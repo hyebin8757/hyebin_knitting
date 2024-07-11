@@ -3,6 +3,6 @@
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
     "types": ["jest", "node"],
+    "esModuleInterop": true, // JEST에서 ESM 사용하기 위해 필요, 혹시 이상있으면 주석 처리 하셔도 됩니다.
   }
 }
-

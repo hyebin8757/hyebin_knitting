@@ -1,24 +1,25 @@
-# Nuxt dev/build outputs
-.output
-.data
-.nuxt
-.nitro
-.cache
-dist
-
-# Node dependencies
-node_modules
-
-# Logs
-logs
-*.log
-
-# Misc
+/.output/
+# OSX
+#
 .DS_Store
-.fleet
-.idea
 
-# Local env files
-.env
-.env.*
-!.env.example
+# node-js
+#
+node_modules/*
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+.nuxt/*
+
+# webstorm
+#
+build/
+/.idea/
+
+# bundle
+#
+dist/
+
+# storybook
+.jest-test-results.json

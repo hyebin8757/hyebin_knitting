@@ -1,17 +1,30 @@
 {
-  "name": "nuxt-app",
+  "name": "min",
+  "version": "0.0.0",
+  "description": "min",
   "private": true,
-  "type": "module",
+  "main": "dist-electron/main.js",
   "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "build": "nuxi build",
+    "dev": "nuxt dev"
   },
   "devDependencies": {
-    "postcss": "^8.4.38",
+    "@nuxt/postcss8": "^1.1.3",
+    "@nuxtjs/eslint-config-typescript": "^12.0.0",
+    "@pinia-plugin-persistedstate/nuxt": "^1.0.0",
+    "@types/jest": "^29.2.5",
+    "@types/uuid": "^9.0.1",
+    "@vue/vue3-jest": "^29.2.2",
+    "autoprefixer": "^10.4.19",
+    "electron": "^25.2.0",
+    "electron-builder": "^24.4.0",
+    "fast-check": "^3.5.0",
+    "nuxt": "3.0.0",
+    "nuxt-electron": "^0.5.0",
+    "nuxt-lodash": "^2.4.1",
     "prettier": "^2.8.3",
+    "tailwindcss": "^3.4.3",
+    "ts-jest": "^29.0.3",
     "typescript": "^4.9.4"
   },
   "dependencies": {
@@ -20,10 +33,20 @@
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
     "@fontsource/noto-sans-kr": "^4.5.12",
+    "@mdx-js/preact": "^2.3.0",
+    "@nuxt-alt/proxy": "^2.1.3",
+    "@nuxt/kit": "^3.4.3",
     "@pinia/nuxt": "^0.4.6",
+    "@types/crypto-js": "^4.1.1",
+    "@types/js-cookie": "^3.0.3",
+    "@vueuse/core": "^9.12.0",
+    "js-cookie": "^3.0.5",
     "material-icons": "^1.13.1",
-    "nuxt": "^3.12.3",
+    "nvm": "0.0.4",
+    "pinia": "^2.1.6",
+    "sass": "^1.57.1",
     "vue": "^3.2.47",
+    "vue-emotion": "^0.4.29",
     "vuetify": "^3.1.0"
   }
 }
