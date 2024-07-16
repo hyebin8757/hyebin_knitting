@@ -1,5 +1,5 @@
 {
-  "name": "min",
+  "name": "portfolio",
   "version": "0.0.0",
   "description": "min",
   "private": true,
@@ -33,6 +33,7 @@
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
     "@fontsource/noto-sans-kr": "^4.5.12",
+    "@mdi/font": "^7.4.47",
     "@mdx-js/preact": "^2.3.0",
     "@nuxt-alt/proxy": "^2.1.3",
     "@nuxt/kit": "^3.4.3",

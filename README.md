@@ -1,9 +1,9 @@
-# Nuxt3 + Typescript 시작하는 방법
+# Components 이름 
 
-* 설치시 에러 관련 :
-error lru-cache@8.0.5: The engine "node" is incompatible with this module. Expected version ">=16.14". Got "14.18.0"
-error Found incompatible module.
-노드 버전 16.14 이상 사용 하세요~!
+* The : 컴포넌트를 조합하여 사용 할 경우
+* View : 조합 할 수 있는 컴포넌트일 경우
+
+
 
 1. Typescript를 사용할 경우 Nuxt에서 사용하는 Type을 모두 Build 해야한다.
     - 아래 명령어롤 입력해서 사용한다.

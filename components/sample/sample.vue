@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import {definePageMeta} from "#imports";
+import {reactive} from "vue";
+import { cx } from "@emotion/css";
 
-definePageMeta( {
-  layout: "layout",
-} );
 /************************************************************
  * Props
  ************************************************************/
@@ -12,10 +10,17 @@ definePageMeta( {
  * Emit
  ************************************************************/
 
+
 /************************************************************
  * Data ( ref, reactive, computed... )
  ************************************************************/
+const Data = reactive({
 
+})
+
+const BooleanData = reactive({
+
+})
 /************************************************************
  * Function
  ************************************************************/
@@ -25,10 +30,9 @@ definePageMeta( {
  ************************************************************/
 
 
-
 </script>
 <template>
-  <span>메인</span>
+
 </template>
 
 <style lang="scss"></style>

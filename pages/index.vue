@@ -3,7 +3,7 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 
-router.push( "/main/userMain");
+router.push( "/main/main");
 
 </script>
 <template>

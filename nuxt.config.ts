@@ -31,7 +31,7 @@ const nuxtConfig: any = {
       htmlAttrs: {
         lang: "ko",
       },
-      title: "단축 URL 만들기",
+      title: "민우주 포트퐅리오",
       charset: "utf-8",
       viewport: "width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1",
       meta: [
@@ -39,11 +39,11 @@ const nuxtConfig: any = {
         {"http-equiv": "Pragma", content: "no-cache"},
         {"http-equiv": "Cache-control", content: "no-cache"},
         {"http-equiv": "Expires", content: "0"},
-        { hid : "og:title", property : "og:title", content : "단축 URL 만들기" },
+        { hid : "og:title", property : "og:title", content : "민우주 포트폴리오" },
         { hid : "og:image", property : "og:image", content : "/image_og.png" },
-        { hid : "og:description", property : "og:description", content : "길고 복잡한 URL 을 단 몇 번의 클릭으로 간단하고 기억하기 쉬운 URL로 바꿔 보세요. 정보의 공유가 훨씬 간편해지고, 링크를 통한 접근성을 높일 수 있습니다." },
+        { hid : "og:description", property : "og:description", content : "설명" },
         { hid : "og:type", property : "og:type", content : "website" },
-        { hid : "og:url", property : "og:url", content : "https://gw1.kr"},
+        { hid : "og:url", property : "og:url", content : ""},
       ],
       script: [],
       link: [
@@ -57,7 +57,10 @@ const nuxtConfig: any = {
    * */
   css: [
     "vuetify/lib/styles/main.sass",
+    '@mdi/font/css/materialdesignicons.css',
     "material-icons/iconfont/material-icons.css",
+    "@/assets/scss/style.scss",
+    "@/assets/style/CommonStyle.ts",
   ],
 
   nitro: {
