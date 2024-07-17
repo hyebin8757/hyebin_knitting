@@ -39,8 +39,25 @@ export const CommonStyle = {
         }
       }
     }
-    
+  `,
+
+  Button : css`
+    .v-btn {
+      min-width: initial !important;
       
+      &.v-btn--size-default {
+        padding: 0;
+      }
+      
+      &.v-btn--elevated:hover, 
+      &.v-btn--elevated:focus {
+        box-shadow: none;
+      }
+
+      .v-btn__overlay {
+        display: none;
+      }
+    }
   `,
 }
 
@@ -50,6 +67,7 @@ export const CommonStyle = {
 injectGlobal`
   ${CommonStyle.Default};
   ${CommonStyle.Input};
+  ${CommonStyle.Button};
 `;
 
 /************************************************************

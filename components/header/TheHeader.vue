@@ -37,7 +37,8 @@ const headerData = reactive({
 })
 
 const headerBooleanData = reactive({
-  searchInputLoading : false
+  searchInputLoading : false,
+  isLightMode : false,
 })
 
 /************************************************************
@@ -45,6 +46,14 @@ const headerBooleanData = reactive({
  ************************************************************/
 const onSearch = () => {
   console.log("search")
+}
+
+const onLogin = () => {
+  console.log("로그인")
+}
+
+const changeMode = () => {
+  headerBooleanData.isLightMode = !headerBooleanData.isLightMode;
 }
 
 /************************************************************
@@ -85,6 +94,14 @@ const onSearch = () => {
     </div>
 
     <div :class="cx('right', HeaderStyle.Right )">
+      <v-btn
+          :class="cx( 'login-btn' )"
+          :ripple="false"
+          variant="text"
+          @click="onLogin"
+      >
+        <span>로그인</span>
+      </v-btn>
       <v-text-field
           v-model="headerData.searchInput"
           :class="cx( HeaderStyle.SearchInput )"
@@ -97,6 +114,14 @@ const onSearch = () => {
           clearable
           @click:append-inner="onSearch"
       ></v-text-field>
+      <v-btn
+          :class="cx( HeaderStyle.ModeButton )"
+          :ripple="false"
+          variant="text"
+          @click="changeMode"
+      >
+        <span class="material-icons" v-text="headerBooleanData.isLightMode ? 'light_mode' : 'dark_mode'"></span>
+      </v-btn>
     </div>
   </div>
 </template>

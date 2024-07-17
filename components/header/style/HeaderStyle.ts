@@ -30,11 +30,27 @@ export const HeaderStyle = {
   Center : css`
     ${StyleUtils.FlexUtils("center", "center")};
     gap: 1rem;
-    flex: 1;
+    flex: 0.6;
   `,
 
   Right : css`
+    ${StyleUtils.FlexUtils("center", "flex-end")};
+    gap: 1rem;
+    flex: 0.2;
     
+    .v-btn {
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: var( --white-color );
+      
+      &:hover {
+        color: var( --system-green-lighten-color );
+      }
+    }
+    
+    .v-input {
+      max-width: 20rem;
+    }
   `,
 
   ButtonGroup : css`
@@ -111,6 +127,9 @@ export const HeaderStyle = {
         min-height: 3rem;
       }
     }
+  `,
+
+  ModeButton : css`
   `,
 }
 

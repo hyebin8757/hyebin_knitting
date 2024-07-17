@@ -20,6 +20,8 @@ export const LayoutStyle = {
   `,
 
   Container : css`
+    ${StyleUtils.FlexUtils("stretch", "flex-start")};
+    gap: 2rem;
     width: 100%;
     height: calc( 100% - ${HeaderStyleData.height} );
     background: var( --primary-color );
