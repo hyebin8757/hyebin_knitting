@@ -1,6 +1,7 @@
 import { css, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "../../styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
+import "@fontsource/noto-sans-kr/korean.css";
 
 const { setMedia } = _uiUtil();
 
@@ -59,6 +60,19 @@ export const CommonStyle = {
       }
     }
   `,
+
+  Tooltip : css`
+    .v-overlay {
+      &.v-tooltip {
+        .v-overlay__content {
+          font-size: 1.4rem;
+          font-weight: 500;
+          color: var( --text-color-1 );
+          background: var( --white-color );
+        }
+      }
+    }
+  `,
 }
 
 /************************************************************
@@ -68,6 +82,7 @@ injectGlobal`
   ${CommonStyle.Default};
   ${CommonStyle.Input};
   ${CommonStyle.Button};
+  ${CommonStyle.Tooltip};
 `;
 
 /************************************************************
