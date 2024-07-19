@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import {reactive} from "vue";
+import {onMounted, reactive, ref} from "vue";
+import {useRoute, useRouter} from "vue-router";
 import { cx } from "@emotion/css";
+import {useUtil} from "~/utils/useUtil";
 import {SidebarStyle} from "~/components/sidebar/style/SidebarStyle";
+
+const { isEmpty } = useUtil.typeValidation;
+const route = useRoute();
+const router = useRouter();
 
 /************************************************************
  * Props
@@ -17,24 +23,28 @@ import {SidebarStyle} from "~/components/sidebar/style/SidebarStyle";
 const sidebarData = reactive({
   menuButtonList : [
     {
-      label : "home",
+      label : "main",
+      tooltip : "메인",
       iconName : "home",
-      path : "",
+      path : "/main/main",
     },
     {
-      label : "",
+      label : "project",
+      tooltip : "프로젝트",
       iconName : "code",
-      path : "",
+      path : "/project/project",
     },
     {
-      label : "",
+      label : "about",
+      tooltip : "자기소개서",
       iconName : "create",
-      path : "",
+      path : "/about/about",
     },
     {
-      label : "",
+      label : "contact",
+      tooltip : "연락처",
       iconName : "mail_outline",
-      path : "",
+      path : "/contact/contact",
     },
   ],
 
@@ -42,37 +52,74 @@ const sidebarData = reactive({
   menuList : [
     {
       title : "home.vue",
-      path : "",
+      label : "main",
+      path : "/main/main",
     },
     {
       title : "about.html",
-      path : "",
-    },
-    {
-      title : "project.js",
-      path : "",
+      label : "about",
+      path : "/about/about",
     },
     {
       title : "contact.css",
-      path : "",
+      label : "contact",
+      path : "/contact/contact",
+    },
+    {
+      title : "project.js",
+      label : "project",
+      path : "/project/project",
     },
   ],
 })
 
-
-
 const sidebarBooleanData = reactive({
-
+  isResize : false,
 })
+
+const menuListRef = ref( null );
 
 /************************************************************
  * Function
  ************************************************************/
+const onResizeScreen = () => {
+  sidebarBooleanData.isResize = true;
+
+  addEventListener("mousemove", ( e : MouseEvent ) => {
+    if ( !sidebarBooleanData.isResize || isEmpty( menuListRef.value ) ) {
+      return;
+    }
+
+    menuListRef.value.style.width = ( e.clientX - 50 ) + "px"
+  });
+
+  addEventListener("mouseup", ( e : MouseEvent ) => {
+    sidebarBooleanData.isResize = false;
+  });
+}
+
+const setActive = ( label : string ) => {
+  if ( isEmpty( label ) ) {
+    return "";
+  }
+
+  return route.path.includes( label ) && 'is-active'
+}
+
+const movePage = ( path : string ) => {
+  if ( isEmpty( path ) ) {
+    return;
+  }
+
+  router.push( path );
+}
 
 /************************************************************
  * Watch & Mounted
  ************************************************************/
-
+onMounted( () => {
+  console.log("route.path",route.path);
+});
 
 /**
  * 버튼 종류 및 메뉴 리스트
@@ -95,13 +142,20 @@ const sidebarBooleanData = reactive({
       <v-btn
         v-for="( item, index ) in sidebarData.menuButtonList"
         :key="index"
+        :class="cx( setActive( item.label ) )"
         :label="item.label"
         variant="text"
+        @click="movePage( item.path )"
       >
         <span class="material-icons-outlined" v-text="item.iconName"></span>
+        <v-tooltip
+            :content-class="item.label"
+            activator="parent"
+            location="end"
+        >{{item.tooltip}}</v-tooltip>
       </v-btn>
     </div>
-    <div :class="cx( SidebarStyle.MenuList )">
+    <div ref="menuListRef" :class="cx( SidebarStyle.MenuList )">
       <v-list
           v-model:opened="sidebarData.menuListValue"
       >
@@ -118,9 +172,15 @@ const sidebarBooleanData = reactive({
               v-for="( item, index ) in sidebarData.menuList"
               :key="index"
               :title="item.title"
+              :class="cx( setActive( item.label ))"
+              @click="movePage( item.path )"
           ></v-list-item>
         </v-list-group>
       </v-list>
+      <div
+         :class="cx('resize-bar', sidebarBooleanData.isResize && 'is-active' )"
+         @mousedown="onResizeScreen"
+      ></div>
     </div>
   </div>
 </template>

@@ -21,11 +21,19 @@ export const SidebarStyle = {
   MenuButtonList : css`
     width: 5rem;
     height: 100%;
-    border-right: 1px solid var( --border-color-1 );
+    border-right: 1px solid var( --black-color );
     
     .v-btn {
-      width: 100%;
-      color: var( --white-color );
+      &.v-btn--density-default {
+        width: 100%;
+        height: 4.8rem;
+        color: var( --white-color );
+        
+        &.is-active,
+        &:hover {
+          color: var( --system-green-lighten-color );
+        }
+      }
       
       + .v-btn {
         margin-top: 1rem;
@@ -34,11 +42,63 @@ export const SidebarStyle = {
   `,
 
   MenuList : css`
+    ${StyleUtils.FlexUtils("stretch", "flex-start")};
+    min-width: 15rem;
+    max-width: 25rem;
+    height: 100%;
+    
+    .resize-bar {
+      width: 1px;
+      height: 100%;
+      background: var( --black-color );
+      cursor: col-resize;
+      
+      &.is-active,
+      &:hover {
+        width: 2px;
+        background: var( --system-green-lighten-color );
+      }
+    }
+    
     .v-list {
+      width: 100%;
+      height: 100%;
+      padding: 0;
       background: transparent;
       
+      .v-list-group {
+        > .v-list-item {
+          .v-list-item-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+          }
+
+          &:hover {
+            color: var( --system-green-lighten-color );
+          }
+        }
+        
+        .v-list-group__items {
+          .v-list-item {
+            min-height: 4rem;
+            
+            .v-list-item-title {
+              font-size: 1.6rem;
+            }
+
+            &.is-active,
+            &:hover {
+              background: var( --system-green-darken-color );
+            }
+          } 
+        }
+      }
+      
       .v-list-item {
+        padding: 0;
         color: var( --white-color );
+        cursor: pointer;
+        
         .v-list-item__overlay {
           display: none;
         }
