@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {definePageMeta} from "#imports";
+import TheProject from "~/components/project/TheProject.vue";
 
 definePageMeta( {
   layout: "layout",
@@ -27,6 +28,7 @@ definePageMeta( {
 
 </script>
 <template>
+  <TheProject/>
 </template>
 
 <style lang="scss"></style>

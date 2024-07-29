@@ -1,11 +1,5 @@
 /**
- * site > utils
+ * site >
  *
  * */
-export * from "./utils/utils"
-
-/**
- * site > service
- *
- * */
-export * from "./service/service"
+export * from "./components"

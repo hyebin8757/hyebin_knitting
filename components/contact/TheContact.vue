@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import {reactive} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import { cx } from "@emotion/css";
+import {useUtil} from "~/utils/useUtil";
 import {ContactStyle} from "~/components/contact/style/ContactStyle";
+
+const { isEmpty } = useUtil.typeValidation;
 
 /************************************************************
  * Props
@@ -15,12 +18,35 @@ import {ContactStyle} from "~/components/contact/style/ContactStyle";
  * Data ( ref, reactive, computed... )
  ************************************************************/
 const contactData = reactive({
-
+  socialsList : [
+    {
+      title : "email",
+      text : `<a href="mailto:dnwnekek2@naver.com">dnwkeke2@naver.com</a>`,
+      html : true,
+    },
+    {
+      title : "github",
+      text : "",
+      html : false,
+    },
+    {
+      title : "notion",
+      text : "",
+      html : false,
+    },
+    {
+      title : "kakao",
+      text : "",
+      html : false,
+    },
+  ]
 })
 
 const contactBooleanData = reactive({
 
 })
+
+const emphasisRef =  ref( null );
 
 /************************************************************
  * Function
@@ -32,6 +58,13 @@ const escapeHtml = ( str : string ) => {
 /************************************************************
  * Watch & Mounted
  ************************************************************/
+onMounted(()=> {
+  if( isEmpty( emphasisRef.value ) ) {
+    return;
+  }
+
+  emphasisRef.value?.setAttribute("data-heading", emphasisRef.value.innerText);
+});
 
 
 </script>
@@ -73,8 +106,27 @@ const escapeHtml = ( str : string ) => {
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠂⠁⠀⠂⠂⠀⡐⠀⢠⠀⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
       </pre>
     </div>
-    <div>
-
+    <div :class="cx( ContactStyle.Content )">
+      <div :class="cx( ContactStyle.Emphasis )">
+        <span>.</span>
+        <em ref="emphasisRef">SOCIALS</em>
+        <span>{</span>
+      </div>
+      <div :class="cx( ContactStyle.ListArea )">
+        <ul>
+          <li
+              v-for="( item, index ) in contactData.socialsList"
+              :key="index"
+              :class="cx( ContactStyle.ListItem )"
+          >
+            <span v-text="item.title" class="title"></span>
+            <span class="colon"> : </span>
+            <span v-if="!item.html" v-text="item.text" class="text"></span>
+            <span v-if="item.html" v-html="item.text" class="text"></span>
+          </li>
+        </ul>
+      </div>
+      <span :class="cx( ContactStyle.Emphasis )">}</span>
     </div>
   </div>
 </template>

@@ -16,6 +16,10 @@ const { setMedia } = _uiUtil();
 export const CommonStyle = {
   Default : css``,
 
+  DefaultPadding : css`
+    padding: 2rem 3rem;
+  `,
+
   Input : css`
     .v-input {
       &.v-input--density-compact {
