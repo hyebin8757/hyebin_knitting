@@ -6,4 +6,5 @@ export type ProjectList = {
     content : string,
     path : string,
     imgSrc : string,
+    localImg? : boolean,
 }

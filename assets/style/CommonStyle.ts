@@ -2,6 +2,10 @@ import { css, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "../../styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 import "@fontsource/noto-sans-kr/korean.css";
+import 'swiper/css';
+import 'swiper/css/effect-coverflow';
+import 'swiper/css/pagination';
+
 
 const { setMedia } = _uiUtil();
 
@@ -48,6 +52,7 @@ export const CommonStyle = {
 
   Button : css`
     .v-btn {
+      position: relative;
       min-width: initial !important;
       
       &.v-btn--size-default {
@@ -61,6 +66,21 @@ export const CommonStyle = {
 
       .v-btn__overlay {
         display: none;
+      }
+      
+      &:hover {
+        &:before {
+          content: "";
+          display: inline-block;
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: 5;
+          width: 100%;
+          height: 100%;
+          opacity: 0.2;
+          background: currentColor;
+        }
       }
     }
   `,

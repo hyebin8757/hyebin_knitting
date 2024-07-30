@@ -42,7 +42,7 @@ onMounted( () => {
         <TheSidebar/>
 
         <!-- 실제 콘텐츠 -->
-        <main>
+        <main :class="cx( LayoutStyle.Main )">
           <slot/>
         </main>
       </section>

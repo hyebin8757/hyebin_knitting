@@ -20,18 +20,6 @@ export const ContactStyle = {
     gap: 8rem;
   `,
 
-  DotArt : css`
-    pre {
-      color: var( --white-color );
-      transition: transform 0.3s ease;
-      
-      &:hover {
-        color: var( --secondary-lighten-color-1 );
-        transform: scale(1.1);
-      }
-    }
-  `,
-
   Content : css`
     
   `,

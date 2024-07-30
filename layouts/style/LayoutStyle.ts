@@ -26,6 +26,10 @@ export const LayoutStyle = {
     height: calc( 100% - ${HeaderStyleData.height} );
     background: var( --primary-color );
   `,
+
+  Main : css`
+    padding: 2rem 0;
+  `,
 }
 
 /************************************************************
