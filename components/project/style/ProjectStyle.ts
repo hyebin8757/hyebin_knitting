@@ -1,6 +1,7 @@
 import { css, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
+import {CommonStyle} from "assets/style/CommonStyle";
 
 const { setMedia } = _uiUtil();
 
@@ -14,6 +15,18 @@ const { setMedia } = _uiUtil();
 export const ProjectStyle = {
   Default : css`
     
+  `,
+
+  Tab : css`
+    &.v-tabs {
+      ${CommonStyle.MenuBtn};
+    }
+  `,
+
+  CardTextBox : css`
+    &.v-card-text {
+      ${CommonStyle.DefaultPadding};
+    }
   `,
 
   ProjectItem : css`
@@ -45,8 +58,8 @@ export const ProjectStyle = {
     .swiper-slide {
       width: 100%;
       height: 100%;
-      max-width: 40rem;
-      max-height: 40rem;
+      max-width: 50rem;
+      max-height: 100rem;
       border-radius: 1rem;
       background-size: cover;
       background-position: center;

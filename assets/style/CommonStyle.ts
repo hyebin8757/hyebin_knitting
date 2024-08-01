@@ -1,5 +1,5 @@
 import { css, injectGlobal } from "@emotion/css";
-import {StyleUtils} from "../../styleUtils/styleUtils";
+// import {StyleUtils} from "../../styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 import "@fontsource/noto-sans-kr/korean.css";
 import 'swiper/css';
@@ -94,6 +94,59 @@ export const CommonStyle = {
           color: var( --text-color-1 );
           background: var( --white-color );
         }
+      }
+    }
+  `,
+
+  MenuBtn : css`
+    .v-btn {
+      position: relative;
+      height: 4.8rem !important;
+      padding: 0 1rem !important;
+      border-radius: 0 !important;
+      font-size: 1.2rem;
+      color: var(--white-color);
+
+      &.is-active,
+      &.v-tab--selected,
+      &:hover {
+        color: var( --system-green-lighten-color );
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      &:after {
+        display: none;
+      }
+
+      &:before {
+        position: absolute;
+        top: 0;
+        left: initial;
+        right: 0;
+        content: "";
+        width: 1px;
+        height: 100%;
+        opacity: 0.3;
+        background: var(--disabled-bg-color-1);
+      }
+
+      &:last-of-type {
+        &:before {
+          display: none;
+        }
+      }
+
+      .v-btn__content {
+        gap: 0.5rem;
+      }
+
+    [ class ^= "material" ] {
+      font-size: 1.6rem;
+    }
+
+      img {
+        width: 1.1rem;
+        height: 1.1rem;
       }
     }
   `,

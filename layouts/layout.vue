@@ -5,6 +5,7 @@ import { cx } from "@emotion/css";
 import TheHeader from "~/components/header/TheHeader.vue";
 import TheSidebar from "~/components/sidebar/TheSidebar.vue";
 import {LayoutStyle} from "~/layouts/style/LayoutStyle";
+import TheMenu from "~/components/menu/TheMenu.vue";
 
 
 const route = useRoute();
@@ -43,6 +44,9 @@ onMounted( () => {
 
         <!-- 실제 콘텐츠 -->
         <main :class="cx( LayoutStyle.Main )">
+          <!-- menu -->
+          <TheMenu/>
+
           <slot/>
         </main>
       </section>

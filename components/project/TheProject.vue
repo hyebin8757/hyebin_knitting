@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import {reactive} from "vue";
+import {reactive, ref} from "vue";
 import { cx } from "@emotion/css";
-import {ProjectList} from "~/types/site/components/project";
-import {useUtil} from "~/utils/useUtil";
-import {ProjectStyle} from "~/components/project/style/ProjectStyle";
-import ProjectCard from "~/components/project/card/ProjectCard.vue";
+import { useUtil } from "~/utils/useUtil";
 import { SwiperSlide } from 'swiper/vue';
+import ProjectCard from "~/components/project/card/ProjectCard.vue";
+import { ProjectList } from "~/types/site/components/project";
+import { TabMenuList } from "~/types/site/components/tabMenuList";
+import { ProjectStyle } from "~/components/project/style/ProjectStyle";
 
 const { useImage } = useUtil.AssetResolverUtil;
 
@@ -21,10 +22,26 @@ const { useImage } = useUtil.AssetResolverUtil;
  * Data ( ref, reactive, computed... )
  ************************************************************/
 const projectData = reactive<{
+  tabList : TabMenuList[],
   mainProjectList : ProjectList[];
   newCreationProjectList : ProjectList[];
   renewalProjectList : ProjectList[];
 }>({
+  tabList : [
+    {
+      title : "MainProject.vue",
+      value : "one",
+    },
+    {
+      title : "NewProject.vue",
+      value : "two",
+    },
+    {
+      title : "RenewalProject.vue",
+      value : "three",
+    },
+  ],
+
   mainProjectList : [
     {
       title : "리마커블소프트 UI 프레임워크",
@@ -140,6 +157,8 @@ const projectData = reactive<{
   ],
 });
 
+const tab = ref( "one" );
+
 /************************************************************
  * Function
  ************************************************************/
@@ -153,75 +172,99 @@ const projectData = reactive<{
 </script>
 <template>
   <div :class="cx( ProjectStyle.Default )">
-    <div :class="cx( 'project-item', ProjectStyle.ProjectItem )">
-      <div :class="cx( ProjectStyle.ProjectTitle )">
-        <h2>주요 프로젝트</h2>
-      </div>
-      <div :class="cx( ProjectStyle.CardWrapper )">
-        <BaseSwiper>
-          <template #slide>
-            <swiper-slide
-                v-for="( item, index ) in projectData.mainProjectList"
-                :key="index"
-            >
-              <ProjectCard
-                  :title="item.title"
-                  :content="item.content"
-                  :img-src="item.imgSrc"
-                  :path="item.path"
-                  :local-img="item.localImg"
-              />
-            </swiper-slide>
-          </template>
-        </BaseSwiper>
-      </div>
-    </div>
-    <div :class="cx( 'project-item', ProjectStyle.ProjectItem )">
-      <div :class="cx( ProjectStyle.ProjectTitle )">
-        <h2>신규 생성 프로젝트</h2>
-      </div>
-      <div :class="cx( ProjectStyle.CardWrapper )">
-        <BaseSwiper>
-          <template #slide>
-            <swiper-slide
-                v-for="( item, index ) in projectData.newCreationProjectList"
-                :key="index"
-            >
-              <ProjectCard
-                  :title="item.title"
-                  :content="item.content"
-                  :img-src="item.imgSrc"
-                  :path="item.path"
-                  :local-img="item.localImg"
-              />
-            </swiper-slide>
-          </template>
-        </BaseSwiper>
-      </div>
-    </div>
-    <div :class="cx( 'project-item', ProjectStyle.ProjectItem )">
-      <div :class="cx( ProjectStyle.ProjectTitle )">
-        <h2>리뉴얼 / 유지보수</h2>
-      </div>
-      <div :class="cx( ProjectStyle.CardWrapper )">
-        <BaseSwiper>
-          <template #slide>
-            <swiper-slide
-                v-for="( item, index ) in projectData.renewalProjectList"
-                :key="index"
-            >
-              <ProjectCard
-                  :title="item.title"
-                  :content="item.content"
-                  :img-src="item.imgSrc"
-                  :path="item.path"
-                  :local-img="item.localImg"
-              />
-            </swiper-slide>
-          </template>
-        </BaseSwiper>
-      </div>
-    </div>
+    <v-tabs :class="cx( ProjectStyle.Tab )" v-model="tab">
+      <v-tab
+          v-for="( item, index ) in projectData.tabList"
+          :key="index"
+          :value="item.value"
+      >
+        <img src="@/assets/images/icon/icon_vue.svg" alt="iconVue">
+        <span v-text="item.title"></span>
+        <span class="material-icons">close</span>
+      </v-tab>
+    </v-tabs>
+
+    <v-card-text :class="cx( ProjectStyle.CardTextBox )">
+      <v-tabs-window v-model="tab">
+        <v-tabs-window-item value="one">
+          <div :class="cx( 'project-item', ProjectStyle.ProjectItem )">
+            <div :class="cx( ProjectStyle.ProjectTitle )">
+              <h2>주요 프로젝트</h2>
+            </div>
+            <div :class="cx( ProjectStyle.CardWrapper )">
+              <BaseSwiper>
+                <template #slide>
+                  <swiper-slide
+                      v-for="( item, index ) in projectData.mainProjectList"
+                      :key="index"
+                  >
+                    <ProjectCard
+                        :title="item.title"
+                        :content="item.content"
+                        :img-src="item.imgSrc"
+                        :path="item.path"
+                        :local-img="item.localImg"
+                    />
+                  </swiper-slide>
+                </template>
+              </BaseSwiper>
+            </div>
+          </div>
+        </v-tabs-window-item>
+
+        <v-tabs-window-item value="two">
+          <div :class="cx( 'project-item', ProjectStyle.ProjectItem )">
+            <div :class="cx( ProjectStyle.ProjectTitle )">
+              <h2>신규 생성 프로젝트</h2>
+            </div>
+            <div :class="cx( ProjectStyle.CardWrapper )">
+              <BaseSwiper>
+                <template #slide>
+                  <swiper-slide
+                      v-for="( item, index ) in projectData.newCreationProjectList"
+                      :key="index"
+                  >
+                    <ProjectCard
+                        :title="item.title"
+                        :content="item.content"
+                        :img-src="item.imgSrc"
+                        :path="item.path"
+                        :local-img="item.localImg"
+                    />
+                  </swiper-slide>
+                </template>
+              </BaseSwiper>
+            </div>
+          </div>
+        </v-tabs-window-item>
+
+        <v-tabs-window-item value="three">
+          <div :class="cx( 'project-item', ProjectStyle.ProjectItem )">
+            <div :class="cx( ProjectStyle.ProjectTitle )">
+              <h2>리뉴얼 / 유지보수</h2>
+            </div>
+            <div :class="cx( ProjectStyle.CardWrapper )">
+              <BaseSwiper>
+                <template #slide>
+                  <swiper-slide
+                      v-for="( item, index ) in projectData.renewalProjectList"
+                      :key="index"
+                  >
+                    <ProjectCard
+                        :title="item.title"
+                        :content="item.content"
+                        :img-src="item.imgSrc"
+                        :path="item.path"
+                        :local-img="item.localImg"
+                    />
+                  </swiper-slide>
+                </template>
+              </BaseSwiper>
+            </div>
+          </div>
+        </v-tabs-window-item>
+      </v-tabs-window>
+    </v-card-text>
   </div>
 </template>
 

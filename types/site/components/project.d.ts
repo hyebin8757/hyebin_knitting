@@ -1,6 +1,5 @@
 
 /** project **/
-
 export type ProjectList = {
     title : string,
     content : string,

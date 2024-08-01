@@ -24,6 +24,7 @@ export const HeaderStyle = {
   `,
 
   Left : css`
+    ${StyleUtils.FlexUtils("center", "flex-start")};
     flex: 0.2;
   `,
 
@@ -56,6 +57,7 @@ export const HeaderStyle = {
   ButtonGroup : css`
     ${StyleUtils.FlexUtils("center", "flex-start")};
     gap: 1rem;
+    margin-right: 2rem;
     
     .button-item {
       ${StyleUtils.FlexUtils("center", "center")};
@@ -91,7 +93,24 @@ export const HeaderStyle = {
     }
   `,
 
+  MenuList : css`
+    ${StyleUtils.FlexUtils("center", "flex-start")};
+    gap: 1rem;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var( --white-color );
+    
+    span {
+      cursor: pointer;
+      
+      &:hover {
+        color: var( --system-green-lighten-color );
+      }
+    }
+  `,
+
   Title : css`
+    margin-left: -3rem;
     font-size: 1.6rem;
     color: var( --white-color );
   `,

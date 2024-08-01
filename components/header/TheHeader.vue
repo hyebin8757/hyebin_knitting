@@ -33,6 +33,30 @@ const headerData = reactive({
     },
   ],
 
+  menuList : [
+    {
+      text : "File",
+    },
+    {
+      text : "Edit",
+    },
+    {
+      text : "View",
+    },
+    {
+      text : "Go",
+    },
+    {
+      text : "Run",
+    },
+    {
+      text : "Terminal",
+    },
+    {
+      text : "Help",
+    },
+  ],
+
   searchInput : "",
 })
 
@@ -74,6 +98,13 @@ const changeMode = () => {
           <span class="material-icons" v-text="item.iconName"></span>
           <label v-text="item.value"></label>
         </div>
+      </div>
+      <div :class="cx('menu-list', HeaderStyle.MenuList)">
+        <span
+            v-for="( item, index ) in headerData.menuList"
+            :key="index"
+            v-text="item.text"
+        ></span>
       </div>
     </div>
 

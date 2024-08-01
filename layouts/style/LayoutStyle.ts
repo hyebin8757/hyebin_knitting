@@ -21,14 +21,14 @@ export const LayoutStyle = {
 
   Container : css`
     ${StyleUtils.FlexUtils("stretch", "flex-start")};
-    gap: 2rem;
     width: 100%;
     height: calc( 100% - ${HeaderStyleData.height} );
     background: var( --primary-color );
   `,
 
   Main : css`
-    padding: 2rem 0;
+    width: 100%;
+    height: 100%;
   `,
 }
 

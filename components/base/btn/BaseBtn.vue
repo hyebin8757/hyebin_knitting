@@ -9,8 +9,10 @@ type BtnVariant = "" | "outlined" | "tonal" | "text" | "plain" | "flat" | "eleva
  * Props
  ************************************************************/
 const props = withDefaults( defineProps<{
+  ripple? : boolean,
   variant? : BtnVariant,
 }>(), {
+  ripple : false,
   variant : "",
 });
 
@@ -48,7 +50,7 @@ const baseBtnBooleanData = reactive({
   <v-btn
       :class="cx( BaseBtnStyle.Default )"
       :variant="props.variant"
-      :ripple="false"
+      :ripple="props.ripple"
       @click="onClick"
   >
     <slot name="default">

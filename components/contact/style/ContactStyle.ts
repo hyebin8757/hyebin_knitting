@@ -1,6 +1,6 @@
 import { css, injectGlobal } from "@emotion/css";
-import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
+import {StyleUtils} from "~/styleUtils/styleUtils";
 import {CommonStyle} from "assets/style/CommonStyle";
 
 const { setMedia } = _uiUtil();
@@ -15,13 +15,15 @@ const { setMedia } = _uiUtil();
  ************************************************************/
 export const ContactStyle = {
   Default : css`
-    ${CommonStyle.DefaultPadding};
     ${StyleUtils.FlexUtils("center", "flex-start")};
+    ${CommonStyle.DefaultPadding};
     gap: 8rem;
+    width: 100%;
   `,
 
   Content : css`
-    
+    position: relative;
+    width: 100%;
   `,
 
   Emphasis : css`
@@ -110,6 +112,28 @@ export const ContactStyle = {
       &:hover {
         text-decoration: underline;
       }
+      
+      a[ref="email"] {
+        span {
+          &.is-active {
+            color: var( --secondary-lighten-color-1 );
+            transition: color 0.5s;
+          }
+        }
+      }
+    }
+  `,
+
+  Video : css`
+    position: absolute;
+    top: -9rem;
+    left: 45rem;
+    width: 50rem;
+    height: 50rem;
+    
+    video {
+      width: 100%;
+      height: 100%;
     }
   `,
 }
