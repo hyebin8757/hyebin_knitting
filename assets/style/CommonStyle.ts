@@ -47,6 +47,10 @@ export const CommonStyle = {
           }
         }
       }
+
+      .v-input__details {
+        display: none;
+      }
     }
   `,
 
@@ -111,7 +115,7 @@ export const CommonStyle = {
       &.v-tab--selected,
       &:hover {
         color: var( --system-green-lighten-color );
-        background: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.2);
       }
 
       &:after {
@@ -140,13 +144,13 @@ export const CommonStyle = {
         gap: 0.5rem;
       }
 
-    [ class ^= "material" ] {
-      font-size: 1.6rem;
-    }
+      [ class ^= "material" ] {
+        font-size: 1.6rem;
+      }
 
       img {
-        width: 1.1rem;
-        height: 1.1rem;
+        width: 1.2rem;
+        height: 1.2rem;
       }
     }
   `,

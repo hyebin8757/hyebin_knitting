@@ -104,7 +104,7 @@ const hoverEmail = () => {
   })
 
   timer.value = setTimeout(() => {
-    const emailElHref = emailEl?.href;
+    const emailElHref = emailEl.value?.href;
 
     emailElHref && ( window.location.href = emailElHref );
   }, 8000);

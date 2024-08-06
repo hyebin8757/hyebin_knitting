@@ -16,6 +16,16 @@ export const MenuStyle = {
   Default : css`
     ${StyleUtils.FlexUtils("center", "flex-start")};
     ${CommonStyle.MenuBtn};
+    
+    .v-btn {
+      svg {
+        width: 1.8rem;
+        height: 1.8rem;
+      }
+      
+      &.is-active {
+        border-bottom: 2px solid var( --system-green-lighten-color );
+      }
   }
   `,
 

@@ -20,6 +20,14 @@ export const ProjectStyle = {
   Tab : css`
     &.v-tabs {
       ${CommonStyle.MenuBtn};
+      
+      .v-btn {
+        :nth-of-type(3) {
+          img {
+            filter: brightness(0) saturate(100%) invert(14%) sepia(77%) saturate(5289%) hue-rotate(351deg) brightness(90%) contrast(81%);
+          }
+        }
+      }
     }
   `,
 
@@ -39,7 +47,7 @@ export const ProjectStyle = {
   `,
 
   ProjectTitle : css`
-    margin-bottom: 2rem;
+    margin-bottom: 4rem;
     
     h2 {
       font-size: 3rem;
@@ -52,13 +60,13 @@ export const ProjectStyle = {
     
     .swiper-wrapper {
       position: relative;
-      left: -55rem;
+      left: -35rem;
     }
     
     .swiper-slide {
-      width: 100%;
+      width: fit-content;
       height: 100%;
-      max-width: 50rem;
+      max-width: 80rem;
       max-height: 100rem;
       border-radius: 1rem;
       background-size: cover;
@@ -67,22 +75,31 @@ export const ProjectStyle = {
   `,
 
   Card : css`
+    ${StyleUtils.FlexUtils("stretch", "flex-start")};
+    gap: 2rem;
     border-radius: 2rem;
     background: var( --white-color );
   `,
 
   CardImg : css`
-    width: 100%;
-    height: 15rem;
+    width: 40rem;
+    height: 30rem;
+    border-radius: 2rem 0 0 2rem;
     border-bottom: 1px solid var( --border-color-1 );
     
     img {
       display: block;
       width: 100%;
       height: 100%;
-      border-radius: 2rem 2rem 0 0;
-      object-fit: contain;
+      min-height: 30.1rem;
+      border-radius: 2rem 0 0 2rem;
     }
+  `,
+
+  CardContainer : css`
+    ${StyleUtils.FlexUtils("flex-start", "space-between", "", "column")};
+    width: 25rem;
+    padding: 1rem;
   `,
 
   CardContent : css`
@@ -99,13 +116,21 @@ export const ProjectStyle = {
     font-size: 1.4rem;
   `,
 
+  CardTag : css`
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var( --text-color-2 );
+  `,
+
   CardBtnGroup : css`
     ${StyleUtils.FlexUtils("center", "flex-end")};
     gap: 1rem;
+    width: 100%;
     padding: 0 1rem 1rem 0;
     
     .v-btn {
-      padding: 0.5rem;
+      padding: 0.5rem 1rem;
       font-size: 1.2rem;
       color: var( --white-color );
 

@@ -5,5 +5,9 @@ export type ProjectList = {
     content : string,
     path : string,
     imgSrc : string,
+    tag? : string,
+    workList? : any,
     localImg? : boolean,
+    isSecurity? : boolean,
+    isWorkBtn? : boolean,
 }

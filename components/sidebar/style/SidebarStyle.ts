@@ -65,6 +65,17 @@ export const SidebarStyle = {
       height: 100%;
       padding: 0;
       background: transparent;
+
+      img {
+        width: 1.4rem;
+        height: 1.4rem;
+      }
+      
+      svg {
+        margin-top: 3px;
+        width: 1.8rem;
+        height: 1.8rem;
+      }
       
       .v-list-group {
         > .v-list-item {
@@ -80,7 +91,11 @@ export const SidebarStyle = {
         
         .v-list-group__items {
           .v-list-item {
+            ${StyleUtils.FlexUtils("center", "flex-start")};
+            gap: 0.8rem;
             min-height: 4rem;
+            padding-inline-start: 0 !important;
+            padding: 0 1.6rem !important;
             
             .v-list-item-title {
               font-size: 1.6rem;

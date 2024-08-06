@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import {reactive} from "vue";
 import { cx } from "@emotion/css";
+import { useRouter } from "vue-router";
 import { HeaderStyle } from "~/components/header/style/HeaderStyle";
+
+const router = useRouter();
 
 /************************************************************
  * Props
@@ -73,7 +76,7 @@ const onSearch = () => {
 }
 
 const onLogin = () => {
-  console.log("로그인")
+  router.push("/login/login");
 }
 
 const changeMode = () => {

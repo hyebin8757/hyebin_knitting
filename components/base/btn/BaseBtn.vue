@@ -11,9 +11,11 @@ type BtnVariant = "" | "outlined" | "tonal" | "text" | "plain" | "flat" | "eleva
 const props = withDefaults( defineProps<{
   ripple? : boolean,
   variant? : BtnVariant,
+  hover? : boolean,
 }>(), {
   ripple : false,
   variant : "",
+  hover : true,
 });
 
 /************************************************************
@@ -48,7 +50,7 @@ const baseBtnBooleanData = reactive({
 </script>
 <template>
   <v-btn
-      :class="cx( BaseBtnStyle.Default )"
+      :class="cx( BaseBtnStyle.Default, props.hover || 'is-hover-none')"
       :variant="props.variant"
       :ripple="props.ripple"
       @click="onClick"

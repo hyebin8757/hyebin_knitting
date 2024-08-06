@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import {definePageMeta} from "#imports";
+import TheLogin from "~/components/login/TheLogin.vue";
 
-definePageMeta( {
-  layout: "layout",
-} );
 /************************************************************
  * Props
  ************************************************************/
@@ -27,7 +24,7 @@ definePageMeta( {
 
 </script>
 <template>
-  1
+  <TheLogin/>
 </template>
 
 <style lang="scss"></style>

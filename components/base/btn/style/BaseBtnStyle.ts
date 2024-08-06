@@ -14,6 +14,11 @@ const { setMedia } = _uiUtil();
  ************************************************************/
 export const BaseBtnStyle = {
   Default : css`
+    &.is-hover-none {
+      &:before {
+        display: none;
+      }
+    }
   `,
 }
 
