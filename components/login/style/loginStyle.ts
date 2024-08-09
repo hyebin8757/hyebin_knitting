@@ -32,13 +32,31 @@ export const loginStyle = {
     }
   `,
 
-  FormCard : css`
+  Container : css`
+    ${StyleUtils.FlexUtils("center", "center")};
     width: 100%;
     height: 100%;
-    max-width: 50rem;
-    max-height: 35rem;
-    padding: 2rem;
+    max-width: 60vw;
+    max-height: 60vh;
     border-radius: 2rem;
+    overflow: hidden;
+  `,
+
+  FormBg : css`
+    width: 100%;
+    height: 100%;
+    
+    img {
+      width: 100%;
+      height: 100%;
+    }
+  `,
+
+  FormCard : css`
+    ${StyleUtils.FlexUtils("center", "center", "", "column")};
+    width: 100%;
+    height: 100%;
+    padding: 2rem;
     background: var( --white-color );
   `,
 
@@ -48,6 +66,7 @@ export const loginStyle = {
     margin-bottom: 2rem;
     font-size: 3rem;
     font-weight: 700;
+    cursor: pointer;
     
     img {
       width: 3rem;
@@ -56,11 +75,13 @@ export const loginStyle = {
   `,
 
   Content : css`
-    
+    width: 100%;
+    height: auto;
   `,
 
   Form : css`
-    
+    width: 100%;
+    height: fit-content;
   `,
 
   InfoArea : css`
@@ -70,34 +91,31 @@ export const loginStyle = {
   InfoItem : css`
     &:nth-of-type(2) {
       margin-top: 1rem;
+      .title {
+        margin-bottom: 1rem;
+      }
+    }
+    
+    .is-flex {
+      ${StyleUtils.FlexUtils("center", "flex-start")};
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      
+      [ class ^= "material" ] {
+        font-size: 1.7rem;
+        cursor: default;
+      }
     }
     
     .title {
       display: inline-block;
-      margin-bottom: 1rem;
       font-size: 1.4rem;
       font-weight: 500;
     }
     
     .v-input {
-      padding: 1rem;
-      border: 1px solid var( --border-color-1 );
-      border-radius: 1rem;
-      
-      * {
-        padding: 0;
-      }
-      
-      .v-field--variant-solo {
-        box-shadow: none;
-      }
-
       .v-input__append {
         align-items: center;
-      }
-      
-      input {
-        min-height: 2rem;
       }
     }
   `,
@@ -106,12 +124,14 @@ export const loginStyle = {
     margin: 2rem 0;
     
     .v-btn {
-      width: 100%;
-      height: 4rem;
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: var( --white-color );
-      background: var( --system-green-color );
+      &.v-btn--density-default {
+        width: 100%;
+        height: 4rem;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var( --white-color );
+        background: var( --system-green-color );  
+      }
     }
   `,
 
@@ -130,12 +150,26 @@ export const loginStyle = {
       }
     }
   `,
+
+  LoginTooltip : css`
+    .v-overlay {
+      &.v-tooltip {
+        .v-overlay__content {
+          &.login-tooltip {
+            color: var( --white-color );
+            background: rgba( 0, 0, 0, 0.8 );
+          }
+        }
+      }
+    }
+  `,
 }
 
 /************************************************************
  * global style
  ************************************************************/
 injectGlobal`
+  ${loginStyle.LoginTooltip};
 `;
 
 /************************************************************

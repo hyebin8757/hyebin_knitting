@@ -44,8 +44,16 @@ export const HeaderStyle = {
       font-weight: 500;
       color: var( --white-color );
       
+      [ class ^= "material" ] {
+        font-size: 1.8rem;
+      }
+      
       &:hover {
         color: var( --system-green-lighten-color );
+        
+        &:before {
+          display: none;
+        }
       }
     }
     
@@ -141,9 +149,10 @@ export const HeaderStyle = {
     &.v-input {
       width: 20rem;
       height: 3rem;
+      min-height: 3rem;
+      padding: 0.3rem 1.5rem;
       
       .v-input__control {
-        min-height: 3rem;
       }
     }
   `,

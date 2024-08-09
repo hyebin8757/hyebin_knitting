@@ -136,6 +136,15 @@ const changeMode = () => {
       >
         <span>로그인</span>
       </v-btn>
+<!--      <v-btn-->
+<!--          :class="cx( 'logout-btn' )"-->
+<!--          :ripple="false"-->
+<!--          variant="text"-->
+<!--          @click=""-->
+<!--      >-->
+<!--        <span>로그아웃</span>-->
+<!--        <span class="material-icons">logout</span>-->
+<!--      </v-btn>-->
       <v-text-field
           v-model="headerData.searchInput"
           :class="cx( HeaderStyle.SearchInput )"

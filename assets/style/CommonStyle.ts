@@ -26,16 +26,27 @@ export const CommonStyle = {
 
   Input : css`
     .v-input {
+      min-height: 4rem;
+      padding: 1rem;
+      border: 1px solid var( --border-color-1 );
+      border-radius: 1rem;
+      background: var( --white-color );
+      
+      * {
+        padding: 0 !important;
+      }
+
+
+      input {
+        height: 100%;
+        min-height: 2rem;
+        padding: 0 0 0 1rem;
+        font-size: 1.4rem;
+      }
+      
       &.v-input--density-compact {
         --v-input-control-height : 10px;
         --v-input-padding-top : 0;
-        
-        
-        input {
-          height: 100%;
-          padding: 0 0 0 1rem;
-          font-size: 1.4rem;
-        }
 
         .v-field__prepend-inner,
         .v-field__append-inner,
@@ -51,6 +62,16 @@ export const CommonStyle = {
       .v-input__details {
         display: none;
       }
+
+
+      .v-field--variant-solo {
+        box-shadow: none;
+      }
+      
+      .v-field__input {
+        min-height: fit-content;
+      }
+
     }
   `,
 
@@ -85,6 +106,18 @@ export const CommonStyle = {
           opacity: 0.2;
           background: currentColor;
         }
+      }
+    }
+  `,
+
+  Radio : css`
+    .v-radio-group {
+      .v-label {
+        font-size: 1.4rem;
+      }
+      
+      .mdi-radiobox-marked {
+        color: var( --primary-darken-color-1 );
       }
     }
   `,
@@ -154,6 +187,32 @@ export const CommonStyle = {
       }
     }
   `,
+
+  Dialog : css`
+    &.v-dialog {
+      .v-overlay__content {
+        > .v-card {
+          .v-card-item {
+            color: var( --white-color );
+            background: var( --primary-darken-color-1 );
+          }
+
+          > .v-card-text {
+            padding: 3rem 2rem !important;
+          }
+
+          .v-card-actions {
+            .v-btn {
+              height: fit-content;
+              padding: 1rem;
+              color: var( --white-color );
+              background: var( --primary-darken-color-1 );
+            }
+          }
+        }
+      }
+    }
+  `,
 }
 
 /************************************************************
@@ -163,6 +222,7 @@ injectGlobal`
   ${CommonStyle.Default};
   ${CommonStyle.Input};
   ${CommonStyle.Button};
+  ${CommonStyle.Radio};
   ${CommonStyle.Tooltip};
 `;
 

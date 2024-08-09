@@ -27,11 +27,11 @@ const emit = defineEmits<{
 /************************************************************
  * Data ( ref, reactive, computed... )
  ************************************************************/
-const Data = reactive({
+const projectData = reactive({
 
 })
 
-const BooleanData = reactive({
+const projectBooleanData = reactive({
 
 })
 /************************************************************

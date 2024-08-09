@@ -37,7 +37,7 @@ export const BaseDialogStyle = {
           }
           
           .v-card-text {
-            padding: 1rem 2rem !important;
+            padding: 1rem 2rem;
             font-size: 1.4rem;
           }
           

@@ -1,6 +1,7 @@
 import { css, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
+import {CommonStyle} from "assets/style/CommonStyle";
 
 const { setMedia } = _uiUtil();
 
@@ -14,29 +15,7 @@ const { setMedia } = _uiUtil();
  ************************************************************/
 export const ProjectDialogStyle = {
   Default : css`
-    &.v-dialog {
-      .v-overlay__content {
-        .v-card {
-          .v-card-item {
-            color: var( --white-color );
-            background: var( --primary-darken-color-1 );
-          }
-
-          .v-card-text {
-            padding: 3rem 2rem !important;
-          }
-          
-          .v-card-actions {
-            .v-btn {
-              height: fit-content;
-              padding: 1rem;
-              color: var( --white-color );
-              background: var( --primary-darken-color-1 );
-            }
-          }
-        }    
-      }
-    }
+    ${CommonStyle.Dialog};
   `,
 
   WorkList : css`

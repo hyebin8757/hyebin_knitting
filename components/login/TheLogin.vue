@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import {reactive} from "vue";
 import { cx } from "@emotion/css";
-import {useRouter} from "vue-router";
 import {useUtil} from "~/utils/useUtil";
+import {useRouter} from "vue-router";
+import {useUserStore} from "~/stores/useUserStore";
 import BaseBtn from "~/components/base/btn/BaseBtn.vue";
+import BaseAlert from "~/components/base/alert/BaseAlert.vue";
+import FindDialog from "~/components/dialog/find/FindDialog.vue";
 import {loginStyle} from "~/components/login/style/loginStyle";
 
 const router = useRouter();
-const { isEmpty } = useUtil.typeValidation;
+const { } = useUserStore();
+const { isEmpty, isNotEmpty } = useUtil.typeValidation;
 
 /************************************************************
  * Props
@@ -27,33 +31,87 @@ const loginData = reactive({
   menuList : [
     {
       title : "아이디 찾기",
-      path : "",
+      event : ( itemInfo : any ) => {
+        findDialogToggle( itemInfo.title );
+      },
     },
     {
       title : "비밀번호 찾기",
-      path : "",
+      event : ( itemInfo : any  ) => {
+        findDialogToggle( itemInfo.title );
+      },
     },
     {
       title : "회원가입",
       path : "",
+      event : ( itemInfo : any  ) => {
+        if ( isEmpty( itemInfo.path ) ) {
+          return;
+        }
+
+        router.push( itemInfo.path );
+      },
     }
   ],
+  findTitle : "",
+  alertText :  "",
 })
 
 const loginBooleanData = reactive({
   passwordShow : false,
+  alert : false,loginData,
+  isFirst : true,
+  findDialog : false,
 })
 
 /************************************************************
  * Function
  ************************************************************/
-const menuEvent = ( path : string ) => {
-  if ( isEmpty( path ) ) {
+const moveMain = () => {
+  router.push( "/main/main" );
+}
+
+const onLogin = async () => {
+  const isCheck = await loginValidation();
+
+  if ( !isCheck ) {
+    return ( loginBooleanData.alert = true );
+  }
+
+  moveMain();
+}
+
+const findDialogToggle = ( title : string ) => {
+  if ( isEmpty( title ) ) {
     return;
   }
 
-  router.push( path );
+  loginData.findTitle = title;
+
+  loginBooleanData.findDialog = true;
 }
+
+const loginValidation = () => {
+  if ( isEmpty( loginData.id ) && isEmpty( loginData.password ) ) {
+    loginData.alertText = "아이디 와 비밀번호를 입력해주세요.";
+    return false;
+  }
+  else if ( isEmpty( loginData.id ) && isNotEmpty( loginData.password ) ) {
+    loginData.alertText = "아이디 입력해주세요.";
+    return false;
+  }
+  else if ( isNotEmpty( loginData.id ) && isEmpty( loginData.password ) ) {
+    loginData.alertText = "비밀번호를 입력해주세요.";
+    return false;
+  }
+  else if ( "testUser" !== loginData.id || "0000" !== loginData.password ) {
+    loginData.alertText = "아이디 혹은 비밀번호를 잘못 입력하였습니다. 입력하신 내용을 다시 확인해주세요.";
+    return false;
+  }
+
+  return true;
+}
+
 /************************************************************
  * Watch & Mounted
  ************************************************************/
@@ -62,50 +120,90 @@ const menuEvent = ( path : string ) => {
 </script>
 <template>
   <div :class="cx( loginStyle.Default )">
-    <div :class="cx( loginStyle.FormCard )">
-      <div :class="cx( loginStyle.Title )">
-        <img src="@/assets/images/logo/logo.png" alt="logo">
-        <span>IntelliJ IDEA</span>
+    <div :class="cx( loginStyle.Container )">
+      <div :class="cx( loginStyle.FormBg )">
+        <img src="@/assets/images/bg/bg_login.jpg" alt="loginBg">
       </div>
-      <div :class="cx( loginStyle.Content )">
-        <form :class="cx( loginStyle.Form )">
-          <div :class="cx( loginStyle.InfoArea )">
-            <div :class="cx( loginStyle.InfoItem )">
-              <span class="title">아이디</span>
-              <v-text-field
-                  v-model="loginData.id"
-                  variant="solo">
-              </v-text-field>
-            </div>
-            <div :class="cx( loginStyle.InfoItem )">
-              <span class="title">비밀번호</span>
-              <v-text-field
-                  v-model="loginData.password"
-                  variant="solo"
-                  :append-icon="loginBooleanData.passwordShow ? 'mdi-eye' : 'mdi-eye-off'"
-                  :type="loginBooleanData.passwordShow ? 'text' : 'password'"
-                  @click:append="loginBooleanData.passwordShow = !loginBooleanData.passwordShow"
-              />
-            </div>
-          </div>
-          <div :class="cx( loginStyle.LoginBtn )">
-            <BaseBtn>
-              <span>로그인</span>
-            </BaseBtn>
-          </div>
-        </form>
-        <div :class="cx( loginStyle.MenuList )">
-          <ul>
-            <li
-                v-for="( item, index ) in loginData.menuList"
-                :key="index"
-            >
-              <span v-text="item.title" @click="menuEvent( item.path )"></span>
-            </li>
-          </ul>
+      <div :class="cx( loginStyle.FormCard )">
+        <div :class="cx( loginStyle.Title )" @click="moveMain">
+          <img src="@/assets/images/logo/logo.png" alt="logo">
+          <span>Min U Ju - IntelliJ IDEA</span>
         </div>
-      </div>
+        <div :class="cx( loginStyle.Content )">
+          <form :class="cx( loginStyle.Form )">
+            <div :class="cx( loginStyle.InfoArea )">
+              <div :class="cx( loginStyle.InfoItem )">
+                <div class="is-flex">
+                  <span class="title">아이디</span>
+                  <v-tooltip
+                      content-class="login-tooltip"
+                      location="right"
+                  >
+                    <template v-slot:activator="{ props }">
+                      <span v-bind="props" class="material-icons">error_outline</span>
+                    </template>
+                    <div>
+                      <span>초기 아이디 / 비밀번호</span>
+                      <ul>
+                        <li>
+                          <span>아이디 : testUser</span>
+                        </li>
+                        <li>
+                          <span>비밀번호 : 0000</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </v-tooltip>
+                </div>
+                <v-text-field
+                    v-model="loginData.id"
+                    variant="solo"
+                    placeholder="아이디를 입력해주세요."
+                />
+              </div>
+              <div :class="cx( loginStyle.InfoItem )">
+                <span class="title">비밀번호</span>
+                <v-text-field
+                    v-model="loginData.password"
+                    variant="solo"
+                    placeholder="패스워드를 입력해주세요."
+                    :append-icon="loginBooleanData.passwordShow ? 'mdi-eye' : 'mdi-eye-off'"
+                    :type="loginBooleanData.passwordShow ? 'text' : 'password'"
+                    @click:append="loginBooleanData.passwordShow = !loginBooleanData.passwordShow"
+                />
+              </div>
+            </div>
+            <div :class="cx( loginStyle.LoginBtn )">
+              <BaseBtn
+                  @on-click="onLogin"
+              >
+                <span>로그인</span>
+              </BaseBtn>
+            </div>
+          </form>
+          <div :class="cx( loginStyle.MenuList )">
+            <ul>
+              <li
+                  v-for="( item, index ) in loginData.menuList"
+                  :key="index"
+              >
+                <span v-text="item.title" @click="item.event( item )"></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>  
     </div>
+    <FindDialog
+        v-model="loginBooleanData.findDialog"
+        :title="loginData.findTitle"
+    />
+    <BaseAlert
+        v-model="loginBooleanData.alert"
+        title=""
+        :text="loginData.alertText"
+        :is-close-btn="false"
+    />
   </div>
 </template>
 
