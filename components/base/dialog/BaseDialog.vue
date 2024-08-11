@@ -8,9 +8,15 @@ import {BaseDialogStyle} from "~/components/base/dialog/style/BaseDialogStyle";
  * Props
  ************************************************************/
 const props = withDefaults( defineProps<{
-  title : string,
+  title? : string,
+  isCheck? : boolean,
+  checkBtnText? : string,
+  closeBtnText? : string,
 }>(), {
   title : "타이틀",
+  isCheck : false,
+  checkBtnText : "확인",
+  closeBtnText : "닫기",
 });
 
 /************************************************************
@@ -21,6 +27,7 @@ const emit = defineEmits<{
    * dialog 이벤트
    */
   ( eventName: "update:modelValue", value: boolean ): void,
+  ( eventName: "onCheck"): void,
 }>();
 
 /************************************************************
@@ -43,6 +50,10 @@ const updateModelValue = ( value : boolean ) => {
   emit("update:modelValue", value );
 }
 
+const onCheck = () => {
+  emit("onCheck");
+}
+
 /************************************************************
  * Watch & Mounted
  ************************************************************/
@@ -58,7 +69,9 @@ const updateModelValue = ( value : boolean ) => {
     <v-card>
       <template #title>
         <div class="title">
-          <span v-text="props.title"></span>
+          <slot name="title">
+            <span v-text="props.title"></span>
+          </slot>
         </div>
 
         <BaseBtn
@@ -81,7 +94,15 @@ const updateModelValue = ( value : boolean ) => {
               variant="flat"
               @on-click="updateModelValue( false )"
           >
-            <span>닫기</span>
+            <span v-text="props.closeBtnText"></span>
+          </BaseBtn>
+          <BaseBtn
+              v-if="props.isCheck"
+              :hover="false"
+              variant="flat"
+              @on-click="onCheck"
+          >
+            <span v-text="props.checkBtnText"></span>
           </BaseBtn>
         </slot>
       </v-card-actions>

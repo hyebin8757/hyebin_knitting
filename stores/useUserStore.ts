@@ -1,8 +1,6 @@
-import {ref,computed} from "vue";
-import Cookies from "js-cookie";
+import {ref} from "vue";
 import {defineStore} from "pinia";
-
-const { isNotEmpty } = useUtil.typeValidation;
+import CryptoJS from "crypto-js";
 
 interface UserModel {
   id? : string,
@@ -10,52 +8,35 @@ interface UserModel {
 }
 
 export const useUserStore = defineStore( "user", () => {
-  const loginUser = ref<UserModel>( {} );
-
-  const getLoginUser = computed( () => loginUser.value );
-
-  // 로그인중인지 체크.
-  const isLogin = computed(() => {
-    return isNotEmpty( loginUser.value );
-  });
+  const isLogin = ref<boolean>( false );
 
   const setUserInfo = ( userInfo : UserModel ) => {
-    // sessionStorage.setItem( "user", `${userInfo}` );
 
-    const z = JSON.stringify( userInfo );
+    const encryptedData = CryptoJS.AES.encrypt( JSON.stringify( userInfo ), "info" ).toString();
 
-    sessionStorage.setItem( "user", JSON.stringify( userInfo ) );
-
-    console.log( JSON.parse( z ) );
+    sessionStorage.setItem( "user", encryptedData );
   }
 
-  const login = ( user: UserModel ) => {
-    loginUser.value = user;
-  };
+  const getLoginUser = () => {
+    const decryptData = CryptoJS.AES.decrypt( sessionStorage.getItem( "user" ) || "" , 'info').toString(CryptoJS.enc.Utf8);
+    return  decryptData ? JSON.parse( decryptData ) : "";
+  }
+
+  const setLogin = ( state : boolean ) => {
+    isLogin.value = state;
+  }
 
   const logout = () => {
-    // user pinia store 초기화
-    resetState();
-
-    // 카테고리 pinia store 초기화
     sessionStorage.removeItem( "user" );
 
     location.href = "/login/login";
   };
 
-  /**
-   * 로그아웃 시 user pinia store 제거
-   */
-  const resetState = () => {
-    loginUser.value = {};
-  }
-
   return {
-    loginUser,
-    getLoginUser,
     isLogin,
+    getLoginUser,
     setUserInfo,
-    login,
+    setLogin,
     logout,
   };
 }, {

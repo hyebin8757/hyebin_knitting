@@ -55,13 +55,7 @@ const alertToggle = ( value : boolean ) => {
 /************************************************************
  * Watch & Mounted
  ************************************************************/
-onMounted( () => {
-  if( !props.isFooter ) {
-    setTimeout( () => {
-      alertToggle( false );
-    }, 1000);
-  }
-});
+onMounted( () => {});
 
 
 </script>

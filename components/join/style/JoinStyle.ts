@@ -1,0 +1,105 @@
+import { css, injectGlobal } from "@emotion/css";
+import {StyleUtils} from "~/styleUtils/styleUtils";
+import {_uiUtil} from "~/utils/core/ui/uiUtil";
+import {LoginStyle} from "~/components/login/style/LoginStyle";
+
+const { setMedia } = _uiUtil();
+
+/************************************************************
+ * style data
+ ************************************************************/
+
+
+/************************************************************
+ * style
+ ************************************************************/
+export const JoinStyle = {
+  Default : css`
+    ${LoginStyle.Default}; 
+    flex-direction: column;
+  `,
+
+  Container : css`
+    width: 50rem;
+    height: 55rem;
+    padding: 2rem;
+    border-radius: 2rem;
+    background: var( --white-color );
+    
+    > div {
+      &:nth-child(3) {
+        margin-top: 2rem;
+      }
+    }
+    
+    .is-right {
+      text-align: right;
+    }
+  `,
+
+  Title : css`
+    ${LoginStyle.Title};
+  `,
+
+  JoinItem : css`
+    .v-input {
+      + .v-input {
+        margin-top: 1rem;
+      }
+    }
+    
+    .v-radio-group {
+      .v-selection-control-group {
+        flex-direction: row;
+      }  
+    }
+    
+    em {
+      color: var( --system-red-color );
+    }
+  `,
+
+  JoinBtn : css`
+    ${LoginStyle.LoginBtn};
+  `,
+}
+
+/************************************************************
+ * global style
+ ************************************************************/
+injectGlobal`
+`;
+
+/************************************************************
+ * media style
+ ************************************************************/
+const MediaStyle = {
+  Media : {
+    /** [ 1280px ] */
+    1280 : css`
+    `,
+
+    /** [ 1024px ] */
+    1024 : css`
+     
+    `,
+
+    /** [ 768px ] */
+    768 : css`
+      
+    `,
+
+    /** [ 640px ] */
+    640 : css`
+      
+    `,
+
+    /** [ 450px ] */
+    450 : css `
+    `
+  },
+}
+
+/************************************************************
+ * style override
+ ************************************************************/

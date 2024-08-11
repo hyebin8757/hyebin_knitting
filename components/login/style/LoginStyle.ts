@@ -12,7 +12,7 @@ const { setMedia } = _uiUtil();
 /************************************************************
  * style
  ************************************************************/
-export const loginStyle = {
+export const LoginStyle = {
   Default : css`
     ${StyleUtils.FlexUtils( "center", "center" )};
     width: 100vw;
@@ -112,12 +112,6 @@ export const loginStyle = {
       font-size: 1.4rem;
       font-weight: 500;
     }
-    
-    .v-input {
-      .v-input__append {
-        align-items: center;
-      }
-    }
   `,
 
   LoginBtn : css`
@@ -152,16 +146,7 @@ export const loginStyle = {
   `,
 
   LoginTooltip : css`
-    .v-overlay {
-      &.v-tooltip {
-        .v-overlay__content {
-          &.login-tooltip {
-            color: var( --white-color );
-            background: rgba( 0, 0, 0, 0.8 );
-          }
-        }
-      }
-    }
+    
   `,
 }
 
@@ -169,7 +154,7 @@ export const loginStyle = {
  * global style
  ************************************************************/
 injectGlobal`
-  ${loginStyle.LoginTooltip};
+  ${LoginStyle.LoginTooltip};
 `;
 
 /************************************************************

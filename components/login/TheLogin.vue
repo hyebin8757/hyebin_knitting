@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {reactive} from "vue";
+import {onMounted, reactive, watch} from "vue";
 import { cx } from "@emotion/css";
 import {useUtil} from "~/utils/useUtil";
 import {useRouter} from "vue-router";
@@ -7,10 +7,10 @@ import {useUserStore} from "~/stores/useUserStore";
 import BaseBtn from "~/components/base/btn/BaseBtn.vue";
 import BaseAlert from "~/components/base/alert/BaseAlert.vue";
 import FindDialog from "~/components/dialog/find/FindDialog.vue";
-import {loginStyle} from "~/components/login/style/loginStyle";
+import {LoginStyle} from "~/components/login/style/LoginStyle";
 
 const router = useRouter();
-const { } = useUserStore();
+const { setLogin, getLoginUser } = useUserStore();
 const { isEmpty, isNotEmpty } = useUtil.typeValidation;
 
 /************************************************************
@@ -43,7 +43,7 @@ const loginData = reactive({
     },
     {
       title : "회원가입",
-      path : "",
+      path : "/join/join",
       event : ( itemInfo : any  ) => {
         if ( isEmpty( itemInfo.path ) ) {
           return;
@@ -78,6 +78,7 @@ const onLogin = async () => {
     return ( loginBooleanData.alert = true );
   }
 
+  setLogin( true );
   moveMain();
 }
 
@@ -92,19 +93,25 @@ const findDialogToggle = ( title : string ) => {
 }
 
 const loginValidation = () => {
+  const loginUser = getLoginUser();
+
   if ( isEmpty( loginData.id ) && isEmpty( loginData.password ) ) {
     loginData.alertText = "아이디 와 비밀번호를 입력해주세요.";
     return false;
   }
   else if ( isEmpty( loginData.id ) && isNotEmpty( loginData.password ) ) {
-    loginData.alertText = "아이디 입력해주세요.";
+    loginData.alertText = "아이디를 입력해주세요.";
     return false;
   }
   else if ( isNotEmpty( loginData.id ) && isEmpty( loginData.password ) ) {
     loginData.alertText = "비밀번호를 입력해주세요.";
     return false;
   }
-  else if ( "testUser" !== loginData.id || "0000" !== loginData.password ) {
+  else if ( isEmpty( loginUser ) && ( "testUser" !== loginData.id || "0000" !== loginData.password ) ) {
+    loginData.alertText = "아이디 혹은 비밀번호를 잘못 입력하였습니다. 입력하신 내용을 다시 확인해주세요.";
+    return false;
+  }
+  else if ( isNotEmpty( loginUser ) && ( loginData.id !== loginUser?.id || loginData.password !== loginUser?.password )) {
     loginData.alertText = "아이디 혹은 비밀번호를 잘못 입력하였습니다. 입력하신 내용을 다시 확인해주세요.";
     return false;
   }
@@ -115,28 +122,44 @@ const loginValidation = () => {
 /************************************************************
  * Watch & Mounted
  ************************************************************/
+watch( () => loginBooleanData.findDialog, ( newValue : boolean ) => {
+  if( !newValue ) {
+    setTimeout( () => {
+      loginData.findTitle = "";
+    }, 200);
+  }
+});
 
+watch( () => loginBooleanData.alert, ( newValue : boolean ) => {
+  if ( newValue ) {
+    setTimeout( () => {
+      loginBooleanData.alert = false;
+    }, 1000);
+  }
+});
+
+onMounted( () => {});
 
 </script>
 <template>
-  <div :class="cx( loginStyle.Default )">
-    <div :class="cx( loginStyle.Container )">
-      <div :class="cx( loginStyle.FormBg )">
+  <div :class="cx( LoginStyle.Default )">
+    <div :class="cx( LoginStyle.Container )">
+      <div :class="cx( LoginStyle.FormBg )">
         <img src="@/assets/images/bg/bg_login.jpg" alt="loginBg">
       </div>
-      <div :class="cx( loginStyle.FormCard )">
-        <div :class="cx( loginStyle.Title )" @click="moveMain">
+      <div :class="cx( LoginStyle.FormCard )">
+        <div :class="cx( LoginStyle.Title )" @click="moveMain">
           <img src="@/assets/images/logo/logo.png" alt="logo">
           <span>Min U Ju - IntelliJ IDEA</span>
         </div>
-        <div :class="cx( loginStyle.Content )">
-          <form :class="cx( loginStyle.Form )">
-            <div :class="cx( loginStyle.InfoArea )">
-              <div :class="cx( loginStyle.InfoItem )">
+        <div :class="cx( LoginStyle.Content )">
+          <form :class="cx( LoginStyle.Form )">
+            <div :class="cx( LoginStyle.InfoArea )">
+              <div :class="cx( LoginStyle.InfoItem )">
                 <div class="is-flex">
                   <span class="title">아이디</span>
                   <v-tooltip
-                      content-class="login-tooltip"
+                      content-class="black-tooltip"
                       location="right"
                   >
                     <template v-slot:activator="{ props }">
@@ -161,7 +184,7 @@ const loginValidation = () => {
                     placeholder="아이디를 입력해주세요."
                 />
               </div>
-              <div :class="cx( loginStyle.InfoItem )">
+              <div :class="cx( LoginStyle.InfoItem )">
                 <span class="title">비밀번호</span>
                 <v-text-field
                     v-model="loginData.password"
@@ -173,15 +196,13 @@ const loginValidation = () => {
                 />
               </div>
             </div>
-            <div :class="cx( loginStyle.LoginBtn )">
-              <BaseBtn
-                  @on-click="onLogin"
-              >
+            <div :class="cx( LoginStyle.LoginBtn )">
+              <BaseBtn @on-click="onLogin">
                 <span>로그인</span>
               </BaseBtn>
             </div>
           </form>
-          <div :class="cx( loginStyle.MenuList )">
+          <div :class="cx( LoginStyle.MenuList )">
             <ul>
               <li
                   v-for="( item, index ) in loginData.menuList"
@@ -202,7 +223,7 @@ const loginValidation = () => {
         v-model="loginBooleanData.alert"
         title=""
         :text="loginData.alertText"
-        :is-close-btn="false"
+        :is-footer="false"
     />
   </div>
 </template>

@@ -72,6 +72,9 @@ export const CommonStyle = {
         min-height: fit-content;
       }
 
+      .v-input__append {
+        align-items: center;
+      }
     }
   `,
 
@@ -115,9 +118,33 @@ export const CommonStyle = {
       .v-label {
         font-size: 1.4rem;
       }
-      
+
       .mdi-radiobox-marked {
         color: var( --primary-darken-color-1 );
+      }
+      
+      .v-radio {
+        &:hover {
+          i,
+          .v-label {
+            color: var( --primary-darken-color-1 );
+          }
+        }
+
+        .v-selection-control__input {
+          :hover::before {
+            opacity: 0;
+          }
+        }
+
+        &.v-selection-control--dirty {
+          .v-label {
+            &.v-label--clickable {
+              font-weight: 700;
+              color: var( --primary-darken-color-1 );
+            }
+          }
+        }
       }
     }
   `,
@@ -130,6 +157,11 @@ export const CommonStyle = {
           font-weight: 500;
           color: var( --text-color-1 );
           background: var( --white-color );
+          
+          &.black-tooltip {
+            color: var( --white-color );
+            background: rgba( 0, 0, 0, 0.8 );
+          }
         }
       }
     }
@@ -198,7 +230,7 @@ export const CommonStyle = {
           }
 
           > .v-card-text {
-            padding: 3rem 2rem !important;
+            padding: 2rem !important;
           }
 
           .v-card-actions {

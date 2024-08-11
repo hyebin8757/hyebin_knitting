@@ -2,9 +2,11 @@
 import {reactive} from "vue";
 import { cx } from "@emotion/css";
 import { useRouter } from "vue-router";
+import {useUserStore} from "~/stores/useUserStore";
 import { HeaderStyle } from "~/components/header/style/HeaderStyle";
 
 const router = useRouter();
+const { isLogin, logout } = useUserStore();
 
 /************************************************************
  * Props
@@ -129,6 +131,7 @@ const changeMode = () => {
 
     <div :class="cx('right', HeaderStyle.Right )">
       <v-btn
+          v-if="!isLogin"
           :class="cx( 'login-btn' )"
           :ripple="false"
           variant="text"
@@ -136,15 +139,16 @@ const changeMode = () => {
       >
         <span>로그인</span>
       </v-btn>
-<!--      <v-btn-->
-<!--          :class="cx( 'logout-btn' )"-->
-<!--          :ripple="false"-->
-<!--          variant="text"-->
-<!--          @click=""-->
-<!--      >-->
-<!--        <span>로그아웃</span>-->
-<!--        <span class="material-icons">logout</span>-->
-<!--      </v-btn>-->
+      <v-btn
+          v-if="isLogin"
+          :class="cx( 'logout-btn' )"
+          :ripple="false"
+          variant="text"
+          @click="logout"
+      >
+        <span>로그아웃</span>
+        <span class="material-icons">logout</span>
+      </v-btn>
       <v-text-field
           v-model="headerData.searchInput"
           :class="cx( HeaderStyle.SearchInput )"

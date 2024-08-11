@@ -34,6 +34,10 @@ export const FindDialogStyle = {
         padding: 0 2rem;
         font-size: 1.4rem;
         text-align: center;
+        
+        &:hover {
+          color: var( --primary-darken-color-1 );
+        }
       }
     }
     
@@ -76,7 +80,36 @@ export const FindDialogStyle = {
   `,
 
   PasswordFrom : css`
+    padding: 3rem;
+    border-radius: 1rem;
+    background: var( --background-color-1 );
     
+    .password-item {
+      .title {
+        margin-bottom: 1rem;
+        font-size: 1.8rem;
+        font-weight: 500;
+      }
+      
+      + .password-item {
+        margin-top: 2rem;
+      }
+    } 
+    
+    .password-guide {
+      margin-top: 2rem;
+      font-size: 1.2rem;
+      
+      em {
+        color: var( --primary-darken-color-1 );
+        cursor: pointer;
+        
+        &:hover {
+          font-weight: 700;
+          text-decoration: underline;  
+        }
+      }
+    }
   `,
 }
 

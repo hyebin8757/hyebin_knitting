@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import {onMounted, reactive} from "vue";
+import {onMounted, reactive, watch, toRef } from "vue";
 import { cx } from "@emotion/css";
+import BaseBtn from "~/components/base/btn/BaseBtn.vue";
 import BaseDialog from "~/components/base/dialog/BaseDialog.vue";
 import {FindDialogStyle} from "~/components/dialog/find/style/FindDialogStyle";
 
@@ -28,20 +29,48 @@ const emit = defineEmits<{
  * Data ( ref, reactive, computed... )
  ************************************************************/
 const findData = reactive({
+  title : props.title,
   idTab : "name",
   idRadio1: "one",
   idRadio2: "one",
   findGuide : "회원가입 시 입력된 개인정보로 아이디를 찾으실 수 있습니다.",
   name : "",
   birthDate : "",
+  idDate : "",
 })
 
 const findBooleanData = reactive({
-
+  dialog : false,
+  isAlert : false,
+  isChangeText : false,
+  isPassword : false,
 })
 /************************************************************
  * Function
  ************************************************************/
+const onCheck = () => {
+  findBooleanData.isAlert = true;
+
+  setTimeout( () => {
+    findBooleanData.isAlert = false;
+  }, 800);
+}
+
+const changeData = ( title : string ) => {
+  findData.title = title;
+
+  switch ( title ) {
+    case "아이디 찾기" :
+      findData.findGuide = "회원가입 시 입력된 개인정보로 아이디를 찾으실 수 있습니다.";
+      findBooleanData.isPassword = false;
+      break;
+    case "비밀번호 찾기" :
+      findData.findGuide = "개인정보 입력을 통해 비밀번호를 찾으실 수 있습니다.";
+      findBooleanData.isPassword = true;
+      break;
+  }
+}
+
 const updateModelValue = ( value : boolean ) => {
   emit("update:modelValue", value );
 }
@@ -49,30 +78,40 @@ const updateModelValue = ( value : boolean ) => {
 /************************************************************
  * Watch & Mounted
  ************************************************************/
-onMounted(() => {
+watch( () => props.title, ( newValue : string ) => {
+  changeData( newValue );
 
+  findData.idTab = "name";
+  findData.idRadio1 = "one";
+  findData.idRadio2 = "one";
 });
+
+onMounted(() => {});
 
 </script>
 <template>
   <BaseDialog
       :class="cx( FindDialogStyle.Default )"
-      :title="props.title"
+      :is-check="true"
       max-width="800"
+      @on-check="onCheck"
       @update:model-value="updateModelValue"
   >
+    <template #title>
+      <span v-text="findData.title"></span>
+    </template>
     <div :class="cx( FindDialogStyle.FindGuide )">
       <span v-text="'*' + findData.findGuide"></span>
     </div>
-    <div :class="cx( FindDialogStyle.IdFrom )">
+    <div v-if="!findBooleanData.isPassword" :class="cx( FindDialogStyle.IdFrom )">
       <v-tabs
           v-model="findData.idTab"
           color="primary"
           direction="vertical"
       >
-        <v-tab text="이름/생년월일" value="name"></v-tab>
-        <v-tab text="휴대폰 인증" value="phone"></v-tab>
-        <v-tab text="아이피(I-PIN)인증" value="i-pin"></v-tab>
+        <v-tab text="이름/생년월일" value="name" :ripple="false"></v-tab>
+        <v-tab text="휴대폰 인증" value="phone" :ripple="false"></v-tab>
+        <v-tab text="아이피(I-PIN)인증" value="i-pin" :ripple="false"></v-tab>
       </v-tabs>
 
       <v-tabs-window v-model="findData.idTab">
@@ -141,9 +180,55 @@ onMounted(() => {
         </v-tabs-window-item>
       </v-tabs-window>
     </div>
-    <div :class="cx( FindDialogStyle.PasswordFrom )">
-
+    <div v-if="findBooleanData.isPassword" :class="cx( FindDialogStyle.PasswordFrom )">
+      <div class="password-item">
+        <div class="title">
+          <span>이름</span>
+        </div>
+        <v-text-field
+            v-model="findData.name"
+            variant="solo"
+            placeholder="이름을 입력해주세요."
+        />
+      </div>
+      <div class="password-item">
+        <div class="title">
+          <span>아이디</span>
+        </div>
+        <v-text-field
+            v-model="findData.idDate"
+            variant="solo"
+            placeholder="아이디를 입력해 주세요."
+        />
+      </div>
+      <div class="password-guide">
+        <span>아이디가 기억나지 않는다면? <em @click="changeData('아이디 찾기', true )">아이디 찾기 바로가기</em></span>
+      </div>
     </div>
+
+    <template #footer>
+      <BaseBtn
+          :hover="false"
+          variant="flat"
+          @on-click="updateModelValue( false )"
+      >
+        <span>닫기</span>
+      </BaseBtn>
+      <BaseBtn
+          :hover="false"
+          variant="flat"
+          @on-click="onCheck"
+      >
+        <span v-text="findData.title"></span>
+      </BaseBtn>
+    </template>
+
+    <BaseAlert
+        v-if="findBooleanData.isAlert"
+        title="안내"
+        text="미개발 상태 입니다."
+        :is-footer="false"
+    />
   </BaseDialog>
 </template>
 
