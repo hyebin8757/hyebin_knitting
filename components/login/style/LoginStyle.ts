@@ -36,8 +36,8 @@ export const LoginStyle = {
     ${StyleUtils.FlexUtils("center", "center")};
     width: 100%;
     height: 100%;
-    max-width: 60vw;
-    max-height: 60vh;
+    max-width: 100rem;
+    max-height: 60rem;
     border-radius: 2rem;
     overflow: hidden;
   `,
@@ -56,14 +56,14 @@ export const LoginStyle = {
     ${StyleUtils.FlexUtils("center", "center", "", "column")};
     width: 100%;
     height: 100%;
-    padding: 2rem;
+    padding: 2rem 5rem;
     background: var( --white-color );
   `,
 
   Title : css`
     ${StyleUtils.FlexUtils("center", "center")};
     gap: 0.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 4rem;
     font-size: 3rem;
     font-weight: 700;
     cursor: pointer;
@@ -90,7 +90,7 @@ export const LoginStyle = {
 
   InfoItem : css`
     &:nth-of-type(2) {
-      margin-top: 1rem;
+      margin-top: 2rem;
       .title {
         margin-bottom: 1rem;
       }

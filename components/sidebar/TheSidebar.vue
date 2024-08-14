@@ -4,10 +4,14 @@ import {useRoute, useRouter} from "vue-router";
 import { cx } from "@emotion/css";
 import {useUtil} from "~/utils/useUtil";
 import {SidebarStyle} from "~/components/sidebar/style/SidebarStyle";
+import {useSidebarStore} from "~/stores/useSidebarStore";
+import {SidebarMenu} from "~/types/site/components/sidebar";
+import SidebarList from "~/components/sidebar/list/SidebarList.vue";
 
 const { isEmpty } = useUtil.typeValidation;
 const route = useRoute();
 const router = useRouter();
+const { setSidebarMenuListWidth, setBookmarkList, isBookmarkList, getBookmarkList, removeBookmarkList } = useSidebarStore();
 
 /************************************************************
  * Props
@@ -54,21 +58,25 @@ const sidebarData = reactive({
       title : "home.vue",
       label : "main",
       path : "/main/main",
+      bookmark : false,
     },
     {
       title : "about.html",
       label : "about",
       path : "/about/about",
+      bookmark : false,
     },
     {
       title : "contact.css",
       label : "contact",
       path : "/contact/contact",
+      bookmark : false,
     },
     {
       title : "project.js",
       label : "project",
       path : "/project/project",
+      bookmark : false,
     },
   ],
 })
@@ -78,10 +86,13 @@ const sidebarBooleanData = reactive({
 })
 
 const menuListRef = ref( null );
+const menuListWidth = ref( 0 );
+const bookmarkList = ref<SidebarMenu[]| undefined | []>( [] );
 
 /************************************************************
  * Function
  ************************************************************/
+// sidebar menu width 설정
 const onResizeScreen = () => {
   sidebarBooleanData.isResize = true;
 
@@ -98,6 +109,7 @@ const onResizeScreen = () => {
   });
 }
 
+// select / menu button active 설정
 const setActive = ( label : string ) => {
   if ( isEmpty( label ) ) {
     return "";
@@ -106,6 +118,7 @@ const setActive = ( label : string ) => {
   return route.path.includes( label ) && 'is-active'
 }
 
+// 메뉴별 페이지 이동
 const movePage = ( path : string ) => {
   if ( isEmpty( path ) ) {
     return;
@@ -114,27 +127,40 @@ const movePage = ( path : string ) => {
   router.push( path );
 }
 
+
+// 즐겨 찾기 토글
+const toggleBookmark = ( item : SidebarMenu ) => {
+  item.bookmark = !item.bookmark;
+
+  if ( !item.bookmark ) {
+    bookmarkList.value =  removeBookmarkList( item );
+    return;
+  }
+
+  bookmarkList.value = setBookmarkList( item );
+}
+
 /************************************************************
  * Watch & Mounted
  ************************************************************/
 onMounted( () => {
-  console.log("route.path",route.path);
+  menuListWidth.value = menuListRef.value ? menuListRef.value.offsetWidth : 0;
+
+  setSidebarMenuListWidth( menuListWidth.value );
+
+  if ( isBookmarkList ) {
+    bookmarkList.value = getBookmarkList;
+
+    sidebarData.menuList.forEach((item: SidebarMenu) => {
+      const matchingSubItem = bookmarkList.value?.find(subItem => item.label === subItem.label);
+
+      if ( matchingSubItem ) {
+        item.bookmark = matchingSubItem.bookmark;
+      }
+    });
+  }
 });
 
-/**
- * 버튼 종류 및 메뉴 리스트
- * - 메인 ( home )
- * - 프로젝트 ( projects )
- * - about
- * - contact
- * - blog??
-
-
- <div :class="cx()">
-
- </div>
-
- */
 </script>
 <template>
   <div :class="cx('sidebar', SidebarStyle.Default )">
@@ -168,22 +194,24 @@ onMounted( () => {
             ></v-list-item>
           </template>
 
-          <v-list-item
-              v-for="( item, index ) in sidebarData.menuList"
-              :key="index"
-              :title="item.title"
-              :class="cx( setActive( item.label ))"
-              @click="movePage( item.path )"
-          >
-            <template #prepend>
-              <img v-if="0 === index" src="@/assets/images/icon/icon_vue.svg" alt="vue">
-              <svg v-if="1 === index" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#e44d26" class="Tab_icon__XOYo5"><path d="m12 17.56l4.07-1.13.55-6.1h-7.24l-.18-2.03h7.6l.2-1.99h-10l.56 6.01h6.89l-.23 2.58-2.22.6-2.22-.6-.14-1.66h-2l.29 3.19 4.07 1.13m-7.93-14.56h15.86l-1.43 16.2-6.5 1.8-6.5-1.8-1.43-16.2z"></path></svg>
-              <svg v-if="2 === index" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#42a5f5" class="Tab_icon__XOYo5"><path d="m5 3l-.65 3.34h13.59l-.44 2.16h-13.58l-.66 3.33h13.59l-.76 3.81-5.48 1.81-4.75-1.81.33-1.64h-3.34l-.79 4 7.85 3 9.05-3 1.2-6.03.24-1.21 1.54-7.76h-16.94z"></path></svg>
-              <svg v-if="3 === index" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#ffca28" class="Tab_icon__XOYo5"><path d="m3 3h18v18h-18v-18m4.73 15.04c.4.85 1.19 1.55 2.54 1.55 1.5 0 2.53-.8 2.53-2.55v-5.78h-1.7v5.74c0 .86-.35 1.08-.9 1.08-.58 0-.82-.4-1.09-.87l-1.38.83m5.98-.18c.5.98 1.51 1.73 3.09 1.73 1.6 0 2.8-.83 2.8-2.36 0-1.41-.81-2.04-2.25-2.66l-.42-.18c-.73-.31-1.04-.52-1.04-1.02 0-.41.31-.73.81-.73.48 0 .8.21 1.09.73l1.31-.87c-.55-.96-1.33-1.33-2.4-1.33-1.51 0-2.48.96-2.48 2.23 0 1.38.81 2.03 2.03 2.55l.42.18c.78.34 1.24.55 1.24 1.13 0 .48-.45.83-1.15.83-.83 0-1.31-.43-1.67-1.03l-1.38.8z"></path></svg>
-            </template>
-          </v-list-item>
+          <SidebarList
+              :menu-list="sidebarData.menuList"
+              @toggle-bookmark="toggleBookmark"
+          />
         </v-list-group>
+
+        <v-list-item :class="cx( SidebarStyle.BookmarkList )">
+          <div :class="cx( SidebarStyle.BookmarkTitle )">
+            <span>즐겨찾기</span>
+          </div>
+
+          <SidebarList
+              :is-bookmark="true"
+              :menu-list="bookmarkList"
+          />
+        </v-list-item>
       </v-list>
+
       <div
          :class="cx('resize-bar', sidebarBooleanData.isResize && 'is-active' )"
          @mousedown="onResizeScreen"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {reactive, ref} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import { cx } from "@emotion/css";
 import { useUtil } from "~/utils/useUtil";
 import { SwiperSlide } from 'swiper/vue';
@@ -9,6 +9,8 @@ import { TabMenuList } from "~/types/site/components/tabMenuList";
 import { ProjectStyle } from "~/components/project/style/ProjectStyle";
 
 const { useImage } = useUtil.AssetResolverUtil;
+const { isEmpty } = useUtil.typeValidation;
+
 
 /************************************************************
  * Props
@@ -47,7 +49,7 @@ const projectData = reactive<{
 
   mainProjectList : [
     {
-      title : `리마커블소프트 UI <br> 프레임워크`,
+      title : `리마커블소프트 UI 프레임워크`,
       content : "프레임 워크 제작",
       path : "",
       imgSrc : "/assets/images/project/main/main_ui.png",
@@ -99,7 +101,7 @@ const projectData = reactive<{
       `
     },
     {
-      title : `강원특별자치도교육청<br>교육과학정보원`,
+      title : `강원특별자치도교육청교육과학정보원`,
       content : "강원특별자치도교육청 홈페이지 통합관리 시스템",
       path : "",
       imgSrc : "/assets/images/project/main/main_integration.png",
@@ -208,21 +210,50 @@ const projectData = reactive<{
   ],
 });
 
+const projectBooleanData = reactive( {
+  isAlert : false
+} );
+
 const tab = ref( "one" );
+const detailProjectItem = ref<ProjectList | {}>({});
 
 /************************************************************
  * Function
  ************************************************************/
+const setDetailProjectItem = ( item : ProjectList ) => {
+  if ( isEmpty( item ) ) {
+    return;
+  }
+
+  detailProjectItem.value = item;
+}
+
+const movePage = ( path: string, security? : boolean ) => {
+  if ( security ) {
+    projectBooleanData.isAlert = security
+
+    return;
+  }
+
+  // window.open( path );
+}
+
+const onAlertToggle = ( value : boolean ) => {
+  projectBooleanData.isAlert = value;
+}
 
 
 /************************************************************
  * Watch & Mounted
  ************************************************************/
-
+onMounted(() => {
+  detailProjectItem.value = projectData.mainProjectList[0];
+});
 
 </script>
 <template>
   <div :class="cx( ProjectStyle.Default )">
+
     <v-tabs :class="cx( ProjectStyle.Tab )" v-model="tab">
       <v-tab
           v-for="( item, index ) in projectData.tabList"
@@ -240,29 +271,27 @@ const tab = ref( "one" );
         <v-tabs-window-item value="one">
           <div :class="cx( 'project-item', ProjectStyle.ProjectItem )">
             <div :class="cx( ProjectStyle.ProjectTitle )">
-              <h2>주요 프로젝트</h2>
+              <h2>Main Project 😄</h2>
             </div>
             <div :class="cx( ProjectStyle.CardWrapper )">
-              <BaseSwiper>
-                <template #slide>
-                  <swiper-slide
-                      v-for="( item, index ) in projectData.mainProjectList"
-                      :key="index"
-                  >
-                    <ProjectCard
-                        :title="item.title"
-                        :content="item.content"
-                        :img-src="item.imgSrc"
-                        :tag="item.tag"
-                        :work-list="item.workList"
-                        :path="item.path"
-                        :local-img="item.localImg"
-                        :is-security="item.isSecurity"
-                        :is-work-btn="true"
-                    />
-                  </swiper-slide>
-                </template>
-              </BaseSwiper>
+              <div ref="centralContainer" :class="cx('central-container', 'central-1', ProjectStyle.CentralContainer )"></div>
+
+              <div :class="cx( ProjectStyle.CardList )">
+                <ProjectCard
+                    v-for="( item, index ) in projectData.mainProjectList"
+                    :key="index"
+                    :title="item.title"
+                    :content="item.content"
+                    :img-src="item.imgSrc"
+                    :tag="item.tag"
+                    :work-list="item.workList"
+                    :path="item.path"
+                    :local-img="item.localImg"
+                    :is-security="item.isSecurity"
+                    :is-work-btn="true"
+                    @on-click="moveCard( index )"
+                />
+              </div>
             </div>
           </div>
         </v-tabs-window-item>
@@ -270,7 +299,7 @@ const tab = ref( "one" );
         <v-tabs-window-item value="two">
           <div :class="cx( 'project-item', ProjectStyle.ProjectItem )">
             <div :class="cx( ProjectStyle.ProjectTitle )">
-              <h2>신규 생성 프로젝트</h2>
+              <h2>New Project 🤩 {{tab}}</h2>
             </div>
             <div :class="cx( ProjectStyle.CardWrapper )">
               <BaseSwiper>
@@ -298,7 +327,7 @@ const tab = ref( "one" );
         <v-tabs-window-item value="three">
           <div :class="cx( 'project-item', ProjectStyle.ProjectItem )">
             <div :class="cx( ProjectStyle.ProjectTitle )">
-              <h2>리뉴얼 / 유지보수</h2>
+              <h2>Renewal Project 🤔</h2>
             </div>
             <div :class="cx( ProjectStyle.CardWrapper )">
               <BaseSwiper>
@@ -323,6 +352,14 @@ const tab = ref( "one" );
         </v-tabs-window-item>
       </v-tabs-window>
     </v-card-text>
+
+    <BaseAlert
+        v-if="detailProjectItem.isSecurity && projectBooleanData.isAlert"
+        title="안내"
+        text="보안상 이유로 이동되지 않습니다."
+        :is-footer="false"
+        @on-alert="onAlertToggle"
+    />
   </div>
 </template>
 

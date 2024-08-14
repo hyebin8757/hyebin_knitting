@@ -3,7 +3,7 @@ import {reactive} from "vue";
 import { cx } from "@emotion/css";
 import {BaseBtnStyle} from "~/components/base/btn/style/BaseBtnStyle";
 
-type BtnVariant = "" | "outlined" | "tonal" | "text" | "plain" | "flat" | "elevated";
+type BtnVariant = "outlined" | "tonal" | "text" | "plain" | "flat" | "elevated";
 
 /************************************************************
  * Props
@@ -14,7 +14,7 @@ const props = withDefaults( defineProps<{
   hover? : boolean,
 }>(), {
   ripple : false,
-  variant : "",
+  variant : "text",
   hover : true,
 });
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {onMounted, reactive} from "vue";
+import {onMounted, reactive, toRef } from "vue";
 import {cx} from "@emotion/css";
 import {useUtil} from "~/utils/useUtil";
-import BaseBtn from "~/components/base/btn/BaseBtn.vue";
+// import BaseBtn from "~/components/base/btn/BaseBtn.vue";
 import type {ProjectList} from "~/types/site/components/project";
 import {ProjectStyle} from "~/components/project/style/ProjectStyle";
 import ProjectDialog from "~/components/dialog/project/ProjectDialog.vue";
@@ -28,13 +28,31 @@ const props = withDefaults( defineProps<ProjectList>(), {
 /************************************************************
  * Emit
  ************************************************************/
+const emit = defineEmits<{
+  /**
+   * card 이벤트
+   */
+  ( eventName: "onClick" ): void,
+}>();
+
+const onClick = () => {
+  emit( "onClick" );
+}
 
 /************************************************************
  * Data ( ref, reactive, computed... )
  ************************************************************/
 const projectCardData = reactive( {
-
-} );
+  title: toRef( props, "title" ).value,
+  content: toRef( props, "content" ).value,
+  path: toRef( props, "path" ).value,
+  imgSrc: toRef( props, "imgSrc" ).value,
+  tag: toRef( props, "tag" ).value,
+  workList: toRef( props, "workList" ).value,
+  localImg: toRef( props, "localImg" ).value,
+  isSecurity: toRef( props, "isSecurity" ).value,
+  isWorkBtn: toRef( props, "isWorkBtn" ).value,
+});
 
 const projectCardBooleanData = reactive( {
   isDialog : false,
@@ -54,10 +72,6 @@ const movePage = ( path: string, security? : boolean ) => {
   // window.open( path );
 }
 
-const openDialog = () => {
-  projectCardBooleanData.isDialog = true;
-}
-
 const onAlertToggle = ( value : boolean ) => {
   projectCardBooleanData.isAlert = value;
 }
@@ -73,8 +87,10 @@ onMounted(() => {
 </script>
 <template>
   <div
-      :class="cx( ProjectStyle.Card )"
+      :class="cx( ProjectStyle.Card, 'project-card' )"
+      @click="onClick"
   >
+    <div :class="cx( ProjectStyle.CardLine )"></div>
     <div :class="cx( ProjectStyle.CardImg )">
       <img v-if="props.localImg" :src="useImage(props.imgSrc)" alt="cardImg">
       <img v-else :src="props.imgSrc" alt="cardImg">
@@ -90,12 +106,6 @@ onMounted(() => {
         </div>
       </div>
       <div :class="cx( ProjectStyle.CardBtnGroup )">
-        <BaseBtn
-            v-if="props.isWorkBtn"
-            @on-click="openDialog"
-        >
-          <span>작업 내용</span>
-        </BaseBtn>
         <BaseBtn
             @on-click="movePage( props.path, props.isSecurity )"
         >

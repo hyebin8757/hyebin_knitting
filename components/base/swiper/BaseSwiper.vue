@@ -2,7 +2,7 @@
 import {reactive} from "vue";
 import { cx } from "@emotion/css";
 import {Swiper, SwiperSlide} from "swiper/vue";
-import {EffectCoverflow, Pagination} from "swiper/modules";
+import {EffectCards} from "swiper/modules";
 
 /************************************************************
  * Props
@@ -24,7 +24,8 @@ const BooleanData = reactive({
 
 })
 
-const modules = [EffectCoverflow, Pagination];
+// const modules = [EffectCoverflow, Pagination];
+const modules = [EffectCards];
 /************************************************************
  * Function
  ************************************************************/
@@ -37,18 +38,8 @@ const modules = [EffectCoverflow, Pagination];
 </script>
 <template>
   <swiper
-      effect="coverflow"
+      :effect="'cards'"
       :grabCursor="true"
-      :centeredSlides="true"
-      slidesPerView="auto"
-      :coverflowEffect="{
-        rotate: 50,
-        stretch: 0,
-        depth: 100,
-        modifier: 1,
-        slideShadows: true,
-      }"
-      :pagination="false"
       :modules="modules"
   >
     <slot name="slide">

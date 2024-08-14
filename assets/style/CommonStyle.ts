@@ -3,8 +3,7 @@ import { css, injectGlobal } from "@emotion/css";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 import "@fontsource/noto-sans-kr/korean.css";
 import 'swiper/css';
-import 'swiper/css/effect-coverflow';
-import 'swiper/css/pagination';
+import 'swiper/css/effect-cards';
 
 
 const { setMedia } = _uiUtil();

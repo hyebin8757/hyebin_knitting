@@ -1,9 +1,11 @@
 import { css, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "@/utils/core/ui/uiUtil";
+import {useSidebarStore} from "~/stores/useSidebarStore";
 import {HeaderStyleData} from "~/components/header/style/HeaderStyle";
 
 const { setMedia } = _uiUtil();
+const { getSidebarMenuListWidth } = useSidebarStore();
 
 /************************************************************
  * style data
@@ -27,7 +29,7 @@ export const LayoutStyle = {
   `,
 
   Main : css`
-    width: 100%;
+    width: calc( 100% - 5rem - ${ getSidebarMenuListWidth }px  );
     height: 100%;
   `,
 }

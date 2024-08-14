@@ -26,6 +26,7 @@ const { isEmpty, isNotEmpty } = useUtil.typeValidation;
 const joinData = reactive({
   id : "",
   password : "",
+  passwordReconfirm : "",
   eMail : "test@intellij.com",
   name : "테스트 유저",
   birthDate : new Date(),
@@ -36,6 +37,7 @@ const joinData = reactive({
 
 const joinBooleanData = reactive({
   passwordShow : false,
+  passwordReconfirmShow : false,
   alert : false,
 })
 /************************************************************
@@ -104,6 +106,11 @@ const joinValidation = () => {
     return false;
   }
 
+  if ( joinData.password !== joinData.passwordReconfirm ) {
+    joinData.alertText = "비밀번호가 동일하지 않습니다. 다시 확인해주세요.";
+    return false;
+  }
+
   return true;
 }
 
@@ -162,6 +169,17 @@ onMounted( () => {
         />
         <em v-if="0 < joinData.password.length && 4 > joinData.password.length">
           최소 4글자 이상 작성해주세요.
+        </em>
+        <v-text-field
+            v-model="joinData.passwordReconfirm"
+            variant="solo"
+            placeholder="비밀번호 재확인"
+            :append-icon="joinBooleanData.passwordReconfirmShow ? 'mdi-eye' : 'mdi-eye-off'"
+            :type="joinBooleanData.passwordReconfirmShow ? 'text' : 'password'"
+            @click:append="joinBooleanData.passwordReconfirmShow = !joinBooleanData.passwordReconfirmShow"
+        />
+        <em v-if="1 < joinData.passwordReconfirm.length && joinData.password !== joinData.passwordReconfirm">
+          비밀번호를 다시 확인 해주세요.
         </em>
         <v-text-field
             v-model="joinData.eMail"
