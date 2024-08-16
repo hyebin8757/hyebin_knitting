@@ -43,7 +43,6 @@ export const _typeValidationUtil = (): TypeValidationUtil => {
       result = true;
     }
 
-    // console.log( "checkMobile", result )
     return result;
   }
 

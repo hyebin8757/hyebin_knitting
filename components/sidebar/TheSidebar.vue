@@ -5,12 +5,14 @@ import { cx } from "@emotion/css";
 import {useUtil} from "~/utils/useUtil";
 import {SidebarStyle} from "~/components/sidebar/style/SidebarStyle";
 import {useSidebarStore} from "~/stores/useSidebarStore";
+import {useUserStore} from "~/stores/useUserStore";
 import {SidebarMenu} from "~/types/site/components/sidebar";
 import SidebarList from "~/components/sidebar/list/SidebarList.vue";
 
-const { isEmpty } = useUtil.typeValidation;
 const route = useRoute();
 const router = useRouter();
+const { isEmpty } = useUtil.typeValidation;
+const { isLogin } = useUserStore();
 const { setSidebarMenuListWidth, setBookmarkList, isBookmarkList, getBookmarkList, removeBookmarkList } = useSidebarStore();
 
 /************************************************************
@@ -20,6 +22,13 @@ const { setSidebarMenuListWidth, setBookmarkList, isBookmarkList, getBookmarkLis
 /************************************************************
  * Emit
  ************************************************************/
+const emit = defineEmits<{
+  /**
+   * menu 복원 이벤트
+   */
+  ( eventName: "onRestore", label : string ): void,
+}>();
+
 
 /************************************************************
  * Data ( ref, reactive, computed... )
@@ -127,6 +136,10 @@ const movePage = ( path : string ) => {
   router.push( path );
 }
 
+// 삭제 된 메뉴 복원
+const onRestore = ( label : string ) => {
+  emit( "onRestore", label );
+}
 
 // 즐겨 찾기 토글
 const toggleBookmark = ( item : SidebarMenu ) => {
@@ -197,17 +210,32 @@ onMounted( () => {
           <SidebarList
               :menu-list="sidebarData.menuList"
               @toggle-bookmark="toggleBookmark"
+              @on-restore="onRestore"
           />
         </v-list-group>
 
         <v-list-item :class="cx( SidebarStyle.BookmarkList )">
           <div :class="cx( SidebarStyle.BookmarkTitle )">
             <span>즐겨찾기</span>
+            <v-tooltip
+                v-if="!isLogin"
+                content-class=""
+                location="top"
+            >
+              <template v-slot:activator="{ props }">
+                <span v-bind="props" class="material-icons">error_outline</span>
+              </template>
+              <div>
+                <span>* 로그인 시 사용 가능합니다.</span>
+              </div>
+            </v-tooltip>
           </div>
 
           <SidebarList
+              v-if="isLogin"
               :is-bookmark="true"
               :menu-list="bookmarkList"
+              @on-restore="onRestore"
           />
         </v-list-item>
       </v-list>

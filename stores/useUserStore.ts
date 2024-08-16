@@ -28,6 +28,8 @@ export const useUserStore = defineStore( "user", () => {
 
   const logout = () => {
     sessionStorage.removeItem( "user" );
+    sessionStorage.removeItem( "sidebar" );
+    sessionStorage.removeItem( "menu" );
 
     location.href = "/login/login";
   };

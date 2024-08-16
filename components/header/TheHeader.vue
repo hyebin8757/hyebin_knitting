@@ -15,6 +15,21 @@ const { isLogin, logout } = useUserStore();
 /************************************************************
  * Emit
  ************************************************************/
+const emit = defineEmits<{
+  /**
+   * menu reset 이벤트
+   */
+  ( eventName: "onMenuReset" ): void,
+}>();
+
+// menu reset
+const onMenuReset = ( text : string ) => {
+  if ( "MenuReset" !== text ) {
+    return;
+  }
+
+  emit( "onMenuReset" );
+}
 
 /************************************************************
  * Data ( ref, reactive, computed... )
@@ -60,6 +75,9 @@ const headerData = reactive({
     {
       text : "Help",
     },
+    {
+      text : "MenuReset",
+    },
   ],
 
   searchInput : "",
@@ -73,17 +91,21 @@ const headerBooleanData = reactive({
 /************************************************************
  * Function
  ************************************************************/
+// 검색
 const onSearch = () => {
   console.log("search")
 }
 
+// 로그인 페이지로 이동
 const onLogin = () => {
   router.push("/login/login");
 }
 
+// 다크모드 설정
 const changeMode = () => {
   headerBooleanData.isLightMode = !headerBooleanData.isLightMode;
 }
+
 
 /************************************************************
  * Watch & Mounted
@@ -109,6 +131,7 @@ const changeMode = () => {
             v-for="( item, index ) in headerData.menuList"
             :key="index"
             v-text="item.text"
+            @click="onMenuReset( item.text )"
         ></span>
       </div>
     </div>
@@ -131,6 +154,14 @@ const changeMode = () => {
 
     <div :class="cx('right', HeaderStyle.Right )">
       <v-btn
+          :class="cx( HeaderStyle.ModeButton )"
+          :ripple="false"
+          variant="text"
+          @click="changeMode"
+      >
+        <span class="material-icons" v-text="headerBooleanData.isLightMode ? 'light_mode' : 'dark_mode'"></span>
+      </v-btn>
+      <v-btn
           v-if="!isLogin"
           :class="cx( 'login-btn' )"
           :ripple="false"
@@ -149,26 +180,18 @@ const changeMode = () => {
         <span>로그아웃</span>
         <span class="material-icons">logout</span>
       </v-btn>
-      <v-text-field
-          v-model="headerData.searchInput"
-          :class="cx( HeaderStyle.SearchInput )"
-          :loading="headerBooleanData.searchInputLoading"
-          append-inner-icon="mdi-magnify"
-          density="compact"
-          variant="solo"
-          hide-details
-          single-line
-          clearable
-          @click:append-inner="onSearch"
-      ></v-text-field>
-      <v-btn
-          :class="cx( HeaderStyle.ModeButton )"
-          :ripple="false"
-          variant="text"
-          @click="changeMode"
-      >
-        <span class="material-icons" v-text="headerBooleanData.isLightMode ? 'light_mode' : 'dark_mode'"></span>
-      </v-btn>
+<!--      <v-text-field-->
+<!--          v-model="headerData.searchInput"-->
+<!--          :class="cx( HeaderStyle.SearchInput )"-->
+<!--          :loading="headerBooleanData.searchInputLoading"-->
+<!--          append-inner-icon="mdi-magnify"-->
+<!--          density="compact"-->
+<!--          variant="solo"-->
+<!--          hide-details-->
+<!--          single-line-->
+<!--          clearable-->
+<!--          @click:append-inner="onSearch"-->
+<!--      ></v-text-field>-->
     </div>
   </div>
 </template>

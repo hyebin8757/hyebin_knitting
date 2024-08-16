@@ -164,6 +164,7 @@ export const SidebarStyle = {
   `,
 
   BookmarkTitle : css`
+    ${StyleUtils.FlexUtils("center", "space-between")};
     padding: 1rem;
     border-bottom: 1px solid var( --border-color-1 );
     font-size: 1.6rem;

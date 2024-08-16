@@ -5,5 +5,6 @@ export type TabMenuList = {
     imgSrc? : string,
     value? : string,
     path? : string,
+    active? : boolean,
 }
 

@@ -32,6 +32,7 @@ export const useSidebarStore = defineStore( "sidebar", () => {
      return;
     }
 
+    // @ts-ignore
     getBookmarkList.value.push( item );
 
     return getBookmarkList.value;
@@ -43,6 +44,7 @@ export const useSidebarStore = defineStore( "sidebar", () => {
       return;
     }
 
+    // @ts-ignore
     getBookmarkList.value = getBookmarkList.value.filter( items => item.label !== items.label );
 
     return getBookmarkList.value;

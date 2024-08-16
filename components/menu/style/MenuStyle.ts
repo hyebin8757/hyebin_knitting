@@ -16,6 +16,7 @@ export const MenuStyle = {
   Default : css`
     ${StyleUtils.FlexUtils("center", "flex-start")};
     ${CommonStyle.MenuBtn};
+    height: 4.8rem;
     
     .v-btn {
       svg {
