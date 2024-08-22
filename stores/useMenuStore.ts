@@ -7,6 +7,9 @@ import {SidebarMenu} from "~/types/site/components/sidebar";
 const { isEmpty, isNotEmpty } = useUtil.typeValidation;
 
 export const useMenuStore = defineStore( "menu", () => {
+  // 메뉴 리스트
+  const getAfterMenuList = ref<TabMenuList[]>([]);
+
   // 지워진 메뉴 리스트
   const getMenuGarbageList = ref<TabMenuList[]>([]);
 
@@ -22,6 +25,15 @@ export const useMenuStore = defineStore( "menu", () => {
   const isRestoreMenuList = computed( () => {
     return isNotEmpty( getRestoreMenuList.value.length );
   });
+
+  // 메뉴 설정
+  const setAfterMenuList = ( menuList : TabMenuList[] ) => {
+    if ( isEmpty( menuList ) ) {
+      return;
+    }
+
+    getAfterMenuList.value = menuList;
+  }
 
   // 지워진 메뉴 설정
   const setMenuGarbageList = ( menu : TabMenuList )  => {
@@ -57,10 +69,12 @@ export const useMenuStore = defineStore( "menu", () => {
   }
 
   return {
+    getAfterMenuList,
     getMenuGarbageList,
     getRestoreMenuList,
     isMenuGarbageList,
     isRestoreMenuList,
+    setAfterMenuList,
     setMenuGarbageList,
     setRestoreMenuList,
     removeMenuGarbageList,

@@ -8,6 +8,9 @@ const { setMedia } = _uiUtil();
 /************************************************************
  * style data
  ************************************************************/
+export const MenuStyleData = {
+  menuHeight: 4.8,
+}
 
 /************************************************************
  * style
@@ -16,7 +19,7 @@ export const MenuStyle = {
   Default : css`
     ${StyleUtils.FlexUtils("center", "flex-start")};
     ${CommonStyle.MenuBtn};
-    height: 4.8rem;
+    height: ${MenuStyleData.menuHeight}rem;
     
     .v-btn {
       svg {

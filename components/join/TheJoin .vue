@@ -11,6 +11,7 @@ import {JoinStyle} from "~/components/join/style/JoinStyle";
 const router = useRouter();
 const { setUserInfo } = useUserStore();
 const { isEmpty, isNotEmpty } = useUtil.typeValidation;
+
 /************************************************************
  * Props
  ************************************************************/
@@ -43,10 +44,12 @@ const joinBooleanData = reactive({
 /************************************************************
  * Function
  ************************************************************/
+// 로그인 페이지 이동
 const onLogin = () => {
   router.push("/login/login");
 }
 
+// 생년월일 현재로 날짜 설정
 const formatDateToString = ( value: Date ): string => {
   if ( isEmpty( value ) ) {
     return "19990101";
@@ -67,6 +70,7 @@ const formatDateToString = ( value: Date ): string => {
   return  year + month + date;
 }
 
+// 로그인 설정
 const onJoin = async () => {
   const isCheck = await joinValidation();
 
@@ -82,6 +86,7 @@ const onJoin = async () => {
   onLogin();
 }
 
+// 로그인 시 데이터 확인
 const joinValidation = () => {
   const koreanRegex = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
 

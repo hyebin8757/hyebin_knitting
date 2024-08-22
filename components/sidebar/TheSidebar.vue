@@ -3,17 +3,23 @@ import {onMounted, reactive, ref} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import { cx } from "@emotion/css";
 import {useUtil} from "~/utils/useUtil";
-import {SidebarStyle} from "~/components/sidebar/style/SidebarStyle";
 import {useSidebarStore} from "~/stores/useSidebarStore";
 import {useUserStore} from "~/stores/useUserStore";
 import {SidebarMenu} from "~/types/site/components/sidebar";
 import SidebarList from "~/components/sidebar/list/SidebarList.vue";
+import {SidebarStyle} from "~/components/sidebar/style/SidebarStyle";
 
 const route = useRoute();
 const router = useRouter();
 const { isEmpty } = useUtil.typeValidation;
 const { isLogin } = useUserStore();
-const { setSidebarMenuListWidth, setBookmarkList, isBookmarkList, getBookmarkList, removeBookmarkList } = useSidebarStore();
+const {
+  setSidebarMenuListWidth,
+  setBookmarkList,
+  getBookmarkList,
+  isBookmarkList,
+  removeBookmarkList
+} = useSidebarStore();
 
 /************************************************************
  * Props

@@ -29,7 +29,7 @@ export const LayoutStyle = {
   `,
 
   Main : css`
-    width: calc( 100% - 5rem - ${ getSidebarMenuListWidth }px  );
+    width: calc( 100% - 5rem - 18.7rem );
     height: 100%;
   `,
 }

@@ -44,6 +44,7 @@ export const SidebarStyle = {
 
   MenuList : css`
     ${StyleUtils.FlexUtils("stretch", "flex-start")};
+    width: fit-content;
     min-width: 15rem;
     max-width: 25rem;
     height: 100%;
