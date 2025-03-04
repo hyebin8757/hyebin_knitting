@@ -14,13 +14,7 @@ import { cx } from "@emotion/css";
 /************************************************************
  * Data ( ref, reactive, computed... )
  ************************************************************/
-const Data = reactive({
 
-})
-
-const BooleanData = reactive({
-
-})
 /************************************************************
  * Function
  ************************************************************/
@@ -33,14 +27,6 @@ const BooleanData = reactive({
 </script>
 <template>
   <div>
-    <html>
-      <body>
-        <span>1</span>
-      </body>
-      <footer>
-        <span>1</span>
-      </footer>
-    </html>
   </div>
 </template>
 

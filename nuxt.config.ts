@@ -59,7 +59,6 @@ const nuxtConfig: any = {
     "vuetify/lib/styles/main.sass",
     '@mdi/font/css/materialdesignicons.css',
     "material-icons/iconfont/material-icons.css",
-    "@/assets/scss/style.scss",
     "@/assets/style/CommonStyle.ts",
   ],
 
