@@ -1,7 +1,7 @@
 import { css, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
-import {LoginStyle} from "~/components/login/style/LoginStyle";
+import {LoginStyle} from "~/assets/style/pages/LoginStyle";
 
 const { setMedia } = _uiUtil();
 

@@ -29,7 +29,8 @@ export const LayoutStyle = {
   `,
 
   Main : css`
-    width: calc( 100% - 5rem - 18.7rem );
+    //width: calc( 100% - 5rem - 18.7rem );
+    width: 100%;
     height: 100%;
   `,
 }

@@ -4,7 +4,7 @@ import {cx} from "@emotion/css";
 import {useUtil} from "~/utils/useUtil";
 // import BaseBtn from "~/components/base/btn/BaseBtn.vue";
 import type {ProjectList} from "~/types/site/components/project";
-import {ProjectStyle} from "~/components/project/style/ProjectStyle";
+import { ProjectStyle } from "~/assets/style/pages/ProjectStyle";
 import ProjectDialog from "~/components/dialog/project/ProjectDialog.vue";
 
 const {isNotEmpty} = useUtil.typeValidation;

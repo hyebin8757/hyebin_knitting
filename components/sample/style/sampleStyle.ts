@@ -1,4 +1,4 @@
-import { css, injectGlobal } from "@emotion/css";
+import {css, cx, injectGlobal} from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 
@@ -55,3 +55,8 @@ const MediaStyle = {
 /************************************************************
  * style override
  ************************************************************/
+Style.Default = cx(
+  Style.Default,
+  // option ( max | min )
+  setMedia( MediaStyle.Media,  "max" ),
+);
