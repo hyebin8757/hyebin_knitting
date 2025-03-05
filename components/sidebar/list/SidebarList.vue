@@ -1,16 +1,39 @@
 <script setup lang="ts">
-import {onMounted, reactive, ref} from "vue";
-import {useRoute, useRouter} from "vue-router";
 import { cx } from "@emotion/css";
-import {useUtil} from "~/utils/useUtil";
-import {useUserStore} from "~/stores/useUserStore";
-import {useMenuStore} from "~/stores/useMenuStore";
-import {SidebarMenu} from "~/types/site/components/sidebar";
+import { useRoute, useRouter } from "vue-router";
 
+/************************************************************
+ * Components
+ ************************************************************/
+
+/************************************************************
+ * Style
+ ************************************************************/
+
+/************************************************************
+ * Utils, Constants...
+ ************************************************************/
+import { useUtil } from "~/utils/useUtil";
+
+import { useUserStore } from "~/stores/useUserStore";
+
+import { useMenuStore } from "~/stores/useMenuStore";
+
+/************************************************************
+ * Types, Interface
+ ************************************************************/
+import { SidebarMenu } from "~/types/site/components/sidebar";
+
+/************************************************************
+ * External Dependencies ( 외부 종속성 )
+ ************************************************************/
 const route = useRoute();
 const router = useRouter();
+
 const { isEmpty } = useUtil.typeValidation;
+
 const { isLogin } = useUserStore();
+
 const { removeMenuGarbageList } = useMenuStore();
 
 /************************************************************
@@ -46,28 +69,6 @@ const emit = defineEmits<{
   ( eventName: "onRestore", label : string ): void,
 }>();
 
-
-
-/************************************************************
- * Data ( ref, reactive, computed... )
- ************************************************************/
-const sidebarListData = reactive({})
-
-const sidebarListBooleanData = reactive({})
-
-/************************************************************
- * Function
- ************************************************************/
-
-// select / menu button active 설정
-const setActive = ( label : string ) => {
-  if ( isEmpty( label ) ) {
-    return "";
-  }
-
-  return route.path.includes( label ) && 'is-active'
-}
-
 // 메뉴별 페이지 이동
 const movePage = ( item : SidebarMenu ) => {
   if ( isEmpty( item.path ) ) {
@@ -89,20 +90,50 @@ const toggleBookmark = ( event : Event, item : SidebarMenu ) => {
 }
 
 /************************************************************
- * Watch & Mounted
+ * Raw Data ( 원시 데이터 )
  ************************************************************/
-onMounted( () => {
 
-});
+/************************************************************
+ * Dynamic Data ( 동적 데이터 )
+ ************************************************************/
+
+/************************************************************
+ * Provide / inject Data
+ ************************************************************/
+
+/************************************************************
+ * Function
+ ************************************************************/
+// select / menu button active 설정
+const setActive = ( label : string ) => {
+  if ( isEmpty( label ) ) {
+    return "";
+  }
+
+  return route.path.includes( label ) && 'is-active'
+}
+
+/************************************************************
+ * Watch
+ ************************************************************/
+
+/************************************************************
+ * Mounted
+ ************************************************************/
+
+/************************************************************
+ * Layout
+ ************************************************************/
 
 </script>
+
 <template>
   <v-list-item
-      v-for="( item, index ) in props.menuList"
-      :key="index"
-      :title="item.title"
-      :class="props.isBookmark || cx( setActive( item.label ))"
-      @click="movePage( item )"
+    v-for="( item, index ) in props.menuList"
+    :key="index"
+    :title="item.title"
+    :class="props.isBookmark || cx( setActive( item.label ))"
+    @click="movePage( item )"
   >
     <template #prepend>
       <img v-if=" 'main' === item.label" src="@/assets/images/icon/icon_vue.svg" alt="vue">

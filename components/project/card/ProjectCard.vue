@@ -1,14 +1,32 @@
 <script setup lang="ts">
-import {onMounted, reactive, toRef } from "vue";
-import {cx} from "@emotion/css";
-import {useUtil} from "~/utils/useUtil";
-// import BaseBtn from "~/components/base/btn/BaseBtn.vue";
-import type {ProjectList} from "~/types/site/components/project";
-import { ProjectStyle } from "~/assets/style/pages/ProjectStyle";
+import { reactive, toRef } from "vue";
+import { cx } from "@emotion/css";
+
+/************************************************************
+ * Components
+ ************************************************************/
 import ProjectDialog from "~/components/dialog/project/ProjectDialog.vue";
 
-const {isNotEmpty} = useUtil.typeValidation;
-const {useImage} = useUtil.AssetResolverUtil;
+/************************************************************
+ * Style
+ ************************************************************/
+import { ProjectStyle } from "~/assets/style/pages/ProjectStyle";
+
+/************************************************************
+ * Utils, Constants...
+ ************************************************************/
+import { useUtil } from "~/utils/useUtil";
+
+/************************************************************
+ * Types, Interface
+ ************************************************************/
+import type { ProjectList } from "~/types/site/components/project";
+
+/************************************************************
+ * External Dependencies ( 외부 종속성 )
+ ************************************************************/
+const { useImage } = useUtil.AssetResolverUtil;
+const { isNotEmpty } = useUtil.typeValidation;
 
 /************************************************************
  * Props
@@ -38,9 +56,12 @@ const emit = defineEmits<{
 const onClick = () => {
   emit( "onClick" );
 }
+/************************************************************
+ * Raw Data ( 원시 데이터 )
+ ************************************************************/
 
 /************************************************************
- * Data ( ref, reactive, computed... )
+ * Dynamic Data ( 동적 데이터 )
  ************************************************************/
 const projectCardData = reactive( {
   title: toRef( props, "title" ).value,
@@ -60,6 +81,10 @@ const projectCardBooleanData = reactive( {
 } );
 
 /************************************************************
+ * Provide / inject Data
+ ************************************************************/
+
+/************************************************************
  * Function
  ************************************************************/
 const movePage = ( path: string, security? : boolean ) => {
@@ -77,18 +102,23 @@ const onAlertToggle = ( value : boolean ) => {
 }
 
 /************************************************************
- * Watch & Mounted
+ * Watch
  ************************************************************/
-onMounted(() => {
 
-})
+/************************************************************
+ * Mounted
+ ************************************************************/
 
+/************************************************************
+ * Layout
+ ************************************************************/
 
 </script>
+
 <template>
   <div
-      :class="cx( ProjectStyle.Card, 'project-card' )"
-      @click="onClick"
+    :class="cx( ProjectStyle.Card, 'project-card' )"
+    @click="onClick"
   >
     <div :class="cx( ProjectStyle.CardLine )"></div>
     <div :class="cx( ProjectStyle.CardImg )">
@@ -107,25 +137,28 @@ onMounted(() => {
       </div>
       <div :class="cx( ProjectStyle.CardBtnGroup )">
         <BaseBtn
-            @on-click="movePage( props.path, props.isSecurity )"
+          @on-click="movePage( props.path, props.isSecurity )"
         >
           <span>이동</span>
         </BaseBtn>
       </div>
     </div>
   </div>
+
   <ProjectDialog
-      v-model="projectCardBooleanData.isDialog"
-      :work-list="props.workList"
+    v-model="projectCardBooleanData.isDialog"
+    :work-list="props.workList"
   />
+
   <BaseAlert
-      v-if="props.isSecurity && projectCardBooleanData.isAlert"
-      title="안내"
-      text="보안상 이유로 이동되지 않습니다."
-      :is-footer="false"
-      @on-alert="onAlertToggle"
+    v-if="props.isSecurity && projectCardBooleanData.isAlert"
+    title="안내"
+    text="보안상 이유로 이동되지 않습니다."
+    :is-footer="false"
+    @on-alert="onAlertToggle"
   />
 </template>
 
 <style lang="scss"></style>
+
 

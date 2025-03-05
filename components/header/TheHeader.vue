@@ -1,11 +1,31 @@
 <script setup lang="ts">
-import {reactive} from "vue";
+import { reactive } from "vue";
 import { cx } from "@emotion/css";
 import { useRouter } from "vue-router";
-import {useUserStore} from "~/stores/useUserStore";
+
+/************************************************************
+ * Components
+ ************************************************************/
+
+/************************************************************
+ * Style
+ ************************************************************/
 import { HeaderStyle } from "~/components/header/style/HeaderStyle";
 
+/************************************************************
+ * Utils, Constants...
+ ************************************************************/
+import { useUserStore } from "~/stores/useUserStore";
+
+/************************************************************
+ * Types, Interface
+ ************************************************************/
+
+/************************************************************
+ * External Dependencies ( 외부 종속성 )
+ ************************************************************/
 const router = useRouter();
+
 const { isLogin, logout } = useUserStore();
 
 /************************************************************
@@ -30,9 +50,8 @@ const onMenuReset = ( text : string ) => {
 
   emit( "onMenuReset" );
 }
-
 /************************************************************
- * Data ( ref, reactive, computed... )
+ * Raw Data ( 원시 데이터 )
  ************************************************************/
 const headerData = reactive({
   buttonList : [
@@ -83,10 +102,17 @@ const headerData = reactive({
   searchInput : "",
 })
 
+/************************************************************
+ * Dynamic Data ( 동적 데이터 )
+ ************************************************************/
 const headerBooleanData = reactive({
   searchInputLoading : false,
   isLightMode : false,
 })
+
+/************************************************************
+ * Provide / inject Data
+ ************************************************************/
 
 /************************************************************
  * Function
@@ -106,21 +132,28 @@ const changeMode = () => {
   headerBooleanData.isLightMode = !headerBooleanData.isLightMode;
 }
 
-
 /************************************************************
- * Watch & Mounted
+ * Watch
  ************************************************************/
 
+/************************************************************
+ * Mounted
+ ************************************************************/
+
+/************************************************************
+ * Layout
+ ************************************************************/
 
 </script>
+
 <template>
   <div :class="cx('header', HeaderStyle.Default )">
     <div :class="cx('left', HeaderStyle.Left )">
       <div :class="cx('button-group', HeaderStyle.ButtonGroup )">
         <div
-            v-for="( item, index ) in headerData.buttonList"
-            :key="index"
-            :class="cx('button-item', item.className )"
+          v-for="( item, index ) in headerData.buttonList"
+          :key="index"
+          :class="cx('button-item', item.className )"
         >
           <span class="material-icons" v-text="item.iconName"></span>
           <label v-text="item.value"></label>
@@ -128,10 +161,10 @@ const changeMode = () => {
       </div>
       <div :class="cx('menu-list', HeaderStyle.MenuList)">
         <span
-            v-for="( item, index ) in headerData.menuList"
-            :key="index"
-            v-text="item.text"
-            @click="onMenuReset( item.text )"
+          v-for="( item, index ) in headerData.menuList"
+          :key="index"
+          v-text="item.text"
+          @click="onMenuReset( item.text )"
         ></span>
       </div>
     </div>
@@ -143,9 +176,9 @@ const changeMode = () => {
       <div :class="cx( HeaderStyle.Profile )">
         <img src="@/assets/images/img/profile.jpg" alt="profile">
         <v-tooltip
-            content-class="header-profile"
-            activator="parent"
-            location="bottom"
+          content-class="header-profile"
+          activator="parent"
+          location="bottom"
         >
           <img src="@/assets/images/img/profile.jpg" alt="profile">
         </v-tooltip>
@@ -154,44 +187,44 @@ const changeMode = () => {
 
     <div :class="cx('right', HeaderStyle.Right )">
       <v-btn
-          :class="cx( HeaderStyle.ModeButton )"
-          :ripple="false"
-          variant="text"
-          @click="changeMode"
+        :class="cx( HeaderStyle.ModeButton )"
+        :ripple="false"
+        variant="text"
+        @click="changeMode"
       >
         <span class="material-icons" v-text="headerBooleanData.isLightMode ? 'light_mode' : 'dark_mode'"></span>
       </v-btn>
       <v-btn
-          v-if="!isLogin"
-          :class="cx( 'login-btn' )"
-          :ripple="false"
-          variant="text"
-          @click="onLogin"
+        v-if="!isLogin"
+        :class="cx( 'login-btn' )"
+        :ripple="false"
+        variant="text"
+        @click="onLogin"
       >
         <span>로그인</span>
       </v-btn>
       <v-btn
-          v-if="isLogin"
-          :class="cx( 'logout-btn' )"
-          :ripple="false"
-          variant="text"
-          @click="logout"
+        v-if="isLogin"
+        :class="cx( 'logout-btn' )"
+        :ripple="false"
+        variant="text"
+        @click="logout"
       >
         <span>로그아웃</span>
         <span class="material-icons">logout</span>
       </v-btn>
-<!--      <v-text-field-->
-<!--          v-model="headerData.searchInput"-->
-<!--          :class="cx( HeaderStyle.SearchInput )"-->
-<!--          :loading="headerBooleanData.searchInputLoading"-->
-<!--          append-inner-icon="mdi-magnify"-->
-<!--          density="compact"-->
-<!--          variant="solo"-->
-<!--          hide-details-->
-<!--          single-line-->
-<!--          clearable-->
-<!--          @click:append-inner="onSearch"-->
-<!--      ></v-text-field>-->
+      <!--      <v-text-field-->
+      <!--          v-model="headerData.searchInput"-->
+      <!--          :class="cx( HeaderStyle.SearchInput )"-->
+      <!--          :loading="headerBooleanData.searchInputLoading"-->
+      <!--          append-inner-icon="mdi-magnify"-->
+      <!--          density="compact"-->
+      <!--          variant="solo"-->
+      <!--          hide-details-->
+      <!--          single-line-->
+      <!--          clearable-->
+      <!--          @click:append-inner="onSearch"-->
+      <!--      ></v-text-field>-->
     </div>
   </div>
 </template>

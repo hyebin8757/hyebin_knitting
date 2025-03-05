@@ -286,7 +286,7 @@ export const MainStyle = {
     font-weight: bold;
     white-space: nowrap;
     color: var( --white-color );
-    z-index: 10000;
+    z-index: 100;
     
     img {
       width: 6rem !important;

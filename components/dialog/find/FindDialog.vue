@@ -1,9 +1,29 @@
 <script setup lang="ts">
-import {onMounted, reactive, watch, toRef } from "vue";
+import { reactive, watch } from "vue";
 import { cx } from "@emotion/css";
+
+/************************************************************
+ * Components
+ ************************************************************/
 import BaseBtn from "~/components/base/btn/BaseBtn.vue";
 import BaseDialog from "~/components/base/dialog/BaseDialog.vue";
-import {FindDialogStyle} from "~/components/dialog/find/style/FindDialogStyle";
+
+/************************************************************
+ * Style
+ ************************************************************/
+import { FindDialogStyle } from "~/components/dialog/find/style/FindDialogStyle";
+
+/************************************************************
+ * Utils, Constants...
+ ************************************************************/
+
+/************************************************************
+ * Types, Interface
+ ************************************************************/
+
+/************************************************************
+ * External Dependencies ( 외부 종속성 )
+ ************************************************************/
 
 /************************************************************
  * Props
@@ -24,9 +44,12 @@ const emit = defineEmits<{
   ( eventName: "update:modelValue", value: boolean ): void,
 }>();
 
+const updateModelValue = ( value : boolean ) => {
+  emit("update:modelValue", value );
+}
 
 /************************************************************
- * Data ( ref, reactive, computed... )
+ * Raw Data ( 원시 데이터 )
  ************************************************************/
 const findData = reactive({
   title : props.title,
@@ -39,12 +62,20 @@ const findData = reactive({
   idDate : "",
 })
 
+/************************************************************
+ * Dynamic Data ( 동적 데이터 )
+ ************************************************************/
 const findBooleanData = reactive({
   dialog : false,
   isAlert : false,
   isChangeText : false,
   isPassword : false,
 })
+
+/************************************************************
+ * Provide / inject Data
+ ************************************************************/
+
 /************************************************************
  * Function
  ************************************************************/
@@ -71,12 +102,8 @@ const changeData = ( title : string ) => {
   }
 }
 
-const updateModelValue = ( value : boolean ) => {
-  emit("update:modelValue", value );
-}
-
 /************************************************************
- * Watch & Mounted
+ * Watch
  ************************************************************/
 watch( () => props.title, ( newValue : string ) => {
   changeData( newValue );
@@ -86,16 +113,24 @@ watch( () => props.title, ( newValue : string ) => {
   findData.idRadio2 = "one";
 });
 
-onMounted(() => {});
+
+/************************************************************
+ * Mounted
+ ************************************************************/
+
+/************************************************************
+ * Layout
+ ************************************************************/
 
 </script>
+
 <template>
   <BaseDialog
-      :class="cx( FindDialogStyle.Default )"
-      :is-check="true"
-      max-width="800"
-      @on-check="onCheck"
-      @update:model-value="updateModelValue"
+    :class="cx( FindDialogStyle.Default )"
+    :is-check="true"
+    max-width="800"
+    @on-check="onCheck"
+    @update:model-value="updateModelValue"
   >
     <template #title>
       <span v-text="findData.title"></span>
@@ -105,9 +140,9 @@ onMounted(() => {});
     </div>
     <div v-if="!findBooleanData.isPassword" :class="cx( FindDialogStyle.IdFrom )">
       <v-tabs
-          v-model="findData.idTab"
-          color="primary"
-          direction="vertical"
+        v-model="findData.idTab"
+        color="primary"
+        direction="vertical"
       >
         <v-tab text="이름/생년월일" value="name" :ripple="false"></v-tab>
         <v-tab text="휴대폰 인증" value="phone" :ripple="false"></v-tab>
@@ -123,9 +158,9 @@ onMounted(() => {});
                   <span>이름</span>
                 </div>
                 <v-text-field
-                    v-model="findData.name"
-                    variant="solo"
-                    placeholder="이름을 입력해주세요."
+                  v-model="findData.name"
+                  variant="solo"
+                  placeholder="이름을 입력해주세요."
                 />
               </div>
               <div class="tab-item">
@@ -133,9 +168,9 @@ onMounted(() => {});
                   <span>생년월일</span>
                 </div>
                 <v-text-field
-                    v-model="findData.birthDate"
-                    variant="solo"
-                    placeholder="생년월일 8자리를 입력해주세요. Ex)19990101"
+                  v-model="findData.birthDate"
+                  variant="solo"
+                  placeholder="생년월일 8자리를 입력해주세요. Ex)19990101"
                 />
               </div>
               <div class="tab-item__guide">
@@ -186,9 +221,9 @@ onMounted(() => {});
           <span>이름</span>
         </div>
         <v-text-field
-            v-model="findData.name"
-            variant="solo"
-            placeholder="이름을 입력해주세요."
+          v-model="findData.name"
+          variant="solo"
+          placeholder="이름을 입력해주세요."
         />
       </div>
       <div class="password-item">
@@ -196,9 +231,9 @@ onMounted(() => {});
           <span>아이디</span>
         </div>
         <v-text-field
-            v-model="findData.idDate"
-            variant="solo"
-            placeholder="아이디를 입력해 주세요."
+          v-model="findData.idDate"
+          variant="solo"
+          placeholder="아이디를 입력해 주세요."
         />
       </div>
       <div class="password-guide">
@@ -208,26 +243,26 @@ onMounted(() => {});
 
     <template #footer>
       <BaseBtn
-          :hover="false"
-          variant="flat"
-          @on-click="updateModelValue( false )"
+        :hover="false"
+        variant="flat"
+        @on-click="updateModelValue( false )"
       >
         <span>닫기</span>
       </BaseBtn>
       <BaseBtn
-          :hover="false"
-          variant="flat"
-          @on-click="onCheck"
+        :hover="false"
+        variant="flat"
+        @on-click="onCheck"
       >
         <span v-text="findData.title"></span>
       </BaseBtn>
     </template>
 
     <BaseAlert
-        v-if="findBooleanData.isAlert"
-        title="안내"
-        text="미개발 상태 입니다."
-        :is-footer="false"
+      v-if="findBooleanData.isAlert"
+      title="안내"
+      text="미개발 상태 입니다."
+      :is-footer="false"
     />
   </BaseDialog>
 </template>

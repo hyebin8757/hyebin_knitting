@@ -1,11 +1,29 @@
 <script setup lang="ts">
-import { reactive, onMounted } from "vue";
 import { cx } from "@emotion/css";
-import {AlertOption} from "~/types/site/components/alert";
-import {useUtil} from "~/utils/useUtil";
-import BaseBtn from "~/components/base/btn/BaseBtn.vue";
-import {BaseAlertStyle} from "~/components/base/alert/style/BaseAlertStyle";
 
+/************************************************************
+ * Components
+ ************************************************************/
+import BaseBtn from "~/components/base/btn/BaseBtn.vue";
+
+/************************************************************
+ * Style
+ ************************************************************/
+import { BaseAlertStyle } from "~/components/base/alert/style/BaseAlertStyle";
+
+/************************************************************
+ * Utils, Constants...
+ ************************************************************/
+import { useUtil } from "~/utils/useUtil";
+
+/************************************************************
+ * Types, Interface
+ ************************************************************/
+import { AlertOption } from "~/types/site/components/alert";
+
+/************************************************************
+ * External Dependencies ( 외부 종속성 )
+ ************************************************************/
 const { isNotEmpty } = useUtil.typeValidation;
 
 /************************************************************
@@ -35,15 +53,17 @@ const emit = defineEmits<{
 }>();
 
 /************************************************************
- * Data ( ref, reactive, computed... )
+ * Raw Data ( 원시 데이터 )
  ************************************************************/
-const alertData = reactive({
 
-})
+/************************************************************
+ * Dynamic Data ( 동적 데이터 )
+ ************************************************************/
 
-const alertBooleanData = reactive({
+/************************************************************
+ * Provide / inject Data
+ ************************************************************/
 
-})
 /************************************************************
  * Function
  ************************************************************/
@@ -53,16 +73,23 @@ const alertToggle = ( value : boolean ) => {
 }
 
 /************************************************************
- * Watch & Mounted
+ * Watch
  ************************************************************/
-onMounted( () => {});
 
+/************************************************************
+ * Mounted
+ ************************************************************/
+
+/************************************************************
+ * Layout
+ ************************************************************/
 
 </script>
+
 <template>
   <v-alert
-      :class="cx( BaseAlertStyle.Default )"
-      :type="props.type"
+    :class="cx( BaseAlertStyle.Default )"
+    :type="props.type"
   >
     <template #title v-if="isNotEmpty(props.title)">
       <h3 v-text="props.title"></h3>
@@ -72,18 +99,18 @@ onMounted( () => {});
 
       <div v-if="props.isFooter" :class="cx( BaseAlertStyle.Footer )">
         <BaseBtn
-            v-if="props.isCheckBtn"
-            :hover="false"
-            variant="text"
-            @on-click="alertToggle( true )"
+          v-if="props.isCheckBtn"
+          :hover="false"
+          variant="text"
+          @on-click="alertToggle( true )"
         >
           <span v-text="props.checkBtnText"></span>
         </BaseBtn>
         <BaseBtn
-            v-if="props.isCloseBtn"
-            :hover="false"
-            variant="text"
-            @on-click="alertToggle( false )"
+          v-if="props.isCloseBtn"
+          :hover="false"
+          variant="text"
+          @on-click="alertToggle( false )"
         >
           <span v-text="props.closeBtnText"></span>
         </BaseBtn>

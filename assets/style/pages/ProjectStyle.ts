@@ -15,7 +15,7 @@ const { setMedia } = _uiUtil();
 export const ProjectStyle = {
   Default : css`
     width: 100%;
-    height: 100%;
+    height: calc( 100% - 5rem );
     
     .v-card-text,
     [ class ^= "v-window" ] {

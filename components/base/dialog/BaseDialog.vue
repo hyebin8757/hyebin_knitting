@@ -1,8 +1,27 @@
 <script setup lang="ts">
-import {reactive} from "vue";
 import { cx } from "@emotion/css";
+
+/************************************************************
+ * Components
+ ************************************************************/
 import BaseBtn from "~/components/base/btn/BaseBtn.vue";
-import {BaseDialogStyle} from "~/components/base/dialog/style/BaseDialogStyle";
+
+/************************************************************
+ * Style
+ ************************************************************/
+import { BaseDialogStyle } from "~/components/base/dialog/style/BaseDialogStyle";
+
+/************************************************************
+ * Utils, Constants...
+ ************************************************************/
+
+/************************************************************
+ * Types, Interface
+ ************************************************************/
+
+/************************************************************
+ * External Dependencies ( 외부 종속성 )
+ ************************************************************/
 
 /************************************************************
  * Props
@@ -19,6 +38,7 @@ const props = withDefaults( defineProps<{
   closeBtnText : "닫기",
 });
 
+
 /************************************************************
  * Emit
  ************************************************************/
@@ -30,22 +50,6 @@ const emit = defineEmits<{
   ( eventName: "onCheck"): void,
 }>();
 
-/************************************************************
- * Data ( ref, reactive, computed... )
- ************************************************************/
-// const dialog = ref( false );
-
-const dialogData = reactive({
-
-})
-
-const dialogBooleanData = reactive({
-
-})
-
-/************************************************************
- * Function
- ************************************************************/
 const updateModelValue = ( value : boolean ) => {
   emit("update:modelValue", value );
 }
@@ -55,16 +59,40 @@ const onCheck = () => {
 }
 
 /************************************************************
- * Watch & Mounted
+ * Raw Data ( 원시 데이터 )
  ************************************************************/
 
+/************************************************************
+ * Dynamic Data ( 동적 데이터 )
+ ************************************************************/
+
+/************************************************************
+ * Provide / inject Data
+ ************************************************************/
+
+/************************************************************
+ * Function
+ ************************************************************/
+
+/************************************************************
+ * Watch
+ ************************************************************/
+
+/************************************************************
+ * Mounted
+ ************************************************************/
+
+/************************************************************
+ * Layout
+ ************************************************************/
 
 </script>
+
 <template>
   <v-dialog
-      v-if="true"
-      :class="cx( BaseDialogStyle.Default )"
-      @update:model-value="updateModelValue"
+    v-if="true"
+    :class="cx( BaseDialogStyle.Default )"
+    @update:model-value="updateModelValue"
   >
     <v-card>
       <template #title>
@@ -75,9 +103,9 @@ const onCheck = () => {
         </div>
 
         <BaseBtn
-            :hover="false"
-            variant="text"
-            @on-click="updateModelValue( false )"
+          :hover="false"
+          variant="text"
+          @on-click="updateModelValue( false )"
         >
           <span class="material-icons">close</span>
         </BaseBtn>
@@ -90,17 +118,17 @@ const onCheck = () => {
         <v-spacer></v-spacer>
         <slot name="footer">
           <BaseBtn
-              :hover="false"
-              variant="flat"
-              @on-click="updateModelValue( false )"
+            :hover="false"
+            variant="flat"
+            @on-click="updateModelValue( false )"
           >
             <span v-text="props.closeBtnText"></span>
           </BaseBtn>
           <BaseBtn
-              v-if="props.isCheck"
-              :hover="false"
-              variant="flat"
-              @on-click="onCheck"
+            v-if="props.isCheck"
+            :hover="false"
+            variant="flat"
+            @on-click="onCheck"
           >
             <span v-text="props.checkBtnText"></span>
           </BaseBtn>

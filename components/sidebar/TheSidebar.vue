@@ -1,18 +1,41 @@
 <script setup lang="ts">
-import {onMounted, reactive, ref} from "vue";
-import {useRoute, useRouter} from "vue-router";
+import { onMounted, reactive, ref } from "vue";
 import { cx } from "@emotion/css";
-import {useUtil} from "~/utils/useUtil";
-import {useSidebarStore} from "~/stores/useSidebarStore";
-import {useUserStore} from "~/stores/useUserStore";
-import {SidebarMenu} from "~/types/site/components/sidebar";
-import SidebarList from "~/components/sidebar/list/SidebarList.vue";
-import {SidebarStyle} from "~/components/sidebar/style/SidebarStyle";
+import { useRoute, useRouter } from "vue-router";
 
+/************************************************************
+ * Components
+ ************************************************************/
+import SidebarList from "~/components/sidebar/list/SidebarList.vue";
+
+/************************************************************
+ * Style
+ ************************************************************/
+import { SidebarStyle } from "~/components/sidebar/style/SidebarStyle";
+
+/************************************************************
+ * Utils, Constants...
+ ************************************************************/
+import { useUtil } from "~/utils/useUtil";
+
+import { useUserStore } from "~/stores/useUserStore";
+import { useSidebarStore } from "~/stores/useSidebarStore";
+
+/************************************************************
+ * Types, Interface
+ ************************************************************/
+import { SidebarMenu } from "~/types/site/components/sidebar";
+
+/************************************************************
+ * External Dependencies ( 외부 종속성 )
+ ************************************************************/
 const route = useRoute();
 const router = useRouter();
+
 const { isEmpty } = useUtil.typeValidation;
+
 const { isLogin } = useUserStore();
+
 const {
   setSidebarMenuListWidth,
   setBookmarkList,
@@ -35,9 +58,13 @@ const emit = defineEmits<{
   ( eventName: "onRestore", label : string ): void,
 }>();
 
+// 삭제 된 메뉴 복원
+const onRestore = ( label : string ) => {
+  emit( "onRestore", label );
+}
 
 /************************************************************
- * Data ( ref, reactive, computed... )
+ * Raw Data ( 원시 데이터 )
  ************************************************************/
 const sidebarData = reactive({
   menuButtonList : [
@@ -96,6 +123,9 @@ const sidebarData = reactive({
   ],
 })
 
+/************************************************************
+ * Dynamic Data ( 동적 데이터 )
+ ************************************************************/
 const sidebarBooleanData = reactive({
   isResize : false,
 })
@@ -103,6 +133,10 @@ const sidebarBooleanData = reactive({
 const menuListRef = ref( null );
 const menuListWidth = ref( 0 );
 const bookmarkList = ref<SidebarMenu[]| undefined | []>( [] );
+
+/************************************************************
+ * Provide / inject Data
+ ************************************************************/
 
 /************************************************************
  * Function
@@ -142,11 +176,6 @@ const movePage = ( path : string ) => {
   router.push( path );
 }
 
-// 삭제 된 메뉴 복원
-const onRestore = ( label : string ) => {
-  emit( "onRestore", label );
-}
-
 // 즐겨 찾기 토글
 const toggleBookmark = ( item : SidebarMenu ) => {
   item.bookmark = !item.bookmark;
@@ -160,7 +189,11 @@ const toggleBookmark = ( item : SidebarMenu ) => {
 }
 
 /************************************************************
- * Watch & Mounted
+ * Watch
+ ************************************************************/
+
+/************************************************************
+ * Mounted
  ************************************************************/
 onMounted( () => {
   menuListWidth.value = menuListRef.value ? menuListRef.value.offsetWidth : 0;
@@ -180,7 +213,12 @@ onMounted( () => {
   }
 });
 
+/************************************************************
+ * Layout
+ ************************************************************/
+
 </script>
+
 <template>
   <div :class="cx('sidebar', SidebarStyle.Default )">
     <div :class="cx( SidebarStyle.MenuButtonList )">
@@ -194,29 +232,29 @@ onMounted( () => {
       >
         <span class="material-icons-outlined" v-text="item.iconName"></span>
         <v-tooltip
-            :content-class="item.label"
-            activator="parent"
-            location="end"
+          :content-class="item.label"
+          activator="parent"
+          location="end"
         >{{item.tooltip}}</v-tooltip>
       </v-btn>
     </div>
     <div ref="menuListRef" :class="cx( SidebarStyle.MenuList )">
       <v-list
-          v-model:opened="sidebarData.menuListValue"
+        v-model:opened="sidebarData.menuListValue"
       >
         <v-list-group value="portfolio" >
           <template v-slot:activator="{ props }">
             <v-list-item
-                v-bind="props"
-                title="PORTFOLIO"
-                :ripple="false"
+              v-bind="props"
+              title="PORTFOLIO"
+              :ripple="false"
             ></v-list-item>
           </template>
 
           <SidebarList
-              :menu-list="sidebarData.menuList"
-              @toggle-bookmark="toggleBookmark"
-              @on-restore="onRestore"
+            :menu-list="sidebarData.menuList"
+            @toggle-bookmark="toggleBookmark"
+            @on-restore="onRestore"
           />
         </v-list-group>
 
@@ -224,9 +262,9 @@ onMounted( () => {
           <div :class="cx( SidebarStyle.BookmarkTitle )">
             <span>즐겨찾기</span>
             <v-tooltip
-                v-if="!isLogin"
-                content-class=""
-                location="top"
+              v-if="!isLogin"
+              content-class=""
+              location="top"
             >
               <template v-slot:activator="{ props }">
                 <span v-bind="props" class="material-icons">error_outline</span>
@@ -238,17 +276,17 @@ onMounted( () => {
           </div>
 
           <SidebarList
-              v-if="isLogin"
-              :is-bookmark="true"
-              :menu-list="bookmarkList"
-              @on-restore="onRestore"
+            v-if="isLogin"
+            :is-bookmark="true"
+            :menu-list="bookmarkList"
+            @on-restore="onRestore"
           />
         </v-list-item>
       </v-list>
 
       <div
-         :class="cx('resize-bar', sidebarBooleanData.isResize && 'is-active' )"
-         @mousedown="onResizeScreen"
+        :class="cx('resize-bar', sidebarBooleanData.isResize && 'is-active' )"
+        @mousedown="onResizeScreen"
       ></div>
     </div>
   </div>

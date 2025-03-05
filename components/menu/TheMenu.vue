@@ -1,14 +1,39 @@
 <script setup lang="ts">
-import {onMounted, reactive, ref, watch} from "vue";
+import { onMounted, reactive, ref, watch } from "vue";
 import { cx } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
-import { useMenuStore } from "~/stores/useMenuStore";
-import { useUtil } from "~/utils/useUtil";
-import { TabMenuList } from "~/types/site/components/tabMenuList";
+
+/************************************************************
+ * Components
+ ************************************************************/
+
+/************************************************************
+ * Style
+ ************************************************************/
 import { MenuStyle } from "~/components/menu/style/MenuStyle";
 
+/************************************************************
+ * Utils, Constants...
+ ************************************************************/
+import { useUtil } from "~/utils/useUtil";
+
+import { useMenuStore } from "~/stores/useMenuStore";
+
+/************************************************************
+ * Types, Interface
+ ************************************************************/
+import { TabMenuList } from "~/types/site/components/tabMenuList";
+
+type MenuActive = "main" | "about" | "contact" | "" ;
+
+/************************************************************
+ * External Dependencies ( 외부 종속성 )
+ ************************************************************/
 const route = useRoute();
 const router = useRouter();
+
+const { isEmpty } = useUtil.typeValidation;
+
 const {
   getAfterMenuList,
   getRestoreMenuList,
@@ -19,10 +44,7 @@ const {
   isRestoreMenuList,
   menuReset
 } = useMenuStore();
-const { isEmpty } = useUtil.typeValidation;
-const { useImage } = useUtil.AssetResolverUtil;
 
-type MenuActive = "main" | "about" | "contact" | "" ;
 /************************************************************
  * Props
  ************************************************************/
@@ -35,9 +57,12 @@ const props = withDefaults( defineProps<{
 /************************************************************
  * Emit
  ************************************************************/
+const emit = defineEmits<{
+  ( eventName: "" ): void,
+}>();
 
 /************************************************************
- * Data ( ref, reactive, computed... )
+ * Raw Data ( 원시 데이터 )
  ************************************************************/
 const menuData = reactive<{
   originalMenuList : TabMenuList[],
@@ -69,11 +94,18 @@ const menuData = reactive<{
   isActive : "",
 })
 
+/************************************************************
+ * Dynamic Data ( 동적 데이터 )
+ ************************************************************/
 const menuBooleanData = reactive({
   isProject : false,
 })
 
 const menuList = ref( menuData.originalMenuList );
+
+/************************************************************
+ * Provide / inject Data
+ ************************************************************/
 
 /************************************************************
  * Function
@@ -140,8 +172,9 @@ const onMenuReset = () => {
 }
 
 defineExpose({ onMenuReset });
+
 /************************************************************
- * Watch & Mounted
+ * Watch
  ************************************************************/
 watch( () => route.path, ( newPath : string ) => {
   showMenu( newPath );
@@ -160,6 +193,9 @@ watch( () => props.restoreMenu, ( newValue : string ) => {
   setRestoreMenuList( menuList.value );
 });
 
+/************************************************************
+ * Mounted
+ ************************************************************/
 onMounted( () => {
   showMenu( route.path );
 
@@ -171,7 +207,12 @@ onMounted( () => {
   }
 });
 
+/************************************************************
+ * Layout
+ ************************************************************/
+
 </script>
+
 <template>
   <div :class="cx( MenuStyle.Default )">
     <BaseBtn
@@ -187,8 +228,8 @@ onMounted( () => {
       <svg v-if="'project' === item.value" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#ffca28" class="Tab_icon__XOYo5"><path d="m3 3h18v18h-18v-18m4.73 15.04c.4.85 1.19 1.55 2.54 1.55 1.5 0 2.53-.8 2.53-2.55v-5.78h-1.7v5.74c0 .86-.35 1.08-.9 1.08-.58 0-.82-.4-1.09-.87l-1.38.83m5.98-.18c.5.98 1.51 1.73 3.09 1.73 1.6 0 2.8-.83 2.8-2.36 0-1.41-.81-2.04-2.25-2.66l-.42-.18c-.73-.31-1.04-.52-1.04-1.02 0-.41.31-.73.81-.73.48 0 .8.21 1.09.73l1.31-.87c-.55-.96-1.33-1.33-2.4-1.33-1.51 0-2.48.96-2.48 2.23 0 1.38.81 2.03 2.03 2.55l.42.18c.78.34 1.24.55 1.24 1.13 0 .48-.45.83-1.15.83-.83 0-1.31-.43-1.67-1.03l-1.38.8z"></path></svg>
       <span v-text="item.title"></span>
       <v-tooltip
-          content-class=""
-          location="top"
+        content-class=""
+        location="top"
       >
         <template v-slot:activator="{ props }">
           <span v-bind="props" class="material-icons" @click="menuClose( $event, item, index )">close</span>
