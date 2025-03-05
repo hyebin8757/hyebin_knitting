@@ -74,7 +74,26 @@ const projectData = reactive<{
       imgSrc : "/assets/images/project/main/main_ui.png",
       localImg : true,
       isSecurity : true,
-      tag : "#Vue3, #Nuxt3, #TypeScript, #EmotionCss, #Tailwindcss, #Vuetify",
+      tagList : [
+        {
+          name : "Vue3",
+        },
+        {
+          name : "Nuxt3",
+        },
+        {
+          name : "TypeScript",
+        },
+        {
+          name : "EmotionCss",
+        },
+        {
+          name : "Tailwindcss",
+        },
+        {
+          name : "Vuetify",
+        },
+      ] ,
       workList :`
         <li>- Vuetify 를 이용한 컴포넌트 제작 ( base, block, view 등 )</li>
         <li>- EmotionCss 및 Tailwindcss 이용한 재사용 가능한 스타일 및 UI Util 생성</li>
@@ -86,7 +105,23 @@ const projectData = reactive<{
       content : "긴 인터넷 주소를 짧게 줄인 단축 URL 또는 QR코드 전달 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_shorturl.0faabc5a.png",
-      tag : "#Vue3, #Nuxt3, #TypeScript, #EmotionCss, #Vuetify",
+      tagList : [
+        {
+          name : "Vue3",
+        },
+        {
+          name : "Nuxt3",
+        },
+        {
+          name : "TypeScript",
+        },
+        {
+          name : "EmotionCss",
+        },
+        {
+          name : "Vuetify",
+        },
+      ] ,
       workList :`
         <li>- SFC 프로젝트 구조 설계 및 프론트엔드 개발 설계</li>
         <li>- 자체 제작한 UI 프레임워크 와 TypeScript 를 이용한 컴포넌트 생성</li>
@@ -100,7 +135,26 @@ const projectData = reactive<{
       path : "",
       imgSrc : "/assets/images/project/main/main_home.png",
       localImg : true,
-      tag : "#Vue3, #Nuxt3, #TypeScript, #Scss, #Storybook, #Vuetify",
+      tagList : [
+        {
+          name : "Vue3",
+        },
+        {
+          name : "Nuxt3",
+        },
+        {
+          name : "TypeScript",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "Storybook",
+        },
+        {
+          name : "Vuetify",
+        },
+      ] ,
       workList :`
         <li>- 첫 Vue3 Setup 이용한 SFC 프로젝트 구조 설계 및 프론트엔드 개발 설계</li>
         <li>- StoryBook 을 이용한 컴포넌트 사용 방법 설정 및 확인</li>
@@ -112,7 +166,32 @@ const projectData = reactive<{
       content : "에디터 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_vacancy.da56c3a3.png",
-      tag : "#Vue2, #Nuxt2, #Vue3, #Nuxt3, #Javascript, #TypeScript, #Scss, #Vuetify",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Vue3",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Nuxt3",
+        },
+        {
+          name : "Javascript",
+        },
+        {
+          name : "TypeScript",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "Vuetify",
+        },
+      ] ,
       workList :`
         <li>- JavaScript와 CSS를 이용한 텍스트 에디터 색상 커스터마이징 기능 개발</li>
         <li>- Vue2에서 Vue3를 이용한 SPA 구조 마이그레이션 설계 및 퍼블리싱</li>
@@ -125,7 +204,20 @@ const projectData = reactive<{
       path : "",
       imgSrc : "/assets/images/project/main/main_integration.png",
       localImg : true,
-      tag : "#Vue2, #Nuxt2, #Scss, #Element-Ui",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "Element-Ui",
+        },
+      ] ,
       workList :`
         <li>- Css 에서 Scss 를 이용한 스타일 마이그레이션 설계 및 기준 생성</li>
         <li>- CMS 구조 설계 및 퍼블리싱</li>
@@ -143,7 +235,23 @@ const projectData = reactive<{
       imgSrc : "/assets/images/project/new/new_car.png",
       localImg : true,
       isSecurity : true,
-      tag : "#Vue2, #Nuxt2, #Javascript, #Scss, #Vuetify",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Javascript",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "Vuetify",
+        },
+      ] ,
     },
     {
       title : `Kcc Glass VMS 방문자<br>출입시스템`,
@@ -152,21 +260,66 @@ const projectData = reactive<{
       imgSrc : "/assets/images/project/new/new_kcc.png",
       localImg : true,
       isSecurity : true,
-      tag : "#Vue2, #Nuxt2, #Scss, #Element-Ui",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "Element-Ui",
+        },
+      ] ,
     },
     {
       title : "온라인 참가 신청",
       content : "행사 / 모임 참가 신청 관리 및 참가자 데이터 수집 및 분석 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/online_request_manager_01.00d8df9e.png",
-      tag : "#Vue2, #Nuxt2, #Javascript, #Scss, #Vuetify",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Javascript",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "Vuetify",
+        },
+      ] ,
     },
     {
       title : "온라인 심사 시스템",
       content : "대회, 선발 등 공정한 심사를 위한 온라인 심사 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/online_contest_manager_01.ce4ffb64.png",
-      tag : "#Vue2, #Nuxt2, #Javascript, #Scss, #Vuetify",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Javascript",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "Vuetify",
+        },
+      ] ,
     },
     {
       title : "IDX 협업 지원 센터",
@@ -174,14 +327,37 @@ const projectData = reactive<{
       path : "",
       imgSrc : "/assets/images/project/new/new_idx.png",
       localImg : true,
-      tag : "#Html, #Css, #Jquery",
+      tagList : [
+        {
+          name : "Html",
+        },
+        {
+          name : "Css",
+        },
+        {
+          name : "Jquery",
+        },
+      ] ,
     },
     {
       title : `강원 보결전담강사 예약<br>시스템`,
       content : "검증된 대체 강사의 예약을 위한 예약 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_vacancy.da56c3a3.png",
-      tag : "#Vue2, #Nuxt2, #Scss, #Element-Ui",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "Element-Ui",
+        },
+      ] ,
     },
     {
       title : `강원유아교육진흥원<br>( 모바일 앱 )`,
@@ -190,7 +366,20 @@ const projectData = reactive<{
       imgSrc : "/assets/images/project/new/new_playnote.png",
       localImg : true,
       isSecurity : true,
-      tag : "#Vue2, #Nuxt2, #Scss, #Element-Ui",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "Element-Ui",
+        },
+      ] ,
     },
   ],
 
@@ -314,7 +503,7 @@ definePageMeta( {
               <h2>Main Project 😄</h2>
             </div>
             <div :class="cx( ProjectStyle.CardWrapper )">
-              <div ref="centralContainer" :class="cx('central-container', 'central-1', ProjectStyle.CentralContainer )"></div>
+<!--              <div ref="centralContainer" :class="cx('central-container', 'central-1', ProjectStyle.CentralContainer )"></div>-->
 
               <div :class="cx( ProjectStyle.CardList )">
                 <ProjectCard
@@ -323,7 +512,7 @@ definePageMeta( {
                   :title="item.title"
                   :content="item.content"
                   :img-src="item.imgSrc"
-                  :tag="item.tag"
+                  :tag-list="item.tagList"
                   :work-list="item.workList"
                   :path="item.path"
                   :local-img="item.localImg"
@@ -339,7 +528,7 @@ definePageMeta( {
         <v-tabs-window-item value="two">
           <div :class="cx( 'project-item', ProjectStyle.ProjectItem )">
             <div :class="cx( ProjectStyle.ProjectTitle )">
-              <h2>New Project 🤩 {{tab}}</h2>
+              <h2>New Project 🤩</h2>
             </div>
             <div :class="cx( ProjectStyle.CardWrapper )">
               <BaseSwiper>
