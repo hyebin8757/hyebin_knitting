@@ -5,6 +5,7 @@ export type ProjectList = {
     content : string,
     path : string,
     imgSrc : string,
+    date? : string,
     tagList? : { name : string }[],
     workList? : any,
     localImg? : boolean,

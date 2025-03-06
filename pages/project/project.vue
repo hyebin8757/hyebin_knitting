@@ -74,6 +74,7 @@ const projectData = reactive<{
       imgSrc : "/assets/images/project/main/main_ui.png",
       localImg : true,
       isSecurity : true,
+      date : "",
       tagList : [
         {
           name : "Vue3",
@@ -94,17 +95,24 @@ const projectData = reactive<{
           name : "Vuetify",
         },
       ] ,
-      workList :`
-        <li>- Vuetify 를 이용한 컴포넌트 제작 ( base, block, view 등 )</li>
-        <li>- EmotionCss 및 Tailwindcss 이용한 재사용 가능한 스타일 및 UI Util 생성</li>
-        <li>- 프로젝트 생성 및 개발 작업 생산성 향상</li>
-      `
+      workList : [
+        {
+          text : "Vuetify 를 이용한 컴포넌트 제작 ( base, block, view 등 )"
+        },
+        {
+          text : "EmotionCss 및 Tailwindcss 이용한 재사용 가능한 스타일 및 UI Util 생성"
+        },
+        {
+          text : "프로젝트 생성 및 개발 작업 생산성 향상"
+        },
+      ],
     },
     {
       title : "단축 URL",
       content : "긴 인터넷 주소를 짧게 줄인 단축 URL 또는 QR코드 전달 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_shorturl.0faabc5a.png",
+      date : "",
       tagList : [
         {
           name : "Vue3",
@@ -122,12 +130,20 @@ const projectData = reactive<{
           name : "Vuetify",
         },
       ] ,
-      workList :`
-        <li>- SFC 프로젝트 구조 설계 및 프론트엔드 개발 설계</li>
-        <li>- 자체 제작한 UI 프레임워크 와 TypeScript 를 이용한 컴포넌트 생성</li>
-        <li>- EmotionCss 이용한 UI Util 개발 생성 및 적용</li>
-        <li>- 동적 UI 개발 ( Dom 조작 및 Scroll 등 )</li>
-      `
+      workList : [
+        {
+          text : "SFC 프로젝트 구조 설계 및 프론트엔드 개발 설계",
+        },
+        {
+          text : "자체 제작한 UI 프레임워크 와 TypeScript 를 이용한 컴포넌트 생성",
+        },
+        {
+          text : "EmotionCss 이용한 UI Util 개발 생성 및 적용",
+        },
+        {
+          text : "동적 UI 개발 ( Dom 조작 및 Scroll 등 )",
+        },
+      ],
     },
     {
       title : "리마커블소프트 홈페이지",
@@ -135,6 +151,7 @@ const projectData = reactive<{
       path : "",
       imgSrc : "/assets/images/project/main/main_home.png",
       localImg : true,
+      date : "",
       tagList : [
         {
           name : "Vue3",
@@ -155,17 +172,24 @@ const projectData = reactive<{
           name : "Vuetify",
         },
       ] ,
-      workList :`
-        <li>- 첫 Vue3 Setup 이용한 SFC 프로젝트 구조 설계 및 프론트엔드 개발 설계</li>
-        <li>- StoryBook 을 이용한 컴포넌트 사용 방법 설정 및 확인</li>
-        <li>- 반응형 사용자 웹 /앱 화면 및 관리자 화면 퍼블리싱</li>
-      `
+      workList : [
+        {
+          text : "첫 Vue3 Setup 이용한 SFC 프로젝트 구조 설계 및 프론트엔드 개발 설계",
+        },
+        {
+          text : "StoryBook 을 이용한 컴포넌트 사용 방법 설정 및 확인",
+        },
+        {
+          text : "반응형 사용자 웹 /앱 화면 및 관리자 화면 퍼블리싱",
+        },
+      ],
     },
     {
       title : "GW 노트+",
       content : "에디터 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_vacancy.da56c3a3.png",
+      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -192,17 +216,24 @@ const projectData = reactive<{
           name : "Vuetify",
         },
       ] ,
-      workList :`
-        <li>- JavaScript와 CSS를 이용한 텍스트 에디터 색상 커스터마이징 기능 개발</li>
-        <li>- Vue2에서 Vue3를 이용한 SPA 구조 마이그레이션 설계 및 퍼블리싱</li>
-        <li>- 반응형 웹 / 앱 화면 다크모드 인터페이스 퍼블리싱</li>
-      `
+      workList : [
+        {
+          text : "JavaScript 와 CSS 를 이용한 텍스트 에디터 색상 커스터마이징 기능 개발",
+        },
+        {
+          text : "Vue2에서 Vue3를 이용한 SPA 구조 마이그레이션 설계 및 퍼블리싱",
+        },
+        {
+          text : "반응형 웹 / 앱 화면 다크모드 인터페이스 퍼블리싱",
+        },
+      ],
     },
     {
       title : `강원특별자치도교육청교육과학정보원`,
       content : "강원특별자치도교육청 홈페이지 통합관리 시스템",
       path : "",
       imgSrc : "/assets/images/project/main/main_integration.png",
+      date : "",
       localImg : true,
       tagList : [
         {
@@ -218,12 +249,20 @@ const projectData = reactive<{
           name : "Element-Ui",
         },
       ] ,
-      workList :`
-        <li>- Css 에서 Scss 를 이용한 스타일 마이그레이션 설계 및 기준 생성</li>
-        <li>- CMS 구조 설계 및 퍼블리싱</li>
-        <li>- 반응형 사용자 웹 / 앱 화면 및 관리자 화면 퍼블리싱</li>
-        <li>- 지속적인 유지 보수</li>
-      `
+      workList : [
+        {
+          text : "Css 에서 Scss 를 이용한 스타일 마이그레이션 설계 및 기준 생성",
+        },
+        {
+          text : "CMS 구조 설계 및 퍼블리싱",
+        },
+        {
+          text : "반응형 사용자 웹 / 앱 화면 및 관리자 화면 퍼블리싱",
+        },
+        {
+          text : "지속적인 유지 보수",
+        },
+      ],
     },
   ],
 
@@ -235,6 +274,7 @@ const projectData = reactive<{
       imgSrc : "/assets/images/project/new/new_car.png",
       localImg : true,
       isSecurity : true,
+      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -260,6 +300,7 @@ const projectData = reactive<{
       imgSrc : "/assets/images/project/new/new_kcc.png",
       localImg : true,
       isSecurity : true,
+      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -280,6 +321,7 @@ const projectData = reactive<{
       content : "행사 / 모임 참가 신청 관리 및 참가자 데이터 수집 및 분석 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/online_request_manager_01.00d8df9e.png",
+      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -303,6 +345,7 @@ const projectData = reactive<{
       content : "대회, 선발 등 공정한 심사를 위한 온라인 심사 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/online_contest_manager_01.ce4ffb64.png",
+      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -327,6 +370,7 @@ const projectData = reactive<{
       path : "",
       imgSrc : "/assets/images/project/new/new_idx.png",
       localImg : true,
+      date : "",
       tagList : [
         {
           name : "Html",
@@ -344,6 +388,7 @@ const projectData = reactive<{
       content : "검증된 대체 강사의 예약을 위한 예약 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_vacancy.da56c3a3.png",
+      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -366,6 +411,7 @@ const projectData = reactive<{
       imgSrc : "/assets/images/project/new/new_playnote.png",
       localImg : true,
       isSecurity : true,
+      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -391,7 +437,7 @@ const projectData = reactive<{
       imgSrc : "https://www.remarkablesoft.com/_nuxt/lms_user_01.fc18ae22.png",
     },
     {
-      title : "블렌디드 러닝 연수<br>시스템",
+      title : "블렌디드 러닝 연수시스템",
       content : "교육의 질적 향상과 발전을 위한 교직원 연수 시스템",
       path : "",
       imgSrc : "/assets/images/project/renewal/renewal_blended.png",
@@ -505,22 +551,20 @@ definePageMeta( {
             <div :class="cx( ProjectStyle.CardWrapper )">
 <!--              <div ref="centralContainer" :class="cx('central-container', 'central-1', ProjectStyle.CentralContainer )"></div>-->
 
-              <div :class="cx( ProjectStyle.CardList )">
-                <ProjectCard
-                  v-for="( item, index ) in projectData.mainProjectList"
-                  :key="index"
-                  :title="item.title"
-                  :content="item.content"
-                  :img-src="item.imgSrc"
-                  :tag-list="item.tagList"
-                  :work-list="item.workList"
-                  :path="item.path"
-                  :local-img="item.localImg"
-                  :is-security="item.isSecurity"
-                  :is-work-btn="true"
-                  @on-click="moveCard( index )"
-                />
-              </div>
+              <ProjectCard
+                v-for="( item, index ) in projectData.mainProjectList"
+                :key="index"
+                :title="item.title"
+                :content="item.content"
+                :img-src="item.imgSrc"
+                :tag-list="item.tagList"
+                :work-list="item.workList"
+                :path="item.path"
+                :local-img="item.localImg"
+                :is-security="item.isSecurity"
+                :is-work-btn="true"
+                @on-click="moveCard( index )"
+              />
             </div>
           </div>
         </v-tabs-window-item>
@@ -531,24 +575,17 @@ definePageMeta( {
               <h2>New Project 🤩</h2>
             </div>
             <div :class="cx( ProjectStyle.CardWrapper )">
-              <BaseSwiper>
-                <template #slide>
-                  <swiper-slide
-                    v-for="( item, index ) in projectData.newCreationProjectList"
-                    :key="index"
-                  >
-                    <ProjectCard
-                      :title="item.title"
-                      :content="item.content"
-                      :img-src="item.imgSrc"
-                      :tag="item.tag"
-                      :path="item.path"
-                      :local-img="item.localImg"
-                      :is-security="item.isSecurity"
-                    />
-                  </swiper-slide>
-                </template>
-              </BaseSwiper>
+              <ProjectCard
+                v-for="( item, index ) in projectData.newCreationProjectList"
+                :key="index"
+                :title="item.title"
+                :content="item.content"
+                :img-src="item.imgSrc"
+                :tag="item.tag"
+                :path="item.path"
+                :local-img="item.localImg"
+                :is-security="item.isSecurity"
+              />
             </div>
           </div>
         </v-tabs-window-item>
@@ -559,23 +596,16 @@ definePageMeta( {
               <h2>Renewal Project 🤔</h2>
             </div>
             <div :class="cx( ProjectStyle.CardWrapper )">
-              <BaseSwiper>
-                <template #slide>
-                  <swiper-slide
-                    v-for="( item, index ) in projectData.renewalProjectList"
-                    :key="index"
-                  >
-                    <ProjectCard
-                      :title="item.title"
-                      :content="item.content"
-                      :img-src="item.imgSrc"
-                      :path="item.path"
-                      :local-img="item.localImg"
-                      :is-security="item.isSecurity"
-                    />
-                  </swiper-slide>
-                </template>
-              </BaseSwiper>
+              <ProjectCard
+                v-for="( item, index ) in projectData.renewalProjectList"
+                :key="index"
+                :title="item.title"
+                :content="item.content"
+                :img-src="item.imgSrc"
+                :path="item.path"
+                :local-img="item.localImg"
+                :is-security="item.isSecurity"
+              />
             </div>
           </div>
         </v-tabs-window-item>

@@ -24,7 +24,7 @@ export const ProjectStyle = {
     }
 
     .v-card-text {
-      height: calc( 100% - 8.8rem );
+      height: calc( 100% - 4.6rem );
     }
   `,
 
@@ -50,7 +50,6 @@ export const ProjectStyle = {
 
   ProjectItem : css`
     width: 100%;
-    height: 100%;
     
     &.project-item {
       
@@ -70,11 +69,13 @@ export const ProjectStyle = {
   `,
 
   CardWrapper: css`
-    ${StyleUtils.FlexUtils("stretch", "flex-start")};
-    gap: 2rem;
+    ${StyleUtils.FlexUtils("stretch", "flex-start", "wrap" )};
+    gap: 2rem 5rem;
     position: relative;
     width: 100%;
+    max-width: 175rem;
     height: 100%;
+    margin: 0 auto;
   `,
 
   CentralContainer : css`

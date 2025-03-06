@@ -9,6 +9,7 @@ import { cx, css } from "@emotion/css";
 /************************************************************
  * Style
  ************************************************************/
+import { ProjectCardStyle } from "~/components/project/card/style/ProjectCardStyle";
 
 /************************************************************
  * Utils, Constants...
@@ -33,6 +34,7 @@ const props = withDefaults( defineProps<ProjectList>(), {
   content: "",
   path: "",
   imgSrc: "",
+  date : "",
   tagList : () => [ { name : "" } ],
   workList : "",
   localImg : false,
@@ -78,33 +80,42 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div>
-    <div>
+  <div :class="cx( ProjectCardStyle.Default )">
+    <div :class="cx( ProjectCardStyle.ImgBox )">
       <img :src="useImage( props.imgSrc )" alt="">
     </div>
 
-    <div>
+    <div :class="cx( ProjectCardStyle.Title )">
       <h2 v-text="props.title"/>
     </div>
 
-    <div>
-      <div>
+    <div :class="cx( ProjectCardStyle.InfoBox )">
+      <div :class="cx( ProjectCardStyle.LabelBox )">
         <v-chip
           v-for="( item, index ) in props.tagList"
           :key="index"
         >
-          <span v-text=" '#' + item.name "/>
+          <span v-text=" '# ' + item.name "/>
         </v-chip>
       </div>
 
-      <ul>
-        <li>
+      <ul :class="cx( ProjectCardStyle.DataBox )">
+        <li v-if="props.date">
           <div>
             <img src="" alt="">
-            <span></span>
+            <span>작업 기간</span>
           </div>
 
-          <span v-text=""/>
+          <span v-text="props.date"/>
+        </li>
+
+        <li
+          v-if="props.workList?.length"
+          v-for="( item, index ) in props.workList"
+          :key="index"
+        >
+          <span>-</span>
+          <span v-text="item.text"/>
         </li>
       </ul>
     </div>
