@@ -549,8 +549,6 @@ definePageMeta( {
               <h2>Main Project 😄</h2>
             </div>
             <div :class="cx( ProjectStyle.CardWrapper )">
-<!--              <div ref="centralContainer" :class="cx('central-container', 'central-1', ProjectStyle.CentralContainer )"></div>-->
-
               <ProjectCard
                 v-for="( item, index ) in projectData.mainProjectList"
                 :key="index"

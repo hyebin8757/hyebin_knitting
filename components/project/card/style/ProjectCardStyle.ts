@@ -14,8 +14,9 @@ const { setMedia } = _uiUtil();
  ************************************************************/
 export const ProjectCardStyle = {
   Default : css`
-    width: 40rem;
-    height: fit-content;
+    min-width: 40rem;
+    height: 100%;
+    flex: 1;
   `,
 
   ImgBox : css`
@@ -32,6 +33,7 @@ export const ProjectCardStyle = {
   `,
 
   Title : css`
+    min-height: 6rem;
     margin: 1.2rem 0;
     color: var( --white-color );
     
@@ -41,6 +43,7 @@ export const ProjectCardStyle = {
   `,
 
   InfoBox : css`
+    height: calc( 100% - 33.4rem );
     padding: 1.6rem;
     border-radius: 1rem;
     background: var( --background-color-1 );

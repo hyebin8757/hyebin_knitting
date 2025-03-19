@@ -69,7 +69,8 @@ export const ProjectStyle = {
   `,
 
   CardWrapper: css`
-    ${StyleUtils.FlexUtils("stretch", "flex-start", "wrap" )};
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 2rem 5rem;
     position: relative;
     width: 100%;
