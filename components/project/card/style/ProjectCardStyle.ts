@@ -20,6 +20,7 @@ export const ProjectCardStyle = {
   `,
 
   ImgBox : css`
+    position: relative;
     width: 100%;
     height: 25rem;
     border-radius: 1rem;
@@ -30,6 +31,24 @@ export const ProjectCardStyle = {
       height: 100%;
       border-radius: 1rem;
     }
+    
+    &.is-best {
+      &:before {
+        ${StyleUtils.FlexUtils("center", "center" )};
+        content: "Best";
+        position: absolute;
+        top: 3rem;
+        left: -0.6rem ;
+        width: 10rem;
+        height: 2rem;
+        border-radius: 0.5rem;
+        font-size: 1.4rem;
+        font-weight: 700;
+        transform: rotate( 320deg );
+        color: var( --white-color );
+        background: var( --primary-lighten-color-1 );
+      }
+    }
   `,
 
   Title : css`
@@ -39,6 +58,10 @@ export const ProjectCardStyle = {
     
     h2 {
       font-size: 2rem;  
+      
+      br {
+        display: none;
+      }
     }
   `,
 
@@ -47,6 +70,18 @@ export const ProjectCardStyle = {
     padding: 1.6rem;
     border-radius: 1rem;
     background: var( --background-color-1 );
+  `,
+
+  Service : css`
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var( --primary-color );
+    font-size: 1.4rem;
+    
+    span {
+      display: block;
+      margin-top: 0.8rem;
+    }
   `,
 
   LabelBox : css`

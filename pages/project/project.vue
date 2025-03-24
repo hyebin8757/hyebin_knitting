@@ -69,12 +69,12 @@ const projectData = reactive<{
   mainProjectList : [
     {
       title : `리마커블소프트 UI 프레임워크`,
-      content : "프레임 워크 제작",
+      service : "프레임 워크 제작",
       path : "",
       imgSrc : "/assets/images/project/main/main_ui.png",
       localImg : true,
+      isBest : true,
       isSecurity : true,
-      date : "",
       tagList : [
         {
           name : "Vue3",
@@ -103,16 +103,16 @@ const projectData = reactive<{
           text : "EmotionCss 및 Tailwindcss 이용한 재사용 가능한 스타일 및 UI Util 생성"
         },
         {
-          text : "프로젝트 생성 및 개발 작업 생산성 향상"
+          text : "프로젝트 스타일 작업 기준 적용 및 프로젝트 생성 개발 시간 단축 업무 생산성 향상"
         },
       ],
     },
     {
       title : "단축 URL",
-      content : "긴 인터넷 주소를 짧게 줄인 단축 URL 또는 QR코드 전달 시스템",
+      service : `긴 인터넷 주소를 짧게 줄인 단축 URL 또는 <br> QR코드 전달 시스템`,
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_shorturl.0faabc5a.png",
-      date : "",
+      isBest : true,
       tagList : [
         {
           name : "Vue3",
@@ -138,20 +138,61 @@ const projectData = reactive<{
           text : "자체 제작한 UI 프레임워크 와 TypeScript 를 이용한 컴포넌트 생성",
         },
         {
+          text : "Tree 구조 Sidebar 컴포넌트 공통화 생성 및 개발",
+        },
+        {
           text : "EmotionCss 이용한 UI Util 개발 생성 및 적용",
         },
         {
-          text : "동적 UI 개발 ( Dom 조작 및 Scroll 등 )",
+          text : "JavaScript 와 TypeScript 을 활용한 동적 UI 개발 ( Dom 조작 및 Scroll 등 )",
+        },
+      ],
+    },
+    {
+      title : 'KCC 글라스 자동 배포 시스템',
+      service : "KCC 글라스 자사 프로젝트 자동배포 관리 시스템",
+      path : "",
+      imgSrc : "/assets/images/project/main/main_integration.png",
+      isBest : true,
+      localImg : true,
+      tagList : [
+        {
+          name : "Vue3",
+        },
+        {
+          name : "Nuxt3",
+        },
+        {
+          name : "TypeScript",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "Vuetify",
+        },
+      ] ,
+      workList : [
+        {
+          text : "Vue3 Setup 이용한 SFC 프로젝트 구조 설계 및 프론트엔드 개발 설계 고도화",
+        },
+        {
+          text : "사용자 친화적 UI / UX 기획",
+        },
+        {
+          text : "CMS 구조 고도화",
+        },
+        {
+          text : "JavaScript 와 TypeScript 을 활용한 동적 UI 개발",
         },
       ],
     },
     {
       title : "리마커블소프트 홈페이지",
-      content : "회사 소개 시스템",
+      service : "회사 소개 시스템",
       path : "",
       imgSrc : "/assets/images/project/main/main_home.png",
       localImg : true,
-      date : "",
       tagList : [
         {
           name : "Vue3",
@@ -180,16 +221,15 @@ const projectData = reactive<{
           text : "StoryBook 을 이용한 컴포넌트 사용 방법 설정 및 확인",
         },
         {
-          text : "반응형 사용자 웹 /앱 화면 및 관리자 화면 퍼블리싱",
+          text : "반응형 사용자 웹 / 앱 화면 및 관리자 화면 퍼블리싱",
         },
       ],
     },
     {
       title : "GW 노트+",
-      content : "에디터 시스템",
+      service : "에디터 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_vacancy.da56c3a3.png",
-      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -230,10 +270,9 @@ const projectData = reactive<{
     },
     {
       title : `강원특별자치도교육청교육과학정보원`,
-      content : "강원특별자치도교육청 홈페이지 통합관리 시스템",
+      service : "강원특별자치도교육청 홈페이지 통합관리 시스템",
       path : "",
       imgSrc : "/assets/images/project/main/main_integration.png",
-      date : "",
       localImg : true,
       tagList : [
         {
@@ -264,17 +303,51 @@ const projectData = reactive<{
         },
       ],
     },
+    {
+      title : 'G.I.J.O Technology ( IT 보안 전문 기업 )',
+      service : "보안 기술 판매 시스템",
+      path : "",
+      imgSrc : "/assets/images/project/main/main_integration.png",
+      localImg : true,
+      tagList : [
+        {
+          name : "Vue3",
+        },
+        {
+          name : "Nuxt3",
+        },
+        {
+          name : "TypeScript",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "Vuetify",
+        },
+      ] ,
+      workList : [
+        {
+          text : "Swiper 를 활용한 컴포넌트 생성",
+        },
+        {
+          text : "애니메이션을 활용한 UI 개발",
+        },
+        {
+          text : "동적 Grid 개발에 참여",
+        },
+      ],
+    },
   ],
 
   newCreationProjectList : [
     {
       title : "차놀자 파트너스",
-      content : "렌트가 CMS",
+      service : "렌트가 CMS",
       path : "",
       imgSrc : "/assets/images/project/new/new_car.png",
       localImg : true,
       isSecurity : true,
-      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -295,12 +368,11 @@ const projectData = reactive<{
     },
     {
       title : `Kcc Glass VMS 방문자<br>출입시스템`,
-      content : "방문자 출입 관리 CMS",
+      service : "방문자 출입 관리 CMS",
       path : "",
       imgSrc : "/assets/images/project/new/new_kcc.png",
       localImg : true,
       isSecurity : true,
-      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -318,10 +390,9 @@ const projectData = reactive<{
     },
     {
       title : "온라인 참가 신청",
-      content : "행사 / 모임 참가 신청 관리 및 참가자 데이터 수집 및 분석 시스템",
+      service : `행사 / 모임 참가 신청 관리 및 <br> 참가자 데이터 수집 및 분석 시스템`,
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/online_request_manager_01.00d8df9e.png",
-      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -342,10 +413,9 @@ const projectData = reactive<{
     },
     {
       title : "온라인 심사 시스템",
-      content : "대회, 선발 등 공정한 심사를 위한 온라인 심사 시스템",
+      service : "대회, 선발 등 공정한 심사를 위한 온라인 심사 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/online_contest_manager_01.ce4ffb64.png",
-      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -366,11 +436,10 @@ const projectData = reactive<{
     },
     {
       title : "IDX 협업 지원 센터",
-      content : "회사소개 시스템",
+      service : "회사소개 시스템",
       path : "",
       imgSrc : "/assets/images/project/new/new_idx.png",
       localImg : true,
-      date : "",
       tagList : [
         {
           name : "Html",
@@ -385,10 +454,9 @@ const projectData = reactive<{
     },
     {
       title : `강원 보결전담강사 예약<br>시스템`,
-      content : "검증된 대체 강사의 예약을 위한 예약 시스템",
+      service : "검증된 대체 강사의 예약을 위한 예약 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_vacancy.da56c3a3.png",
-      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -406,12 +474,11 @@ const projectData = reactive<{
     },
     {
       title : `강원유아교육진흥원<br>( 모바일 앱 )`,
-      content : "유아들의 체험활동 관리 CMS",
+      service : "유아들의 체험활동 관리 CMS",
       path : "",
       imgSrc : "/assets/images/project/new/new_playnote.png",
       localImg : true,
       isSecurity : true,
-      date : "",
       tagList : [
         {
           name : "Vue2",
@@ -432,34 +499,119 @@ const projectData = reactive<{
   renewalProjectList: [
     {
       title : "원격 교육 연수원",
-      content : "교육의 질적 향상과 발전을 위한 교직원 연수 시스템",
+      service : "교육의 질적 향상과 발전을 위한 교직원 연수 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/lms_user_01.fc18ae22.png",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Javascript",
+        },
+        {
+          name : "Css",
+        },
+        {
+          name : "ElElement",
+        },
+      ] ,
     },
     {
       title : "블렌디드 러닝 연수시스템",
-      content : "교육의 질적 향상과 발전을 위한 교직원 연수 시스템",
+      service : "교육의 질적 향상과 발전을 위한 교직원 연수 시스템",
       path : "",
       imgSrc : "/assets/images/project/renewal/renewal_blended.png",
       localImg : true,
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Javascript",
+        },
+        {
+          name : "Css",
+        },
+        {
+          name : "ElElement",
+        },
+      ] ,
     },
     {
       title : "전자책 출판 시스템",
-      content : "다양한 문서를 전자책으로 변환할 수 있는 전자책 시스템",
+      service : "다양한 문서를 전자책으로 변환할 수 있는 전자책 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_ebook.23d1bcb3.png",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Javascript",
+        },
+        {
+          name : "Css",
+        },
+        {
+          name : "ElElement",
+        },
+      ] ,
     },
     {
       title : "수리과학 정보 체험 센터",
-      content : "교육 예약 및 수강 관리를 위한 온라인 예약 관리 시스템",
+      service : "교육 예약 및 수강 관리를 위한 온라인 예약 관리 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/mathsciences_user_01.1cd1c916.png",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Javascript",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "ElElement",
+        },
+      ] ,
     },
     {
       title : "설문",
-      content : "설문지 작성 및 결과 분석 가능한 설문조사 통합 관리 시스템",
+      service : "설문지 작성 및 결과 분석 가능한 설문조사 통합 관리 시스템",
       path : "",
       imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_survey.2842ad93.png",
+      tagList : [
+        {
+          name : "Vue2",
+        },
+        {
+          name : "Nuxt2",
+        },
+        {
+          name : "Javascript",
+        },
+        {
+          name : "Scss",
+        },
+        {
+          name : "ElElement",
+        },
+      ] ,
     },
   ],
 });
@@ -537,7 +689,6 @@ definePageMeta( {
       >
         <img :src="useImage( item.imgSrc )" alt="icon">
         <span v-text="item.title"></span>
-        <span class="material-icons">close</span>
       </v-tab>
     </v-tabs>
 
@@ -553,7 +704,8 @@ definePageMeta( {
                 v-for="( item, index ) in projectData.mainProjectList"
                 :key="index"
                 :title="item.title"
-                :content="item.content"
+                :service="item.service"
+                :is-best="item.isBest"
                 :img-src="item.imgSrc"
                 :tag-list="item.tagList"
                 :work-list="item.workList"
@@ -577,12 +729,15 @@ definePageMeta( {
                 v-for="( item, index ) in projectData.newCreationProjectList"
                 :key="index"
                 :title="item.title"
-                :content="item.content"
+                :service="item.service"
                 :img-src="item.imgSrc"
-                :tag="item.tag"
+                :tag-list="item.tagList"
+                :work-list="item.workList"
                 :path="item.path"
                 :local-img="item.localImg"
                 :is-security="item.isSecurity"
+                :is-work-btn="true"
+                @on-click="moveCard( index )"
               />
             </div>
           </div>
@@ -598,11 +753,15 @@ definePageMeta( {
                 v-for="( item, index ) in projectData.renewalProjectList"
                 :key="index"
                 :title="item.title"
-                :content="item.content"
+                :service="item.service"
                 :img-src="item.imgSrc"
+                :tag-list="item.tagList"
+                :work-list="item.workList"
                 :path="item.path"
                 :local-img="item.localImg"
                 :is-security="item.isSecurity"
+                :is-work-btn="true"
+                @on-click="moveCard( index )"
               />
             </div>
           </div>

@@ -31,13 +31,14 @@ const { useImage } = useUtil.AssetResolverUtil;
  ************************************************************/
 const props = withDefaults( defineProps<ProjectList>(), {
   title: "",
-  content: "",
+  service: "",
   path: "",
   imgSrc: "",
   date : "",
   tagList : () => [ { name : "" } ],
   workList : "",
   localImg : false,
+  isBest : false,
   isSecurity : false,
   isWorkBtn : false,
 });
@@ -81,15 +82,20 @@ const emit = defineEmits<{
 
 <template>
   <div :class="cx( ProjectCardStyle.Default )">
-    <div :class="cx( ProjectCardStyle.ImgBox )">
+    <div :class="cx( ProjectCardStyle.ImgBox, props.isBest && 'is-best' )">
       <img :src="useImage( props.imgSrc )" alt="">
     </div>
 
     <div :class="cx( ProjectCardStyle.Title )">
-      <h2 v-text="props.title"/>
+      <h2 v-html="props.title"/>
     </div>
 
     <div :class="cx( ProjectCardStyle.InfoBox )">
+      <div :class="cx( ProjectCardStyle.Service )">
+        <b>서비스</b>
+        <span v-html="props.service"/>
+      </div>
+
       <div :class="cx( ProjectCardStyle.LabelBox )">
         <v-chip
           v-for="( item, index ) in props.tagList"

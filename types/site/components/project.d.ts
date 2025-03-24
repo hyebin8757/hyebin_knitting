@@ -2,13 +2,13 @@
 /** project **/
 export type ProjectList = {
     title : string,
-    content : string,
+    service : string,
     path : string,
     imgSrc : string,
-    date? : string,
     tagList? : { name : string }[],
     workList? : any,
     localImg? : boolean,
+    isBest? : boolean,
     isSecurity? : boolean,
     isWorkBtn? : boolean,
 }
