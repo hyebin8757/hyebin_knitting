@@ -111,7 +111,7 @@ const projectData = reactive<{
       title : "단축 URL",
       service : `긴 인터넷 주소를 짧게 줄인 단축 URL 또는 <br> QR코드 전달 시스템`,
       path : "",
-      imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_shorturl.0faabc5a.png",
+      imgSrc : "/assets/images/project/main/main_url.png",
       isBest : true,
       tagList : [
         {
@@ -152,7 +152,7 @@ const projectData = reactive<{
       title : 'KCC 글라스 자동 배포 시스템',
       service : "KCC 글라스 자사 프로젝트 자동배포 관리 시스템",
       path : "",
-      imgSrc : "/assets/images/project/main/main_integration.png",
+      imgSrc : "/assets/images/project/main/main_auto.png",
       isBest : true,
       localImg : true,
       tagList : [
@@ -229,7 +229,7 @@ const projectData = reactive<{
       title : "GW 노트+",
       service : "에디터 시스템",
       path : "",
-      imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_vacancy.da56c3a3.png",
+      imgSrc : "/assets/images/project/main/main_note.png",
       tagList : [
         {
           name : "Vue2",
@@ -307,7 +307,7 @@ const projectData = reactive<{
       title : 'G.I.J.O Technology ( IT 보안 전문 기업 )',
       service : "보안 기술 판매 시스템",
       path : "",
-      imgSrc : "/assets/images/project/main/main_integration.png",
+      imgSrc : "/assets/images/project/main/main_gijo.png",
       localImg : true,
       tagList : [
         {
@@ -370,7 +370,7 @@ const projectData = reactive<{
       title : `Kcc Glass VMS 방문자<br>출입시스템`,
       service : "방문자 출입 관리 CMS",
       path : "",
-      imgSrc : "/assets/images/project/new/new_kcc.png",
+      imgSrc : "/assets/images/project/new/new_coming_and_going.png",
       localImg : true,
       isSecurity : true,
       tagList : [
@@ -392,7 +392,7 @@ const projectData = reactive<{
       title : "온라인 참가 신청",
       service : `행사 / 모임 참가 신청 관리 및 <br> 참가자 데이터 수집 및 분석 시스템`,
       path : "",
-      imgSrc : "https://www.remarkablesoft.com/_nuxt/online_request_manager_01.00d8df9e.png",
+      imgSrc : "/assets/images/project/new/new_application.png",
       tagList : [
         {
           name : "Vue2",
@@ -415,7 +415,7 @@ const projectData = reactive<{
       title : "온라인 심사 시스템",
       service : "대회, 선발 등 공정한 심사를 위한 온라인 심사 시스템",
       path : "",
-      imgSrc : "https://www.remarkablesoft.com/_nuxt/online_contest_manager_01.ce4ffb64.png",
+      imgSrc : "/assets/images/project/new/new_audit.png",
       tagList : [
         {
           name : "Vue2",
@@ -456,7 +456,7 @@ const projectData = reactive<{
       title : `강원 보결전담강사 예약<br>시스템`,
       service : "검증된 대체 강사의 예약을 위한 예약 시스템",
       path : "",
-      imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_vacancy.da56c3a3.png",
+      imgSrc : "/assets/images/project/new/new_instructor.png",
       tagList : [
         {
           name : "Vue2",
@@ -501,7 +501,7 @@ const projectData = reactive<{
       title : "원격 교육 연수원",
       service : "교육의 질적 향상과 발전을 위한 교직원 연수 시스템",
       path : "",
-      imgSrc : "https://www.remarkablesoft.com/_nuxt/lms_user_01.fc18ae22.png",
+      imgSrc : "/assets/images/project/renewal/renewal_lms.png",
       tagList : [
         {
           name : "Vue2",
@@ -548,7 +548,7 @@ const projectData = reactive<{
       title : "전자책 출판 시스템",
       service : "다양한 문서를 전자책으로 변환할 수 있는 전자책 시스템",
       path : "",
-      imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_ebook.23d1bcb3.png",
+      imgSrc : "/assets/images/project/renewal/renewal_ebook.png",
       tagList : [
         {
           name : "Vue2",
@@ -571,7 +571,7 @@ const projectData = reactive<{
       title : "수리과학 정보 체험 센터",
       service : "교육 예약 및 수강 관리를 위한 온라인 예약 관리 시스템",
       path : "",
-      imgSrc : "https://www.remarkablesoft.com/_nuxt/mathsciences_user_01.1cd1c916.png",
+      imgSrc : "/assets/images/project/renewal/renewal_math.png",
       tagList : [
         {
           name : "Vue2",
@@ -594,7 +594,7 @@ const projectData = reactive<{
       title : "설문",
       service : "설문지 작성 및 결과 분석 가능한 설문조사 통합 관리 시스템",
       path : "",
-      imgSrc : "https://www.remarkablesoft.com/_nuxt/bg_survey.2842ad93.png",
+      imgSrc : "/assets/images/project/renewal/renewal_survey.png",
       tagList : [
         {
           name : "Vue2",

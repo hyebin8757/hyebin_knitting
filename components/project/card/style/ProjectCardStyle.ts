@@ -14,7 +14,8 @@ const { setMedia } = _uiUtil();
  ************************************************************/
 export const ProjectCardStyle = {
   Default : css`
-    min-width: 40rem;
+    width: 100%;
+    max-width: 40rem;
     height: 100%;
     flex: 1;
   `,
