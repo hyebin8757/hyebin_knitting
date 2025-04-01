@@ -1,6 +1,7 @@
 import {css, cx, injectGlobal} from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
+import {ProjectData} from "assets/style/pages/ProjectStyle";
 
 const { setMedia } = _uiUtil();
 
@@ -14,10 +15,21 @@ const { setMedia } = _uiUtil();
  ************************************************************/
 export const ProjectCardStyle = {
   Default : css`
+    ${ ProjectData.Animation };
+    position: relative;
     width: 100%;
     max-width: 40rem;
     height: 100%;
     flex: 1;
+    
+    &:hover {
+      z-index: 10;
+      
+      .info-box {
+        visibility: visible;
+        animation: fadeIn 0.3s ease-in-out forwards;
+      }
+    }
   `,
 
   ImgBox : css`
@@ -67,10 +79,18 @@ export const ProjectCardStyle = {
   `,
 
   InfoBox : css`
-    height: calc( 100% - 33.4rem );
+    ${ ProjectData.Animation };
+    position: absolute;
+    top: calc( 100% + 1rem );
+    left: 0;
+    z-index: 10;
+    //height: calc( 100% - 33.4rem );
     padding: 1.6rem;
     border-radius: 1rem;
+    opacity: 0;
+    visibility: hidden;
     background: var( --background-color-1 );
+    animation: fadeOut 0.3s ease-in-out forwards;
   `,
 
   Service : css`

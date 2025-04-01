@@ -8,14 +8,68 @@ const { setMedia } = _uiUtil();
 /************************************************************
  * style data
  ************************************************************/
+export const ProjectData = {
+  Animation : css`
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+        visibility: hidden;
+      }
+    }
+
+  `
+}
 
 /************************************************************
  * style
  ************************************************************/
 export const ProjectStyle = {
   Default : css`
+    position: relative;
     width: 100%;
     height: calc( 100% - 5rem );
+
+    &:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      background: rgba(0, 0, 0, 0.8);
+      visibility: hidden;
+      transition: none;
+    }
+    
+    ${ ProjectData.Animation };
+
+    &.is-hover {
+      &:before {
+        visibility: visible;
+        animation: fadeIn 0.3s ease-in-out forwards;
+      }
+    }
+
+    &:not(.is-hover) {
+      &:before {
+        animation: fadeOut 0.3s ease-in-out forwards;
+      }
+    }
     
     .v-card-text,
     [ class ^= "v-window" ] {

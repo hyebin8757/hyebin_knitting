@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { inject } from "vue";
 import { cx, css } from "@emotion/css";
 
 /************************************************************
@@ -57,6 +57,7 @@ const emit = defineEmits<{
 /************************************************************
  * Dynamic Data ( 동적 데이터 )
  ************************************************************/
+const isHover = inject( "isHover" );
 
 /************************************************************
  * Provide / inject Data
@@ -65,6 +66,9 @@ const emit = defineEmits<{
 /************************************************************
  * Function
  ************************************************************/
+const onHoverToggle = ( value : boolean ) => {
+  isHover.value = value;
+}
 
 /************************************************************
  * Watch
@@ -81,7 +85,11 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div :class="cx( ProjectCardStyle.Default )">
+  <div
+      :class="cx( ProjectCardStyle.Default )"
+      @mouseenter="onHoverToggle( true )"
+      @mouseleave="onHoverToggle( false )"
+  >
     <div :class="cx( ProjectCardStyle.ImgBox, props.isBest && 'is-best' )">
       <img :src="useImage( props.imgSrc )" alt="">
     </div>
@@ -90,7 +98,7 @@ const emit = defineEmits<{
       <h2 v-html="props.title"/>
     </div>
 
-    <div :class="cx( ProjectCardStyle.InfoBox )">
+    <div :class="cx( 'info-box', ProjectCardStyle.InfoBox )">
       <div :class="cx( ProjectCardStyle.Service )">
         <b>서비스</b>
         <span v-html="props.service"/>
@@ -106,14 +114,14 @@ const emit = defineEmits<{
       </div>
 
       <ul :class="cx( ProjectCardStyle.DataBox )">
-        <li v-if="props.date">
-          <div>
-            <img src="" alt="">
-            <span>작업 기간</span>
-          </div>
+<!--        <li v-if="props.date">-->
+<!--          <div>-->
+<!--            <img src="" alt="">-->
+<!--            <span>작업 기간</span>-->
+<!--          </div>-->
 
-          <span v-text="props.date"/>
-        </li>
+<!--          <span v-text="props.date"/>-->
+<!--        </li>-->
 
         <li
           v-if="props.workList?.length"

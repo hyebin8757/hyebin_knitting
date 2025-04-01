@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref, provide } from "vue";
 import { cx } from "@emotion/css";
 import { definePageMeta } from "~/.nuxt/imports";
 
 /************************************************************
  * Components
  ************************************************************/
-import { SwiperSlide } from "swiper/vue";
 import ProjectCard from "~/components/project/card/ProjectCard.vue";
 
 /************************************************************
@@ -628,9 +627,12 @@ const tab = ref( "one" );
 
 const detailProjectItem = ref<ProjectList | {}>({});
 
+const isHover = ref( false );
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
+provide( "isHover", isHover );
 
 /************************************************************
  * Function
@@ -679,7 +681,7 @@ definePageMeta( {
 </script>
 
 <template>
-  <div :class="cx( ProjectStyle.Default )">
+  <div :class="cx( ProjectStyle.Default, isHover && 'is-hover' )">
 
     <v-tabs :class="cx( ProjectStyle.Tab )" v-model="tab">
       <v-tab
