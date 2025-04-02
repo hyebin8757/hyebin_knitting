@@ -2,8 +2,10 @@ import {css, cx, injectGlobal} from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 import {ProjectData} from "assets/style/pages/ProjectStyle";
+import {useUtil} from "~/utils/useUtil";
 
 const { setMedia } = _uiUtil();
+const { useImage } = useUtil.AssetResolverUtil;
 
 /************************************************************
  * style data
@@ -21,9 +23,11 @@ export const ProjectCardStyle = {
     max-width: 40rem;
     height: 100%;
     flex: 1;
+    cursor: url(${useImage("/assets/images/icon/icon_cursor.svg")}), auto;
     
     &:hover {
       z-index: 10;
+      
       
       .info-box {
         visibility: visible;
