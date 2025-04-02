@@ -1,6 +1,7 @@
 import { css, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
+import {CommonStyle} from "assets/style/CommonStyle";
 
 const { setMedia } = _uiUtil();
 
@@ -12,8 +13,40 @@ const { setMedia } = _uiUtil();
 /************************************************************
  * style
  ************************************************************/
-export const Style = {
-  Default : css``,
+export const AboutStyle = {
+  Default : css`
+    ${CommonStyle.DefaultPadding};
+  `,
+
+  Title : css`
+    font-size: 4.8rem;
+    color: #D4CAB2;
+  `,
+
+  Introduction : css`
+    display: block;
+    margin: 2rem 0;
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: #9CA6AD;
+  `,
+
+  ConsoleBox : css`
+    padding: 1rem;
+    border-radius: 1rem;
+    font-size: 1.6rem;
+    font-weight: 500;
+    color: #2CBC8C;
+    background: #14344b;
+    
+    em {
+      color: #E7D19F;
+    }
+    
+    > div {
+      ${StyleUtils.FlexUtils("center", "flex-start")};
+    }
+  `,
 }
 
 /************************************************************

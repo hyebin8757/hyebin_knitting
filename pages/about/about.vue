@@ -11,6 +11,7 @@ import { definePageMeta } from "~/.nuxt/imports";
 /************************************************************
  * Style
  ************************************************************/
+import { AboutStyle } from "assets/style/pages/AboutStyle";
 
 /************************************************************
  * Util, Constants...
@@ -34,7 +35,6 @@ const router = useRouter();
  * Emit
  ************************************************************/
 
-
 /************************************************************
  * Raw Data ( 원시 데이터 )
  ************************************************************/
@@ -42,6 +42,7 @@ const router = useRouter();
 /************************************************************
  * Dynamic Data ( 동적 데이터 )
  ************************************************************/
+const consoleInput = ref( "" );
 
 /************************************************************
  * Provide / inject Data
@@ -69,7 +70,42 @@ definePageMeta( {
 </script>
 
 <template>
+  <div :class="cx( AboutStyle.Default )">
+    <h2 :class="cx( AboutStyle.Title )">
+      Welcome to My <br>
+      Portfolio!
+    </h2>
 
+    <p :class="cx( AboutStyle.Introduction )">Hi, I'm a Frontend Publisher passionate about web development.</p>
+
+    <div :class="cx( AboutStyle.ConsoleBox )">
+      <div>
+        <span>console<em>.log("Welcome!");</em></span>
+
+        <BaseBtn
+          @on-click=""
+        >
+          <span>수정하기</span>
+        </BaseBtn>
+      </div>
+
+      <div>
+        <v-text-field
+          v-model="consoleInput"
+          variant="solo"
+          hide-details="auto"
+          placeholder="console box 데이터를 입력해주세요."
+        />
+
+        <BaseBtn
+          @on-click=""
+        >
+          <span>저장하기</span>
+        </BaseBtn>
+      </div>
+    </div>
+
+  </div>
 </template>
 
 <style lang="scss"></style>
