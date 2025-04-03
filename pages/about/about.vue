@@ -16,6 +16,7 @@ import { AboutStyle } from "assets/style/pages/AboutStyle";
 /************************************************************
  * Util, Constants...
  ************************************************************/
+import { useUtil } from "~/utils/useUtil";
 
 /************************************************************
  * Types, Interface
@@ -26,6 +27,8 @@ import { AboutStyle } from "assets/style/pages/AboutStyle";
  ************************************************************/
 const route = useRoute();
 const router = useRouter();
+
+const { isEmpty } = useUtil.typeValidation;
 
 /************************************************************
  * Props
@@ -44,6 +47,12 @@ const router = useRouter();
  ************************************************************/
 const consoleInput = ref( "" );
 
+const consoleDataList = ref([
+  {
+    text : "Welcome!",
+  },
+]);
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
@@ -51,6 +60,21 @@ const consoleInput = ref( "" );
 /************************************************************
  * Function
  ************************************************************/
+const setConsoleData = () => {
+
+  if ( isEmpty( consoleInput.value ) ) return;
+
+  consoleDataList.value.push( { text : consoleInput.value } );
+
+  consoleInput.value = "";
+}
+
+const removerConsoleData = ( item : any  ) => {
+
+  if ( isEmpty( item ) ) return;
+
+  consoleDataList.value = consoleDataList.value.filter( dataItem => item !== dataItem );
+}
 
 /************************************************************
  * Watch
@@ -72,39 +96,57 @@ definePageMeta( {
 <template>
   <div :class="cx( AboutStyle.Default )">
     <h2 :class="cx( AboutStyle.Title )">
-      Welcome to My <br>
-      Portfolio!
+      환영합니다. 민우주의 <br>
+      포트폴리오에 초대합니다!
     </h2>
 
-    <p :class="cx( AboutStyle.Introduction )">Hi, I'm a Frontend Publisher passionate about web development.</p>
+    <p :class="cx( AboutStyle.Introduction )">인녕하세요. 저는 <b>UI 개발</b>에 열정을 가지고 있으며 <b>프론트엔드</b>의 꿈을 가진 <b>퍼블리셔</b>입니다.</p>
 
     <div :class="cx( AboutStyle.ConsoleBox )">
-      <div>
-        <span>console<em>.log("Welcome!");</em></span>
+      <em :class="cx( AboutStyle.ConsoleBoxGuide )">* 자유롭게 데이터를 추가 해주세요!</em>
 
-        <BaseBtn
-          @on-click=""
+      <div :class="cx( AboutStyle.ConsoleDataList )">
+        <span
+            v-for="( item, index ) in consoleDataList"
+            :key="index"
         >
-          <span>수정하기</span>
-        </BaseBtn>
+          console<em>.log("<b>{{item.text}}</b>");</em>
+
+          <BaseBtn
+              v-if="0 !== index"
+              :hover="false"
+              @on-click="removerConsoleData( item )"
+          >
+            <span class="material-icons">highlight_off</span>
+          </BaseBtn>
+        </span>
       </div>
 
-      <div>
+      <div :class="cx( AboutStyle.ConsoleInputBox )">
         <v-text-field
           v-model="consoleInput"
           variant="solo"
           hide-details="auto"
-          placeholder="console box 데이터를 입력해주세요."
+          clearable
+          placeholder="console box 에 추가 할 데이터를 입력해주세요."
+          @keydown.enter="setConsoleData"
         />
 
         <BaseBtn
-          @on-click=""
+          :hover="false"
+          @on-click="setConsoleData"
         >
-          <span>저장하기</span>
+          <span class="material-icons">upload</span>
         </BaseBtn>
       </div>
     </div>
 
+    <div :class="cx( AboutStyle.InfoBox )">
+      <div>
+        <span v-text=""/>
+
+      </div>
+    </div>
   </div>
 </template>
 

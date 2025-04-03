@@ -9,7 +9,7 @@ const { setMedia } = _uiUtil();
  * style data
  ************************************************************/
 
-
+// ${StyleUtils.FlexUtils("center", "flex-start")};
 /************************************************************
  * style
  ************************************************************/
@@ -29,9 +29,15 @@ export const AboutStyle = {
     font-size: 1.8rem;
     font-weight: 500;
     color: #9CA6AD;
+    
+    b {
+      color: #D4CAB2;
+    }
   `,
 
   ConsoleBox : css`
+    position: relative;
+    width: 50%;
     padding: 1rem;
     border-radius: 1rem;
     font-size: 1.6rem;
@@ -39,13 +45,67 @@ export const AboutStyle = {
     color: #2CBC8C;
     background: #14344b;
     
+    span {
+      display: block;
+    }
+    
     em {
       color: #E7D19F;
     }
+  `,
+
+  ConsoleBoxGuide : css`
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.4rem;
+  `,
+
+  ConsoleDataList : css`
+    ${ CommonStyle.Scroll };
+    height: fit-content;
+    max-height: 22rem;
+    margin-bottom: 2rem;
+    overflow-y: auto;
     
-    > div {
-      ${StyleUtils.FlexUtils("center", "flex-start")};
+    > span {
+      + span {
+        margin-top: 1.5rem;
+      }
     }
+    
+    .v-btn {
+      margin-left: 0.5rem;
+      
+      .material-icons {
+        font-size: 2rem;
+      }
+      
+      &:hover {
+        color: var( --system-red-color );
+      }
+    }
+  `,
+
+  ConsoleInputBox : css`
+    position: relative;
+    
+    .v-input {
+      padding: 1rem 5rem 1rem 1rem;
+    }
+    
+    .v-btn {
+      position: absolute;
+      top: 50%;
+      right: 1rem;
+      transform: translateY( -50% );
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+  `,
+
+  InfoBox : css`
+    
   `,
 }
 

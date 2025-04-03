@@ -344,6 +344,23 @@ export const CommonStyle = {
       }
     }
   `,
+
+  Scroll: css`
+    &::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      border-radius: 20px;
+      background-color: #FFFFFF;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 20px;
+      background-color: #DEDEDE;
+    }
+  `,
 }
 
 /************************************************************
