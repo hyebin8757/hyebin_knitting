@@ -67,15 +67,14 @@ const lastEnterTime = ref( 0 );
  ************************************************************/
 const setConsoleData = () => {
 
+  const enterDelay = 500;
   const now = Date.now();
 
-  const enterDelay = 500;
-
-  if ( isEmpty( consoleInput.value ) ) return;
-
-  if ( now - lastEnterTime.value < enterDelay ) {
+  if ( isEmpty( consoleInput.value ) || now - lastEnterTime.value < enterDelay ) {
     return consoleInput.value = "";
-  }
+  };
+
+  lastEnterTime.value = now;
 
   consoleDataList.value.push( { text : consoleInput.value } );
 
@@ -89,6 +88,7 @@ const setConsoleData = () => {
     // @ts-ignore
     consoleDataListRef.value.scrollTop = ( consoleDataListRef.value.scrollHeight + 100 );
   }, 200)
+  setTimeout( () => { consoleInput.value = "" },50);
 }
 
 const removerConsoleData = ( item : any  ) => {
@@ -98,6 +98,9 @@ const removerConsoleData = ( item : any  ) => {
   consoleDataList.value = consoleDataList.value.filter( dataItem => item !== dataItem );
 }
 
+const resetConsoleData = () => {
+  consoleDataList.value = consoleDataList.value.filter( ( item, index ) => 0 === index );
+}
 
 /************************************************************
  * Watch
@@ -127,6 +130,15 @@ definePageMeta( {
 
     <div :class="cx( AboutStyle.ConsoleBox )">
       <em :class="cx( AboutStyle.ConsoleBoxGuide )">* 자유롭게 데이터를 추가 해주세요!</em>
+
+      <BaseBtn
+          v-if="2 <= consoleDataList.length"
+          :class="cx( AboutStyle.ConsoleResetButton )"
+          :hover="false"
+          @on-click="resetConsoleData"
+      >
+        <span>전체 삭제</span>
+      </BaseBtn>
 
       <div
         ref="consoleDataListRef"
