@@ -7,6 +7,7 @@ import { definePageMeta } from "~/.nuxt/imports";
 /************************************************************
  * Components
  ************************************************************/
+import Tag from "~/components/tag/Tag.vue";
 
 /************************************************************
  * Style
@@ -47,11 +48,15 @@ const { isEmpty } = useUtil.typeValidation;
  ************************************************************/
 const consoleInput = ref( "" );
 
+const consoleDataListRef = ref( null );
+
 const consoleDataList = ref([
   {
     text : "Welcome!",
   },
 ]);
+
+const lastEnterTime = ref( 0 );
 
 /************************************************************
  * Provide / inject Data
@@ -62,11 +67,28 @@ const consoleDataList = ref([
  ************************************************************/
 const setConsoleData = () => {
 
+  const now = Date.now();
+
+  const enterDelay = 500;
+
   if ( isEmpty( consoleInput.value ) ) return;
+
+  if ( now - lastEnterTime.value < enterDelay ) {
+    return consoleInput.value = "";
+  }
 
   consoleDataList.value.push( { text : consoleInput.value } );
 
   consoleInput.value = "";
+
+  lastEnterTime.value = now;
+
+  if ( isEmpty( consoleDataListRef.value ) ) return;
+
+  setTimeout( () => {
+    // @ts-ignore
+    consoleDataListRef.value.scrollTop = ( consoleDataListRef.value.scrollHeight + 100 );
+  }, 200)
 }
 
 const removerConsoleData = ( item : any  ) => {
@@ -75,6 +97,7 @@ const removerConsoleData = ( item : any  ) => {
 
   consoleDataList.value = consoleDataList.value.filter( dataItem => item !== dataItem );
 }
+
 
 /************************************************************
  * Watch
@@ -105,7 +128,10 @@ definePageMeta( {
     <div :class="cx( AboutStyle.ConsoleBox )">
       <em :class="cx( AboutStyle.ConsoleBoxGuide )">* 자유롭게 데이터를 추가 해주세요!</em>
 
-      <div :class="cx( AboutStyle.ConsoleDataList )">
+      <div
+        ref="consoleDataListRef"
+        :class="cx( AboutStyle.ConsoleDataList )"
+      >
         <span
             v-for="( item, index ) in consoleDataList"
             :key="index"
@@ -129,7 +155,7 @@ definePageMeta( {
           hide-details="auto"
           clearable
           placeholder="console box 에 추가 할 데이터를 입력해주세요."
-          @keydown.enter="setConsoleData"
+          @keydown.enter.prevent="setConsoleData"
         />
 
         <BaseBtn
@@ -143,8 +169,116 @@ definePageMeta( {
 
     <div :class="cx( AboutStyle.InfoBox )">
       <div>
-        <span v-text=""/>
+        <Tag
+          tag-name="html"
+          padding="1"
+        />
 
+        <Tag
+          tag-name="head"
+        />
+
+        <Tag
+          tag-name="title"
+        />
+
+        <div
+          :class="cx(
+            css`
+                padding-left: 0;
+            `
+          )"
+        >
+          <p></p>
+        </div>
+
+        <Tag
+          tag-name="title"
+          is-end
+        />
+
+        <Tag
+          tag-name="head"
+          is-end
+        />
+
+        <Tag
+          tag-name="body"
+        />
+
+        <Tag
+          tag-name="header"
+          options="class"
+          options-text="자기소개"
+
+        />
+
+        <div
+          :class="cx(
+            css`
+                padding-left: 0;
+            `
+          )"
+        >
+          <p></p>
+        </div>
+
+        <Tag
+          tag-name="header"
+          is-end
+        />
+
+        <Tag
+          tag-name="main"
+          options="class"
+          options-text="기술 / 경험"
+        />
+
+        <div
+          :class="cx(
+            css`
+                padding-left: 0;
+            `
+          )"
+        >
+          <p></p>
+        </div>
+
+        <Tag
+          tag-name="main"
+          is-end
+        />
+
+        <Tag
+          tag-name="footer"
+          options="class"
+          options-text="경력 / 교육"
+        />
+
+        <div
+          :class="cx(
+            css`
+                padding-left: 0;
+            `
+          )"
+        >
+          <p></p>
+        </div>
+
+        <Tag
+          tag-name="footer"
+          is-end
+        />
+
+        <Tag
+          tag-name="body"
+          is-end
+        />
+
+        <Tag
+          tag-name="html"
+          is-end
+        />
       </div>
     </div>
   </div>

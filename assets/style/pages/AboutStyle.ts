@@ -57,7 +57,7 @@ export const AboutStyle = {
   ConsoleBoxGuide : css`
     position: absolute;
     top: 1rem;
-    right: 1rem;
+    right: 2.5rem;
     font-size: 1.4rem;
   `,
 
