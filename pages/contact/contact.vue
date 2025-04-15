@@ -163,31 +163,35 @@ definePageMeta( {
 
 <template>
   <div :class="cx('contact', ContactStyle.Default )">
-    <div :class="cx( ContactStyle.Content )">
+    <div :class="cx( ContactStyle.Me )">
+      <img src="@/assets/images/img/img_me1.png" alt="">
+
       <div>
-        <div :class="cx( ContactStyle.Emphasis )">
-          <span>.</span>
-          <em ref="emphasisRef">SOCIALS</em>
-          <span>{</span>
-        </div>
-        <div :class="cx( ContactStyle.ListArea )">
-          <ul
+        <img src="@/assets/images/img/img_name.png" alt="">
+        <img src="@/assets/images/img/img_cat.png" alt="">
+      </div>
+    </div>
+
+    <div :class="cx( ContactStyle.Content )">
+      <div :class="cx( ContactStyle.ListArea )">
+        <b>SOCIALS</b>
+
+        <ul
             ref="listAreaRef"
-          >
-            <li
+        >
+          <li
               v-for="( item, index ) in contactData.socialsList"
               :key="index"
               :class="cx( ContactStyle.ListItem )"
-            >
-              <span v-text="item.title" class="title"></span>
-              <span class="colon"> : </span>
-              <span v-if="!item.html" v-text="item.text" class="text"></span>
-              <span v-if="item.html" v-html="item.text" class="text" @mouseenter="setCursor( item.title )" @mouseleave="removeCursor"></span>
-            </li>
-          </ul>
-        </div>
-        <span :class="cx( ContactStyle.Emphasis )">}</span>
+          >
+            <span v-text="item.title" class="title"></span>
+            <span class="colon"> : </span> <br>
+            <span v-if="!item.html" v-text="item.text" class="text"></span>
+            <span v-if="item.html" v-html="item.text" class="text" @mouseenter="setCursor( item.title )" @mouseleave="removeCursor"></span>
+          </li>
+        </ul>
       </div>
+
       <div v-if="contactBooleanData.isVideo" :class="cx( ContactStyle.Video )">
         <video autoplay  muted>
           <source src="@/assets/video/contact/video_contact.mp4" type="video/mp4" />

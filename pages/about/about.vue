@@ -53,6 +53,8 @@ const consoleDataList = ref([
   },
 ]);
 
+const lastEnterTime = ref( 0 );
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
@@ -62,11 +64,16 @@ const consoleDataList = ref([
  ************************************************************/
 const setConsoleData = () => {
 
-  if ( isEmpty( consoleInput.value ) ) return;
+  const enterDelay = 500;
+  const now = Date.now();
+
+  if ( isEmpty( consoleInput.value ) || now - lastEnterTime.value < enterDelay ) return;
+
+  lastEnterTime.value = now;
 
   consoleDataList.value.push( { text : consoleInput.value } );
 
-  consoleInput.value = "";
+  setTimeout( () => { consoleInput.value = "" },50);
 }
 
 const removerConsoleData = ( item : any  ) => {
@@ -74,6 +81,10 @@ const removerConsoleData = ( item : any  ) => {
   if ( isEmpty( item ) ) return;
 
   consoleDataList.value = consoleDataList.value.filter( dataItem => item !== dataItem );
+}
+
+const resetConsoleData = () => {
+  consoleDataList.value = consoleDataList.value.filter( ( item, index ) => 0 === index );
 }
 
 /************************************************************
@@ -105,6 +116,15 @@ definePageMeta( {
     <div :class="cx( AboutStyle.ConsoleBox )">
       <em :class="cx( AboutStyle.ConsoleBoxGuide )">* 자유롭게 데이터를 추가 해주세요!</em>
 
+      <BaseBtn
+          v-if="2 <= consoleDataList.length"
+          :class="cx( AboutStyle.ConsoleResetButton )"
+          :hover="false"
+          @on-click="resetConsoleData"
+      >
+        <span>전체 삭제</span>
+      </BaseBtn>
+
       <div :class="cx( AboutStyle.ConsoleDataList )">
         <span
             v-for="( item, index ) in consoleDataList"
@@ -129,7 +149,7 @@ definePageMeta( {
           hide-details="auto"
           clearable
           placeholder="console box 에 추가 할 데이터를 입력해주세요."
-          @keydown.enter="setConsoleData"
+          @keydown.enter.stop="setConsoleData"
         />
 
         <BaseBtn

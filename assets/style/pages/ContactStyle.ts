@@ -15,10 +15,38 @@ const { setMedia } = _uiUtil();
  ************************************************************/
 export const ContactStyle = {
   Default : css`
-    ${StyleUtils.FlexUtils("center", "flex-start")};
+    ${StyleUtils.FlexUtils("stretch", "flex-start")};
     ${CommonStyle.DefaultPadding};
     gap: 8rem;
     width: 100%;
+  `,
+
+  Me : css`
+    ${StyleUtils.FlexUtils("flex-end", "flex-start")};
+    width: 50rem;
+    height: auto;
+    border-radius: 1rem;
+    
+    > img {
+      width: 35rem;
+      height: auto;
+      margin-left: auto;
+    }
+    
+    > div {
+      img {
+        &:nth-of-type(1) {
+          width: 10rem;
+          height: auto;
+          margin: 0 auto;
+        }
+
+        &:nth-of-type(2) {
+          width: 15rem;
+          height: auto;
+        }
+      }
+    }
   `,
 
   Content : css`
@@ -83,15 +111,24 @@ export const ContactStyle = {
   ListArea : css`
     padding: 1rem 4rem;
     
-    li {
-      + li {
-        margin-top: 2rem;
-      }
+    b {
+      font-size: 5rem;
+      color: #C880B4;
+    }
+    
+    ul {
+      li {
+        
+        + li {
+          margin-top: 2rem;
+        }
+      } 
     }
   `,
 
   ListItem : css`
-    font-size: 1.8rem;
+    font-size: 2rem;
+    font-weight: 500;
     color: var( --white-color );
     
     span {
@@ -100,10 +137,12 @@ export const ContactStyle = {
 
     .title {
       width: 7rem;
+      color: #C880B4;
     }
     
     .colon {
       margin-right: 1rem;
+      color: #C880B4;
     }
     
     .text {

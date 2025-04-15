@@ -61,6 +61,26 @@ export const AboutStyle = {
     font-size: 1.4rem;
   `,
 
+  ConsoleResetButton : css`
+    &.v-btn--variant-text {
+      position: absolute;
+      top: -4.5rem;
+      right: 0;
+      height: 3.2rem !important;
+      font-size: 1.4rem;
+      font-weight: 500;
+      padding: 0 1rem;
+      border: 1px solid var( --system-red-color );
+      color: var( --system-red-color );
+      background: var( --white-color );
+      
+      &:hover {
+        color: var( --white-color );
+        background: rgba( 255, 60, 60, 0.7 );
+      }
+    }
+  `,
+
   ConsoleDataList : css`
     ${ CommonStyle.Scroll };
     height: fit-content;
@@ -92,6 +112,11 @@ export const AboutStyle = {
     
     .v-input {
       padding: 1rem 5rem 1rem 1rem;
+      
+      .mdi-close-circle {
+        width: 2rem;
+        height: 2rem;
+      }
     }
     
     .v-btn {
