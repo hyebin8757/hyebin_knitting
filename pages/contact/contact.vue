@@ -41,26 +41,21 @@ const contactData = reactive({
   socialsList : [
     {
       title : "email",
-      text : `<a href="mailto:dnwnekek2@naver.com" ref="email">
-                <span>dn</span><span>wk</span><span>ek</span><span>e2</span><span>@n</span><span>av</span><span>er</span><span>.com</span>
+      text : `<a href="mailto:dnwnekek2@gmail.com" ref="email">
+                <span>dn</span><span>wk</span><span>ek</span><span>e2</span><span>@g</span><span>ma</span><span>il</span><span>.com</span>
               </a>
       `,
       html : true,
     },
     {
       title : "github",
-      text : "",
-      html : false,
-    },
-    {
-      title : "notion",
-      text : "",
+      text : "miuju",
       html : false,
     },
     {
       title : "kakao",
-      text : "",
-      html : false,
+      text : `<a href="">kakao open chat</a>`,
+      html : true,
     },
   ],
 });

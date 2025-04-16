@@ -25,7 +25,6 @@ export const AboutStyle = {
 
   Introduction : css`
     display: block;
-    margin: 2rem 0;
     font-size: 1.8rem;
     font-weight: 500;
     color: #9CA6AD;
@@ -38,6 +37,7 @@ export const AboutStyle = {
   ConsoleBox : css`
     position: relative;
     width: 50%;
+    margin-top: 2rem;
     padding: 1rem;
     border-radius: 1rem;
     font-size: 1.6rem;
@@ -130,7 +130,13 @@ export const AboutStyle = {
   `,
 
   InfoBox : css`
+    margin-top: 2rem;
     
+    div {
+      + div {
+        margin-top: 1.5rem;
+      }
+    }
   `,
 }
 
