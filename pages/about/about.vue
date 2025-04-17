@@ -58,6 +58,24 @@ const consoleDataList = ref([
 
 const lastEnterTime = ref( 0 );
 
+const technologyList = ref( [
+  {
+    text : "모노레포를 활용한 프로젝트 관리",
+  },
+  {
+    text : "JavaScript 와 TypeScript 을 활용한 동적 UI 개발",
+  },
+  {
+    text : "Vue 에서 EmotionCss 와 TypeScript 이용한 StyledComponents 생성",
+  },
+  {
+    text : "StoryBook 을 이용한 컴포넌트 생성 및 컴퍼넌트 문서화",
+  },
+  {
+    text : "Css 에서 Scss 를 이용한 스타일 마이그레이션 설계 및 Style 아키텍처 생성",
+  },
+]);
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
@@ -240,11 +258,11 @@ definePageMeta( {
         <p :class="cx( AboutStyle.Introduction )">
           안녕하세요! <br><br>
           저는 디자인과 사용자 경험을 웹에 자연스럽게 녹여내는 것을 좋아하며 <br>
-          모든 팀과 소통하면서 최선의 방법을 찾아 퍼블리싱 하는 퍼블리셔 민우주 입니다!<br> <br>
+          <b>모든 팀과 소통하면서</b> 최선의 방법을 찾아 퍼블리싱 하는 <b>퍼블리셔 민우주</b> 입니다!<br> <br>
 
-          작업 시 컴포넌트 기반 개발, 반응형 UI, 접근성 고려를 기본으로, 유지보수와 확장성을 생각한 퍼블리싱을 지향합니다. <br> <br>
+          작업 시 <b>컴포넌트 기반 개발, 반응형 UI, 접근성</b> 고려를 기본으로, 유지보수와 확장성을 생각한 퍼블리싱을 지향합니다. <br> <br>
 
-          특히 Vue 생태계에 익숙하며, Nuxt를 활용한 SSR 환경 구성이나 SEO 최적화에도 자신이 있습니다.<br> <br>
+          특히 <b>Vue</b> 생태계에 익숙하며, <b>Nuxt</b>를 활용한 <b>SSR 환경</b> 구성이나 <b>SEO 최적화</b>에도 자신이 있습니다.<br> <br>
 
           작은 디테일까지 놓치지 않는 꼼꼼함과 개발자와 디자이너 사이에서 원활한 커뮤니케이션을 통해 <br>
           프로젝트의 완성도를 높이는 데 기여하는 퍼블리셔가 되기 위해 끊임없이 배우고 성장하고 있습니다!
@@ -267,11 +285,27 @@ definePageMeta( {
       <div
           :class="cx(
             css`
-                padding-left: 0;
+                padding-left: 7rem;
             `
           )"
       >
-        <p></p>
+        <b>기술</b>
+
+        <ul>
+          <li
+            v-for="( item, index ) in technologyList"
+            :key="index"
+            v-text="item.text"
+          />
+        </ul>
+
+        <b>경험</b>
+
+        <p :class="cx( AboutStyle.Introduction )">
+          다수의 공공기관 및 기업에서 요구하는 니즈에 맞춰 웹/앱 서비스의 <br>
+          퍼블리싱, 유지보수, 리뉴얼을 진행하며 다양한 문제를 경험했고, <br>
+          이를 해결해 나가며 지속적으로 배우고 성장하고 있습니다.
+        </p>
       </div>
 
       <Tag
@@ -290,11 +324,23 @@ definePageMeta( {
       <div
           :class="cx(
             css`
-                padding-left: 0;
+                padding-left: 7rem;
             `
           )"
       >
-        <p></p>
+        <b>경력</b>
+
+        <span :class="cx( AboutStyle.Introduction )">
+          (주)리마커블 소프트
+          - 웹퍼블리셔 ( 2021.08 ~ 현재 )
+        </span>
+
+        <b>교육</b>
+
+        <span :class="cx( AboutStyle.Introduction )">
+          이젠아케데미(서울)
+          - 웹디자인/웹퍼블리셔 과정 수료 ( 2021.03 ~ 2021.08 )
+        </span>
       </div>
 
       <Tag
