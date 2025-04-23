@@ -60,19 +60,19 @@ const lastEnterTime = ref( 0 );
 
 const technologyList = ref( [
   {
-    text : "모노레포를 활용한 프로젝트 관리",
+    text : `- <b>모노레포</b>를 활용한 프로젝트 관리`,
   },
   {
-    text : "JavaScript 와 TypeScript 을 활용한 동적 UI 개발",
+    text : `- <b>JavaScript</b> 와 <b>TypeScript</b> 을 활용한 동적 UI 개발`,
   },
   {
-    text : "Vue 에서 EmotionCss 와 TypeScript 이용한 StyledComponents 생성",
+    text : `- Vue 에서 <b>EmotionCss</b> 와 TypeScript 이용한 <b>StyledComponents</b> 생성`,
   },
   {
-    text : "StoryBook 을 이용한 컴포넌트 생성 및 컴퍼넌트 문서화",
+    text : `- <b>StoryBook</b> 을 이용한 컴포넌트 생성 및 컴퍼넌트 문서화`,
   },
   {
-    text : "Css 에서 Scss 를 이용한 스타일 마이그레이션 설계 및 Style 아키텍처 생성",
+    text : `- Css 에서 Scss 를 이용한 <b>스타일 마이그레이션</b> 설계 및 Style 아키텍처 생성`,
   },
 ]);
 
@@ -284,28 +284,34 @@ definePageMeta( {
 
       <div
           :class="cx(
+            AboutStyle.Introduction,
+            AboutStyle.ExperienceBox,
             css`
                 padding-left: 7rem;
             `
           )"
       >
-        <b>기술</b>
+        <div>
+          <b>기술</b>
 
-        <ul>
-          <li
-            v-for="( item, index ) in technologyList"
-            :key="index"
-            v-text="item.text"
-          />
-        </ul>
+          <ul>
+            <li
+              v-for="( item, index ) in technologyList"
+              :key="index"
+              v-html="item.text"
+            />
+          </ul>
+        </div>
 
-        <b>경험</b>
+        <div>
+          <b>경험</b>
 
-        <p :class="cx( AboutStyle.Introduction )">
-          다수의 공공기관 및 기업에서 요구하는 니즈에 맞춰 웹/앱 서비스의 <br>
-          퍼블리싱, 유지보수, 리뉴얼을 진행하며 다양한 문제를 경험했고, <br>
-          이를 해결해 나가며 지속적으로 배우고 성장하고 있습니다.
-        </p>
+          <p :class="cx( AboutStyle.Introduction )">
+            다수의 공공기관 및 기업에서 요구하는 니즈에 맞춰 웹/앱 서비스의 <br>
+            퍼블리싱, 유지보수, 리뉴얼을 진행하며 다양한 문제를 경험했고, <br>
+            이를 해결해 나가며 지속적으로 배우고 성장하고 있습니다.
+          </p>
+        </div>
       </div>
 
       <Tag
@@ -323,24 +329,30 @@ definePageMeta( {
 
       <div
           :class="cx(
+            AboutStyle.Introduction,
+            AboutStyle.ExperienceBox,
             css`
                 padding-left: 7rem;
             `
           )"
       >
-        <b>경력</b>
+        <div>
+          <b>경력</b>
 
-        <span :class="cx( AboutStyle.Introduction )">
-          (주)리마커블 소프트
-          - 웹퍼블리셔 ( 2021.08 ~ 현재 )
-        </span>
+          <span :class="cx( AboutStyle.Introduction )">
+            (주)리마커블 소프트
+            - 웹퍼블리셔 ( 2021.08 ~ 현재 )
+          </span>
+        </div>
 
-        <b>교육</b>
+        <div>
+          <b>교육</b>
 
-        <span :class="cx( AboutStyle.Introduction )">
-          이젠아케데미(서울)
-          - 웹디자인/웹퍼블리셔 과정 수료 ( 2021.03 ~ 2021.08 )
-        </span>
+          <span :class="cx( AboutStyle.Introduction )">
+            이젠아케데미(서울)
+            - 웹디자인/웹퍼블리셔 과정 수료 ( 2021.03 ~ 2021.08 )
+          </span>
+        </div>
       </div>
 
       <Tag

@@ -138,6 +138,23 @@ export const AboutStyle = {
       }
     }
   `,
+
+  ExperienceBox : css`
+    ul {
+      li {
+        + li {
+          margin-top: 1rem;
+        }
+      }
+    }
+    
+    > div {
+      > b {
+        display: inline-block;
+        margin-bottom: 1.5rem;
+      }
+    }
+  `,
 }
 
 /************************************************************
