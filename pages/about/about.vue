@@ -54,6 +54,9 @@ const consoleDataList = ref([
   {
     text : "Welcome!",
   },
+  {
+    text : "You’re invited to Min U JU portfolio!!",
+  },
 ]);
 
 const lastEnterTime = ref( 0 );
@@ -117,7 +120,7 @@ const removerConsoleData = ( item : any  ) => {
 }
 
 const resetConsoleData = () => {
-  consoleDataList.value = consoleDataList.value.filter( ( item, index ) => 0 === index );
+  consoleDataList.value = consoleDataList.value.filter( ( item, index ) => 2 > index );
 }
 
 /************************************************************
@@ -139,16 +142,11 @@ definePageMeta( {
 
 <template>
   <div :class="cx( AboutStyle.Default )">
-    <h2 :class="cx( AboutStyle.Title )">
-      환영합니다. 민우주의 <br>
-      포트폴리오에 초대합니다!
-    </h2>
-
     <div :class="cx( AboutStyle.ConsoleBox )">
       <em :class="cx( AboutStyle.ConsoleBoxGuide )">* 자유롭게 데이터를 추가 해주세요!</em>
 
       <BaseBtn
-          v-if="2 <= consoleDataList.length"
+          v-if="3 <= consoleDataList.length"
           :class="cx( AboutStyle.ConsoleResetButton )"
           :hover="false"
           @on-click="resetConsoleData"
@@ -164,10 +162,10 @@ definePageMeta( {
             v-for="( item, index ) in consoleDataList"
             :key="index"
         >
-          console<em>.log("<b>{{item.text}}</b>");</em>
+          console<em>.log( "<b>{{item.text}}</b>" );</em>
 
           <BaseBtn
-              v-if="0 !== index"
+              v-if="2 <= index"
               :hover="false"
               @on-click="removerConsoleData( item )"
           >

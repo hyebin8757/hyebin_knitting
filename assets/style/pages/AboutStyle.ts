@@ -18,11 +18,6 @@ export const AboutStyle = {
     ${CommonStyle.DefaultPadding};
   `,
 
-  Title : css`
-    font-size: 4.8rem;
-    color: #D4CAB2;
-  `,
-
   Introduction : css`
     display: block;
     font-size: 1.8rem;
