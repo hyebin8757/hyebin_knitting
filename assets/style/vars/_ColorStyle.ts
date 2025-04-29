@@ -66,7 +66,7 @@ export const ColorStyle = {
       --background-color-1: #F5F5F5;
       --background-color-2: #EDEDED;
       --background-color-3: #D4EAFF;
-      --background-color-4: #FFF4D4;
+      --background-color-4: #F3EFD6;
 
     }
 

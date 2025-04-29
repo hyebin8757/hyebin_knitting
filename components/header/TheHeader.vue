@@ -16,6 +16,7 @@ import { HeaderStyle } from "~/components/header/style/HeaderStyle";
  * Utils, Constants...
  ************************************************************/
 import { useUserStore } from "~/stores/useUserStore";
+import ButtonGroup from "~/components/buttonGroup/ButtonGroup.vue";
 
 /************************************************************
  * Types, Interface
@@ -54,24 +55,6 @@ const onMenuReset = ( text : string ) => {
  * Raw Data ( 원시 데이터 )
  ************************************************************/
 const headerData = reactive({
-  buttonList : [
-    {
-      value : "닫기",
-      iconName : "close",
-      className : "close",
-    },
-    {
-      value : "최소화",
-      iconName : "remove",
-      className : "remove",
-    },
-    {
-      value : "확대",
-      iconName : "zoom_out_map",
-      className : "zoom",
-    },
-  ],
-
   menuList : [
     {
       text : "File",
@@ -149,16 +132,8 @@ const changeMode = () => {
 <template>
   <div :class="cx('header', HeaderStyle.Default )">
     <div :class="cx('left', HeaderStyle.Left )">
-      <div :class="cx('button-group', HeaderStyle.ButtonGroup )">
-        <div
-          v-for="( item, index ) in headerData.buttonList"
-          :key="index"
-          :class="cx('button-item', item.className )"
-        >
-          <span class="material-icons" v-text="item.iconName"></span>
-          <label v-text="item.value"></label>
-        </div>
-      </div>
+      <ButtonGroup/>
+
       <div :class="cx('menu-list', HeaderStyle.MenuList)">
         <span
           v-for="( item, index ) in headerData.menuList"

@@ -46,6 +46,18 @@ const { useImage } = useUtil.AssetResolverUtil;
 /************************************************************
  * Dynamic Data ( 동적 데이터 )
  ************************************************************/
+const buttonList = ref([
+  {
+    value : "닫기",
+    iconName : "close",
+    className : "close",
+  },
+  {
+    value : "확대",
+    iconName : "zoom_out_map",
+    className : "zoom",
+  },
+]);
 
 /************************************************************
  * Provide / inject Data
@@ -79,7 +91,7 @@ definePageMeta( {
 <template>
   <div ref="mainRef" :class="cx( MainStyle.Default )">
     <div :class="cx( MainStyle.Title )">
-      민우주의 포트폴리오에 오신 걸 환영합니다!
+      민우주의 퍼블리싱 우주에 오신 걸 환영합니다!
       <img src="@/assets/images/img/cat_logo.svg" alt="">
     </div>
 
@@ -87,9 +99,7 @@ definePageMeta( {
       <div :class="cx( MainStyle.CodeBox )">
         <div :class="cx( MainStyle.CodeBoxHeader )">
           <div>
-            <div :class="cx( MainStyle.CodeBoxHeaderButton )">
-              <span>버튼 스타일</span>
-            </div>
+            <ButtonGroup :button-list="buttonList" />
 
             <div>
               <span>template</span>
@@ -108,7 +118,7 @@ definePageMeta( {
       
       <div :class="cx( MainStyle.CatBox )">
         <div :class="cx( MainStyle.CatBoxGuide )">
-          <span>구경 할래 냥?</span>
+          <b>구경 할래 냥?</b>
         </div>
 
         <img src="@/assets/images/img/img_cat_main.png" alt="">
@@ -129,6 +139,7 @@ definePageMeta( {
         variant="text"
         @on-click=""
       >
+        <img src="@/assets/images/icon/icon_project.png" alt="">
         <span>프로젝트 보러가기</span>
       </BaseBtn>
 
@@ -137,6 +148,7 @@ definePageMeta( {
         variant="text"
         @on-click=""
       >
+        <img src="@/assets/images/icon/icon_contact.png" alt="">
         <span>나에게 연락하기</span>
       </BaseBtn>
     </div>

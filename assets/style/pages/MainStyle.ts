@@ -20,6 +20,7 @@ export const MainStyle = {
     position: relative;
     width: 100%;
     height: calc( 100% - ${MenuStyleData.menuHeight}rem );
+    padding: 3rem;
     overflow: hidden;
     background: url(${useImage("/assets/images/bg/bg_main.png")}) repeat center center/cover;;
   `,
@@ -32,7 +33,7 @@ export const MainStyle = {
     font-size: 4rem;
     font-weight: bold;
     white-space: nowrap;
-    color: var( --white-color );
+    color: var( --background-color-4 );
     z-index: 100;
     
     img {
@@ -42,23 +43,48 @@ export const MainStyle = {
   `,
 
   Content : css`
-    ${StyleUtils.FlexUtils("stretch", "flex-start")};
+    ${StyleUtils.FlexUtils("stretch", "center")};
+    gap: 3rem;
+    margin-top: 4rem;
   `,
 
 
   CodeBox : css`
+    width: 100rem;
+    border: 1px solid #769DA6;
+    border-radius: 2rem;
   `,
 
   CodeBoxHeader : css`
+    ${StyleUtils.FlexUtils("center", "space-between")};
+    height: 4rem;
+    padding: 0 2rem;
+    border-radius: 2rem 2rem 0 0;
+    font-size: 1.6rem;
+    font-weight: 500;
+    color: var( --background-color-4 );
+    background: var( --primary-color );
+    
+    > div {
+      &:nth-of-type(1) {
+        ${StyleUtils.FlexUtils("center", "flex-start")};
+        gap: 1.5rem;
+      }
+    }
   `,
 
   CodeBoxHeaderButton : css`
   `,
 
   CodeBoxContent : css`
+    width: 100%;
+    height: calc( 100% - 4rem );
+    border-radius: 0 0 2rem 2rem;
+    background: #010F1C;
   `,
 
   CatBox : css`
+    text-align: center;
     
     > img {
       width: 50rem;
@@ -66,22 +92,68 @@ export const MainStyle = {
     }
     
     .v-btn {
-      width: 3rem;
+      width: 15rem;
       height: 3rem;
+      background: var( --background-color-4 );
       
       img {
-        width: 100%;
-        height: 100%;
+        width: 3rem;
+        height: 3rem;
+      }
+      
+      &:hover {
+        background: var( --system-red-color );
+        
+        img {
+          filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(2%) hue-rotate(338deg) brightness(111%) contrast(101%);
+        }
       }
     }
   `,
 
   CatBoxGuide : css`
+    ${StyleUtils.FlexUtils("center", "center")};
+    position: relative;
+    width: 40rem;
+    height: 5rem;
+    margin: 0 auto;
+    border-radius: 5rem;
+    font-size: 2rem;
+    background: var( --background-color-4 );
+    
+    &:before {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX( -50% );
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-left: 1rem solid transparent;
+      border-right: 1rem solid transparent;
+      border-top: 2rem solid var( --background-color-4 );; 
+    }
   `,
 
   ButtonGroup : css`
-    ${StyleUtils.FlexUtils("center", "flex-start")};
-    gap: 1.5rem;
+    ${StyleUtils.FlexUtils("center", "center")};
+    gap: 10rem;
+    margin-top: 4rem;
+
+    .v-btn.v-btn--density-default {
+      flex: 1;
+      max-width: 20rem;
+      height: 5rem;
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: var( --background-color-4 );
+      
+      img {
+        width: 3rem;
+        height: auto;
+      }
+    }
   `,
 }
 
