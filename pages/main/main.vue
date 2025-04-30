@@ -59,6 +59,10 @@ const buttonList = ref([
   },
 ]);
 
+const isHeartEvent = ref( false );
+
+const codeBoxPending = ref( true );
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
@@ -66,6 +70,21 @@ const buttonList = ref([
 /************************************************************
  * Function
  ************************************************************/
+const setCodeBox = () => {
+
+  onHeartEvent();
+
+  codeBoxPending.value = false;
+}
+
+const onHeartEvent = () => {
+
+  if ( isHeartEvent.value ) return;
+
+  isHeartEvent.value = true;
+
+  setTimeout( () => isHeartEvent.value = false, 1000 )
+}
 
 /************************************************************
  * Watch
@@ -112,6 +131,14 @@ definePageMeta( {
         </div>
 
         <div :class="cx( MainStyle.CodeBoxContent )">
+          <div
+            v-if="codeBoxPending"
+            :class="cx( MainStyle.CodeBoxPending )"
+          >
+            <img src="@/assets/images/img/img_loading.svg" alt="">
+
+            <span>데이터 생성중...</span>
+          </div>
 
         </div>
       </div>
@@ -121,12 +148,16 @@ definePageMeta( {
           <b>구경 할래 냥?</b>
         </div>
 
-        <img src="@/assets/images/img/img_cat_main.png" alt="">
+        <div :class="cx( MainStyle.CatBoxImg )">
+          <img src="@/assets/images/img/img_nameplate.png" alt="">
+          <img src="@/assets/images/img/img_cat_main.png" alt="">
+        </div>
 
         <BaseBtn
+          :class="cx( { 'is-active' : isHeartEvent } )"
           :hover="false"
           variant="text"
-          @on-click=""
+          @on-click="setCodeBox"
         >
           <img src="@/assets/images/icon/icon_heart.png" alt="">
         </BaseBtn>

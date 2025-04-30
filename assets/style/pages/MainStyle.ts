@@ -22,7 +22,7 @@ export const MainStyle = {
     height: calc( 100% - ${MenuStyleData.menuHeight}rem );
     padding: 3rem;
     overflow: hidden;
-    background: url(${useImage("/assets/images/bg/bg_main.png")}) repeat center center/cover;;
+    background: url(${useImage("/assets/images/bg/bg_main.png")}) repeat center center/cover;
   `,
 
   Title : css`
@@ -83,18 +83,49 @@ export const MainStyle = {
     background: #010F1C;
   `,
 
+  CodeBoxPending : css`
+    ${StyleUtils.FlexUtils("center", "center")};
+    width: 100%;
+    height: 100%;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var( --white-color );
+    
+    img {
+      width: 5rem;
+      height: auto;
+    }
+  `,
+
   CatBox : css`
     text-align: center;
     
-    > img {
-      width: 50rem;
-      height: auto;
-    }
-    
     .v-btn {
+      position: relative;
       width: 15rem;
       height: 3rem;
       background: var( --background-color-4 );
+      
+      &::after {
+        content: "";
+        position: absolute;
+        display: inline-block;
+        width: 3rem;
+        height: 3rem;
+        opacity: 0;
+        left: 50%;
+        transform: translate( -50%, 0 );
+        border: 0 none !important;
+        pointer-events: none;
+        transition: none;
+        background: url(${useImage("/assets/images/icon/icon_heart.png")}) repeat center center/cover;
+      }
+      
+      &.is-active {
+        &::after {
+          animation: slideUpFade 1s ease-out forwards;
+        }
+      }
       
       img {
         width: 3rem;
@@ -107,6 +138,25 @@ export const MainStyle = {
         img {
           filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(2%) hue-rotate(338deg) brightness(111%) contrast(101%);
         }
+      }
+    }
+
+    @keyframes slideUpFade {
+      0% {
+        opacity: 0;
+        transform: translateY(0);
+      }
+      30% {
+        opacity: 1;
+        transform: translateY(-10px);
+      }
+      70% {
+        opacity: 1;
+        transform: translateY(-30px);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-40px);
       }
     }
   `,
@@ -133,6 +183,24 @@ export const MainStyle = {
       border-left: 1rem solid transparent;
       border-right: 1rem solid transparent;
       border-top: 2rem solid var( --background-color-4 );; 
+    }
+  `,
+
+  CatBoxImg : css`
+    position: relative;
+    img {
+      &:nth-of-type(1) {
+        position: absolute;
+        top: 58%;
+        right: 40%;
+        width: 7rem;
+        height: auto;
+      }
+      
+      &:nth-of-type(2) {
+        width: 50rem;
+        height: auto;
+      }
     }
   `,
 
