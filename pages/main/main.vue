@@ -7,6 +7,7 @@ import { definePageMeta } from "~/.nuxt/imports";
 /************************************************************
  * Components
  ************************************************************/
+import BaseBtn from "~/components/base/btn/BaseBtn.vue";
 
 /************************************************************
  * Style
@@ -17,7 +18,6 @@ import { MainStyle } from "~/assets/style/pages/MainStyle";
  * Util, Constants...
  ************************************************************/
 import { useUtil } from "~/utils/useUtil";
-import BaseBtn from "~/components/base/btn/BaseBtn.vue";
 
 /************************************************************
  * Types, Interface
@@ -63,6 +63,20 @@ const isHeartEvent = ref( false );
 
 const codeBoxPending = ref( true );
 
+const codeRef = ref( null );
+
+const codeLines = ref( [
+  ` <template>안녕하세요</template>`,
+  `<head> 인사말 </head>`
+]);
+
+let parsedLines : any[] = [];
+let lineIndex = 0;
+let partIndex = 0;
+let charIndex = 0;
+let currentTarget : any = null;
+let cursor : any = null;
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
@@ -84,6 +98,83 @@ const onHeartEvent = () => {
   isHeartEvent.value = true;
 
   setTimeout( () => isHeartEvent.value = false, 1000 )
+}
+
+// 파싱 로직: 태그와 일반 텍스트 분리
+const parseLine = ( line : string ) => {
+
+  const regex = /(<\/?[a-zA-Z]+>)|([^<>]+)/g;
+
+  const parts = [];
+
+  let match;
+
+  while ( ( match = regex.exec(line) ) ) {
+    if ( match[1] ) {
+      parts.push({ type: 'tag', text: match[1] });
+    }
+    else if ( match[2] ) {
+      parts.push({ type: 'text', text: match[2] });
+    }
+  }
+
+  return parts;
+};
+
+// 파싱된 전체 라인 저장
+parsedLines = codeLines.value.map(( line, index ) => ({
+  parts: parseLine(line),
+  wrapper: Object.assign(document.createElement('div'), {
+    className: `line-${index}`
+  }),
+}));
+
+const typeLine = () => {
+
+  if ( lineIndex >= parsedLines.length ) {
+    return cursor?.remove();
+  }
+
+  const { wrapper, parts } = parsedLines[lineIndex];
+  const part = parts[partIndex];
+
+  if ( !part ) {
+    lineIndex++;
+    partIndex = 0;
+    charIndex = 0;
+    setTimeout(typeLine, 300);
+    return;
+  }
+
+  if ( 0 === charIndex && 0 === partIndex ) {
+    codeRef.value?.appendChild( wrapper ); // 줄이 시작되자마자 붙여!
+  }
+
+  if ( 0 === charIndex ) {
+    if ( "tag" === part.type ) {
+      currentTarget = document.createElement('div');
+
+      const tagName = part.text.replace(/[</>]/g, '');
+      currentTarget.classList.add(`tag-${tagName}`);
+
+      wrapper.appendChild(currentTarget);
+    }
+    else {
+      currentTarget = wrapper;
+    }
+  }
+
+  if ( charIndex < part.text.length ) {
+    const char = document.createTextNode(part.text[charIndex]);
+    currentTarget.insertBefore(char, cursor);
+    charIndex++;
+    setTimeout(typeLine, 25);
+  }
+  else {
+    partIndex++;
+    charIndex = 0;
+    setTimeout(typeLine, 100);
+  }
 }
 
 /************************************************************
@@ -121,7 +212,7 @@ definePageMeta( {
             <ButtonGroup :button-list="buttonList" />
 
             <div>
-              <span>template</span>
+              <span>Portfolio</span>
             </div>
           </div>
 
@@ -137,9 +228,15 @@ definePageMeta( {
           >
             <img src="@/assets/images/img/img_loading.svg" alt="">
 
-            <span>데이터 생성중...</span>
+            <span>
+              데이터 생성중...( <img src="@/assets/images/icon/icon_heart.png" alt=""> CLICK! )
+            </span>
           </div>
 
+          <div
+            ref="codeRef"
+            :class="cx( MainStyle.CodeBoxCode )"
+          />
         </div>
       </div>
       
@@ -157,7 +254,7 @@ definePageMeta( {
           :class="cx( { 'is-active' : isHeartEvent } )"
           :hover="false"
           variant="text"
-          @on-click="setCodeBox"
+          @on-click="() => { setCodeBox(); typeLine(); }"
         >
           <img src="@/assets/images/icon/icon_heart.png" alt="">
         </BaseBtn>
@@ -180,7 +277,7 @@ definePageMeta( {
         @on-click=""
       >
         <img src="@/assets/images/icon/icon_contact.png" alt="">
-        <span>나에게 연락하기</span>
+        <span>연락하기</span>
       </BaseBtn>
     </div>
   </div>

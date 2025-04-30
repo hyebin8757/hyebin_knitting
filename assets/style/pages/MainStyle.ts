@@ -91,9 +91,49 @@ export const MainStyle = {
     font-weight: 700;
     color: var( --white-color );
     
-    img {
+    > img {
       width: 5rem;
       height: auto;
+    }
+    
+    span {
+      img {
+        display: inline-block;
+        width: 2.4rem;
+        height: auto;
+        vertical-align: text-bottom;
+      } 
+    }
+  `,
+
+  CodeBoxCode : css`
+    width: 100%;
+    height: 100%;
+    padding: 2.4rem;
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: var( --white-color );
+    white-space: pre;
+
+    .hidden {
+      visibility: hidden;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 1rem;
+      background-color: #ccc;
+      animation: blink 0.8s infinite;
+    }
+    
+    .line-0 {
+      color : var( --primary-darken-color-1 );
+    }
+
+    @keyframes blink {
+      0%, 100% { background: #ccc; }
+      50% { background: transparent; }
     }
   `,
 
@@ -144,11 +184,11 @@ export const MainStyle = {
     @keyframes slideUpFade {
       0% {
         opacity: 0;
-        transform: translateY(0);
+        transform: translateY(-10px);
       }
       30% {
         opacity: 1;
-        transform: translateY(-10px);
+        transform: translateY(-20px);
       }
       70% {
         opacity: 1;
