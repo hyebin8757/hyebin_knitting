@@ -3,6 +3,7 @@ import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 import {MenuStyleData} from "~/components/menu/style/MenuStyle";
 import {useUtil} from "~/utils/useUtil";
+import { CommonStyle } from "assets/style/CommonStyle";
 
 const { setMedia } = _uiUtil();
 const { useImage } = useUtil.AssetResolverUtil;
@@ -77,8 +78,10 @@ export const MainStyle = {
   `,
 
   CodeBoxContent : css`
+    ${ CommonStyle.Scroll };
     width: 100%;
     height: calc( 100% - 4rem );
+    max-height: 54.4rem;
     border-radius: 0 0 2rem 2rem;
     background: #010F1C;
   `,
@@ -109,6 +112,7 @@ export const MainStyle = {
   CodeBoxCode : css`
     width: 100%;
     height: 100%;
+    overflow: auto;
     padding: 2.4rem;
     font-size: 1.8rem;
     font-weight: 500;
@@ -127,8 +131,72 @@ export const MainStyle = {
       animation: blink 0.8s infinite;
     }
     
-    .line-0 {
-      color : var( --primary-darken-color-1 );
+    [ class ^= "line" ] {
+      > [ class ^= "tag" ] {
+        &:nth-of-type(1) {
+          margin-top: 0.5rem;
+        }
+      }
+    }
+    
+    .tag-title {
+      &:nth-of-type(2) {
+      margin-top: 0.5rrem;
+      }
+      
+      &:nth-of-type(3) {
+        margin-bottom: 0.5rrem;
+      }
+    }
+    
+    .tag {
+      &-html,
+      &-body {
+        color : #FFCB6B;  
+      }
+
+      &-head,
+      &-main {
+        color : #82AAFF;
+      }
+      
+      &-title {
+        color : #C3E88D;
+      }
+
+      &-b {
+        color : #F07178;;
+      }
+
+      &-p {
+        color : #7FDBFF;
+      }
+
+
+      &-head,
+      &-body {
+        padding-left: 1rem;
+      }
+      
+      &-main,
+      &-title {
+        padding-left: 2rem;
+      }
+
+      &-b,
+      &-p {
+        padding-left: 3rem;
+        
+        + .text {
+          padding-left: 4rem;
+        }
+      }
+      
+      &-title {
+        + .text {
+          padding-left: 3rem;
+        }
+      }
     }
 
     @keyframes blink {
@@ -159,6 +227,7 @@ export const MainStyle = {
         pointer-events: none;
         transition: none;
         background: url(${useImage("/assets/images/icon/icon_heart.png")}) repeat center center/cover;
+        filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(2%) hue-rotate(338deg) brightness(111%) contrast(101%);
       }
       
       &.is-active {
