@@ -214,7 +214,7 @@ onMounted( () => {
 </script>
 
 <template>
-  <div :class="cx( MenuStyle.Default )">
+  <div :class="cx( 'menu',  MenuStyle.Default )">
     <BaseBtn
       v-for="( item, index ) in menuList"
       :key="index"

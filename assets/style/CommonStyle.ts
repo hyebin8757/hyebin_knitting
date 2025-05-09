@@ -2,7 +2,8 @@ import { css, cx, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 import { ColorStyle } from "assets/style/vars/_ColorStyle";
-import {ResetStyle} from "~/assets/style/base/_Reset"
+import { ResetStyle } from "~/assets/style/base/_Reset"
+import { DarkModeStyle } from "assets/style/vars/_DarkModeStyle";
 import "@fontsource/noto-sans-kr/korean.css";
 import "swiper/css";
 import "swiper/css/effect-cards";
@@ -402,6 +403,7 @@ const GlobalStyle = {
   CoreCommon  : CommonStyle.Default,
   Reset       : ResetStyle.Default,
   Color       : ColorStyle.Default,
+  Main        : DarkModeStyle.Default,
   Pagination  : CommonStyle.Pagination,
 }
 
@@ -410,6 +412,7 @@ injectGlobal`
     GlobalStyle.CoreCommon,
     GlobalStyle.Reset,
     GlobalStyle.Color,
+    GlobalStyle.Main,
     GlobalStyle.Pagination,
     CommonStyle.Input,
     CommonStyle.Button,

@@ -54,6 +54,7 @@ export const MainStyle = {
     width: 100rem;
     border: 1px solid #769DA6;
     border-radius: 2rem;
+    overflow: hidden;
   `,
 
   CodeBoxHeader : css`
@@ -338,6 +339,7 @@ export const MainStyle = {
  * global style
  ************************************************************/
 injectGlobal`
+ 
 `;
 
 

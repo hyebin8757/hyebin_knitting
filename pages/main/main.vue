@@ -259,15 +259,15 @@ definePageMeta( {
 </script>
 
 <template>
-  <div ref="mainRef" :class="cx( MainStyle.Default )">
-    <div :class="cx( MainStyle.Title )">
+  <div ref="mainRef" :class="cx( 'main', MainStyle.Default )">
+    <div :class="cx( 'main-title', MainStyle.Title )">
       민우주의 퍼블리싱 우주에 오신 걸 환영합니다!
       <img src="@/assets/images/img/cat_logo.svg" alt="">
     </div>
 
     <div :class="cx( MainStyle.Content )">
-      <div :class="cx( MainStyle.CodeBox )">
-        <div :class="cx( MainStyle.CodeBoxHeader )">
+      <div :class="cx( 'code-box', MainStyle.CodeBox )">
+        <div :class="cx( 'code-box-header', MainStyle.CodeBoxHeader )">
           <div>
             <ButtonGroup :button-list="buttonList" />
 
@@ -281,7 +281,7 @@ definePageMeta( {
           </div>
         </div>
 
-        <div :class="cx( MainStyle.CodeBoxContent )">
+        <div :class="cx( 'code-box-content', MainStyle.CodeBoxContent )">
           <div
             v-if="codeBoxPending"
             :class="cx( MainStyle.CodeBoxPending )"

@@ -90,7 +90,7 @@ const headerData = reactive({
  ************************************************************/
 const headerBooleanData = reactive({
   searchInputLoading : false,
-  isLightMode : false,
+  isLightMode : true,
 })
 
 /************************************************************
@@ -112,7 +112,21 @@ const onLogin = () => {
 
 // 다크모드 설정
 const changeMode = () => {
+
   headerBooleanData.isLightMode = !headerBooleanData.isLightMode;
+
+  onDarkMode();
+}
+
+const onDarkMode = () => {
+
+  const htmlDom = document.documentElement;
+
+  if ( !headerBooleanData.isLightMode ) {
+    return htmlDom.removeAttribute( "dark-mode" );
+  }
+
+  htmlDom.setAttribute( "dark-mode", "true" )
 }
 
 /************************************************************
@@ -122,6 +136,9 @@ const changeMode = () => {
 /************************************************************
  * Mounted
  ************************************************************/
+onMounted( () => {
+  onDarkMode();
+})
 
 /************************************************************
  * Layout

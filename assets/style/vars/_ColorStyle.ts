@@ -9,12 +9,17 @@ import { css, cx, injectGlobal } from "@emotion/css";
  ************************************************************/
 export const ColorStyle = {
   Default : css`
-    :root[dark-data=true] {
+    :root[dark-mode=true] {
       --white-color: #303030;
       --black-color: #FFFFFF;
+      --primary-color: #FFFBEE;
+      --gradation-color-1: #FFFBEE;
+      --primary-lighten-color-3: #FFFBEE;
+      --system-green-lighten-color: #FFB526;
+      --system-green-darken-color: #FFC727;
     }
 
-    :root {
+     :root {
       /** primary color **/
       --primary-color: #0c2034;
       --primary-darken-color-1: #2366B4;
