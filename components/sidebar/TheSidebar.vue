@@ -258,7 +258,7 @@ onMounted( () => {
           />
         </v-list-group>
 
-        <v-list-item :class="cx( SidebarStyle.BookmarkList )">
+        <v-list-item :class="cx( 'bookmark-list', SidebarStyle.BookmarkList )">
           <div :class="cx( SidebarStyle.BookmarkTitle )">
             <span>즐겨찾기</span>
             <v-tooltip

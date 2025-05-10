@@ -184,7 +184,7 @@ onMounted( () => {
         variant="text"
         @click="changeMode"
       >
-        <span class="material-icons" v-text="headerBooleanData.isLightMode ? 'light_mode' : 'dark_mode'"></span>
+        <span class="material-icons" v-text="headerBooleanData.isLightMode ? 'dark_mode' : 'light_mode' "></span>
       </v-btn>
       <v-btn
         v-if="!isLogin"

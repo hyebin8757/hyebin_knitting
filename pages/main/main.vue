@@ -300,7 +300,7 @@ definePageMeta( {
         </div>
       </div>
       
-      <div :class="cx( MainStyle.CatBox )">
+      <div :class="cx( 'cat-box', MainStyle.CatBox )">
         <div :class="cx( MainStyle.CatBoxGuide )">
           <b v-text="catGuide"/>
         </div>

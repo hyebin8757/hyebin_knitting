@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch } from "vue";
+import { reactive, watch, onMounted } from "vue";
 import { cx } from "@emotion/css";
 import { useRouter } from "vue-router";
 
@@ -169,6 +169,9 @@ watch( () => loginBooleanData.alert, ( newValue : boolean ) => {
 /************************************************************
  * Mounted
  ************************************************************/
+onMounted( () => {
+  document.documentElement.removeAttribute( "dark-mode" );
+})
 
 /************************************************************
  * Layout

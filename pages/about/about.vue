@@ -141,8 +141,8 @@ definePageMeta( {
 </script>
 
 <template>
-  <div :class="cx( AboutStyle.Default )">
-    <div :class="cx( AboutStyle.ConsoleBox )">
+  <div :class="cx( 'about', AboutStyle.Default )">
+    <div :class="cx( 'console-box', AboutStyle.ConsoleBox )">
       <em :class="cx( AboutStyle.ConsoleBoxGuide )">* 자유롭게 데이터를 추가 해주세요!</em>
 
       <BaseBtn
@@ -337,19 +337,19 @@ definePageMeta( {
         <div>
           <b>경력</b>
 
-          <span :class="cx( AboutStyle.Introduction )">
+          <p :class="cx( AboutStyle.Introduction )">
             (주)리마커블 소프트
             - 웹퍼블리셔 ( 2021.08 ~ 현재 )
-          </span>
+          </p>
         </div>
 
         <div>
           <b>교육</b>
 
-          <span :class="cx( AboutStyle.Introduction )">
+          <p :class="cx( AboutStyle.Introduction )">
             이젠아케데미(서울)
             - 웹디자인/웹퍼블리셔 과정 수료 ( 2021.03 ~ 2021.08 )
-          </span>
+          </p>
         </div>
       </div>
 

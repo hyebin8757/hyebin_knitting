@@ -16,8 +16,84 @@ const { useImage } = useUtil.AssetResolverUtil;
  ************************************************************/
 export const DarkModeStyle = {
   Default : css`
-    
- `,
+  
+  `,
+
+  Header : css`
+    .header {
+      border-bottom: 1px solid #C2C2C2;
+    }
+  `,
+
+  Menu : css`
+    .menu {
+      border-bottom: 1px solid #C2C2C2;
+      
+      .v-btn {
+        &:before {
+          background: #303030;
+        }
+
+        &:last-of-type {
+          &:before {
+            display: inline-block;
+          }
+        }
+      }
+    }
+  `,
+
+  Sidebar : css`
+    .sidebar {
+      > div {
+        &:nth-of-type(1) {
+          border-right-color: #C2C2C2;
+        }
+      }
+      
+      .v-list {
+        .v-list-item:not( .bookmark-list, .v-list-group__header ) {
+          &.is-active,
+          &:hover {
+            .v-list-item-title {
+                color: #FFFFFF;
+            }
+            
+            svg.js-svg {
+              filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(34deg) brightness(108%) contrast(101%);
+            }
+            
+            .bookmark {
+              &.is-active {
+                color: #FFFFFF !important;
+              }
+            }
+          }
+
+          &.is-active {
+            .bookmark {
+              &.is-active {
+                color: #FFFFFF !important;
+                
+                &:hover {
+                  color: #FFFFFF !important;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      .resize-bar {
+        background: #C2C2C2;
+
+        &.is-active,
+        &:hover {
+          background: var( --secondary-lighten-color-1 );
+        }
+      }
+    }
+  `,
 
   Main : css`
     .main {
@@ -38,60 +114,71 @@ export const DarkModeStyle = {
           background: #FFFFFF;
         } 
       }
-    }
-  `,
-
-  Header : css`
-    .header {
-      border-bottom: 1px solid #C2C2C2;
-    }
-  `,
-
-  Menu : css`
-    .menu {
-      border-bottom: 1px solid #C2C2C2;
       
-      .v-btn {
-        &:before {
-          background: #303030;
+      .cat-box {
+        .v-btn {
+          &::after {
+            filter: initial;
+          }
         }
       }
     }
   `,
 
-  Sidebar : css`
-    .sidebar {
-      > div {
-        &:nth-of-type(1) {
-          border-right-color: #C2C2C2;
+  About : css`
+    .about {
+      .console-box {
+        background: #FFF;
+        box-shadow: 0 3px 8px rgba( 0, 0, 0, 0.8 );
+
+        .v-input {
+          background: #FFFBEE;
         }
       }
-      
-      .v-list {
-        .v-list-item {
-          &.is-active,
-          &:hover {
-            color: #FFFFFF;
+
+      p,
+      li {
+        color: #303030;
+      }
+
+      b {
+        color: var( --system-green-darken-color );
+      }
+    }
+  `,
+
+  Project : css`
+    .project {
+      .v-slide-group {
+        border-bottom: 1px solid #C2C2C2;
+        
+        .v-btn {
+          &:before {
+            background: #303030;
           }
           
           &:last-of-type {
-            &.is-active,
-            &:hover {
-              svg {
-                filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(34deg) brightness(108%) contrast(101%);
-              }
+            &:before {
+              display: inline-block;
             }
           }
         }
       }
-      
-      .resize-bar {
-        background: #C2C2C2;
+    }
+  `,
 
-        &.is-active,
-        &:hover {
-          background: var( --secondary-lighten-color-1 );
-        }
+  Input : css`
+    .v-field--variant-solo {
+      background: transparent;
+    }
+  `,
+
+  Tooltip : css`
+    .v-overlay {
+      &.v-tooltip {
+        .v-overlay__content {
+          background: #FFF;
+        } 
       }
     }
   `,
@@ -141,10 +228,14 @@ const MainMediaStyle = {
 DarkModeStyle.Default = css`
     html[dark-mode=true] {
       ${cx(
-        DarkModeStyle.Main,
         DarkModeStyle.Header,
         DarkModeStyle.Menu,
         DarkModeStyle.Sidebar,
+        DarkModeStyle.Main,
+        DarkModeStyle.About,
+        DarkModeStyle.Project,
+        DarkModeStyle.Input,
+        DarkModeStyle.Tooltip,
       )}
     },
 `;

@@ -681,7 +681,7 @@ definePageMeta( {
 </script>
 
 <template>
-  <div :class="cx( ProjectStyle.Default, isHover && 'is-hover' )">
+  <div :class="cx( 'project', ProjectStyle.Default, isHover && 'is-hover' )">
 
     <v-tabs :class="cx( ProjectStyle.Tab )" v-model="tab">
       <v-tab

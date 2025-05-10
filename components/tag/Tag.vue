@@ -77,6 +77,7 @@ const props = withDefaults( defineProps<{
 <template>
   <div
     :class="cx(
+      'tag',
       TagStyle.Default,
       css`
         ${ props.padding && `padding-left : ${props.padding}rem` }
