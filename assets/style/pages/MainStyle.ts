@@ -81,8 +81,7 @@ export const MainStyle = {
   CodeBoxContent : css`
     ${ CommonStyle.Scroll };
     width: 100%;
-    height: calc( 100% - 4rem );
-    max-height: 54.4rem;
+    height: 54.4rem;
     border-radius: 0 0 2rem 2rem;
     background: #010F1C;
   `,
@@ -142,11 +141,11 @@ export const MainStyle = {
     
     .tag-title {
       &:nth-of-type(2) {
-      margin-top: 0.5rrem;
+        margin-top: 0.5rem;
       }
       
       &:nth-of-type(3) {
-        margin-bottom: 0.5rrem;
+        margin-bottom: 0.5rem;
       }
     }
     
@@ -207,6 +206,8 @@ export const MainStyle = {
   `,
 
   CatBox : css`
+    width: 100%;
+    max-width: 50rem;
     text-align: center;
     
     .v-btn {
@@ -298,6 +299,7 @@ export const MainStyle = {
 
   CatBoxImg : css`
     position: relative;
+    
     img {
       &:nth-of-type(1) {
         position: absolute;
@@ -308,7 +310,7 @@ export const MainStyle = {
       }
       
       &:nth-of-type(2) {
-        width: 50rem;
+        width: 100%;
         height: auto;
       }
     }
@@ -346,8 +348,22 @@ injectGlobal`
 /************************************************************
  * media style
  ************************************************************/
-const MainMediaStyle = {
-  MainMedia : {
+const MediaStyle = {
+  Media : {
+    /** [ 1800px ] */
+    1800 : css`
+      .main-content {
+        flex-direction: column-reverse;
+
+        .cat-box {
+          position: absolute;
+          top: 2rem;
+          right: 2rem;
+          width: 30rem;
+        }
+      }
+    `,
+
     /** [ 1280px ] */
     1280 : css`
     `,
@@ -378,4 +394,6 @@ const MainMediaStyle = {
  ************************************************************/
 MainStyle.Default = cx(
   MainStyle.Default,
+  // option ( max | min )
+  setMedia( MediaStyle.Media,  "max" )
 );

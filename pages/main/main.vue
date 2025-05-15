@@ -265,7 +265,7 @@ definePageMeta( {
       <img src="@/assets/images/img/cat_logo.svg" alt="">
     </div>
 
-    <div :class="cx( MainStyle.Content )">
+    <div :class="cx('main-content', MainStyle.Content )">
       <div :class="cx( 'code-box', MainStyle.CodeBox )">
         <div :class="cx( 'code-box-header', MainStyle.CodeBoxHeader )">
           <div>

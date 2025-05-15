@@ -186,6 +186,7 @@ onMounted( () => {
       >
         <span class="material-icons" v-text="headerBooleanData.isLightMode ? 'dark_mode' : 'light_mode' "></span>
       </v-btn>
+
       <v-btn
         v-if="!isLogin"
         :class="cx( 'login-btn' )"
@@ -195,6 +196,7 @@ onMounted( () => {
       >
         <span>로그인</span>
       </v-btn>
+
       <v-btn
         v-if="isLogin"
         :class="cx( 'logout-btn' )"
@@ -205,18 +207,6 @@ onMounted( () => {
         <span>로그아웃</span>
         <span class="material-icons">logout</span>
       </v-btn>
-      <!--      <v-text-field-->
-      <!--          v-model="headerData.searchInput"-->
-      <!--          :class="cx( HeaderStyle.SearchInput )"-->
-      <!--          :loading="headerBooleanData.searchInputLoading"-->
-      <!--          append-inner-icon="mdi-magnify"-->
-      <!--          density="compact"-->
-      <!--          variant="solo"-->
-      <!--          hide-details-->
-      <!--          single-line-->
-      <!--          clearable-->
-      <!--          @click:append-inner="onSearch"-->
-      <!--      ></v-text-field>-->
     </div>
   </div>
 </template>

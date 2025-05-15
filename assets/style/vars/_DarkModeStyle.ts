@@ -22,6 +22,14 @@ export const DarkModeStyle = {
   Header : css`
     .header {
       border-bottom: 1px solid #C2C2C2;
+      
+      .left {
+        .button-group {
+          .button-item {
+            color: #303030;
+          }
+        }
+      }
     }
   `,
 
