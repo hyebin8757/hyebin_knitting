@@ -1,4 +1,4 @@
-import { css, injectGlobal } from "@emotion/css";
+import { css, cx, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "@/utils/core/ui/uiUtil";
 import {useSidebarStore} from "~/stores/useSidebarStore";
@@ -45,14 +45,24 @@ injectGlobal`
  * media style
  ************************************************************/
 const MediaStyle = {
-  ContainerMedia : {
+  Media : {
     /** [ 1280px ] */
     1280 : css`
+      
     `,
 
     /** [ 1024px ] */
     1024 : css`
-     
+      .sidebar {
+        
+        .menu-list {
+          display: none;
+        }
+      }
+      
+     .menu {
+       display: none;
+     }
     `,
 
     /** [ 768px ] */
@@ -74,3 +84,8 @@ const MediaStyle = {
 /************************************************************
  * style override
  ************************************************************/
+LayoutStyle.Default = cx(
+  LayoutStyle.Default,
+  // option ( max | min )
+  setMedia( MediaStyle.Media,  "max" )
+);

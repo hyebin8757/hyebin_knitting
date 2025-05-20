@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, inject } from "vue";
 import { cx } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
 import { definePageMeta } from "~/.nuxt/imports";
@@ -43,6 +43,12 @@ const { useImage } = useUtil.AssetResolverUtil;
 /************************************************************
  * Raw Data ( 원시 데이터 )
  ************************************************************/
+const mainContentRef = ref( null );
+
+const codeBoxRef = ref( null );
+
+const catBoxRef = ref( null );
+
 
 /************************************************************
  * Dynamic Data ( 동적 데이터 )
@@ -106,6 +112,7 @@ const catGuide = ref( "구경 할래 냥?" );
 /************************************************************
  * Provide / inject Data
  ************************************************************/
+const windowWidth = inject( "windowWidth" );
 
 /************************************************************
  * Function
@@ -237,6 +244,17 @@ const changeCatGuide = ( type? : string, value : boolean ) => {
   catGuide.value = "project" === type ? "오! 좋아 프로젝트 구경 시켜줄께~" : "연락? 무조건 환영이야~";
 }
 
+const onResize = () => {
+
+  const maxWidth = 1800;
+
+  if ( maxWidth < windowWidth.value ) {
+    return mainContentRef.value?.appendChild( catBoxRef.value );
+  };
+
+  codeBoxRef.value?.appendChild( catBoxRef.value );
+}
+
 /************************************************************
  * Watch
  ************************************************************/
@@ -246,6 +264,8 @@ const changeCatGuide = ( type? : string, value : boolean ) => {
  ************************************************************/
 onMounted( () => {
   setTimeout( () => changeCodeGuide(), 2000 );
+
+  window.addEventListener( "resize", onResize )
 });
 
 
@@ -261,12 +281,18 @@ definePageMeta( {
 <template>
   <div ref="mainRef" :class="cx( 'main', MainStyle.Default )">
     <div :class="cx( 'main-title', MainStyle.Title )">
-      민우주의 퍼블리싱 우주에 오신 걸 환영합니다!
+      민우주의 퍼블리싱 우주에 <br> 오신 걸 환영합니다!
       <img src="@/assets/images/img/cat_logo.svg" alt="">
     </div>
 
-    <div :class="cx('main-content', MainStyle.Content )">
-      <div :class="cx( 'code-box', MainStyle.CodeBox )">
+    <div
+      ref="mainContentRef"
+      :class="cx('main-content', MainStyle.Content )"
+    >
+      <div
+        ref="codeBoxRef"
+        :class="cx( 'code-box', MainStyle.CodeBox )"
+      >
         <div :class="cx( 'code-box-header', MainStyle.CodeBoxHeader )">
           <div>
             <ButtonGroup :button-list="buttonList" />
@@ -300,12 +326,15 @@ definePageMeta( {
         </div>
       </div>
       
-      <div :class="cx( 'cat-box', MainStyle.CatBox )">
-        <div :class="cx( MainStyle.CatBoxGuide )">
+      <div
+          ref="catBoxRef"
+          :class="cx( 'cat-box', MainStyle.CatBox )"
+      >
+        <div :class="cx( 'cat-box-guide', MainStyle.CatBoxGuide )">
           <b v-text="catGuide"/>
         </div>
 
-        <div :class="cx( MainStyle.CatBoxImg )">
+        <div :class="cx( 'cat-box-img', MainStyle.CatBoxImg )">
           <img src="@/assets/images/img/img_nameplate.png" alt="">
           <img src="@/assets/images/img/img_cat_main.png" alt="">
         </div>

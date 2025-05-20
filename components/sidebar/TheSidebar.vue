@@ -221,7 +221,7 @@ onMounted( () => {
 
 <template>
   <div :class="cx('sidebar', SidebarStyle.Default )">
-    <div :class="cx( SidebarStyle.MenuButtonList )">
+    <div :class="cx( 'menu-button-list', SidebarStyle.MenuButtonList )">
       <v-btn
         v-for="( item, index ) in sidebarData.menuButtonList"
         :key="index"
@@ -238,7 +238,8 @@ onMounted( () => {
         >{{item.tooltip}}</v-tooltip>
       </v-btn>
     </div>
-    <div ref="menuListRef" :class="cx( SidebarStyle.MenuList )">
+
+    <div ref="menuListRef" :class="cx( 'menu-list', SidebarStyle.MenuList )">
       <v-list
         v-model:opened="sidebarData.menuListValue"
       >

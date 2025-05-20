@@ -41,6 +41,10 @@ export const MainStyle = {
       width: 6rem !important;
       height: 6rem !important;
     }
+    
+    br {
+      display: none;
+    }
   `,
 
   Content : css`
@@ -305,7 +309,8 @@ export const MainStyle = {
         position: absolute;
         top: 58%;
         right: 40%;
-        width: 7rem;
+        width: 100%;
+        max-width: 7rem;
         height: auto;
       }
       
@@ -353,19 +358,50 @@ const MediaStyle = {
     /** [ 1800px ] */
     1800 : css`
       .main-content {
-        flex-direction: column-reverse;
+
+        .code-box{
+          position: relative;
+        }
 
         .cat-box {
           position: absolute;
-          top: 2rem;
-          right: 2rem;
-          width: 30rem;
+          bottom: 1rem;
+          right: 1rem;
+          width: 14rem;
+
+          .cat-box-guide {
+            width: 10rem;
+            font-size: 1.4rem;
+          }
+
+          .cat-box-img {
+            img {
+              &:nth-of-type(1) {
+                width: 2rem;
+              }
+            }
+          }
         }
       }
     `,
 
     /** [ 1280px ] */
     1280 : css`
+      .main-title {
+        br {
+          display: inline-block;
+        } 
+        
+        img {
+          display: none;
+        }
+      }
+
+      .main-content {
+        .code-box {
+          width: 100%;
+        }
+      }
     `,
 
     /** [ 1024px ] */

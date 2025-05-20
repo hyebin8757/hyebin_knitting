@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {useRoute, useRouter} from "vue-router";
-import {reactive, computed, onMounted, ref, watch} from "vue";
+import {reactive, computed, onBeforeMount, onMounted, ref, provide} from "vue";
 import { cx } from "@emotion/css";
 import TheHeader from "~/components/header/TheHeader.vue";
 import TheSidebar from "~/components/sidebar/TheSidebar.vue";
@@ -19,7 +19,7 @@ const userLayoutData = reactive( {
   restoreMenu : "",
 });
 
-const userLayoutBooleanData = reactive( {});
+const windowWidth = ref( 0 );
 
 const menuRef = ref( null );
 
@@ -39,10 +39,22 @@ const onMenuReset = () => {
 
   menuRef.value.onMenuReset();
 }
+
+const setWindowWidth = ( data : any ) => {
+  windowWidth.value = data.target.innerWidth;
+}
+
+provide( "windowWidth", windowWidth );
+
 /************************************************************
  * Watch & Mounted
  ************************************************************/
 onMounted( () => {
+
+  window.addEventListener( "resize", setWindowWidth )
+});
+
+onBeforeMount( () => {
 
 });
 
