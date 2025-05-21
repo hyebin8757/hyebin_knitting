@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { reactive } from "vue";
+import { reactive, onMounted, inject } from "vue";
 import { cx } from "@emotion/css";
 import { useRouter } from "vue-router";
 
 /************************************************************
  * Components
  ************************************************************/
+import ButtonGroup from "~/components/buttonGroup/ButtonGroup.vue";
 
 /************************************************************
  * Style
@@ -16,7 +17,6 @@ import { HeaderStyle } from "~/components/header/style/HeaderStyle";
  * Utils, Constants...
  ************************************************************/
 import { useUserStore } from "~/stores/useUserStore";
-import ButtonGroup from "~/components/buttonGroup/ButtonGroup.vue";
 
 /************************************************************
  * Types, Interface
@@ -96,6 +96,9 @@ const headerBooleanData = reactive({
 /************************************************************
  * Provide / inject Data
  ************************************************************/
+const isMobile = inject( "isMobile" );
+
+const mobileSidebar = inject( "mobileSidebar" );
 
 /************************************************************
  * Function
@@ -129,6 +132,10 @@ const onDarkMode = () => {
   htmlDom.setAttribute( "dark-mode", "true" )
 }
 
+const toggleMobileSidebar = () => {
+  mobileSidebar.value = !mobileSidebar.value;
+}
+
 /************************************************************
  * Watch
  ************************************************************/
@@ -150,6 +157,17 @@ onMounted( () => {
   <div :class="cx('header', HeaderStyle.Default )">
     <div :class="cx('left', HeaderStyle.Left )">
       <ButtonGroup/>
+
+      <v-btn
+        v-if="isMobile"
+        :class="cx( HeaderStyle.MobileMenuButton )"
+        :ripple="false"
+        variant="text"
+        @click="toggleMobileSidebar"
+      >
+        <span v-if="!mobileSidebar" class="material-icons-outlined">menu</span>
+        <span v-if="mobileSidebar" class="material-icons">menu_open</span>
+      </v-btn>
 
       <div :class="cx('menu-list', HeaderStyle.MenuList)">
         <span

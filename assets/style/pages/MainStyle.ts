@@ -406,7 +406,15 @@ const MediaStyle = {
 
     /** [ 1024px ] */
     1024 : css`
-     
+      .main-content {
+        .code-box {
+          .code-box-content {
+            > div {
+              white-space: initial;
+            }
+          }
+        }
+      }
     `,
 
     /** [ 768px ] */
@@ -416,11 +424,34 @@ const MediaStyle = {
 
     /** [ 640px ] */
     640 : css`
+      .main-title {
+        display: none;
+      }
       
+      .main-content {
+        .cat-box {
+          [ class ^= "cat" ] {
+            display: none;
+          }
+        }
+      }
     `,
 
     /** [ 450px ] */
     450 : css `
+      padding: 2rem;
+      height: 100%;
+      
+      .main-button-group {
+        flex-direction: column;
+        gap: 2rem;
+        
+        .v-btn {
+          flex: initial;
+          width: 100%;
+          max-width: 100%;
+        }
+      }
     `
   },
 }

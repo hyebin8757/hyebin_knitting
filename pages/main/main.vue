@@ -258,14 +258,20 @@ const onResize = () => {
 /************************************************************
  * Watch
  ************************************************************/
+// watch( () => , () => {
+//
+// });
 
 /************************************************************
  * Mounted
  ************************************************************/
 onMounted( () => {
+
   setTimeout( () => changeCodeGuide(), 2000 );
 
-  window.addEventListener( "resize", onResize )
+  onResize();
+
+  window.addEventListener( "resize", onResize );
 });
 
 
@@ -350,7 +356,7 @@ definePageMeta( {
       </div>
     </div>
 
-    <div :class="cx( MainStyle.ButtonGroup )">
+    <div :class="cx( 'main-button-group', MainStyle.ButtonGroup )">
       <BaseBtn
         :hover="false"
         variant="text"

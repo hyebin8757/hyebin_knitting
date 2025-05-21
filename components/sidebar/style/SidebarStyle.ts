@@ -16,6 +16,24 @@ export const SidebarStyle = {
   Default : css`
     ${StyleUtils.FlexUtils("stretch", "flex-start")};
     height: 100%;
+
+    &.is-show-mobile {
+      transform: translateX(0) !important;
+      transition: transform 0.3s ease-in-out;
+      
+      .menu-list {
+        &:after {
+          content: "";
+          display: block;
+          position: fixed;
+          left: 0;
+          z-index: -10;
+          width: 100vw;
+          height: 100vh;
+          background: rgba( 0, 0, 0, 0.5 );
+        } 
+      }
+    }
   `,
 
   MenuButtonList : css`

@@ -53,9 +53,23 @@ const MediaStyle = {
 
     /** [ 1024px ] */
     1024 : css`
-      .sidebar {
-        
+      .header {
         .menu-list {
+          display: none;
+        }
+      }
+      
+      .sidebar {
+        position: fixed;
+        left: 0;
+        transform: translateX( -20rem );
+        z-index: 100;
+
+        .menu-list {
+          background: var( --primary-color );
+        }
+        
+        .menu-button-list {
           display: none;
         }
       }
@@ -73,6 +87,15 @@ const MediaStyle = {
     /** [ 640px ] */
     640 : css`
       
+    `,
+
+    /** [ 520px ] */
+    520 : css`
+      .header {
+        .center {
+          display: none;
+        }
+      }
     `,
 
     /** [ 450px ] */

@@ -10,25 +10,37 @@ import {LayoutStyle} from "~/layouts/style/LayoutStyle";
 
 const route = useRoute();
 const router = useRouter();
+
 const { isEmpty } = useUtil.typeValidation;
 
 /************************************************************
  * Data ( ref, reactive, computed... )
  ************************************************************/
-const userLayoutData = reactive( {
-  restoreMenu : "",
-});
+const restoreMenu = ref( "" );
 
 const windowWidth = ref( 0 );
 
 const menuRef = ref( null );
+
+const isMobile = computed( () => {
+  return 1024 >= windowWidth.value;
+});
+
+const mobileSidebar = ref( false );
+
+
+provide( "windowWidth", windowWidth );
+
+provide( "isMobile", isMobile );
+
+provide( "mobileSidebar", mobileSidebar );
 
 /************************************************************
  * Function
  ************************************************************/
 // 삭제 된 메뉴 복원
 const onRestore = ( label : string ) => {
-  userLayoutData.restoreMenu = label;
+  restoreMenu.value = label;
 }
 
 // 메뉴 reset
@@ -44,12 +56,12 @@ const setWindowWidth = ( data : any ) => {
   windowWidth.value = data.target.innerWidth;
 }
 
-provide( "windowWidth", windowWidth );
-
 /************************************************************
  * Watch & Mounted
  ************************************************************/
 onMounted( () => {
+
+  windowWidth.value = window.innerWidth;
 
   window.addEventListener( "resize", setWindowWidth )
 });
@@ -73,7 +85,7 @@ onBeforeMount( () => {
         <!-- 실제 콘텐츠 -->
         <main :class="cx( LayoutStyle.Main )">
           <!-- menu -->
-          <TheMenu ref="menuRef"  :restore-menu="userLayoutData.restoreMenu"/>
+          <TheMenu ref="menuRef"  :restore-menu="restoreMenu"/>
 
           <slot/>
         </main>

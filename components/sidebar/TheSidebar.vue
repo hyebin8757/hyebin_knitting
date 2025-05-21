@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { inject, onMounted, reactive, ref } from "vue";
 import { cx } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
 
@@ -60,6 +60,9 @@ const emit = defineEmits<{
 
 // 삭제 된 메뉴 복원
 const onRestore = ( label : string ) => {
+
+  mobileSidebar.value && ( mobileSidebar.value = false );
+
   emit( "onRestore", label );
 }
 
@@ -137,6 +140,7 @@ const bookmarkList = ref<SidebarMenu[]| undefined | []>( [] );
 /************************************************************
  * Provide / inject Data
  ************************************************************/
+const mobileSidebar = inject( "mobileSidebar" );
 
 /************************************************************
  * Function
@@ -220,7 +224,7 @@ onMounted( () => {
 </script>
 
 <template>
-  <div :class="cx('sidebar', SidebarStyle.Default )">
+  <div :class="cx('sidebar', SidebarStyle.Default, { 'is-show-mobile' : mobileSidebar } )">
     <div :class="cx( 'menu-button-list', SidebarStyle.MenuButtonList )">
       <v-btn
         v-for="( item, index ) in sidebarData.menuButtonList"

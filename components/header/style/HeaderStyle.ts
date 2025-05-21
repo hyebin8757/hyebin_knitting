@@ -120,6 +120,11 @@ export const HeaderStyle = {
 
   ModeButton : css`
   `,
+
+
+  MobileMenuButton : css`
+    font-size: 2.4rem;
+  `,
 }
 
 /************************************************************
