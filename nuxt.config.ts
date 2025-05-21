@@ -85,6 +85,10 @@ const nuxtConfig: any = {
       // dir: "src",
       publicDir: "./",
       dir: '.output'
+    },
+
+    externals: {
+      inline: ['h3']
     }
   },
 
