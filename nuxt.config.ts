@@ -84,6 +84,7 @@ const nuxtConfig: any = {
     output: {
       // dir: "src",
       publicDir: "./",
+      dir: '.output'
     }
   },
 
