@@ -20,7 +20,7 @@
     "electron": "^25.2.0",
     "electron-builder": "^24.4.0",
     "fast-check": "^3.5.0",
-    "nuxt": "3.0.0",
+    "nuxt": "3.1.2",
     "nuxt-electron": "^0.5.0",
     "nuxt-lodash": "^2.4.1",
     "prettier": "^2.8.3",
