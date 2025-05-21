@@ -39,6 +39,11 @@ export const LayoutStyle = {
  * global style
  ************************************************************/
 injectGlobal`
+  html {
+    &.is-none-scroll {
+      overflow: hidden;
+    }
+  }
 `;
 
 /************************************************************
@@ -70,7 +75,7 @@ const MediaStyle = {
       .sidebar {
         position: fixed;
         left: 0;
-        transform: translateX( -20rem );
+        transform: translateX( -30rem );
         z-index: 100;
 
         .menu-list {

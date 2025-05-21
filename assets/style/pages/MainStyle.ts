@@ -429,6 +429,14 @@ const MediaStyle = {
       }
       
       .main-content {
+        .code-box {
+          .code-box-content {
+            .code-box-code {
+              font-size: 1.4rem;
+            }
+          }
+        }
+        
         .cat-box {
           [ class ^= "cat" ] {
             display: none;

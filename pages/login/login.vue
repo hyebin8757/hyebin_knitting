@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch, onMounted } from "vue";
+import { reactive, computed, watch, onMounted, onBeforeUnmount, ref } from "vue";
 import { cx } from "@emotion/css";
 import { useRouter } from "vue-router";
 
@@ -88,6 +88,12 @@ const loginBooleanData = reactive({
   findDialog : false,
 })
 
+const windowWidth = ref( 0 );
+
+const isMobile = computed( () => {
+  return 1024 >= windowWidth.value;
+})
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
@@ -147,6 +153,10 @@ const loginValidation = () => {
   return true;
 }
 
+const setWindowWidth = ( data : any ) => {
+  windowWidth.value = data.target.innerWidth;
+}
+
 /************************************************************
  * Watch
  ************************************************************/
@@ -170,8 +180,16 @@ watch( () => loginBooleanData.alert, ( newValue : boolean ) => {
  * Mounted
  ************************************************************/
 onMounted( () => {
+
   document.documentElement.removeAttribute( "dark-mode" );
+
+  window.addEventListener( "resize", setWindowWidth );
 })
+
+onBeforeUnmount( () => {
+  window.removeEventListener( "resize", setWindowWidth );
+});
+
 
 /************************************************************
  * Layout
@@ -180,23 +198,28 @@ onMounted( () => {
 </script>
 
 <template>
-  <div :class="cx( LoginStyle.Default )">
+  <div :class="cx( 'login', LoginStyle.Default )">
     <div :class="cx( LoginStyle.Container )">
-      <div :class="cx( LoginStyle.FormBg )">
+      <div :class="cx( 'form-bg', LoginStyle.FormBg )">
         <img src="@/assets/images/bg/bg_login.jpg" alt="loginBg">
       </div>
-      <div :class="cx( LoginStyle.FormCard )">
-        <div :class="cx( LoginStyle.Title )" @click="moveMain">
+
+      <div :class="cx( 'form-card', LoginStyle.FormCard )">
+        <div :class="cx( 'title', LoginStyle.Title )" @click="moveMain">
           <img src="@/assets/images/logo/logo.png" alt="logo">
-          <span>Min U Ju - IntelliJ IDEA</span>
+          <span>Min U Ju - <br> IntelliJ IDEA</span>
         </div>
+
         <div :class="cx( LoginStyle.Content )">
           <form :class="cx( LoginStyle.Form )">
             <div :class="cx( LoginStyle.InfoArea )">
               <div :class="cx( LoginStyle.InfoItem )">
                 <div class="is-flex">
                   <span class="title">아이디</span>
+                  <em v-if="isMobile">* 아이디 : testUser / 비밀번호 : 0000</em>
+
                   <v-tooltip
+                    v-if="!isMobile"
                     content-class="black-tooltip"
                     location="right"
                   >

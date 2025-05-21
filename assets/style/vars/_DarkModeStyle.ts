@@ -29,6 +29,10 @@ export const DarkModeStyle = {
             color: #303030;
           }
         }
+        
+        .mobile-menu-btn {
+          color: #303030;
+        }
       }
     }
   `,

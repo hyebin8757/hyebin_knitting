@@ -1,4 +1,4 @@
-import { css, injectGlobal } from "@emotion/css";
+import { css, cx, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 
@@ -67,6 +67,10 @@ export const LoginStyle = {
     font-size: 3rem;
     font-weight: 700;
     cursor: pointer;
+    
+    br {
+      display: none;
+    }
     
     img {
       width: 3rem;
@@ -168,7 +172,16 @@ const MediaStyle = {
 
     /** [ 1024px ] */
     1024 : css`
-     
+      .form-bg {
+        display: none;
+      }
+
+      .form-card {
+        width: 80%;
+        height: 85%;
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+      }
     `,
 
     /** [ 768px ] */
@@ -181,6 +194,15 @@ const MediaStyle = {
       
     `,
 
+    /** [ 550px ] */
+    550 : css`
+      .title {
+        br {
+          display: block;
+        }
+      }
+    `,
+
     /** [ 450px ] */
     450 : css `
     `
@@ -190,3 +212,8 @@ const MediaStyle = {
 /************************************************************
  * style override
  ************************************************************/
+LoginStyle.Default = cx(
+  LoginStyle.Default,
+  // option ( max | min )
+  setMedia( MediaStyle.Media,  "max" )
+);

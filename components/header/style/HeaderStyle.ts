@@ -123,7 +123,10 @@ export const HeaderStyle = {
 
 
   MobileMenuButton : css`
-    font-size: 2.4rem;
+    &.v-btn {
+      font-size: 2.4rem;
+      color: #FFF; 
+    }
   `,
 }
 

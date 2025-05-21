@@ -86,9 +86,11 @@ export const ProjectCardStyle = {
   InfoBox : css`
     ${ ProjectData.Animation };
     position: absolute;
-    top: calc( 100% + 1rem );
+    top: 0;
     left: 0;
     z-index: 10;
+    width: 100%;
+    min-height: 25rem;
     //height: calc( 100% - 33.4rem );
     padding: 1.6rem;
     border-radius: 1rem;

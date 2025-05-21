@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {useRoute, useRouter} from "vue-router";
-import { computed, onBeforeMount, onMounted, ref, provide } from "vue";
+import { computed, onBeforeMount, onMounted, ref, provide, watch } from "vue";
 import { cx } from "@emotion/css";
 import TheHeader from "~/components/header/TheHeader.vue";
 import TheSidebar from "~/components/sidebar/TheSidebar.vue";
@@ -59,11 +59,22 @@ const setWindowWidth = ( data : any ) => {
 /************************************************************
  * Watch & Mounted
  ************************************************************/
+watch( () => mobileSidebar.value, ( newValue : boolean ) => {
+
+  const windowEl = document.documentElement;
+
+  if ( !newValue ) {
+    return windowEl.classList.remove( "is-none-scroll" );
+  };
+
+  windowEl.classList.add( "is-none-scroll" );
+});
+
 onMounted( () => {
 
   windowWidth.value = window.innerWidth;
 
-  window.addEventListener( "resize", setWindowWidth )
+  window.addEventListener( "resize", setWindowWidth );
 });
 
 onBeforeMount( () => {

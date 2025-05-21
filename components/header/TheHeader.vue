@@ -90,7 +90,7 @@ const headerData = reactive({
  ************************************************************/
 const headerBooleanData = reactive({
   searchInputLoading : false,
-  isLightMode : true,
+  isLightMode : false,
 })
 
 /************************************************************
@@ -160,7 +160,7 @@ onMounted( () => {
 
       <v-btn
         v-if="isMobile"
-        :class="cx( HeaderStyle.MobileMenuButton )"
+        :class="cx( 'mobile-menu-btn', HeaderStyle.MobileMenuButton )"
         :ripple="false"
         variant="text"
         @click="toggleMobileSidebar"

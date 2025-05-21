@@ -327,7 +327,7 @@ definePageMeta( {
 
           <div
             ref="codeRef"
-            :class="cx( MainStyle.CodeBoxCode )"
+            :class="cx( 'code-box-code', MainStyle.CodeBoxCode )"
           />
         </div>
       </div>
