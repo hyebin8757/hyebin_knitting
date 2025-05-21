@@ -43,6 +43,7 @@
     "@types/js-cookie": "^3.0.3",
     "@vueuse/core": "^9.12.0",
     "crypto-js": "^4.1.1",
+    "h3": "^1.15.3",
     "js-cookie": "^3.0.5",
     "material-icons": "^1.13.1",
     "nvm": "0.0.4",
