@@ -1,4 +1,4 @@
-import { css, injectGlobal } from "@emotion/css";
+import { css, cx, injectGlobal } from "@emotion/css";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {CommonStyle} from "assets/style/CommonStyle";
@@ -206,10 +206,17 @@ injectGlobal`
 /************************************************************
  * media style
  ************************************************************/
-const ContactMediaStyle = {
-  ContactMedia : {
+const MediaStyle = {
+  Media : {
     /** [ 1280px ] */
     1280 : css`
+      ${StyleUtils.FlexUtils("center", "center", "", "column")};
+      
+      .me-box {
+        > img {
+          margin-left: 0;
+        }
+      }
     `,
 
     /** [ 1024px ] */
@@ -224,7 +231,11 @@ const ContactMediaStyle = {
 
     /** [ 640px ] */
     640 : css`
-
+      .me-box {
+        > img {
+          width: 30rem;
+        }
+      }
     `,
 
     /** [ 450px ] */
@@ -236,3 +247,8 @@ const ContactMediaStyle = {
 /************************************************************
  * style override
  ************************************************************/
+ContactStyle.Default = cx(
+  ContactStyle.Default,
+  // option ( max | min )
+  setMedia( MediaStyle.Media,  "max" )
+);

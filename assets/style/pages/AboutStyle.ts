@@ -1,4 +1,4 @@
-import { css, injectGlobal } from "@emotion/css";
+import { css, cx, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 import {CommonStyle} from "assets/style/CommonStyle";
@@ -59,7 +59,7 @@ export const AboutStyle = {
   ConsoleResetButton : css`
     &.v-btn--variant-text {
       position: absolute;
-      top: -4.5rem;
+      top: -3.5rem;
       right: 0;
       height: 3.2rem !important;
       font-size: 1.4rem;
@@ -169,7 +169,28 @@ const MediaStyle = {
 
     /** [ 1024px ] */
     1024 : css`
-     
+      .console-box {
+        width: 100%;
+        
+        .is-mobile-btn {
+          &.v-btn--variant-text {
+            top: -3.5rem;
+            border: 0 none;
+            background: transparent !important;
+            
+            .v-btn__content {
+              display: flex;
+              align-items: center;
+              justify-content: flex-start;
+              gap: 0.5rem;
+              
+              .material-icons {
+                font-size: 1.8rem;
+              }
+            }
+          }
+        }
+      }
     `,
 
     /** [ 768px ] */
@@ -179,7 +200,11 @@ const MediaStyle = {
 
     /** [ 640px ] */
     640 : css`
-      
+      .console-box {
+        .console-box-guide {
+          display: none;
+        }
+      }
     `,
 
     /** [ 450px ] */
@@ -191,3 +216,8 @@ const MediaStyle = {
 /************************************************************
  * style override
  ************************************************************/
+AboutStyle.Default = cx(
+  AboutStyle.Default,
+  // option ( max | min )
+  setMedia( MediaStyle.Media,  "max" )
+);

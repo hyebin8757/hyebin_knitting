@@ -683,7 +683,7 @@ definePageMeta( {
 <template>
   <div :class="cx( 'project', ProjectStyle.Default, isHover && 'is-hover' )">
 
-    <v-tabs :class="cx( ProjectStyle.Tab )" v-model="tab">
+    <v-tabs :class="cx( 'sub-menu-tab', ProjectStyle.Tab )" v-model="tab">
       <v-tab
         v-for="( item, index ) in projectData.tabList"
         :key="index"
@@ -701,7 +701,8 @@ definePageMeta( {
             <div :class="cx( ProjectStyle.ProjectTitle )">
               <h2>Main Project 😄</h2>
             </div>
-            <div :class="cx( ProjectStyle.CardWrapper )">
+
+            <div :class="cx( 'card-wrapper', ProjectStyle.CardWrapper )">
               <ProjectCard
                 v-for="( item, index ) in projectData.mainProjectList"
                 :key="index"
@@ -726,7 +727,8 @@ definePageMeta( {
             <div :class="cx( ProjectStyle.ProjectTitle )">
               <h2>New Project 🤩</h2>
             </div>
-            <div :class="cx( ProjectStyle.CardWrapper )">
+
+            <div :class="cx( 'card-wrapper', ProjectStyle.CardWrapper )">
               <ProjectCard
                 v-for="( item, index ) in projectData.newCreationProjectList"
                 :key="index"
@@ -750,7 +752,8 @@ definePageMeta( {
             <div :class="cx( ProjectStyle.ProjectTitle )">
               <h2>Renewal Project 🤔</h2>
             </div>
-            <div :class="cx( ProjectStyle.CardWrapper )">
+
+            <div :class="cx( 'card-wrapper', ProjectStyle.CardWrapper )">
               <ProjectCard
                 v-for="( item, index ) in projectData.renewalProjectList"
                 :key="index"

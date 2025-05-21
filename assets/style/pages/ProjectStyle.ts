@@ -1,4 +1,4 @@
-import { css, injectGlobal } from "@emotion/css";
+import { css, cx, injectGlobal } from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 import {CommonStyle} from "assets/style/CommonStyle";
@@ -387,10 +387,20 @@ injectGlobal`
 /************************************************************
  * media style
  ************************************************************/
-const MainMediaStyle = {
-  MainMedia : {
+const MediaStyle = {
+  Media : {
+    /** [ 1600px ] */
+    1600 : css`
+      .card-wrapper {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    `,
+
     /** [ 1280px ] */
     1280 : css`
+      .card-wrapper {
+        grid-template-columns: repeat(2, 1fr);
+      }
     `,
 
     /** [ 1024px ] */
@@ -403,13 +413,41 @@ const MainMediaStyle = {
       
     `,
 
+    /** [ 700px ] */
+    700 : css`
+      .card-wrapper {
+        grid-template-columns: 1fr;
+        
+        > div {
+          margin: 0 auto;
+        }
+      }
+    `,
+
     /** [ 640px ] */
     640 : css`
       
     `,
 
+    /** [ 550px ] */
+    550 : css `
+      .sub-menu-tab {
+        .v-btn {
+          padding: 0 0.5rem !important;
+          font-size: 1rem;
+        }
+      }
+    `,
+
     /** [ 450px ] */
     450 : css `
+      .sub-menu-tab {
+        .v-btn {
+          img {
+            display: none;
+          }
+        }
+      }
     `
   },
 }
@@ -417,3 +455,8 @@ const MainMediaStyle = {
 /************************************************************
  * style override
  ************************************************************/
+ProjectStyle.Default = cx(
+  ProjectStyle.Default,
+  // option ( max | min )
+  setMedia( MediaStyle.Media,  "max" )
+);

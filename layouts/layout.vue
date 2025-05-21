@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {useRoute, useRouter} from "vue-router";
-import {reactive, computed, onBeforeMount, onMounted, ref, provide} from "vue";
+import { computed, onBeforeMount, onMounted, ref, provide } from "vue";
 import { cx } from "@emotion/css";
 import TheHeader from "~/components/header/TheHeader.vue";
 import TheSidebar from "~/components/sidebar/TheSidebar.vue";

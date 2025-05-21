@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref, inject} from "vue";
 import { cx } from "@emotion/css";
 import { definePageMeta } from "~/.nuxt/imports";
 
@@ -77,6 +77,7 @@ const spanTimerList = ref<any[]>([]);
 /************************************************************
  * Provide / inject Data
  ************************************************************/
+const isMobile = inject( "isMobile" );
 
 /************************************************************
  * Function
@@ -104,6 +105,9 @@ const removeCursor = () => {
 }
 
 const hoverEmail = () => {
+
+  if( isMobile.value ) return;
+
   contactBooleanData.isVideo = true;
 
   if ( isEmpty( listAreaRef.value ) ) {
@@ -158,7 +162,7 @@ definePageMeta( {
 
 <template>
   <div :class="cx('contact', ContactStyle.Default )">
-    <div :class="cx( ContactStyle.Me )">
+    <div :class="cx( 'me-box', ContactStyle.Me )">
       <img src="@/assets/images/img/img_me1.png" alt="">
 
       <div>
@@ -187,7 +191,7 @@ definePageMeta( {
         </ul>
       </div>
 
-      <div v-if="contactBooleanData.isVideo" :class="cx( ContactStyle.Video )">
+      <div v-if="contactBooleanData.isVideo && !isMobile" :class="cx( ContactStyle.Video )">
         <video autoplay  muted>
           <source src="@/assets/video/contact/video_contact.mp4" type="video/mp4" />
         </video>

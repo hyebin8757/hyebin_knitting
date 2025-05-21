@@ -142,6 +142,12 @@ export const DarkModeStyle = {
         .v-input {
           background: #FFFBEE;
         }
+
+        .v-btn {
+          &.reset-btn.v-btn--variant-text {
+            background: #FFF;
+          } 
+        }
       }
 
       p,

@@ -21,6 +21,7 @@ export const ProjectCardStyle = {
     position: relative;
     width: 100%;
     max-width: 40rem;
+    min-width: 30rem;
     height: 100%;
     flex: 1;
     cursor: url(${useImage("/assets/images/icon/icon_cursor.svg")}), auto;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, inject } from "vue";
 import { cx, css } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
 import { definePageMeta } from "~/.nuxt/imports";
@@ -82,6 +82,7 @@ const technologyList = ref( [
 /************************************************************
  * Provide / inject Data
  ************************************************************/
+const isMobile = inject( "isMobile" );
 
 /************************************************************
  * Function
@@ -143,15 +144,16 @@ definePageMeta( {
 <template>
   <div :class="cx( 'about', AboutStyle.Default )">
     <div :class="cx( 'console-box', AboutStyle.ConsoleBox )">
-      <em :class="cx( AboutStyle.ConsoleBoxGuide )">* 자유롭게 데이터를 추가 해주세요!</em>
+      <em :class="cx( 'console-box-guide', AboutStyle.ConsoleBoxGuide )">* 자유롭게 데이터를 추가 해주세요!</em>
 
       <BaseBtn
           v-if="3 <= consoleDataList.length"
-          :class="cx( AboutStyle.ConsoleResetButton )"
+          :class="cx( 'reset-btn', AboutStyle.ConsoleResetButton, { 'is-mobile-btn' : isMobile } )"
           :hover="false"
           @on-click="resetConsoleData"
       >
         <span>전체 삭제</span>
+        <span v-if="isMobile" class="material-icons">highlight_off</span>
       </BaseBtn>
 
       <div

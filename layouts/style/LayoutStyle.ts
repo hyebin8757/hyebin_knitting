@@ -57,6 +57,14 @@ const MediaStyle = {
         .menu-list {
           display: none;
         }
+        
+        .right {
+          .login-btn {
+            .v-btn__content {
+              white-space: nowrap;
+            }
+          }
+        }
       }
       
       .sidebar {
