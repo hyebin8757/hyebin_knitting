@@ -1,5 +1,6 @@
 [build]
 command = "yarn install && yarn generate"
+command = "ls"
 publish = "./.output/public"
 
 [context.production.environment]
