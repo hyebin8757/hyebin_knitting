@@ -1,6 +1,6 @@
 [build]
 command = "yarn install && yarn add h3 && yarn generate"
-publish = ".output/public"
+publish = ".output"
 
 [context.production.environment]
 NODE_VERSION = "18"
