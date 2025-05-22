@@ -245,7 +245,6 @@ const changeCatGuide = ( type? : string, value : boolean ) => {
 }
 
 const onResize = () => {
-
   const maxWidth = 1800;
 
   if ( maxWidth < windowWidth.value ) {
@@ -269,7 +268,8 @@ onMounted( () => {
 
   setTimeout( () => changeCodeGuide(), 2000 );
 
-  onResize();
+  setTimeout( () => onResize(), 50 );
+
 
   window.addEventListener( "resize", onResize );
 });
@@ -331,7 +331,7 @@ definePageMeta( {
           />
         </div>
       </div>
-      
+
       <div
           ref="catBoxRef"
           :class="cx( 'cat-box', MainStyle.CatBox )"

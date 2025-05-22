@@ -1,5 +1,5 @@
 [build]
-command = "yarn generate"
+command = "yarn install && yarn generate"
 publish = ".output/public"
 
 [context.production.environment]
