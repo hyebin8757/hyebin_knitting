@@ -1,5 +1,5 @@
 [build]
-command = "yarn install && yarn generate"
+command = "pwd && ls -al && yarn install && yarn generate && ls -al .output && ls -al .output/public && ls -al ./.output"
 publish = ".output"
 
 [context.production.environment]
