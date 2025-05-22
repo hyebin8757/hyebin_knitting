@@ -87,9 +87,9 @@ const nuxtConfig: any = {
       dir: '.output'
     },
 
-    externals: {
-      inline: ['h3']
-    }
+    // externals: {
+    //   inline: ['h3']
+    // }
   },
 
   proxy: {
