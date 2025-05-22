@@ -30,10 +30,10 @@ export const CommonStyle = {
       height: 100%;
     }
 
-    .v-application__wrap {
-      min-height: 100%;
-      max-height: 100%;
-    }
+    //.v-application__wrap {
+    //  min-height: 100%;
+    //  max-height: 100%;
+    //}
 
     html {
       font-size: 10px;
