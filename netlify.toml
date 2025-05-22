@@ -1,6 +1,6 @@
 [build]
-command = "yarn install && pwd && ls -al && yarn run generate && ls -al .output && ls -al .output/public"
-publish = ".output"
+command = "pwd && ls -al && yarn install && yarn generate && ls -al dist"
+publish = "dist"
 
 [context.production.environment]
 NODE_VERSION = "18"
