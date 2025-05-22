@@ -98,6 +98,8 @@ export const SidebarStyle = {
       
       .v-list-group {
         > .v-list-item {
+          padding: 0 1rem;
+          
           .v-list-item-title {
             font-size: 1.8rem;
             font-weight: 700;

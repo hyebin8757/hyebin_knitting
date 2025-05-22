@@ -105,7 +105,7 @@ let charIndex = 0;
 let currentTarget : any = null;
 let cursor : any = null;
 
-const codeGuide = ref( "데이터 생성중" );
+const codeGuide = ref( "데이터 생성중 입니다" );
 
 const catGuide = ref( "구경 할래 냥?" );
 
@@ -221,18 +221,18 @@ const changeCodeGuide = () => {
 
   if ( !codeBoxPending.value ) return;
 
-  setTimeout( () => codeGuide.value = "빨리 눌러주세요!!", 1000 );
+  setTimeout( () => codeGuide.value = "빨리 눌러주세요!!", 500 );
 
-  setTimeout( () => codeGuide.value = "진짜 안눌러??", 2500 );
+  setTimeout( () => codeGuide.value = "진짜 안눌러요??", 1500 );
 
-  setTimeout( () => codeGuide.value = "알겠어 내가 실행 할께!!", 4000 );
+  setTimeout( () => codeGuide.value = "알겠어 제가 실행 할께요!!", 3000 );
 
   setTimeout( () => {
 
     setCodeBox();
 
     typeLine();
-  }, 5500 );
+  }, 4500 );
 }
 
 const changeCatGuide = ( type? : string, value : boolean ) => {
@@ -266,7 +266,7 @@ const onResize = () => {
  ************************************************************/
 onMounted( () => {
 
-  setTimeout( () => changeCodeGuide(), 2000 );
+  setTimeout( () => changeCodeGuide(), 1000 );
 
   setTimeout( () => onResize(), 50 );
 
@@ -321,7 +321,7 @@ definePageMeta( {
             <img src="@/assets/images/img/img_loading.svg" alt="">
 
             <span>
-              <em v-text="codeGuide"/>...( <img src="@/assets/images/icon/icon_heart.png" alt=""> CLICK! )
+              <em v-text="codeGuide"/>...( <img src="@/assets/images/icon/icon_heart.png" alt=""> 버튼을 CLICK 해주세요! )
             </span>
           </div>
 

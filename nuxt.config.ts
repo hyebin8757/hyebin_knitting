@@ -47,7 +47,7 @@ const nuxtConfig: any = {
       ],
       script: [],
       link: [
-        {rel: "icon", type: "image/svg", href: "/favicon.svg"}
+        {rel: "icon", type: "image/png", href: "/favicon.png"}
       ]
     }
   },

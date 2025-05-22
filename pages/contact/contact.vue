@@ -54,7 +54,7 @@ const contactData = reactive({
     },
     {
       title : "kakao",
-      text : `<a href="">kakao open chat</a>`,
+      text : `<a href="https://open.kakao.com/o/sZdfKLxh">kakao open chat</a>`,
       html : true,
     },
   ],
