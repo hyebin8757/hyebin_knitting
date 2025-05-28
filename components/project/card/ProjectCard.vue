@@ -100,8 +100,8 @@ const onHoverToggle = ( value : boolean ) => {
 
     <div :class="cx( 'info-box', ProjectCardStyle.InfoBox )">
       <div :class="cx( ProjectCardStyle.Service )">
-        <b>서비스</b>
-        <span v-html="props.service"/>
+        <em>서비스</em>
+        <b v-html="props.service"/>
       </div>
 
       <div :class="cx( ProjectCardStyle.LabelBox )">

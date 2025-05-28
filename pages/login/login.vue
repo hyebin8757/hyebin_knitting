@@ -153,8 +153,8 @@ const loginValidation = () => {
   return true;
 }
 
-const setWindowWidth = ( data : any ) => {
-  windowWidth.value = data.target.innerWidth;
+const setWindowWidth = ( data : any, isMounted : boolean = false ) => {
+  windowWidth.value = isMounted ? data.innerWidth : data.target.innerWidth;
 }
 
 /************************************************************
@@ -180,6 +180,8 @@ watch( () => loginBooleanData.alert, ( newValue : boolean ) => {
  * Mounted
  ************************************************************/
 onMounted( () => {
+
+  setWindowWidth( document.documentElement, true );
 
   document.documentElement.removeAttribute( "dark-mode" );
 

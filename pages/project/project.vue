@@ -682,6 +682,7 @@ definePageMeta( {
 
 <template>
   <div :class="cx( 'project', ProjectStyle.Default, isHover && 'is-hover' )">
+    <em :class="cx( ProjectStyle.Guide )">* 보안상 문제가 발생할 수 있어 링크를 연결하지 않았습니다.</em>
 
     <v-tabs :class="cx( 'sub-menu-tab', ProjectStyle.Tab )" v-model="tab">
       <v-tab

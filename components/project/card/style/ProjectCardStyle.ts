@@ -29,7 +29,6 @@ export const ProjectCardStyle = {
     &:hover {
       z-index: 10;
       
-      
       .info-box {
         visibility: visible;
         animation: fadeIn 0.3s ease-in-out forwards;
@@ -105,10 +104,12 @@ export const ProjectCardStyle = {
     padding-bottom: 1rem;
     border-bottom: 2px solid var( --primary-color );
     font-size: 1.4rem;
+    font-weight: 500;
     
-    span {
+    b {
       display: block;
       margin-top: 0.8rem;
+      font-size: 1.6rem;
     }
   `,
 

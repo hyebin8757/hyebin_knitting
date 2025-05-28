@@ -219,7 +219,7 @@ definePageMeta( {
           )"
       >
         <p :class="cx( AboutStyle.Introduction )">
-          저는 <b>UI 개발</b>에 열정을 가지고 있으며 <b>프론트엔드</b>의 꿈을 가진 <b>퍼블리셔</b>입니다.!
+          저는 <b>UI 개발</b>에 열정을 가지고 있으며  <b>프론트 개발</b>에도 관심이 많은 <b>퍼블리셔</b>입니다.!
         </p>
       </div>
 

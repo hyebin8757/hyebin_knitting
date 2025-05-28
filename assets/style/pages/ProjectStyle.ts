@@ -82,6 +82,16 @@ export const ProjectStyle = {
     }
   `,
 
+  Guide : css`
+    position: absolute;
+    top: 5rem;
+    right: 2rem;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var( --system-red-lighten-color );
+  `,
+
+
   Tab : css`
     &.v-tabs {
       ${CommonStyle.MenuBtn};
