@@ -61,8 +61,8 @@ export const AboutStyle = {
       position: absolute;
       top: -3.5rem;
       right: 0;
-      height: 3.2rem !important;
-      font-size: 1.4rem;
+      height: 2rem !important;
+      font-size: 1.2rem;
       font-weight: 500;
       padding: 0 1rem;
       border: 1px solid var( --system-red-color );
