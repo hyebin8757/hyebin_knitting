@@ -55,7 +55,7 @@ const props = withDefaults( defineProps<{
  * Function
  ************************************************************/
 const onClick = ( index : number ) => {
-  console.log("클릭!!!!", index);
+  // console.log("클릭!!!!", index);
 }
 
 /************************************************************

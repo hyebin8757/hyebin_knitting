@@ -102,7 +102,7 @@ export const ProjectCardStyle = {
   Service : css`
     margin-bottom: 2rem;
     padding-bottom: 1rem;
-    border-bottom: 2px solid var( --primary-color );
+    border-bottom: 2px solid #808080;
     font-size: 1.4rem;
     font-weight: 500;
     
@@ -120,6 +120,8 @@ export const ProjectCardStyle = {
     .v-chip.v-chip--size-default {
       font-size: 1.2rem;
       font-weight: 500;
+      color: #FFF;
+      background: #2366B4;
     }
   `,
 
