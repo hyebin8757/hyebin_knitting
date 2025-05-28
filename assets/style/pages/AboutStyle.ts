@@ -31,7 +31,7 @@ export const AboutStyle = {
 
   ConsoleBox : css`
     position: relative;
-    width: 50%;
+    width: 70%;
     margin-top: 2rem;
     padding: 1rem;
     border-radius: 1rem;
@@ -165,13 +165,14 @@ const MediaStyle = {
   Media : {
     /** [ 1280px ] */
     1280 : css`
+      .console-box {
+        width: 100%;
+      }
     `,
 
     /** [ 1024px ] */
     1024 : css`
       .console-box {
-        width: 100%;
-        
         .is-mobile-btn {
           &.v-btn--variant-text {
             top: -3.5rem;
