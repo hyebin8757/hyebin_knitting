@@ -31,7 +31,7 @@ const nuxtConfig: any = {
       htmlAttrs: {
         lang: "ko",
       },
-      title: "민우주 포트퐅리오",
+      title: "민우주 포트폴리오",
       charset: "utf-8",
       viewport: "width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1",
       meta: [

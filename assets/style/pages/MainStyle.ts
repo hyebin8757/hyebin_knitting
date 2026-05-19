@@ -84,10 +84,36 @@ export const MainStyle = {
 
   CodeBoxContent : css`
     ${ CommonStyle.Scroll };
+    position: relative;
     width: 100%;
     height: 54.4rem;
     border-radius: 0 0 2rem 2rem;
     background: #010F1C;
+    
+    .skip-tooltip {
+      position: absolute;
+      bottom: 2rem;
+      right: 3rem;
+      padding: 0.8rem 1.6rem;
+      border-radius: 2rem;
+      background: rgba(255, 255, 255, 0.15);
+      color: var( --white-color );
+      font-size: 1.4rem;
+      cursor: pointer;
+      animation: pulseTooltip 2s infinite;
+      z-index: 10;
+      backdrop-filter: blur(4px);
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+    }
+    
+    @keyframes pulseTooltip {
+      0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+    }
   `,
 
   CodeBoxPending : css`
@@ -206,6 +232,17 @@ export const MainStyle = {
     @keyframes blink {
       0%, 100% { background: #ccc; }
       50% { background: transparent; }
+    }
+    
+    @keyframes slideUpFadeInCode {
+      0% {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   `,
 

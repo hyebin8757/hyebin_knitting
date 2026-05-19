@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, inject } from "vue";
+import { onMounted, ref, inject, computed } from "vue";
 import { cx } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
 import { definePageMeta } from "~/.nuxt/imports";
@@ -70,7 +70,10 @@ const isHeartEvent = ref( false );
 
 const codeBoxPending = ref( true );
 
-const codeRef = ref( null );
+const codeRef = ref<HTMLElement | null>( null );
+
+const isTyping = ref( false );
+let typeTimeoutId : any = null;
 
 const codeLines = ref( [
   `<html>`,
@@ -112,7 +115,8 @@ const catGuide = ref( "구경 할래 냥?" );
 /************************************************************
  * Provide / inject Data
  ************************************************************/
-const windowWidth = inject( "windowWidth" );
+const windowWidth = inject( "windowWidth" ) as any;
+const isWideScreen = computed(() => windowWidth.value > 1800);
 
 /************************************************************
  * Function
@@ -165,6 +169,7 @@ parsedLines = codeLines.value.map(( line, index ) => ({
 const typeLine = () => {
 
   if ( lineIndex >= parsedLines.length ) {
+    isTyping.value = false;
     return cursor?.remove();
   }
 
@@ -175,7 +180,7 @@ const typeLine = () => {
     lineIndex++;
     partIndex = 0;
     charIndex = 0;
-    setTimeout(typeLine, 300);
+    typeTimeoutId = setTimeout(typeLine, 300);
     return;
   }
 
@@ -203,18 +208,59 @@ const typeLine = () => {
     const char = document.createTextNode(part.text[charIndex]);
     currentTarget.insertBefore(char, cursor);
     charIndex++;
-    setTimeout(typeLine, 15);
+    typeTimeoutId = setTimeout(typeLine, 15);
   }
   else {
     partIndex++;
     charIndex = 0;
-    setTimeout(typeLine, 36);
+    typeTimeoutId = setTimeout(typeLine, 36);
   }
 
 
   if ( isEmpty( codeRef.value ) ) return;
 
   codeRef.value.scrollTop = ( codeRef.value.scrollHeight + 100 );
+}
+
+const skipTyping = () => {
+  if (!isTyping.value) return;
+  isTyping.value = false;
+  clearTimeout(typeTimeoutId);
+
+  for (let i = lineIndex; i < parsedLines.length; i++) {
+    const { wrapper, parts } = parsedLines[i];
+    
+    if (!wrapper.parentNode) {
+      codeRef.value?.appendChild(wrapper);
+    }
+    
+    if (i === lineIndex) {
+      wrapper.innerHTML = '';
+    }
+    
+    if (i >= lineIndex) {
+      parts.forEach(part => {
+        const el = document.createElement('div');
+        if (part.type === 'tag') {
+          const tagName = part.text.replace(/[</>]/g, '');
+          el.classList.add(`tag-${tagName}`);
+        } else {
+          el.classList.add('text');
+        }
+        el.textContent = part.text;
+        
+        el.style.opacity = '0';
+        el.style.animation = `slideUpFadeInCode 0.4s ease-out forwards`;
+        el.style.animationDelay = `${(i - lineIndex) * 0.05}s`;
+        
+        wrapper.appendChild(el);
+      });
+    }
+  }
+  cursor?.remove();
+  if (codeRef.value) {
+    codeRef.value.scrollTop = codeRef.value.scrollHeight + 100;
+  }
 }
 
 const changeCodeGuide = () => {
@@ -228,30 +274,20 @@ const changeCodeGuide = () => {
   setTimeout( () => codeGuide.value = "알겠어 제가 실행 할께요!!", 3000 );
 
   setTimeout( () => {
-
+    if ( !codeBoxPending.value ) return;
     setCodeBox();
-
+    isTyping.value = true;
     typeLine();
   }, 4500 );
 }
 
-const changeCatGuide = ( type? : string, value : boolean ) => {
+const changeCatGuide = ( type? : string, value? : boolean ) => {
 
   if ( !value ) {
     return catGuide.value = "구경 할래 냥?";
   }
 
   catGuide.value = "project" === type ? "오! 좋아 프로젝트 구경 시켜줄께~" : "연락? 무조건 환영이야~";
-}
-
-const onResize = () => {
-  const maxWidth = 1800;
-
-  if ( maxWidth < windowWidth.value ) {
-    return mainContentRef.value?.appendChild( catBoxRef.value );
-  };
-
-  codeBoxRef.value?.appendChild( catBoxRef.value );
 }
 
 /************************************************************
@@ -265,13 +301,7 @@ const onResize = () => {
  * Mounted
  ************************************************************/
 onMounted( () => {
-
   setTimeout( () => changeCodeGuide(), 1000 );
-
-  setTimeout( () => onResize(), 50 );
-
-
-  window.addEventListener( "resize", onResize );
 });
 
 
@@ -313,7 +343,7 @@ definePageMeta( {
           </div>
         </div>
 
-        <div :class="cx( 'code-box-content', MainStyle.CodeBoxContent )">
+        <div :class="cx( 'code-box-content', MainStyle.CodeBoxContent )" @click="skipTyping">
           <div
             v-if="codeBoxPending"
             :class="cx( MainStyle.CodeBoxPending )"
@@ -329,10 +359,42 @@ definePageMeta( {
             ref="codeRef"
             :class="cx( 'code-box-code', MainStyle.CodeBoxCode )"
           />
+
+          <!-- 스킵 안내 툴팁 -->
+          <div v-if="isTyping" class="skip-tooltip" @click.stop="skipTyping">
+            화면을 클릭하면 건너뜁니다 ⏭
+          </div>
+        </div>
+
+        <!-- 데스크탑 미만일 때 코드박스 내부에 고양이 렌더링 -->
+        <div
+            v-if="!isWideScreen"
+            ref="catBoxRef"
+            :class="cx( 'cat-box', MainStyle.CatBox )"
+        >
+          <div :class="cx( 'cat-box-guide', MainStyle.CatBoxGuide )">
+            <b v-text="catGuide"/>
+          </div>
+
+          <div :class="cx( 'cat-box-img', MainStyle.CatBoxImg )">
+            <img src="@/assets/images/img/img_nameplate.png" alt="">
+            <img src="@/assets/images/img/img_cat_main.png" alt="">
+          </div>
+
+          <BaseBtn
+            :class="cx( { 'is-active' : isHeartEvent } )"
+            :hover="false"
+            variant="text"
+            @on-click="() => { if(codeBoxPending){ setCodeBox(); isTyping = true; typeLine(); } }"
+          >
+            <img src="@/assets/images/icon/icon_heart.png" alt="">
+          </BaseBtn>
         </div>
       </div>
 
+      <!-- 1800px 이상 데스크탑일 때 메인 컨텐츠 내부에 고양이 렌더링 -->
       <div
+          v-if="isWideScreen"
           ref="catBoxRef"
           :class="cx( 'cat-box', MainStyle.CatBox )"
       >
@@ -349,7 +411,7 @@ definePageMeta( {
           :class="cx( { 'is-active' : isHeartEvent } )"
           :hover="false"
           variant="text"
-          @on-click="() => { setCodeBox(); typeLine(); }"
+          @on-click="() => { if(codeBoxPending){ setCodeBox(); isTyping = true; typeLine(); } }"
         >
           <img src="@/assets/images/icon/icon_heart.png" alt="">
         </BaseBtn>
