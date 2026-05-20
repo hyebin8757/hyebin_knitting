@@ -23,7 +23,17 @@ export const MainStyle = {
     height: calc( 100% - ${MenuStyleData.menuHeight}rem );
     padding: 3rem;
     overflow: hidden;
-    background: url(${useImage("/assets/images/bg/bg_main.png")}) repeat center center/cover;
+    background: #010c17;
+
+    .star-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
   `,
 
   Title : css`
@@ -51,6 +61,8 @@ export const MainStyle = {
     ${StyleUtils.FlexUtils("stretch", "center")};
     gap: 3rem;
     margin-top: 4rem;
+    position: relative;
+    z-index: 1;
   `,
 
 
@@ -362,6 +374,8 @@ export const MainStyle = {
     ${StyleUtils.FlexUtils("center", "center")};
     gap: 10rem;
     margin-top: 4rem;
+    position: relative;
+    z-index: 1;
 
     .v-btn.v-btn--density-default {
       flex: 1;

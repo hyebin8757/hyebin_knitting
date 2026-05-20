@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, inject, computed } from "vue";
+import { onMounted, onBeforeUnmount, ref, inject, computed } from "vue";
 import { cx } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
 import { definePageMeta } from "~/.nuxt/imports";
@@ -291,6 +291,163 @@ const changeCatGuide = ( type? : string, value? : boolean ) => {
 }
 
 /************************************************************
+ * Canvas Starry Sky Animation
+ ************************************************************/
+interface Star {
+  x: number;
+  y: number;
+  size: number;
+  alpha: number;
+  twinkleSpeed: number;
+  twinkleDir: number;
+  color: string;
+}
+
+interface ShootingStar {
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+  length: number;
+  speed: number;
+  alpha: number;
+  life: number;
+  maxLife: number;
+}
+
+const canvasRef = ref<HTMLCanvasElement | null>( null );
+let starsList: Star[] = [];
+let shootingStarsList: ShootingStar[] = [];
+let animationFrameId: number | null = null;
+let bgGradient: CanvasGradient | null = null;
+let resizeTimeoutId: any = null;
+
+const initStars = ( width : number, height : number ) => {
+  const count = Math.floor( ( width * height ) / 9000 ); // 별 밀도 최적화
+  const generatedStars: Star[] = [];
+  const colors = [ "#ffffff", "#fff7eb", "#e3f2fd", "#fffde7" ];
+
+  for ( let i = 0; i < count; i++ ) {
+    generatedStars.push( {
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: Math.random() * 1.4 + 0.6,
+      alpha: Math.random() * 0.8 + 0.2,
+      twinkleSpeed: 0.003 + Math.random() * 0.012,
+      twinkleDir: Math.random() > 0.5 ? 1 : -1,
+      color: colors[ Math.floor( Math.random() * colors.length ) ],
+    } );
+  }
+  starsList = generatedStars;
+};
+
+const drawStarrySky = () => {
+  const canvas = canvasRef.value;
+  if ( !canvas ) return;
+
+  const ctx = canvas.getContext( "2d", { alpha: false } ); // 알파 채널 제외로 블렌딩 최적화
+  if ( !ctx ) return;
+
+  // 캐싱된 그라데이션 적용 (매 프레임 생성 방지)
+  if ( !bgGradient ) {
+    bgGradient = ctx.createLinearGradient( 0, 0, 0, canvas.height );
+    bgGradient.addColorStop( 0, "#010c17" );
+    bgGradient.addColorStop( 0.5, "#00070e" );
+    bgGradient.addColorStop( 1, "#000205" );
+  }
+  ctx.fillStyle = bgGradient;
+  ctx.fillRect( 0, 0, canvas.width, canvas.height );
+
+  // 별 드로잉 최적화: arc 대신 fillRect 적용으로 드로우콜 속도 대폭 개선
+  starsList.forEach( ( star ) => {
+    star.alpha += star.twinkleSpeed * star.twinkleDir;
+    if ( star.alpha >= 1 ) {
+      star.alpha = 1;
+      star.twinkleDir = -1;
+    } else if ( star.alpha <= 0.15 ) {
+      star.alpha = 0.15;
+      star.twinkleDir = 1;
+    }
+
+    ctx.fillStyle = star.color;
+    ctx.globalAlpha = star.alpha;
+    ctx.fillRect( star.x - star.size / 2, star.y - star.size / 2, star.size, star.size );
+  } );
+
+  ctx.globalAlpha = 1;
+
+  // 유성 생성 주기 최적화
+  if ( Math.random() < 0.0012 && shootingStarsList.length < 2 ) {
+    shootingStarsList.push( {
+      x: Math.random() * canvas.width * 0.8 + canvas.width * 0.2,
+      y: Math.random() * canvas.height * 0.3 - 50,
+      dx: -4 - Math.random() * 4,
+      dy: 3 + Math.random() * 3,
+      length: 60 + Math.random() * 80,
+      speed: 1.5 + Math.random() * 1.5,
+      alpha: 1,
+      life: 0,
+      maxLife: 40 + Math.random() * 30,
+    } );
+  }
+
+  for ( let i = shootingStarsList.length - 1; i >= 0; i-- ) {
+    const ss = shootingStarsList[ i ];
+    ss.x += ss.dx * ss.speed;
+    ss.y += ss.dy * ss.speed;
+    ss.life++;
+    ss.alpha = Math.max( 0, 1 - ss.life / ss.maxLife );
+
+    if ( ss.life >= ss.maxLife || ss.x < -100 || ss.y > canvas.height + 100 ) {
+      shootingStarsList.splice( i, 1 );
+      continue;
+    }
+
+    const grad = ctx.createLinearGradient(
+      ss.x, ss.y,
+      ss.x - ss.dx * ( ss.length / 10 ),
+      ss.y - ss.dy * ( ss.length / 10)
+    );
+    grad.addColorStop( 0, `rgba(255, 255, 255, ${ss.alpha})` );
+    grad.addColorStop( 1, "rgba(255, 255, 255, 0)" );
+
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo( ss.x, ss.y );
+    ctx.lineTo(
+      ss.x - ss.dx * ( ss.length / 10 ),
+      ss.y - ss.dy * ( ss.length / 10 )
+    );
+    ctx.stroke();
+  }
+
+  animationFrameId = requestAnimationFrame( drawStarrySky );
+};
+
+const resizeCanvas = () => {
+  const canvas = canvasRef.value;
+  if ( !canvas ) return;
+
+  const rect = canvas.parentElement?.getBoundingClientRect();
+  if ( rect ) {
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    bgGradient = null; // 리사이즈 시 그라데이션 재생성을 위해 초기화
+    initStars( canvas.width, canvas.height );
+  }
+};
+
+const handleResizeDebounced = () => {
+  if ( resizeTimeoutId ) {
+    clearTimeout( resizeTimeoutId );
+  }
+  resizeTimeoutId = setTimeout( () => {
+    resizeCanvas();
+  }, 150 );
+};
+
+/************************************************************
  * Watch
  ************************************************************/
 // watch( () => , () => {
@@ -302,7 +459,20 @@ const changeCatGuide = ( type? : string, value? : boolean ) => {
  ************************************************************/
 onMounted( () => {
   setTimeout( () => changeCodeGuide(), 1000 );
-});
+
+  if ( canvasRef.value ) {
+    resizeCanvas();
+    drawStarrySky();
+    window.addEventListener( "resize", handleResizeDebounced );
+  }
+} );
+
+onBeforeUnmount( () => {
+  if ( animationFrameId ) {
+    cancelAnimationFrame( animationFrameId );
+  }
+  window.removeEventListener( "resize", handleResizeDebounced );
+} );
 
 
 /************************************************************
@@ -317,6 +487,7 @@ definePageMeta( {
 
 <template>
   <div ref="mainRef" :class="cx( 'main', MainStyle.Default )">
+    <canvas ref="canvasRef" class="star-canvas"></canvas>
     <div :class="cx( 'main-title', MainStyle.Title )">
       민우주의 퍼블리싱 우주에 <br> 오신 걸 환영합니다!
       <img src="@/assets/images/img/cat_logo.svg" alt="">
