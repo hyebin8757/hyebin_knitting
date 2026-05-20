@@ -2,6 +2,7 @@
 import { reactive, computed, watch, onMounted, onBeforeUnmount, ref } from "vue";
 import { cx } from "@emotion/css";
 import { useRouter } from "vue-router";
+import { definePageMeta } from "~/.nuxt/imports";
 
 /************************************************************
  * Components
@@ -196,6 +197,10 @@ onBeforeUnmount( () => {
 /************************************************************
  * Layout
  ************************************************************/
+definePageMeta( {
+  layout: false,
+  alias: [ "/login" ],
+} );
 
 </script>
 

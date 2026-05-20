@@ -42,7 +42,7 @@ const contactData = reactive({
     {
       title : "email",
       text : `<a href="mailto:dnwnekek2@gmail.com" ref="email">
-                <span>dn</span><span>wk</span><span>ek</span><span>e2</span><span>@g</span><span>ma</span><span>il</span><span>.com</span>
+                <span>dn</span><span>wn</span><span>ek</span><span>ek2</span><span>@g</span><span>ma</span><span>il</span><span>.com</span>
               </a>
       `,
       html : true,
@@ -156,6 +156,7 @@ onMounted(()=> {
  ************************************************************/
 definePageMeta( {
   layout: "layout",
+  alias: [ "/contact" ],
 } );
 
 </script>

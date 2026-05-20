@@ -68,15 +68,83 @@ export const SidebarStyle = {
     height: 100%;
     
     .resize-bar {
-      width: 2px;
+      position: relative;
+      width: 10px;
+      margin-left: -4px;
+      margin-right: -4px;
       height: 100%;
-      background: var( --black-color );
       cursor: col-resize;
+      background: transparent;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var( --black-color );
+        transition: background 0.2s ease, width 0.2s ease, left 0.2s ease;
+      }
       
-      &.is-active,
-      &:hover {
+      &.is-active::before,
+      &:hover::before {
+        left: 3px;
+        width: 4px;
         background: var( --system-green-lighten-color );
       }
+    }
+
+    .resize-button {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var( --system-green-lighten-color );
+      border: 2px solid var( --black-color );
+      color: var( --black-color );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      cursor: col-resize;
+      z-index: 20;
+      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      pointer-events: auto;
+
+      &:hover {
+        background: var( --white-color );
+        transform: translate(-50%, -50%) scale(1.1);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+      }
+
+      &:active {
+        transform: translate(-50%, -50%) scale(0.95);
+      }
+
+      svg {
+        width: 16px;
+        height: 16px;
+        color: var( --black-color ) !important;
+        margin: 0 !important;
+      }
+    }
+
+    .fade-enter-active,
+    .fade-leave-active {
+      transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .fade-enter-from,
+    .fade-leave-to {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.5);
     }
     
     .v-list {

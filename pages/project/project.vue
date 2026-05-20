@@ -676,6 +676,7 @@ onMounted(() => {
  ************************************************************/
 definePageMeta( {
   layout: "layout",
+  alias: [ "/project" ],
 } );
 
 </script>

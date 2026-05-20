@@ -316,6 +316,7 @@ onBeforeUnmount( () => {
  ************************************************************/
 definePageMeta( {
   layout: "layout",
+  alias: [ "/main_old" ],
 } );
 
 </script>

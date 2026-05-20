@@ -137,6 +137,7 @@ const resetConsoleData = () => {
  ************************************************************/
 definePageMeta( {
   layout: "layout",
+  alias: [ "/about" ],
 } );
 
 </script>

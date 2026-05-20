@@ -2,6 +2,7 @@
 import { onMounted, reactive, watch } from "vue";
 import { cx } from "@emotion/css";
 import { useRouter } from "vue-router";
+import { definePageMeta } from "~/.nuxt/imports";
 
 /************************************************************
  * Components
@@ -170,6 +171,10 @@ onMounted( () => {
 /************************************************************
  * Layout
  ************************************************************/
+definePageMeta( {
+  layout: false,
+  alias: [ "/join" ],
+} );
 
 </script>
 

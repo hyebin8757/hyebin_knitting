@@ -75,25 +75,25 @@ const sidebarData = reactive({
       label : "main",
       tooltip : "메인",
       iconName : "home",
-      path : "/main/main",
+      path : "/main",
     },
     {
       label : "project",
       tooltip : "프로젝트",
       iconName : "code",
-      path : "/project/project",
+      path : "/project",
     },
     {
       label : "about",
       tooltip : "자기소개서",
       iconName : "create",
-      path : "/about/about",
+      path : "/about",
     },
     {
       label : "contact",
       tooltip : "연락처",
       iconName : "mail_outline",
-      path : "/contact/contact",
+      path : "/contact",
     },
   ],
 
@@ -102,25 +102,25 @@ const sidebarData = reactive({
     {
       title : "home.vue",
       label : "main",
-      path : "/main/main",
+      path : "/main",
       bookmark : false,
     },
     {
       title : "about.html",
       label : "about",
-      path : "/about/about",
+      path : "/about",
       bookmark : false,
     },
     {
       title : "contact.css",
       label : "contact",
-      path : "/contact/contact",
+      path : "/contact",
       bookmark : false,
     },
     {
       title : "project.js",
       label : "project",
-      path : "/project/project",
+      path : "/project",
       bookmark : false,
     },
   ],
@@ -137,6 +137,28 @@ const menuListRef = ref( null );
 const menuListWidth = ref( 0 );
 const bookmarkList = ref<SidebarMenu[]| undefined | []>( [] );
 
+const isHovered = ref( false );
+const buttonY = ref( 0 );
+
+const updateButtonY = ( e : MouseEvent ) => {
+  const resizeBar = ( menuListRef.value as HTMLElement | null )?.querySelector( '.resize-bar' );
+  if ( resizeBar ) {
+    const rect = resizeBar.getBoundingClientRect();
+    const relativeY = e.clientY - rect.top;
+    buttonY.value = Math.max( 20, Math.min( relativeY, rect.height - 20 ) );
+  }
+};
+
+const onMouseMove = ( e : MouseEvent ) => {
+  updateButtonY( e );
+};
+
+const onMouseLeave = () => {
+  if ( !sidebarBooleanData.isResize ) {
+    isHovered.value = false;
+  }
+};
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
@@ -146,20 +168,27 @@ const mobileSidebar = inject( "mobileSidebar" );
  * Function
  ************************************************************/
 // sidebar menu width 설정
-const onResizeScreen = () => {
+const onResizeScreen = ( e : MouseEvent ) => {
   sidebarBooleanData.isResize = true;
+  updateButtonY( e );
 
-  addEventListener("mousemove", ( e : MouseEvent ) => {
+  const handleMouseMove = ( event : MouseEvent ) => {
     if ( !sidebarBooleanData.isResize || isEmpty( menuListRef.value ) ) {
       return;
     }
+    menuListRef.value.style.width = ( event.clientX - 50 ) + "px";
+    updateButtonY( event );
+  };
 
-    menuListRef.value.style.width = ( e.clientX - 50 ) + "px"
-  });
-
-  addEventListener("mouseup", ( e : MouseEvent ) => {
+  const handleMouseUp = () => {
     sidebarBooleanData.isResize = false;
-  });
+    isHovered.value = false;
+    window.removeEventListener( "mousemove", handleMouseMove );
+    window.removeEventListener( "mouseup", handleMouseUp );
+  };
+
+  window.addEventListener( "mousemove", handleMouseMove );
+  window.addEventListener( "mouseup", handleMouseUp );
 }
 
 // select / menu button active 설정
@@ -292,7 +321,23 @@ onMounted( () => {
       <div
         :class="cx('resize-bar', sidebarBooleanData.isResize && 'is-active' )"
         @mousedown="onResizeScreen"
-      ></div>
+        @mouseenter="isHovered = true"
+        @mouseleave="onMouseLeave"
+        @mousemove="onMouseMove"
+      >
+        <transition name="fade">
+          <button
+            v-if="isHovered || sidebarBooleanData.isResize"
+            class="resize-button"
+            :style="{ top: `${buttonY}px` }"
+            @mousedown.stop="onResizeScreen"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m8 18-6-6 6-6M16 6l6 6-6 6"/>
+            </svg>
+          </button>
+        </transition>
+      </div>
     </div>
   </div>
 </template>
