@@ -16,6 +16,16 @@ const { setMedia } = _uiUtil();
 export const FindDialogStyle = {
   Default : css`
     ${CommonStyle.Dialog};
+
+    @media screen and (max-width: 1024px) {
+      &.v-dialog {
+        .v-overlay__content {
+          width: 90% !important;
+          max-width: 95% !important;
+          margin: 1.5rem !important;
+        }
+      }
+    }
   `,
 
   FindGuide : css`
@@ -23,6 +33,11 @@ export const FindDialogStyle = {
     height: fit-content;
     padding-bottom: 2rem;
     text-align: right;
+
+    @media screen and (max-width: 1024px) {
+      text-align: left;
+      padding-bottom: 1.5rem;
+    }
   `,
 
   IdFrom : css`
@@ -76,6 +91,29 @@ export const FindDialogStyle = {
     .tab-item__guide {
       margin-top: 2rem;
       font-size: 1.2rem;
+    }
+
+    @media screen and (max-width: 1024px) {
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .v-tabs {
+        width: 100%;
+        border-bottom: 1px solid var( --border-color-1 );
+      }
+
+      .v-slide-group {
+        .v-btn {
+          padding: 0 1.2rem;
+          font-size: 1.3rem;
+        }
+      }
+
+      .tab-content {
+        .v-card-text {
+          padding: 2rem !important;
+        }
+      }
     }
   `,
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch } from "vue";
+import { reactive, watch, ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { cx } from "@emotion/css";
 
 /************************************************************
@@ -72,6 +72,12 @@ const findBooleanData = reactive({
   isPassword : false,
 })
 
+const windowWidth = ref( 0 );
+
+const isMobile = computed( () => {
+  return 1024 >= windowWidth.value;
+})
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
@@ -102,6 +108,10 @@ const changeData = ( title : string ) => {
   }
 }
 
+const setWindowWidth = ( data : any ) => {
+  windowWidth.value = data.target.innerWidth;
+}
+
 /************************************************************
  * Watch
  ************************************************************/
@@ -117,6 +127,14 @@ watch( () => props.title, ( newValue : string ) => {
 /************************************************************
  * Mounted
  ************************************************************/
+onMounted( () => {
+  windowWidth.value = window.innerWidth;
+  window.addEventListener( "resize", setWindowWidth );
+})
+
+onBeforeUnmount( () => {
+  window.removeEventListener( "resize", setWindowWidth );
+});
 
 /************************************************************
  * Layout
@@ -142,7 +160,7 @@ watch( () => props.title, ( newValue : string ) => {
       <v-tabs
         v-model="findData.idTab"
         color="primary"
-        direction="vertical"
+        :direction="isMobile ? 'horizontal' : 'vertical'"
       >
         <v-tab text="이름/생년월일" value="name" :ripple="false"></v-tab>
         <v-tab text="휴대폰 인증" value="phone" :ripple="false"></v-tab>

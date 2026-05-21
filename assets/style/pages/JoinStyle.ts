@@ -20,8 +20,10 @@ export const JoinStyle = {
   `,
 
   Container : css`
-    width: 50rem;
-    height: 62rem;
+    max-width: 50rem;
+    width: 100%;
+    height: auto;
+    min-height: 62rem;
     padding: 2rem;
     border-radius: 2rem;
     background: var( --white-color );
