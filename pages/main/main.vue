@@ -8,6 +8,7 @@ import { definePageMeta } from "~/.nuxt/imports";
  * Components
  ************************************************************/
 import BaseBtn from "~/components/base/btn/BaseBtn.vue";
+import MainNoticeDialog from "~/components/dialog/main/MainNoticeDialog.vue";
 
 /************************************************************
  * Style
@@ -53,6 +54,7 @@ const catBoxRef = ref( null );
 /************************************************************
  * Dynamic Data ( 동적 데이터 )
  ************************************************************/
+const isNoticePopupOpen = ref( false );
 const buttonList = ref([
   {
     value : "닫기",
@@ -290,6 +292,10 @@ const changeCatGuide = ( type? : string, value? : boolean ) => {
   catGuide.value = "project" === type ? "오! 좋아 프로젝트 구경 시켜줄께~" : "연락? 무조건 환영이야~";
 }
 
+const goToShoppingMall = () => {
+  router.push( "/shopping" );
+}
+
 /************************************************************
  * Canvas Starry Sky Animation
  ************************************************************/
@@ -460,6 +466,13 @@ const handleResizeDebounced = () => {
 onMounted( () => {
   setTimeout( () => changeCodeGuide(), 1000 );
 
+  // 오늘 하루 보지 않기 타임스탬프 체크
+  const expiry = localStorage.getItem("main_notice_expiry");
+  const now = new Date().getTime();
+  if (!expiry || now > parseInt(expiry, 10)) {
+    isNoticePopupOpen.value = true;
+  }
+
   if ( canvasRef.value ) {
     resizeCanvas();
     drawStarrySky();
@@ -613,6 +626,12 @@ definePageMeta( {
         <span>연락하기</span>
       </BaseBtn>
     </div>
+
+    <!-- 신규 쇼핑몰 런칭 공지 팝업 -->
+    <MainNoticeDialog
+      v-model="isNoticePopupOpen"
+      @on-check="goToShoppingMall"
+    />
   </div>
 </template>
 
