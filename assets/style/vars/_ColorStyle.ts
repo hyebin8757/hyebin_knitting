@@ -12,11 +12,11 @@ export const ColorStyle = {
     :root[dark-mode=true] {
       --white-color: #303030;
       --black-color: #FFFFFF;
-      --primary-color: #FFFBEE;
-      --gradation-color-1: #FFFBEE;
-      --primary-lighten-color-3: #FFFBEE;
-      --system-green-lighten-color: #FFB526;
-      --system-green-darken-color: #FFC727;
+      --primary-color: #EBECF0;
+      --gradation-color-1: #F2F2F2;
+      --primary-lighten-color-3: #F2F2F2;
+      --system-green-lighten-color: #3574F0;
+      --system-green-darken-color: #D2E5FA;
     }
 
      :root {

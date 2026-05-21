@@ -2,6 +2,7 @@
 import { inject, onMounted, reactive, ref } from "vue";
 import { cx } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 
 /************************************************************
  * Components
@@ -36,13 +37,15 @@ const { isEmpty } = useUtil.typeValidation;
 
 const { isLogin } = useUserStore();
 
+const sidebarStore = useSidebarStore();
+const { isSidebarOpen } = storeToRefs( sidebarStore );
 const {
   setSidebarMenuListWidth,
   setBookmarkList,
   getBookmarkList,
   isBookmarkList,
   removeBookmarkList
-} = useSidebarStore();
+} = sidebarStore;
 
 /************************************************************
  * Props
@@ -200,13 +203,35 @@ const setActive = ( label : string ) => {
   return route.path.includes( label ) && 'is-active'
 }
 
-// 메뉴별 페이지 이동
-const movePage = ( path : string ) => {
+// 메뉴별 페이지 이동 및 사이드바 토글
+const movePage = ( path : string, label : string ) => {
   if ( isEmpty( path ) ) {
     return;
   }
 
-  router.push( path );
+  const isActive = route.path.includes( label );
+  if ( isActive ) {
+    isSidebarOpen.value = !isSidebarOpen.value;
+  } else {
+    isSidebarOpen.value = true;
+    router.push( path );
+  }
+}
+
+// 리사이즈 바 더블클릭 시 사이드바 토글
+const onResizeDblClick = () => {
+  isSidebarOpen.value = !isSidebarOpen.value;
+}
+
+// 툴팁 텍스트 반환 (사이드바 상태에 따른 안내 포함)
+const getTooltipText = ( item: SidebarMenu ) => {
+  const isActive = route.path.includes( item.label );
+  if ( isActive ) {
+    return isSidebarOpen.value
+      ? `${item.tooltip} (클릭 시 접기)`
+      : `${item.tooltip} (클릭 시 열기)`;
+  }
+  return item.tooltip;
 }
 
 // 즐겨 찾기 토글
@@ -261,18 +286,24 @@ onMounted( () => {
         :class="cx( setActive( item.label ) )"
         :label="item.label"
         variant="text"
-        @click="movePage( item.path )"
+        @click="movePage( item.path, item.label )"
       >
         <span class="material-icons-outlined" v-text="item.iconName"></span>
         <v-tooltip
           :content-class="item.label"
           activator="parent"
           location="end"
-        >{{item.tooltip}}</v-tooltip>
+        >
+          {{ getTooltipText( item ) }}
+        </v-tooltip>
       </v-btn>
     </div>
 
-    <div ref="menuListRef" :class="cx( 'menu-list', SidebarStyle.MenuList )">
+    <div
+      v-show="isSidebarOpen"
+      ref="menuListRef"
+      :class="cx( 'menu-list', SidebarStyle.MenuList )"
+    >
       <v-list
         v-model:opened="sidebarData.menuListValue"
       >
@@ -320,10 +351,12 @@ onMounted( () => {
 
       <div
         :class="cx('resize-bar', sidebarBooleanData.isResize && 'is-active' )"
+        title="드래그: 너비 조절 | 더블 클릭: 사이드바 접기/펼치기"
         @mousedown="onResizeScreen"
         @mouseenter="isHovered = true"
         @mouseleave="onMouseLeave"
         @mousemove="onMouseMove"
+        @dblclick="onResizeDblClick"
       >
         <transition name="fade">
           <button

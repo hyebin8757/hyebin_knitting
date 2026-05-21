@@ -373,7 +373,7 @@ const initStars = ( width : number, height : number ) => {
   const isDarkMode = !document.documentElement.hasAttribute( "dark-mode" );
   const colors = isDarkMode 
     ? [ "#ffffff", "#fff7eb", "#e3f2fd", "#fffde7" ]
-    : [ "#3b82f6", "#60a5fa", "#2563eb", "#1d4ed8", "#38bdf8", "#fbbf24", "#34d399" ]; // 라이트 모드용 프리미엄 별 색상 조합
+    : [ "#1e40af", "#0284c7", "#4f46e5", "#7c3aed", "#d97706", "#0d9488" ]; // 라이트 모드용 고대비 프리미엄 별 색상 조합 (시인성 및 웹 접근성 극대화)
 
   for ( let i = 0; i < count; i++ ) {
     const rgb = hexToRgb( colors[ Math.floor( Math.random() * colors.length ) ] );
@@ -474,9 +474,9 @@ const drawStarrySky = () => {
       grad.addColorStop( 0, `rgba(255, 255, 255, ${ss.alpha})` );
       grad.addColorStop( 1, "rgba(255, 255, 255, 0)" );
     } else {
-      // 라이트 모드에서는 아름다운 스카이 블루 및 골드 꼬리를 가진 유성 연출
-      grad.addColorStop( 0, `rgba(37, 99, 235, ${ss.alpha})` );
-      grad.addColorStop( 1, "rgba(96, 165, 250, 0)" );
+      // 라이트 모드용 고대비 및 프리미엄 유성 연출 (더 깊고 선명한 인디고/보랏빛 꼬리)
+      grad.addColorStop( 0, `rgba(79, 70, 229, ${ss.alpha})` );
+      grad.addColorStop( 1, "rgba(99, 102, 241, 0)" );
     }
 
     ctx.strokeStyle = grad;

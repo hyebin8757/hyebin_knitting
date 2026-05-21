@@ -29,7 +29,7 @@ export const useSidebarStore = defineStore( "sidebar", () => {
   // 즐겨 찾기 메뉴 설정
   const setBookmarkList = ( item : SidebarMenu ) => {
     if ( isEmpty( item ) ) {
-     return;
+      return;
     }
 
     // @ts-ignore
@@ -50,6 +50,9 @@ export const useSidebarStore = defineStore( "sidebar", () => {
     return getBookmarkList.value;
   }
 
+  // sidebar open state
+  const isSidebarOpen = ref<boolean>( true );
+
   return {
     getSidebarMenuListWidth,
     setSidebarMenuListWidth,
@@ -57,6 +60,7 @@ export const useSidebarStore = defineStore( "sidebar", () => {
     getBookmarkList,
     setBookmarkList,
     removeBookmarkList,
+    isSidebarOpen,
   };
 }, {
   persist : {
