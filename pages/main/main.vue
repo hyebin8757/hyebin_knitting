@@ -70,7 +70,7 @@ const buttonList = ref([
 
 const isHeartEvent = ref( false );
 
-const codeBoxPending = ref( true );
+const codeBoxPending = ref( false );
 
 const codeRef = ref<HTMLElement | null>( null );
 
@@ -275,23 +275,7 @@ const skipTyping = () => {
   }
 }
 
-const changeCodeGuide = () => {
-
-  if ( !codeBoxPending.value ) return;
-
-  setTimeout( () => codeGuide.value = "빨리 눌러주세요!!", 500 );
-
-  setTimeout( () => codeGuide.value = "진짜 안눌러요??", 1500 );
-
-  setTimeout( () => codeGuide.value = "알겠어 제가 실행 할께요!!", 3000 );
-
-  setTimeout( () => {
-    if ( !codeBoxPending.value ) return;
-    setCodeBox();
-    isTyping.value = true;
-    typeLine();
-  }, 4500 );
-}
+// changeCodeGuide removed for optimized instant loading UX
 
 const changeCatGuide = ( type? : string, value? : boolean ) => {
 
@@ -538,7 +522,10 @@ const handleResizeDebounced = () => {
  * Mounted
  ************************************************************/
 onMounted( () => {
-  setTimeout( () => changeCodeGuide(), 1000 );
+  setTimeout( () => {
+    isTyping.value = true;
+    typeLine();
+  }, 500 );
 
   // 오늘 하루 보지 않기 타임스탬프 체크
   const expiry = localStorage.getItem("main_notice_expiry");
@@ -681,7 +668,7 @@ definePageMeta( {
             :class="cx( { 'is-active' : isHeartEvent } )"
             :hover="false"
             variant="text"
-            @on-click="() => { if(codeBoxPending){ setCodeBox(); isTyping = true; typeLine(); } }"
+            @on-click="onHeartEvent"
           >
             <img src="@/assets/images/icon/icon_heart.png" alt="">
           </BaseBtn>
@@ -707,7 +694,7 @@ definePageMeta( {
           :class="cx( { 'is-active' : isHeartEvent } )"
           :hover="false"
           variant="text"
-          @on-click="() => { if(codeBoxPending){ setCodeBox(); isTyping = true; typeLine(); } }"
+          @on-click="onHeartEvent"
         >
           <img src="@/assets/images/icon/icon_heart.png" alt="">
         </BaseBtn>
