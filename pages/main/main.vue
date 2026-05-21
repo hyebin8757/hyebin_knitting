@@ -172,7 +172,9 @@ const typeLine = () => {
 
   if ( lineIndex >= parsedLines.length ) {
     isTyping.value = false;
-    return cursor?.remove();
+    cursor?.remove();
+    cursor = null;
+    return;
   }
 
   const { wrapper, parts } = parsedLines[lineIndex];
@@ -204,6 +206,13 @@ const typeLine = () => {
       currentTarget.classList.add('text');
       wrapper.appendChild(currentTarget);
     }
+
+    // 깜빡이는 타이핑 커서 생성 및 배치
+    if ( !cursor ) {
+      cursor = document.createElement('span');
+      cursor.className = 'cursor';
+    }
+    currentTarget.appendChild( cursor );
   }
 
   if ( charIndex < part.text.length ) {
@@ -260,6 +269,7 @@ const skipTyping = () => {
     }
   }
   cursor?.remove();
+  cursor = null;
   if (codeRef.value) {
     codeRef.value.scrollTop = codeRef.value.scrollHeight + 100;
   }
@@ -306,7 +316,9 @@ interface Star {
   alpha: number;
   twinkleSpeed: number;
   twinkleDir: number;
-  color: string;
+  r: number;
+  g: number;
+  b: number;
 }
 
 interface ShootingStar {
@@ -327,44 +339,91 @@ let shootingStarsList: ShootingStar[] = [];
 let animationFrameId: number | null = null;
 let bgGradient: CanvasGradient | null = null;
 let resizeTimeoutId: any = null;
+const isDark = ref( false );
+let darkObserver: MutationObserver | null = null;
+
+let logicalWidth = 0;
+let logicalHeight = 0;
+const isCanvasVisible = ref( true );
+let observer: IntersectionObserver | null = null;
+
+const hexToRgb = ( hex : string ) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec( hex );
+  return result ? {
+    r: parseInt( result[1], 16 ),
+    g: parseInt( result[2], 16 ),
+    b: parseInt( result[3], 16 )
+  } : { r: 255, g: 255, b: 255 };
+}
+
+const checkDarkMode = () => {
+  const isDarkMode = !document.documentElement.hasAttribute( "dark-mode" );
+  if ( isDark.value !== isDarkMode ) {
+    isDark.value = isDarkMode;
+    bgGradient = null; // 그라데이션 캐시 초기화
+    if ( canvasRef.value ) {
+      initStars( logicalWidth, logicalHeight );
+    }
+  }
+}
 
 const initStars = ( width : number, height : number ) => {
   const count = Math.floor( ( width * height ) / 9000 ); // 별 밀도 최적화
   const generatedStars: Star[] = [];
-  const colors = [ "#ffffff", "#fff7eb", "#e3f2fd", "#fffde7" ];
+  const isDarkMode = !document.documentElement.hasAttribute( "dark-mode" );
+  const colors = isDarkMode 
+    ? [ "#ffffff", "#fff7eb", "#e3f2fd", "#fffde7" ]
+    : [ "#3b82f6", "#60a5fa", "#2563eb", "#1d4ed8", "#38bdf8", "#fbbf24", "#34d399" ]; // 라이트 모드용 프리미엄 별 색상 조합
 
   for ( let i = 0; i < count; i++ ) {
+    const rgb = hexToRgb( colors[ Math.floor( Math.random() * colors.length ) ] );
     generatedStars.push( {
       x: Math.random() * width,
       y: Math.random() * height,
-      size: Math.random() * 1.4 + 0.6,
-      alpha: Math.random() * 0.8 + 0.2,
+      size: isDarkMode ? (Math.random() * 1.4 + 0.6) : (Math.random() * 1.8 + 0.8), // 라이트 모드에서 더 잘 보이도록 크기 소폭 조절
+      alpha: Math.random() * 0.7 + 0.3,
       twinkleSpeed: 0.003 + Math.random() * 0.012,
       twinkleDir: Math.random() > 0.5 ? 1 : -1,
-      color: colors[ Math.floor( Math.random() * colors.length ) ],
+      r: rgb.r,
+      g: rgb.g,
+      b: rgb.b
     } );
   }
   starsList = generatedStars;
 };
 
 const drawStarrySky = () => {
+  if ( !isCanvasVisible.value ) {
+    animationFrameId = null;
+    return;
+  }
+
   const canvas = canvasRef.value;
   if ( !canvas ) return;
 
   const ctx = canvas.getContext( "2d", { alpha: false } ); // 알파 채널 제외로 블렌딩 최적화
   if ( !ctx ) return;
 
+  const isDarkMode = !document.documentElement.hasAttribute( "dark-mode" );
+
   // 캐싱된 그라데이션 적용 (매 프레임 생성 방지)
   if ( !bgGradient ) {
-    bgGradient = ctx.createLinearGradient( 0, 0, 0, canvas.height );
-    bgGradient.addColorStop( 0, "#010c17" );
-    bgGradient.addColorStop( 0.5, "#00070e" );
-    bgGradient.addColorStop( 1, "#000205" );
+    bgGradient = ctx.createLinearGradient( 0, 0, 0, logicalHeight );
+    if ( isDarkMode ) {
+      bgGradient.addColorStop( 0, "#010c17" );
+      bgGradient.addColorStop( 0.5, "#00070e" );
+      bgGradient.addColorStop( 1, "#000205" );
+    } else {
+      bgGradient.addColorStop( 0, "#dbeafe" );  // 라이트 모드용 감성적인 하늘빛 블루 그라데이션
+      bgGradient.addColorStop( 0.6, "#f1f5f9" ); // 부드러운 화이트 그레이
+      bgGradient.addColorStop( 1, "#ffffff" );   // 최하단 퓨어 화이트
+    }
   }
   ctx.fillStyle = bgGradient;
-  ctx.fillRect( 0, 0, canvas.width, canvas.height );
+  ctx.fillRect( 0, 0, logicalWidth, logicalHeight );
 
   // 별 드로잉 최적화: arc 대신 fillRect 적용으로 드로우콜 속도 대폭 개선
+  // rgba() 활용으로 ctx.globalAlpha 호출 제거
   starsList.forEach( ( star ) => {
     star.alpha += star.twinkleSpeed * star.twinkleDir;
     if ( star.alpha >= 1 ) {
@@ -375,18 +434,15 @@ const drawStarrySky = () => {
       star.twinkleDir = 1;
     }
 
-    ctx.fillStyle = star.color;
-    ctx.globalAlpha = star.alpha;
+    ctx.fillStyle = `rgba(${star.r}, ${star.g}, ${star.b}, ${star.alpha})`;
     ctx.fillRect( star.x - star.size / 2, star.y - star.size / 2, star.size, star.size );
   } );
 
-  ctx.globalAlpha = 1;
-
-  // 유성 생성 주기 최적화
+  // 유성 생성 주기 최적화 (논리 해상도 기준)
   if ( Math.random() < 0.0012 && shootingStarsList.length < 2 ) {
     shootingStarsList.push( {
-      x: Math.random() * canvas.width * 0.8 + canvas.width * 0.2,
-      y: Math.random() * canvas.height * 0.3 - 50,
+      x: Math.random() * logicalWidth * 0.8 + logicalWidth * 0.2,
+      y: Math.random() * logicalHeight * 0.3 - 50,
       dx: -4 - Math.random() * 4,
       dy: 3 + Math.random() * 3,
       length: 60 + Math.random() * 80,
@@ -404,7 +460,7 @@ const drawStarrySky = () => {
     ss.life++;
     ss.alpha = Math.max( 0, 1 - ss.life / ss.maxLife );
 
-    if ( ss.life >= ss.maxLife || ss.x < -100 || ss.y > canvas.height + 100 ) {
+    if ( ss.life >= ss.maxLife || ss.x < -100 || ss.y > logicalHeight + 100 ) {
       shootingStarsList.splice( i, 1 );
       continue;
     }
@@ -414,8 +470,14 @@ const drawStarrySky = () => {
       ss.x - ss.dx * ( ss.length / 10 ),
       ss.y - ss.dy * ( ss.length / 10)
     );
-    grad.addColorStop( 0, `rgba(255, 255, 255, ${ss.alpha})` );
-    grad.addColorStop( 1, "rgba(255, 255, 255, 0)" );
+    if ( isDarkMode ) {
+      grad.addColorStop( 0, `rgba(255, 255, 255, ${ss.alpha})` );
+      grad.addColorStop( 1, "rgba(255, 255, 255, 0)" );
+    } else {
+      // 라이트 모드에서는 아름다운 스카이 블루 및 골드 꼬리를 가진 유성 연출
+      grad.addColorStop( 0, `rgba(37, 99, 235, ${ss.alpha})` );
+      grad.addColorStop( 1, "rgba(96, 165, 250, 0)" );
+    }
 
     ctx.strokeStyle = grad;
     ctx.lineWidth = 1.8;
@@ -437,10 +499,22 @@ const resizeCanvas = () => {
 
   const rect = canvas.parentElement?.getBoundingClientRect();
   if ( rect ) {
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+    const dpr = window.devicePixelRatio || 1;
+    logicalWidth = rect.width;
+    logicalHeight = rect.height;
+
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = `${rect.height}px`;
+
+    const ctx = canvas.getContext( "2d" );
+    if ( ctx ) {
+      ctx.scale( dpr, dpr );
+    }
+
     bgGradient = null; // 리사이즈 시 그라데이션 재생성을 위해 초기화
-    initStars( canvas.width, canvas.height );
+    initStars( logicalWidth, logicalHeight );
   }
 };
 
@@ -473,9 +547,37 @@ onMounted( () => {
     isNoticePopupOpen.value = true;
   }
 
+  // 다크모드 리액티브 감지 설정
+  isDark.value = !document.documentElement.hasAttribute( "dark-mode" );
+  darkObserver = new MutationObserver( () => {
+    checkDarkMode();
+  } );
+  darkObserver.observe( document.documentElement, {
+    attributes: true,
+    attributeFilter: [ "dark-mode" ]
+  } );
+
   if ( canvasRef.value ) {
     resizeCanvas();
-    drawStarrySky();
+    
+    // IntersectionObserver 초기화 및 감지 시작
+    observer = new IntersectionObserver( ( entries ) => {
+      entries.forEach( ( entry ) => {
+        isCanvasVisible.value = entry.isIntersecting;
+        if ( entry.isIntersecting ) {
+          if ( !animationFrameId ) {
+            drawStarrySky();
+          }
+        } else {
+          if ( animationFrameId ) {
+            cancelAnimationFrame( animationFrameId );
+            animationFrameId = null;
+          }
+        }
+      } );
+    }, { threshold: 0 } );
+
+    observer.observe( canvasRef.value );
     window.addEventListener( "resize", handleResizeDebounced );
   }
 } );
@@ -483,6 +585,15 @@ onMounted( () => {
 onBeforeUnmount( () => {
   if ( animationFrameId ) {
     cancelAnimationFrame( animationFrameId );
+  }
+  if ( resizeTimeoutId ) {
+    clearTimeout( resizeTimeoutId );
+  }
+  if ( darkObserver ) {
+    darkObserver.disconnect();
+  }
+  if ( observer ) {
+    observer.disconnect();
   }
   window.removeEventListener( "resize", handleResizeDebounced );
 } );
