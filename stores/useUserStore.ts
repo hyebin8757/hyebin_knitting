@@ -36,7 +36,7 @@ export const useUserStore = defineStore( "user", () => {
     sessionStorage.removeItem( "sidebar" );
     sessionStorage.removeItem( "menu" );
 
-    location.href = "/login/login";
+    location.href = "/login";
   };
 
   return {

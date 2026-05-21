@@ -47,25 +47,25 @@ const { isEmpty, isNotEmpty } = useUtil.typeValidation;
  * Raw Data ( 원시 데이터 )
  ************************************************************/
 const joinData = reactive({
-  id : "",
-  password : "",
-  passwordReconfirm : "",
-  eMail : "test@intellij.com",
-  name : "테스트 유저",
-  birthDate : new Date(),
-  phone : "01012345678",
-  radio : "one",
-  alertText : "",
-})
+  id: "",
+  password: "",
+  passwordReconfirm: "",
+  eMail: "test@intellij.com",
+  name: "테스트 유저",
+  birthDate: new Date(),
+  phone: "01012345678",
+  radio: "one",
+  alertText: "",
+});
 
 /************************************************************
  * Dynamic Data ( 동적 데이터 )
  ************************************************************/
 const joinBooleanData = reactive({
-  passwordShow : false,
-  passwordReconfirmShow : false,
-  alert : false,
-})
+  passwordShow: false,
+  passwordReconfirmShow: false,
+  alert: false,
+});
 
 /************************************************************
  * Provide / inject Data
@@ -76,12 +76,12 @@ const joinBooleanData = reactive({
  ************************************************************/
 // 로그인 페이지 이동
 const onLogin = () => {
-  router.push("/login/login");
-}
+  router.push("/login");
+};
 
 // 생년월일 현재로 날짜 설정
-const formatDateToString = ( value: Date ): string => {
-  if ( isEmpty( value ) ) {
+const formatDateToString = (value: Date): string => {
+  if (isEmpty(value)) {
     return "19990101";
   }
 
@@ -89,105 +89,104 @@ const formatDateToString = ( value: Date ): string => {
   let month: number | string = value.getMonth() + 1;
   let date: number | string = value.getDate();
 
-  if ( 10 > month ) {
+  if (10 > month) {
     month = "0" + month;
   }
 
-  if ( 10 > value.getDate() ) {
+  if (10 > value.getDate()) {
     date = "0" + value.getDate();
   }
 
-  return  year + month + date;
-}
+  return year + month + date;
+};
 
 // 로그인 설정
 const onJoin = async () => {
   const isCheck = await joinValidation();
 
-  if ( !isCheck ) {
-    return ( joinBooleanData.alert = true );
+  if (!isCheck) {
+    return (joinBooleanData.alert = true);
   }
 
   setUserInfo({
-    id : joinData.id,
-    password : joinData.password,
+    id: joinData.id,
+    password: joinData.password,
   });
 
   onLogin();
-}
+};
 
 // 로그인 시 데이터 확인
 const joinValidation = () => {
   const koreanRegex = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/;
 
-  if ( isEmpty( joinData.id ) && isEmpty( joinData.password )) {
+  if (isEmpty(joinData.id) && isEmpty(joinData.password)) {
     joinData.alertText = "아이디 와 비밀번호를 입력해주세요.";
     return false;
-  }
-  else if ( isEmpty( joinData.id ) ) {
+  } else if (isEmpty(joinData.id)) {
     joinData.alertText = "아이디를 입력해주세요.";
     return false;
-  }
-  else if ( isEmpty( joinData.password ) ) {
+  } else if (isEmpty(joinData.password)) {
     joinData.alertText = "비밀번호를 입력해주세요.";
     return false;
-  }
-  else if ( isNotEmpty( joinData.id ) && koreanRegex.test( joinData.id ) ) {
+  } else if (isNotEmpty(joinData.id) && koreanRegex.test(joinData.id)) {
     joinData.alertText = "아이디에서 한글을 제외 해주세요.";
     return false;
-  }
-  else if ( 4 > joinData.id.length || 4 > joinData.password.length ) {
+  } else if (4 > joinData.id.length || 4 > joinData.password.length) {
     joinData.alertText = "최소 4글자 이상씩 작성해주세요.";
     return false;
   }
 
-  if ( joinData.password !== joinData.passwordReconfirm ) {
+  if (joinData.password !== joinData.passwordReconfirm) {
     joinData.alertText = "비밀번호가 동일하지 않습니다. 다시 확인해주세요.";
     return false;
   }
 
   return true;
-}
+};
+
+const onClose = () => {
+  router.push("/login");
+};
 
 /************************************************************
  * Watch
  ************************************************************/
-watch( () => joinBooleanData.alert, ( newValue : boolean ) => {
-  if ( newValue ) {
-    setTimeout( () => {
-      joinBooleanData.alert = false;
-    }, 1000);
+watch(
+  () => joinBooleanData.alert,
+  (newValue: boolean) => {
+    if (newValue) {
+      setTimeout(() => {
+        joinBooleanData.alert = false;
+      }, 1000);
+    }
   }
-});
+);
 
 /************************************************************
  * Mounted
  ************************************************************/
-onMounted( () => {
+onMounted(() => {
   joinData.radio = "one";
-  joinData.birthDate = formatDateToString( joinData.birthDate );
+  joinData.birthDate = formatDateToString(joinData.birthDate);
 });
 
 /************************************************************
  * Layout
  ************************************************************/
-definePageMeta( {
+definePageMeta({
   layout: false,
-  alias: [ "/join" ],
-} );
-
+  alias: ["/join"],
+});
 </script>
 
 <template>
-  <div :class="cx( JoinStyle.Default )">
-    <div :class="cx( JoinStyle.Container )">
-      <div :class="cx( JoinStyle.Title )" @click="onLogin">
-        <img src="@/assets/images/logo/logo.png" alt="logo">
+  <div :class="cx(JoinStyle.Default)">
+    <div :class="cx(JoinStyle.Container)">
+      <div :class="cx(JoinStyle.Title)" @click="onLogin">
+        <img src="@/assets/images/logo/logo.png" alt="logo" />
         <span>Min U Ju - IntelliJ IDEA</span>
-        <v-tooltip
-          content-class="black-tooltip"
-          location="top"
-        >
+        <v-tooltip content-class="black-tooltip" location="top">
           <template v-slot:activator="{ props }">
             <span v-bind="props" class="material-icons">error_outline</span>
           </template>
@@ -197,7 +196,7 @@ definePageMeta( {
         </v-tooltip>
       </div>
 
-      <div :class="cx( 'join-item', JoinStyle.JoinItem )">
+      <div :class="cx('join-item', JoinStyle.JoinItem)">
         <v-text-field
           v-model="joinData.id"
           variant="solo"
@@ -210,9 +209,13 @@ definePageMeta( {
           v-model="joinData.password"
           variant="solo"
           placeholder="비밀번호"
-          :append-icon="joinBooleanData.passwordShow ? 'mdi-eye' : 'mdi-eye-off'"
+          :append-icon="
+            joinBooleanData.passwordShow ? 'mdi-eye' : 'mdi-eye-off'
+          "
           :type="joinBooleanData.passwordShow ? 'text' : 'password'"
-          @click:append="joinBooleanData.passwordShow = !joinBooleanData.passwordShow"
+          @click:append="
+            joinBooleanData.passwordShow = !joinBooleanData.passwordShow
+          "
         />
         <em v-if="0 < joinData.password.length && 4 > joinData.password.length">
           최소 4글자 이상 작성해주세요.
@@ -221,11 +224,21 @@ definePageMeta( {
           v-model="joinData.passwordReconfirm"
           variant="solo"
           placeholder="비밀번호 재확인"
-          :append-icon="joinBooleanData.passwordReconfirmShow ? 'mdi-eye' : 'mdi-eye-off'"
+          :append-icon="
+            joinBooleanData.passwordReconfirmShow ? 'mdi-eye' : 'mdi-eye-off'
+          "
           :type="joinBooleanData.passwordReconfirmShow ? 'text' : 'password'"
-          @click:append="joinBooleanData.passwordReconfirmShow = !joinBooleanData.passwordReconfirmShow"
+          @click:append="
+            joinBooleanData.passwordReconfirmShow =
+              !joinBooleanData.passwordReconfirmShow
+          "
         />
-        <em v-if="1 < joinData.passwordReconfirm.length && joinData.password !== joinData.passwordReconfirm">
+        <em
+          v-if="
+            1 < joinData.passwordReconfirm.length &&
+            joinData.password !== joinData.passwordReconfirm
+          "
+        >
           비밀번호를 다시 확인 해주세요.
         </em>
         <v-text-field
@@ -235,7 +248,7 @@ definePageMeta( {
         />
       </div>
 
-      <div :class="cx( 'join-item', JoinStyle.JoinItem )">
+      <div :class="cx('join-item', JoinStyle.JoinItem)">
         <v-text-field
           v-model="joinData.name"
           variant="solo"
@@ -258,7 +271,14 @@ definePageMeta( {
         />
       </div>
 
-      <div :class="cx( JoinStyle.JoinBtn )">
+      <div :class="cx(JoinStyle.JoinBtn)">
+        <BaseBtn
+          :class="cx( 'close-btn' )"
+          @on-click="onClose"
+        >
+          <span>취소</span>
+        </BaseBtn>
+
         <BaseBtn @on-click="onJoin">
           <span>회원가입</span>
         </BaseBtn>

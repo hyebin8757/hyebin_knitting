@@ -65,7 +65,7 @@ const loginData = reactive({
     },
     {
       title : "회원가입",
-      path : "/join/join",
+      path : "/join",
       event : ( itemInfo : any  ) => {
         if ( isEmpty( itemInfo.path ) ) {
           return;
@@ -103,7 +103,7 @@ const isMobile = computed( () => {
  * Function
  ************************************************************/
 const moveMain = () => {
-  router.push( "/main/main" );
+  router.push( "/main" );
 }
 
 const onLogin = async () => {

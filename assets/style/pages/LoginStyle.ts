@@ -13,11 +13,16 @@ const { setMedia } = _uiUtil();
  * style
  ************************************************************/
 export const LoginStyle = {
-  Default : css`
-    ${StyleUtils.FlexUtils( "center", "center" )};
+  Default: css`
+    ${StyleUtils.FlexUtils("center", "center")};
     width: 100vw;
     height: 100vh;
-    background: linear-gradient(75deg, rgba(12, 32, 52, 1) 10%, rgb(96, 155, 147) 20%, rgba(12, 32, 52, 1) 100%);
+    background: linear-gradient(
+      75deg,
+      rgba(12, 32, 52, 1) 10%,
+      rgb(96, 155, 147) 20%,
+      rgba(12, 32, 52, 1) 100%
+    );
     background-size: 10000px 100%;
     animation: bg 8s linear infinite;
 
@@ -32,7 +37,7 @@ export const LoginStyle = {
     }
   `,
 
-  Container : css`
+  Container: css`
     ${StyleUtils.FlexUtils("center", "center")};
     width: 100%;
     height: 100%;
@@ -42,75 +47,73 @@ export const LoginStyle = {
     overflow: hidden;
   `,
 
-  FormBg : css`
+  FormBg: css`
     width: 100%;
     height: 100%;
-    
+
     img {
       width: 100%;
       height: 100%;
     }
   `,
 
-  FormCard : css`
+  FormCard: css`
     ${StyleUtils.FlexUtils("center", "center", "", "column")};
     width: 100%;
     height: 100%;
     padding: 2rem 5rem;
-    background: var( --white-color );
+    background: var(--white-color);
   `,
 
-  Title : css`
+  Title: css`
     ${StyleUtils.FlexUtils("center", "center")};
     gap: 0.5rem;
     margin-bottom: 4rem;
     font-size: 3rem;
     font-weight: 700;
     cursor: pointer;
-    
+
     br {
       display: none;
     }
-    
+
     img {
       width: 3rem;
       height: 3rem;
     }
   `,
 
-  Content : css`
+  Content: css`
     width: 100%;
     height: auto;
   `,
 
-  Form : css`
+  Form: css`
     width: 100%;
     height: fit-content;
   `,
 
-  InfoArea : css`
-    
-  `,
+  InfoArea: css``,
 
-  InfoItem : css`
+  InfoItem: css`
     &:nth-of-type(2) {
       margin-top: 2rem;
       .title {
         margin-bottom: 1rem;
       }
     }
-    
+
     .is-flex {
       ${StyleUtils.FlexUtils("center", "flex-start")};
       gap: 0.5rem;
       margin-bottom: 1rem;
-      
-      [ class ^= "material" ] {
+
+      [class^="material"] {
         font-size: 1.7rem;
         cursor: default;
       }
     }
-    
+
     .title {
       display: inline-block;
       font-size: 1.4rem;
@@ -118,41 +121,50 @@ export const LoginStyle = {
     }
   `,
 
-  LoginBtn : css`
+  LoginBtn: css`
+    ${StyleUtils.FlexUtils("center", "flex-start")};
+    gap: 1.2rem;
+    width: 100%;
     margin: 2rem 0;
-    
+
     .v-btn {
+      flex: 1;
+
       &.v-btn--density-default {
         width: 100%;
         height: 4rem;
         font-size: 1.6rem;
         font-weight: 700;
-        color: var( --white-color );
-        background: var( --system-green-color );  
-      }
-    }
-  `,
+        color: var(--white-color);
+        background: var(--system-green-color);
 
-  MenuList : css`
-    ul {
-      ${StyleUtils.FlexUtils("center", "flex-end")};
-      gap: 1rem;
-      
-      li {
-        font-size: 1.2rem;
-        cursor: pointer;
-        
-        &:hover {
-          color: var( --system-green-darken-color );
+        &.close-btn {
+          border: 1px solid var(--border-color-1);
+          color: var(--text-color-1 );
+          background: transparent;
         }
       }
     }
   `,
 
-  LoginTooltip : css`
-    
+  MenuList: css`
+    ul {
+      ${StyleUtils.FlexUtils("center", "flex-end")};
+      gap: 1rem;
+
+      li {
+        font-size: 1.2rem;
+        cursor: pointer;
+
+        &:hover {
+          color: var(--system-green-darken-color);
+        }
+      }
+    }
   `,
-}
+
+  LoginTooltip: css``,
+};
 
 /************************************************************
  * global style
