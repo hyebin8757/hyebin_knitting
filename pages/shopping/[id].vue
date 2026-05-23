@@ -386,10 +386,56 @@ const Styles = {
 
     @media (max-width: 768px) {
       .header-inner {
-        padding: 0 2rem;
+        padding: 0 1.6rem;
       }
       .ux-tag-badge {
         display: none;
+      }
+      
+      .logo {
+        .logo-text {
+          font-size: 1.8rem !important;
+        }
+        .logo-sub {
+          font-size: 0.9rem !important;
+        }
+      }
+
+      .header-actions {
+        gap: 1.2rem;
+        
+        .back-btn {
+          width: 38px !important;
+          height: 38px !important;
+          min-width: 38px !important;
+          max-width: 38px !important;
+          min-height: 38px !important;
+          max-height: 38px !important;
+          flex-shrink: 0 !important;
+          aspect-ratio: 1 / 1 !important;
+          padding: 0 !important;
+          border-radius: 50% !important;
+          background: rgba(255, 255, 255, 0.04) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          color: #ffffff !important;
+          font-size: 0 !important;
+          overflow: hidden !important;
+          
+          .material-icons {
+            margin: 0 !important;
+            font-size: 1.8rem !important;
+          }
+          
+          &:hover {
+            background: rgba(0, 242, 254, 0.1) !important;
+            border-color: #00f2fe !important;
+            color: #00f2fe !important;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
+          }
+        }
       }
     }
   `,
@@ -1265,6 +1311,38 @@ const Styles = {
         &:hover {
           background: #00f2fe !important;
           box-shadow: 0 0 15px rgba(0, 242, 254, 0.5) !important;
+        }
+      }
+    }
+
+    @media (max-width: 480px) {
+      .modal-desc {
+        font-size: 1.4rem;
+        padding: 0 0.4rem;
+        margin-bottom: 2rem;
+      }
+      .size-table {
+        font-size: 1.3rem;
+        
+        th {
+          font-size: 1.3rem;
+          padding: 1.2rem 0.6rem;
+        }
+        
+        td {
+          padding: 1.2rem 0.6rem;
+          
+          &:first-of-type {
+            font-size: 1.35rem;
+          }
+        }
+      }
+      .dialog-actions {
+        padding: 1.6rem;
+        
+        .close-action-btn {
+          font-size: 1.3rem !important;
+          padding: 1rem 2.2rem !important;
         }
       }
     }
