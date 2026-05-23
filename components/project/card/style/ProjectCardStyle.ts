@@ -30,8 +30,8 @@ export const ProjectCardStyle = {
       z-index: 10;
       
       .info-box {
+        opacity: 1;
         visibility: visible;
-        animation: fadeIn 0.3s ease-in-out forwards;
       }
     }
   `,
@@ -90,13 +90,12 @@ export const ProjectCardStyle = {
     z-index: 10;
     width: 100%;
     min-height: 25rem;
-    //height: calc( 100% - 33.4rem );
     padding: 1.6rem;
     border-radius: 1rem;
     opacity: 0;
     visibility: hidden;
     background: var( --background-color-1 );
-    animation: fadeOut 0.3s ease-in-out forwards;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
   `,
 
   Service : css`

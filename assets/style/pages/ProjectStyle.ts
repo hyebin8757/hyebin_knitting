@@ -10,25 +10,7 @@ const { setMedia } = _uiUtil();
  ************************************************************/
 export const ProjectData = {
   Animation : css`
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-
-    @keyframes fadeOut {
-      from {
-        opacity: 1;
-      }
-      to {
-        opacity: 0;
-        visibility: hidden;
-      }
-    }
-
+    /* 깜빡임 방지: keyframe 대신 transition 기반 fade 처리 */
   `
 }
 
@@ -53,21 +35,13 @@ export const ProjectStyle = {
       opacity: 0;
       background: rgba(0, 0, 0, 0.8);
       visibility: hidden;
-      transition: none;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
     }
-    
-    ${ ProjectData.Animation };
 
     &.is-hover {
       &:before {
+        opacity: 1;
         visibility: visible;
-        animation: fadeIn 0.3s ease-in-out forwards;
-      }
-    }
-
-    &:not(.is-hover) {
-      &:before {
-        animation: fadeOut 0.3s ease-in-out forwards;
       }
     }
     

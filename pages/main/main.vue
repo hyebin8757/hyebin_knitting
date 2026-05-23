@@ -727,7 +727,7 @@ definePageMeta( {
         @mouseleave="changeCatGuide( false )"
       >
         <img src="@/assets/images/icon/icon_store.png" alt="">
-        <span>오마주 스토어 입장 👟</span>
+        <span>오마주 스토어 입장</span>
       </BaseBtn>
 
       <BaseBtn
