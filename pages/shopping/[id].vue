@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, inject, onMounted } from "vue";
+import { ref, computed, inject, onMounted, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { cx, css } from "@emotion/css";
 
@@ -48,11 +48,36 @@ const sizes = [230, 235, 240, 245, 250, 255, 260, 265, 270, 275, 280, 285, 290];
 // 미디어 선택 탭 상태 ('image' | '360')
 const activeMediaTab = ref("image");
 
+// 썸네일 갤러리 이미지 리스트 (원래 상품 이미지 + 360 각도 이미지들 결합)
+const GALLERY_IMAGES = computed(() => {
+  // 1번, 2번, 3번 폴더에 파일이 실제로 존재하므로, 다른 번호의 경우 1번으로 폴백하여 엑박 방지 (UX 무결성 확보)
+  const targetId = [1, 2, 3].includes(product.value.id) ? product.value.id : 1;
+  const ext = [2, 3].includes(targetId) ? "webp" : "png";
+  return [
+    product.value.img,
+    `/images/img/salomon/shoes/${targetId}/shoes_img01.${ext}`,
+    `/images/img/salomon/shoes/${targetId}/shoes_img02.${ext}`,
+    `/images/img/salomon/shoes/${targetId}/shoes_img03.${ext}`,
+    `/images/img/salomon/shoes/${targetId}/shoes_img04.${ext}`,
+    `/images/img/salomon/shoes/${targetId}/shoes_img05.${ext}`
+  ];
+});
+const activeGalleryIndex = ref(0);
+
+// 수량 선택 상태
+const selectedQty = ref(1);
+
+// 스크롤 관련 상태
+const scrollPercent = ref(0);
+const showScrollTop = ref(false);
+
 // 가상의 품절 사이즈 지정 (실무 느낌 연출)
 const outOfStockSizes = computed(() => {
   if (product.value.id === 1) return [230, 245, 275];
   if (product.value.id === 2) return [255, 280, 290];
-  return [240, 270, 285];
+  if (product.value.id === 3) return [240, 270, 285];
+  if (product.value.id === 4) return [230, 265, 280];
+  return [235, 250, 275];
 });
 
 // 이미지 돋보기 줌 마이크로 인터랙션
@@ -79,9 +104,25 @@ const cartItems = computed(() => cartStore.cartItems);
 const totalPrice = computed(() => cartStore.totalPrice);
 const totalCartCount = computed(() => cartStore.totalCartCount);
 
+// You May Also Like 관련 상품 추천 목록 (현재 상품 제외하고 슬라이스)
+const recommendedProducts = computed(() => {
+  return PRODUCTS.filter(p => p.id !== product.value.id).slice(0, 4);
+});
+
 /************************************************************
  * Methods
  ************************************************************/
+const handleScroll = () => {
+  // 스크롤 상단 진행도 계산
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  if (docHeight > 0) {
+    scrollPercent.value = (window.scrollY / docHeight) * 100;
+  }
+  
+  // Scroll to Top 버튼 노출 트리거
+  showScrollTop.value = window.scrollY > 400;
+};
+
 onMounted(() => {
   // 최초 로드 시 디폴트 컬러 매칭
   if (product.value) {
@@ -90,6 +131,14 @@ onMounted(() => {
   
   // 최근 본 상품 등록
   cartStore.addRecentlyViewed(productId.value);
+
+  // 스크롤 리스너 장착
+  window.addEventListener("scroll", handleScroll);
+});
+
+onBeforeUnmount(() => {
+  // 스크롤 리스너 해제
+  window.removeEventListener("scroll", handleScroll);
 });
 
 const selectColor = (colorName: string) => {
@@ -114,7 +163,8 @@ const addToCart = () => {
     price: product.value.price,
     img: product.value.img,
     selectedColor: selectedColor.value,
-    selectedSize: selectedSize.value
+    selectedSize: selectedSize.value,
+    qty: selectedQty.value
   });
 
   isCartOpen.value = true;
@@ -126,7 +176,17 @@ const buyNow = () => {
     alert("사이즈 옵션을 먼저 선택해 주세요.");
     return;
   }
-  alert(`구매를 진행합니다: ${product.value.name}\n컬러: ${selectedColor.value}\n사이즈: ${selectedSize.value}mm\n최종 결제서 화면으로 이동합니다 (Friction 0%)`);
+  alert(`구매를 진행합니다: ${product.value.name}\n컬러: ${selectedColor.value}\n사이즈: ${selectedSize.value}mm\n수량: ${selectedQty.value}개\n최종 결제서 화면으로 이동합니다 (Friction 0%)`);
+};
+
+// 상품 공유하기
+const shareProduct = () => {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(window.location.href);
+    alert("상품 링크가 클립보드에 성공적으로 복사되었습니다! 친구에게 공유해 보세요. 🔗");
+  } else {
+    alert("링크 복사를 지원하지 않는 브라우저입니다.");
+  }
 };
 
 // 수량 제어
@@ -146,6 +206,58 @@ const Styles = {
     padding-top: 80px;
     overflow-x: hidden;
     position: relative;
+
+    .scroll-progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(to right, #00f2fe, #ff4081);
+      z-index: 200;
+      transition: width 0.1s ease;
+    }
+
+    .scroll-top-btn {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 50px;
+      height: 50px;
+      background: rgba(11, 11, 11, 0.85);
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      color: #00f2fe;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 100;
+      pointer-events: none;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.15);
+      padding: 0;
+      
+      &:hover {
+        background: #00f2fe;
+        color: #0b0b0b;
+        border-color: #00f2fe;
+        box-shadow: 0 6px 20px rgba(0, 242, 254, 0.5);
+        transform: translateY(-2px);
+      }
+      
+      &.show {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+      
+      .material-icons {
+        font-size: 2rem;
+      }
+    }
   `,
 
   Header: css`
@@ -284,8 +396,35 @@ const Styles = {
 
   ContentWrapper: css`
     max-width: 1440px;
-    margin: 4rem auto 8rem auto;
+    margin: 2rem auto 8rem auto;
     padding: 0 4rem;
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 2.8rem;
+      
+      .crumb-link {
+        cursor: pointer;
+        transition: color 0.3s ease;
+        
+        &:hover {
+          color: #00f2fe;
+        }
+      }
+      
+      .crumb-separator {
+        color: rgba(255, 255, 255, 0.25);
+      }
+      
+      .crumb-active {
+        color: #ffffff;
+      }
+    }
 
     .detail-grid {
       display: grid;
@@ -294,12 +433,13 @@ const Styles = {
       align-items: start;
     }
 
-    .media-column {
+    .media-column-wrapper {
       position: relative;
       background: #141414;
       border-radius: 8px;
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 2.8rem;
 
       .tag-badge {
         position: absolute;
@@ -315,60 +455,68 @@ const Styles = {
         letter-spacing: 0.08em;
       }
 
-      .media-tab-bar {
+      .media-gallery-container {
         display: flex;
-        background: rgba(255, 255, 255, 0.03);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        padding: 0.8rem;
-        gap: 0.8rem;
+        gap: 2.4rem;
+        height: 580px;
+        align-items: stretch;
+      }
 
-        .tab-btn {
-          flex: 1;
-          background: transparent;
-          border: 1px solid transparent;
-          color: rgba(255, 255, 255, 0.6);
-          padding: 0.8rem 1.6rem;
-          font-size: 1.2rem;
-          font-weight: 700;
-          cursor: pointer;
+      .thumbnail-strip {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        width: 80px;
+        flex-shrink: 0;
+        overflow-y: auto;
+        
+        &::-webkit-scrollbar {
+          width: 0px;
+        }
+        
+        .thumb-box {
+          border: 1.5px solid rgba(255, 255, 255, 0.08);
+          border-radius: 4px;
+          background: #111111;
+          width: 80px;
+          height: 80px;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 0.6rem;
-          border-radius: 4px;
-          transition: all 0.3s ease;
-
-          .material-icons {
-            font-size: 1.6rem;
+          cursor: pointer;
+          overflow: hidden;
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+          opacity: 0.6;
+          
+          img {
+            width: 85%;
+            height: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
           }
-
+          
+          &:hover {
+            opacity: 1;
+            border-color: rgba(0, 242, 254, 0.5);
+            
+            img {
+              transform: scale(1.05);
+            }
+          }
+          
           &.active {
-            background: rgba(0, 242, 254, 0.08);
-            border-color: rgba(0, 242, 254, 0.3);
-            color: #00f2fe;
-            box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);
-          }
-
-          &:hover:not(.active) {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.05);
+            opacity: 1;
+            border-color: #00f2fe;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
           }
         }
       }
 
-      .detail-360-container {
-        width: 100%;
-        height: 580px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: radial-gradient(circle at 50% 30%, #151d2a 0%, #06090e 100%);
-      }
-
       .main-image-viewer {
+        flex: 1;
         position: relative;
-        width: 100%;
-        height: 580px;
+        background: #191919;
+        border-radius: 6px;
         overflow: hidden;
         cursor: zoom-in;
         display: flex;
@@ -376,7 +524,7 @@ const Styles = {
         justify-content: center;
 
         img {
-          width: 85%;
+          width: 80%;
           height: auto;
           object-fit: contain;
           transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -414,109 +562,17 @@ const Styles = {
       }
     }
 
-    .recently-viewed-section {
-      margin-top: 10rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 4.8rem;
-
-      .section-title {
-        font-size: 1.8rem;
-        font-weight: 900;
-        letter-spacing: 0.1em;
-        color: #ffffff;
-        margin-bottom: 3.2rem;
+    .info-column-wrapper {
+      position: relative;
+      height: 100%;
+      
+      .info-sticky-panel {
+        position: sticky;
+        top: 120px; /* Header 80px + 여유분 40px */
         display: flex;
-        align-items: center;
-        gap: 0.8rem;
-
-        .material-icons {
-          color: #00f2fe;
-          font-size: 2.2rem;
-        }
-      }
-
-      .recently-viewed-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 2.4rem;
-      }
-
-      .rv-card {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 6px;
-        overflow: hidden;
-        cursor: pointer;
+        flex-direction: column;
         transition: all 0.3s ease;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(0, 242, 254, 0.4);
-          transform: translateY(-4px);
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 242, 254, 0.1);
-        }
-
-        .rv-img-box {
-          height: 120px;
-          background: #141414;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-
-          img {
-            width: 90%;
-            height: auto;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-          }
-        }
-
-        &:hover .rv-img-box img {
-          transform: scale(1.05);
-        }
-
-        .rv-info-box {
-          padding: 1.4rem;
-
-          .rv-name {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: #ffffff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 0.4rem;
-          }
-
-          .rv-price {
-            font-size: 1.2rem;
-            font-weight: 900;
-            color: #00f2fe;
-          }
-        }
       }
-    }
-
-    @media (max-width: 1024px) {
-      .recently-viewed-section {
-        .recently-viewed-grid {
-          grid-template-columns: repeat(3, 1fr);
-        }
-      }
-    }
-
-    @media (max-width: 768px) {
-      .recently-viewed-section {
-        .recently-viewed-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-    }
-
-    .info-column {
-      display: flex;
-      flex-direction: column;
 
       .brand-sub {
         font-size: 1.3rem;
@@ -526,39 +582,116 @@ const Styles = {
         margin-bottom: 1.2rem;
       }
 
-      .prod-title {
-        font-size: 4rem;
-        font-weight: 900;
-        line-height: 1.2;
-        letter-spacing: -0.01em;
+      .title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
         margin-bottom: 1.8rem;
-        color: #ffffff;
+
+        .prod-title {
+          font-size: 4rem;
+          font-weight: 900;
+          line-height: 1.2;
+          letter-spacing: -0.01em;
+          color: #ffffff;
+          margin: 0;
+        }
+
+        .share-btn {
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.7);
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          padding: 0;
+          
+          &:hover {
+            background: #ffffff;
+            color: #0b0b0b;
+            border-color: #ffffff;
+            transform: scale(1.08);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.25);
+          }
+
+          .material-icons {
+            font-size: 2rem;
+          }
+        }
       }
 
       .prod-price {
         font-size: 2.8rem;
         font-weight: 900;
         color: #ffffff;
+        margin-bottom: 2.4rem;
+      }
+
+      .urgency-panel {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px dashed rgba(0, 242, 254, 0.2);
+        border-radius: 6px;
+        padding: 1.6rem;
         margin-bottom: 2.8rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        padding-bottom: 2.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        
+        .urgency-row {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          font-size: 1.3rem;
+          color: rgba(255, 255, 255, 0.7);
+          
+          strong {
+            color: #ffffff;
+          }
+          
+          .material-icons {
+            font-size: 1.8rem;
+            
+            &.pulse {
+              color: #00f2fe;
+              animation: livePulse 2s infinite ease-in-out;
+            }
+            
+            &.error {
+              color: #ff4081;
+            }
+          }
+        }
+        
+        @keyframes livePulse {
+          0% { opacity: 0.4; transform: scale(0.9); }
+          50% { opacity: 1; transform: scale(1.1); text-shadow: 0 0 8px #00f2fe; }
+          100% { opacity: 0.4; transform: scale(0.9); }
+        }
       }
 
       .prod-desc {
         font-size: 1.5rem;
         line-height: 1.8;
-        color: rgba(255, 255, 255, 0.7);
-        margin-bottom: 3.6rem;
+        color: rgba(255, 255, 255, 0.65);
+        margin-bottom: 3.2rem;
         word-break: keep-all;
       }
 
       .option-section {
-        margin-bottom: 3.2rem;
+        margin-bottom: 2.8rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 2.4rem;
 
         .section-title {
           font-size: 1.4rem;
           font-weight: 800;
-          color: rgba(255, 255, 255, 0.6);
+          color: rgba(255, 255, 255, 0.5);
           margin-bottom: 1.4rem;
           
           strong {
@@ -572,7 +705,7 @@ const Styles = {
           align-items: center;
           font-size: 1.4rem;
           font-weight: 800;
-          color: rgba(255, 255, 255, 0.6);
+          color: rgba(255, 255, 255, 0.5);
           margin-bottom: 1.4rem;
 
           .fit-guide-trigger {
@@ -626,6 +759,44 @@ const Styles = {
           }
         }
 
+        .qty-selector {
+          display: flex;
+          align-items: center;
+          gap: 2rem;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 4px;
+          padding: 0.6rem 1.6rem;
+          width: fit-content;
+          
+          .qty-btn {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 1.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            
+            &:hover {
+              color: #00f2fe;
+            }
+          }
+          
+          .qty-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ffffff;
+            min-width: 24px;
+            text-align: center;
+          }
+        }
+
         .size-grid {
           display: grid;
           grid-template-columns: repeat(5, 1fr);
@@ -663,22 +834,6 @@ const Styles = {
               color: rgba(255, 255, 255, 0.2);
               cursor: not-allowed;
               text-decoration: line-through;
-
-              .soldout-tag {
-                position: absolute;
-                bottom: 2px;
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 0.8rem;
-                font-weight: 800;
-                color: #ff4081;
-                text-decoration: none;
-                display: block;
-              }
-            }
-            
-            .soldout-tag {
-              display: none;
             }
           }
         }
@@ -782,23 +937,203 @@ const Styles = {
       }
     }
 
+    .viewer-section {
+      margin-top: 10rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 8rem;
+
+      .viewer-section-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 4rem;
+
+        .viewer-section-label {
+          font-size: 1.2rem;
+          font-weight: 800;
+          color: #00f2fe;
+          letter-spacing: 0.25em;
+          text-transform: uppercase;
+          margin-bottom: 0.8rem;
+        }
+
+        .viewer-section-title {
+          font-size: 3.2rem;
+          font-weight: 900;
+          color: #ffffff;
+          letter-spacing: -0.01em;
+          line-height: 1.15;
+
+          span {
+            background: linear-gradient(135deg, #ffffff 30%, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+        }
+
+        .viewer-section-desc {
+          font-size: 1.4rem;
+          color: rgba(255, 255, 255, 0.45);
+          max-width: 320px;
+          text-align: right;
+          line-height: 1.7;
+          word-break: keep-all;
+        }
+      }
+
+      .viewer-section-inner {
+        background: radial-gradient(ellipse at 50% 0%, #0d1a26 0%, #06090e 65%);
+        border: 1px solid rgba(0, 242, 254, 0.12);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), inset 0 0 60px rgba(0, 242, 254, 0.04);
+        padding: 4rem 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    .recommendations-section {
+      margin-top: 12rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 6rem;
+      
+      .rec-section-title {
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        color: #ffffff;
+        margin-bottom: 4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        
+        .material-icons {
+          color: #00f2fe;
+          font-size: 2.4rem;
+        }
+      }
+      
+      .recommendations-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 3rem;
+      }
+      
+      .rec-card {
+        background: rgba(255, 255, 255, 0.01);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 6px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+        
+        .rec-img-box {
+          height: 180px;
+          background: #131313;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          
+          img {
+            width: 80%;
+            height: auto;
+            object-fit: contain;
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+          }
+        }
+        
+        .rec-info-box {
+          padding: 1.8rem;
+          
+          .rec-name {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          
+          .rec-price {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #00f2fe;
+          }
+        }
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.03);
+          border-color: rgba(0, 242, 254, 0.4);
+          transform: translateY(-6px);
+          box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 242, 254, 0.1);
+          
+          .rec-img-box img {
+            transform: scale(1.06);
+          }
+        }
+      }
+    }
+
     @media (max-width: 1024px) {
       .detail-grid {
         grid-template-columns: 1fr;
-        gap: 4rem;
+        gap: 5rem;
       }
       
-      .media-column .main-image-viewer {
+      .media-column-wrapper .media-gallery-container {
         height: 480px;
+      }
+
+      .recommendations-section .recommendations-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2.4rem;
       }
     }
 
     @media (max-width: 768px) {
       padding: 0 2rem;
       margin: 2rem auto 6rem auto;
+      
+      .breadcrumbs {
+        margin-bottom: 2rem;
+      }
 
-      .info-column {
-        .prod-title {
+      .media-column-wrapper {
+        padding: 1.6rem;
+        
+        .media-gallery-container {
+          flex-direction: column-reverse;
+          height: auto;
+          gap: 1.6rem;
+          
+          .thumbnail-strip {
+            flex-direction: row;
+            width: 100%;
+            height: auto;
+            justify-content: center;
+            
+            .thumb-box {
+              width: 64px;
+              height: 64px;
+            }
+          }
+          
+          .main-image-viewer {
+            height: 320px;
+          }
+        }
+      }
+
+      .info-column-wrapper {
+        .info-sticky-panel {
+          position: static;
+        }
+
+        .title-row .prod-title {
           font-size: 3rem;
         }
         
@@ -809,6 +1144,21 @@ const Styles = {
         .action-buttons-panel {
           grid-template-columns: 1fr;
           gap: 1.6rem;
+        }
+      }
+
+      .viewer-section {
+        margin-top: 6rem;
+        padding-top: 4rem;
+        
+        .viewer-section-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1.6rem;
+          
+          .viewer-section-desc {
+            text-align: left;
+          }
         }
       }
     }
@@ -853,10 +1203,10 @@ const Styles = {
     }
 
     .modal-desc {
-      font-size: 1.4rem;
-      line-height: 1.6;
-      color: rgba(255, 255, 255, 0.6);
-      margin-bottom: 2.4rem;
+      font-size: 1.6rem;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 2.8rem;
       padding: 0 0.8rem;
       word-break: keep-all;
     }
@@ -864,32 +1214,35 @@ const Styles = {
     .size-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 1.3rem;
+      font-size: 1.5rem;
 
       th {
         background: rgba(255, 255, 255, 0.03);
-        color: rgba(255, 255, 255, 0.5);
-        font-weight: 800;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 1.6rem;
+        font-weight: 900;
         text-align: center;
-        padding: 1.2rem;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+        padding: 1.5rem 1.2rem;
+        border-bottom: 2px solid rgba(0, 242, 254, 0.35);
       }
 
       td {
-        padding: 1.2rem;
+        padding: 1.5rem 1.2rem;
         text-align: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        color: rgba(255, 255, 255, 0.8);
-        font-weight: 600;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.95);
+        font-weight: 700;
 
         &:first-of-type {
           color: #00f2fe;
-          font-weight: 800;
+          font-weight: 900;
+          font-size: 1.55rem;
+          text-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
         }
       }
 
       tr:hover td {
-        background: rgba(255, 255, 255, 0.02);
+        background: rgba(255, 255, 255, 0.04);
       }
     }
 
@@ -903,8 +1256,8 @@ const Styles = {
         background: #ffffff !important;
         color: #0b0b0b !important;
         font-weight: 800 !important;
-        font-size: 1.3rem !important;
-        padding: 1rem 2.4rem !important;
+        font-size: 1.5rem !important;
+        padding: 1.2rem 3rem !important;
         border-radius: 4px !important;
         height: auto !important;
         transition: all 0.3s ease !important;
@@ -1210,16 +1563,19 @@ const Styles = {
 
 <template>
   <div :class="cx('salomon-detail-layout', Styles.Layout)">
+    <!-- 스크롤 진행 바 (고정형 네온 블루 진행도) -->
+    <div class="scroll-progress-bar" :style="{ width: scrollPercent + '%' }"></div>
+
     <!-- 네비게이션 헤더 -->
     <header :class="cx('shop-header', Styles.Header)">
       <div class="header-inner">
         <div class="logo" @click="router.push('/shopping')">
           <span class="logo-text">SALOMON</span>
-          <span class="logo-sub">REFACTORING</span>
+          <span class="logo-sub">OFFICIAL HOMAGE</span>
         </div>
 
         <div class="ux-tag-badge">
-          <span>DETAIL INTERACTIVE PAGE</span>
+          <span>PREMIUM SHOPPING EXPERIENCE</span>
         </div>
 
         <div class="header-actions">
@@ -1244,141 +1600,213 @@ const Styles = {
 
     <!-- 상세정보 메인 콘텐츠 구역 -->
     <main :class="cx(Styles.ContentWrapper)">
+      <!-- 브레드크럼 네비게이션 -->
+      <div class="breadcrumbs">
+        <span class="crumb-link" @click="router.push('/main/main')">Home</span>
+        <span class="crumb-separator">></span>
+        <span class="crumb-link" @click="router.push('/shopping')">Shop</span>
+        <span class="crumb-separator">></span>
+        <span class="crumb-active" v-text="product.name"></span>
+      </div>
+
       <div class="detail-grid">
         
-        <!-- 왼쪽 열: 제품 이미지 및 돋보기 줌 미디어 영역 -->
-        <div class="media-column">
-          <div class="tag-badge" v-text="product.tag"></div>
+        <!-- 왼쪽 열: 제품 이미지 썸네일 스트립 + 돋보기 줌 뷰어 -->
+        <div class="media-column-wrapper">
           
-          <!-- 미디어 뷰어 전환 탭 추가 (Glassmorphism 룩앤필) -->
-          <div class="media-tab-bar">
-            <button 
-              type="button"
-              :class="['tab-btn', { active: activeMediaTab === 'image' }]" 
-              @click="activeMediaTab = 'image'"
-            >
-              <span class="material-icons">zoom_in</span>
-              디테일 줌 (ZOOM)
-            </button>
-            <button 
-              type="button"
-              :class="['tab-btn', { active: activeMediaTab === '360' }]" 
-              @click="activeMediaTab = '360'"
-            >
-              <span class="material-icons">3d_rotation</span>
-              360° 입체 탐색
-            </button>
-          </div>
-          
-          <div v-if="activeMediaTab === 'image'"
-            class="main-image-viewer"
-            @mousemove="handleZoomMove"
-            @mouseenter="isZoomed = true"
-            @mouseleave="isZoomed = false"
-          >
-            <!-- 돋보기 줌 이펙트 스타일 동적 바인딩 -->
-            <img
-              :src="product.img"
-              :alt="product.name"
-              :style="{
-                transform: isZoomed ? 'scale(1.8)' : 'scale(1)',
-                transformOrigin: zoomOrigin
-              }"
-            />
+          <div class="media-gallery-container">
+            <!-- 세로형 썸네일 스트립 -->
+            <div class="thumbnail-strip">
+              <div 
+                v-for="(imgUrl, idx) in GALLERY_IMAGES" 
+                :key="idx" 
+                :class="['thumb-box', { active: activeGalleryIndex === idx }]"
+                @click="activeGalleryIndex = idx"
+              >
+                <img :src="imgUrl" alt="Thumbnail" />
+              </div>
+            </div>
             
-            <div class="zoom-guide-toast">
-              <span class="material-icons">zoom_in</span>
-              마우스를 올려 미세 재질을 확대해보세요
-            </div>
-          </div>
+            <!-- 메인 이미지 돋보기 줌 뷰어 -->
+            <div
+              class="main-image-viewer"
+              @mousemove="handleZoomMove"
+              @mouseenter="isZoomed = true"
+              @mouseleave="isZoomed = false"
+            >
+              <!-- 메인 이미지 위에 겹쳐서 표시하여 썸네일 간섭 100% 제거 -->
+              <div class="tag-badge" v-text="product.tag"></div>
+              <img
+                :src="GALLERY_IMAGES[activeGalleryIndex]"
+                :alt="product.name"
+                :style="{
+                  transform: isZoomed ? 'scale(1.8)' : 'scale(1)',
+                  transformOrigin: zoomOrigin
+                }"
+              />
 
-          <!-- 360도 인터랙티브 뷰어 임베딩 (상세전용 prop true 장착) -->
-          <div v-else class="detail-360-container">
-            <Interactive360Viewer :is-detail="true" />
-          </div>
-        </div>
-
-        <!-- 오른쪽 열: 옵션 구매 패널 영역 -->
-        <div class="info-column">
-          <!-- 제품 기본 인포 -->
-          <div class="brand-sub">SALOMON HERITAGE COLLECTIVE</div>
-          <h1 class="prod-title" v-text="product.name"></h1>
-          <div class="prod-price" v-text="product.price"></div>
-
-          <p class="prod-desc" v-text="product.detailDesc"></p>
-
-          <!-- 리팩토링 컬러 스와치 옵션 -->
-          <div class="option-section">
-            <div class="section-title">
-              컬러 옵션: <strong v-text="selectedColor"></strong>
-            </div>
-            <div class="swatches-list">
-              <button
-                v-for="(sw, swIdx) in product.swatches"
-                :key="swIdx"
-                :class="['swatch-btn', { active: selectedColor === sw.name }]"
-                :style="{ backgroundColor: sw.color }"
-                :aria-label="sw.label"
-                @click="selectColor(sw.name)"
-              >
-                <span class="blind" v-text="sw.name"></span>
-              </button>
-            </div>
-          </div>
-
-          <!-- 사이즈 옵션 선택 (품절 분기 적용) -->
-          <div class="option-section">
-            <div class="section-title-row">
-              <span>사이즈 선택 (MM)</span>
-              <button class="fit-guide-trigger" @click="isFitGuideOpen = true">
-                <span class="material-icons">straighten</span>
-                핏 가이드 보기
-              </button>
-            </div>
-
-            <div class="size-grid">
-              <button
-                v-for="size in sizes"
-                :key="size"
-                :class="[
-                  'size-btn',
-                  { active: selectedSize === size },
-                  { 'out-of-stock': outOfStockSizes.includes(size) }
-                ]"
-                :disabled="outOfStockSizes.includes(size)"
-                @click="selectSize(size)"
-              >
-                <span v-text="size"></span>
-                <span v-if="outOfStockSizes.includes(size)" class="soldout-tag">품절</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- 구매 액션 버튼 패널 -->
-          <div class="action-buttons-panel">
-            <button class="cart-add-btn" @click="addToCart">
-              <span class="material-icons">shopping_bag</span>
-              장바구니 담기
-            </button>
-            <button class="buy-now-btn" @click="buyNow">
-              즉시 구매하기
-            </button>
-          </div>
-
-          <!-- 기술 특징 스펙 설명 (아코디언 스타일 대체형 플랫 리스트) -->
-          <div class="spec-section">
-            <h3 class="spec-header">TECHNICAL CHARACTERISTICS</h3>
-            <div class="spec-list">
-              <div v-for="spec in product.techSpecs" :key="spec.key" class="spec-row">
-                <span class="spec-key" v-text="spec.key"></span>
-                <span class="spec-val" v-text="spec.value"></span>
+              <div class="zoom-guide-toast" v-if="!isZoomed">
+                <span class="material-icons">zoom_in</span>
+                마우스를 올려 미세 재질을 확대해보세요
               </div>
             </div>
           </div>
+        </div>
 
+        <!-- 오른쪽 열: 옵션 구매 패널 영역 (Sticky 적용) -->
+        <div class="info-column-wrapper">
+          <div class="info-sticky-panel">
+            <!-- 제품 기본 인포 -->
+            <div class="brand-sub">SALOMON HERITAGE COLLECTIVE</div>
+            <div class="title-row">
+              <h1 class="prod-title" v-text="product.name"></h1>
+              <button class="share-btn" @click="shareProduct" aria-label="상품 공유하기">
+                <span class="material-icons">share</span>
+              </button>
+            </div>
+            
+            <div class="prod-price" v-text="product.price"></div>
+
+            <!-- 재고 긴급성 및 실시간 시각적 증거 (Social Proof) -->
+            <div class="urgency-panel">
+              <div class="urgency-row views">
+                <span class="material-icons pulse">visibility</span>
+                <span>실시간 <strong>15명</strong>이 이 상품을 함께 탐색하고 있습니다.</span>
+              </div>
+              <div class="urgency-row stock">
+                <span class="material-icons error">flash_on</span>
+                <span>품절 직전! 남은 재고 <strong>3개</strong> (선택 즉시 선점)</span>
+              </div>
+            </div>
+
+            <p class="prod-desc" v-text="product.detailDesc"></p>
+
+            <!-- 리팩토링 컬러 스와치 옵션 -->
+            <div class="option-section">
+              <div class="section-title">
+                컬러 옵션: <strong v-text="selectedColor"></strong>
+              </div>
+              <div class="swatches-list">
+                <button
+                  v-for="(sw, swIdx) in product.swatches"
+                  :key="swIdx"
+                  :class="['swatch-btn', { active: selectedColor === sw.name }]"
+                  :style="{ backgroundColor: sw.color }"
+                  :aria-label="sw.label"
+                  @click="selectColor(sw.name)"
+                >
+                  <span class="blind" v-text="sw.name"></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 수량 선택 UI -->
+            <div class="option-section">
+              <div class="section-title">수량 선택</div>
+              <div class="qty-selector">
+                <button class="qty-btn" @click="selectedQty = Math.max(1, selectedQty - 1)">-</button>
+                <span class="qty-value" v-text="selectedQty"></span>
+                <button class="qty-btn" @click="selectedQty = selectedQty + 1">+</button>
+              </div>
+            </div>
+
+            <!-- 사이즈 옵션 선택 (품절 분기 적용) -->
+            <div class="option-section">
+              <div class="section-title-row">
+                <span>사이즈 선택 (MM)</span>
+                <button class="fit-guide-trigger" @click="isFitGuideOpen = true">
+                  <span class="material-icons">straighten</span>
+                  핏 가이드 보기
+                </button>
+              </div>
+
+              <div class="size-grid">
+                <button
+                  v-for="size in sizes"
+                  :key="size"
+                  :class="[
+                    'size-btn',
+                    { active: selectedSize === size },
+                    { 'out-of-stock': outOfStockSizes.includes(size) }
+                  ]"
+                  :disabled="outOfStockSizes.includes(size)"
+                  @click="selectSize(size)"
+                >
+                  <span v-text="size"></span>
+                  <span v-if="outOfStockSizes.includes(size)" class="soldout-tag">품절</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 구매 액션 버튼 패널 -->
+            <div class="action-buttons-panel">
+              <button class="cart-add-btn" @click="addToCart">
+                <span class="material-icons">shopping_bag</span>
+                장바구니 담기
+              </button>
+              <button class="buy-now-btn" @click="buyNow">
+                즉시 구매하기
+              </button>
+            </div>
+
+            <!-- 기술 특징 스펙 설명 (아코디언 스타일 대체형 플랫 리스트) -->
+            <div class="spec-section">
+              <h3 class="spec-header">TECHNICAL CHARACTERISTICS</h3>
+              <div class="spec-list">
+                <div v-for="spec in product.techSpecs" :key="spec.key" class="spec-row">
+                  <span class="spec-key" v-text="spec.key"></span>
+                  <span class="spec-val" v-text="spec.value"></span>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
 
       </div>
+
+      <!-- 360° 풀 와이드 섹션: 구매 흐름 이후 몰입 탐색 존 -->
+      <section class="viewer-section">
+        <div class="viewer-section-header">
+          <div>
+            <div class="viewer-section-label">360° INTERACTIVE EXPLORER</div>
+            <h2 class="viewer-section-title">
+              모든 각도에서<br /><span>직접 확인하세요</span>
+            </h2>
+          </div>
+          <p class="viewer-section-desc">
+            클릭 후 드래그하여 신발을 자유롭게 회전시켜<br />
+            솔, 힐컵, 아웃솔 디테일까지 직접 탐색하세요.
+          </p>
+        </div>
+        <div class="viewer-section-inner">
+          <Interactive360Viewer :is-detail="true" :product-id="product.id" />
+        </div>
+      </section>
+
+      <!-- You May Also Like 관련 상품 추천 섹션 -->
+      <section class="recommendations-section">
+        <h3 class="rec-section-title">
+          <span class="material-icons">auto_awesome</span>
+          YOU MAY ALSO LIKE
+        </h3>
+        <div class="recommendations-grid">
+          <div 
+            v-for="rec in recommendedProducts" 
+            :key="rec.id" 
+            class="rec-card"
+            @click="router.push('/shopping/' + rec.id); activeGalleryIndex = 0; selectedSize = null; selectedQty = 1;"
+          >
+            <div class="rec-img-box">
+              <img :src="rec.img" :alt="rec.name" />
+            </div>
+            <div class="rec-info-box">
+              <h4 class="rec-name" v-text="rec.name"></h4>
+              <p class="rec-price" v-text="rec.price"></p>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- 반응형 3D 핏 가이드 (Size Chart) 모달 팝업 -->
@@ -1518,6 +1946,16 @@ const Styles = {
         </button>
       </div>
     </aside>
+
+    <!-- Scroll to Top 플로팅 버튼 -->
+    <button 
+      class="scroll-top-btn" 
+      :class="{ show: showScrollTop }" 
+      @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+      aria-label="맨 위로 가기"
+    >
+      <span class="material-icons">arrow_upward</span>
+    </button>
 
     <!-- 푸터 영역 -->
     <footer :class="cx('shop-footer', Styles.Footer)">

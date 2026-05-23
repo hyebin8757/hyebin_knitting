@@ -25,12 +25,12 @@ export interface Product {
 export const PRODUCTS: Product[] = [
   {
     id: 1,
-    name: "XT-6 COSMIC NEON BLUE",
+    name: "ACS 프로 SHELL",
     price: "₩ 260,000",
     rawPrice: 260000,
     desc: "아웃도어 기술력과 은하수 궤도 느낌의 네온 블루 컬러웨이가 결합된 트레일 아이콘 슈즈",
     detailDesc: "살로몬 트레일 러닝 역사상 가장 아이코닉한 헤리티지를 자랑하는 XT-6의 은하수 궤도 네온 스페셜 컬렉션입니다. 2013년 최초 출시 이후 세계적인 아웃도어 기어의 최강자로 군림하였으며, 내마모성이 우수한 메쉬 소재와 충격 흡수가 월등한 EVA 아웃솔이 장착되었습니다.",
-    img: "/images/salomon_xt6.png",
+    img: "/images/img/salomon/shoes/1/shoes_card.png",
     tag: "BEST",
     swatches: [
       { color: "#00f2fe", name: "NEON BLUE", label: "네온 블루 배합 컬러 옵션" },
@@ -49,12 +49,12 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: 2,
-    name: "XT-6 ASTRONAUT SHADOW",
+    name: "RX 메리제인",
     price: "₩ 260,000",
     rawPrice: 260000,
-    desc: "달 표면을 탐사하는 듯한 은은한 다크 실버와 매트 블랙 스피드로 레이싱이 가능한 스포티 슈즈",
-    detailDesc: "우주 비행사의 달 표면 탐사선 콘셉트에서 영감을 받은 다크 실버 & 매트 블랙 시그니처 쉐도우 에디션입니다. 뛰어난 방수 메쉬 가공 처리가 적용되어 습한 아웃도어 트레일 런에서도 최상의 건조한 상태와 안정적인 쿠셔닝을 오랫동안 보장합니다.",
-    img: "/images/salomon_xt6.png",
+    desc: "발등을 가로지르는 우아한 스트랩과 살로몬 고유의 테크니컬 메쉬가 결합된 하이브리드 메리제인 스니커즈",
+    detailDesc: "살로몬의 혁신적인 트레일 러닝 기술력과 페미닌한 무드의 메리제인 실루엣이 완벽한 시너지를 이루는 스페셜 에디션입니다. 뛰어난 통기성의 오픈 메쉬 구조와 리커버리 슬립온 프레임이 결합되어 일상과 아웃도어를 자유롭게 넘나드는 유니크한 럭셔리 스타일을 완성합니다.",
+    img: "/images/img/salomon/shoes/2/shoes_card.png",
     tag: "NEW",
     swatches: [
       { color: "#2b2b2b", name: "CYBER BLACK", label: "사이버 블랙 단색 컬러 옵션" },
@@ -72,12 +72,12 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: 3,
-    name: "XT-SPECIAL HYDRO SLICK",
+    name: "XT-위스퍼 VOID",
     price: "₩ 280,000",
     rawPrice: 280000,
-    desc: "고어텍스 코팅과 오렌지 퀵레이스 포인트가 빛나는 스페셜 한정 컬렉션 트레일 기어",
-    detailDesc: "하이드로 코팅 특수 가공과 네온 오렌지 포인트 퀵레이스가 강렬한 조화를 이루는 한정판 스페셜 컬렉션입니다. 험난한 산악 지형을 달리는 극한의 러너들을 위해 하부 지지력이 보강되었으며, 발 피로도를 대폭 낮춰주는 듀얼 밀도 미드솔이 추가 장착되었습니다.",
-    img: "/images/salomon_xt6.png",
+    desc: "안개처럼 고요한 실루엣에 독보적인 리커버리 테크놀로지가 결합된 리미티드 트레일 스니커즈",
+    detailDesc: "바람과 안개의 스텔스적인 움직임에서 영감을 얻은 XT-위스퍼 VOID 한정 컬렉션입니다. 초경량 통기성 메쉬 레이아웃과 충격 분산형 섀시 프레임이 탑재되어 어떠한 극한의 지형에서도 고요하고 안락한 트레일 런을 선사합니다.",
+    img: "/images/img/salomon/shoes/3/shoes_card.png",
     tag: "LIMITED",
     swatches: [
       { color: "#ff7b7b", name: "SALMON PINK", label: "살몬 핑크 네온 포인트 컬러 옵션" },

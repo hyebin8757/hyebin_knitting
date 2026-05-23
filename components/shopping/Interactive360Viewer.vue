@@ -4,12 +4,28 @@ import { cx, css } from "@emotion/css";
 
 const props = withDefaults(defineProps<{
   isDetail?: boolean;
+  productId?: number;
 }>(), {
-  isDetail: false
+  isDetail: false,
+  productId: 1
 });
 
-// 프레임 수 및 그리드 정의 (2행 4열 스프라이트 시트)
-const TOTAL_FRAMES = 8;
+// 프레임 수 및 이미지 목록 정의
+const TOTAL_FRAMES = 5;
+
+// 현재 파일이 존재하는 1번, 2번, 3번 폴더에 대응하고, 향후 다른 상품 추가 시 대비할 수 있는 동적 360° 에셋 파이프라인
+const IMAGES = computed(() => {
+  // 1번, 2번, 3번 폴더에 파일이 실제로 존재하므로, 다른 번호의 경우 1번으로 폴백하여 엑박 방지 (UX 무결성 확보)
+  const targetId = [1, 2, 3].includes(props.productId) ? props.productId : 1;
+  const ext = [2, 3].includes(targetId) ? "webp" : "png";
+  return [
+    `/images/img/salomon/shoes/${targetId}/shoes_img01.${ext}`,
+    `/images/img/salomon/shoes/${targetId}/shoes_img02.${ext}`,
+    `/images/img/salomon/shoes/${targetId}/shoes_img03.${ext}`,
+    `/images/img/salomon/shoes/${targetId}/shoes_img04.${ext}`,
+    `/images/img/salomon/shoes/${targetId}/shoes_img05.${ext}`,
+  ];
+});
 const COLS = 4;
 const ROWS = 2;
 
@@ -30,18 +46,8 @@ const isHovered = ref(false);
 
 const viewerRef = ref<HTMLElement | null>(null);
 
-// 2행 4열 스프라이트 시트의 백분율 background-position 계산
-const bgPosition = computed(() => {
-  const col = currentFrame.value % COLS;
-  const row = Math.floor(currentFrame.value / COLS);
-  
-  // 4개 열(0, 1, 2, 3) -> 백분율 계산: col / (COLS - 1) * 100
-  const xPercent = col === 0 ? 0 : (col / (COLS - 1)) * 100;
-  // 2개 행(0, 1) -> 백분율 계산: row / (ROWS - 1) * 100
-  const yPercent = row === 0 ? 0 : (row / (ROWS - 1)) * 100;
-  
-  return `${xPercent.toFixed(3)}% ${yPercent.toFixed(3)}%`;
-});
+// 현재 프레임에 해당하는 이미지 URL 계산
+const currentImage = computed(() => IMAGES.value[currentFrame.value]);
 
 // 관성(물리 감쇄) 애니메이션 루프
 const updateInertia = () => {
@@ -145,18 +151,7 @@ const handleDragEnd = () => {
   }
 };
 
-// PC 마우스 호버 무브 (네이버 쏘렌토 검색창식 부드러운 연동)
-const handleMouseMove = (e: MouseEvent) => {
-  if (isDragging.value || !viewerRef.value) return;
-  
-  const rect = viewerRef.value.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const ratio = Math.max(0, Math.min(1, x / rect.width));
-  
-  const targetFrame = Math.floor(ratio * (TOTAL_FRAMES - 1));
-  currentFrame.value = targetFrame;
-  currentFrameFloat.value = targetFrame;
-};
+// hover 기반 프레임 변경 제거 - click+drag 시에만 회전
 
 // 모바일 터치 이벤트 맵핑
 const handleTouchStart = (e: TouchEvent) => {
@@ -173,20 +168,8 @@ const handleTouchEnd = () => {
   handleDragEnd();
 };
 
-// 최초 접속 시 신발이 가볍게 좌우로 춤추듯 회전하여 조작을 유도하는 '오토 웰컴 데모'
-const startAutoDemo = () => {
-  let step = 0;
-  autoPlayTimer = setInterval(() => {
-    step++;
-    // 삼각함수 Sine 곡선에 기반하여 신발이 까딱까딱 부드럽게 자동 스윙
-    const demoFrame = Math.round((Math.sin(step * 0.15) + 1) * 3.5); // 0 ~ 7 범위 연출
-    currentFrame.value = demoFrame;
-    currentFrameFloat.value = demoFrame;
-  }, 120);
-};
-
 onMounted(() => {
-  startAutoDemo();
+  // 자동 재생 없이 정지 상태로 시작
 });
 
 onBeforeUnmount(() => {
@@ -303,15 +286,13 @@ const Styles = {
     }
   `,
 
-  SpriteImage: (bgPos: string) => css`
+  SpriteImage: css`
     width: 320px;
     height: 320px;
-    background-image: url("/images/salomon_360_sprite.png");
-    background-size: 400% 200%;
-    background-position: ${bgPos};
-    background-repeat: no-repeat;
+    object-fit: contain;
     z-index: 2;
     pointer-events: none;
+    transition: opacity 0.18s ease;
   `,
 
   Indicator: css`
@@ -373,36 +354,33 @@ const Styles = {
   <div :class="cx('interactive-360-viewer', Styles.Container)">
     <!-- 뷰어 헤더 -->
     <div :class="cx(Styles.Header)">
-      <h3 class="viewer-title">XT-6 COSMIC <span>360° EXPLORER</span></h3>
+      <h3 class="viewer-title">ACS 프로 <span>360° EXPLORER</span></h3>
       <p class="viewer-subtitle">신발을 휙 던지듯 드래그해보세요! 네이버 차량 360도 뷰어처럼 관성을 받아 부드럽게 회전합니다.</p>
     </div>
 
-    <!-- 드래그 & 호버 뷰포트 영역 (A11y 확보) -->
+    <!-- click+drag 뷰포트 영역 (A11y 확보) -->
     <div
       ref="viewerRef"
       :class="cx(Styles.Viewport)"
       role="img"
-      aria-label="마우스 호버 또는 터치 드래그로 신발을 360도 회전하며 디테일을 입체적으로 탐색할 수 있는 인터랙티브 뷰어"
-      @mousemove="handleMouseMove"
+      aria-label="클릭 후 드래그하여 신발을 360도 회전하며 디테일을 입체적으로 탐색할 수 있는 인터랙티브 뷰어"
       @mousedown="handleDragStart"
       @touchstart="handleTouchStart"
       @touchmove="handleTouchMove"
       @touchend="handleTouchEnd"
-      @mouseenter="isHovered = true"
-      @mouseleave="isHovered = false"
     >
-      <!-- 네이버 쏘렌토 360° 복각: 바닥에 입체 투영되는 3D 회전 가이드 오빗 링 -->
-      <div :class="[cx(Styles.OrbitRing), { active: isDragging || isHovered }]">
+      <!-- 바닥에 입체 투영되는 3D 회전 가이드 오빗 링 -->
+      <div :class="[cx(Styles.OrbitRing), { active: isDragging }]">
         <span class="spin-indicator-text">360° INTERACTIVE</span>
       </div>
 
-      <!-- 반응형 CSS Sprite 시트 프레임 -->
-      <div :class="cx(Styles.SpriteImage(bgPosition))"></div>
+      <!-- 개별 salomon 이미지 프레임 -->
+      <img :src="currentImage" :class="cx(Styles.SpriteImage)" alt="Salomon 360 view" />
 
-      <!-- 인터랙션 유도 배너 -->
-      <div v-if="!isDragging && !isHovered" :class="cx(Styles.Indicator)">
+      <!-- 인터랙션 유도 배너: 드래그 중이 아닐 때 항상 표시 -->
+      <div v-if="!isDragging" :class="cx(Styles.Indicator)">
         <span class="material-icons">sync</span>
-        <span>SWIPE OR DRAG</span>
+        <span>CLICK &amp; DRAG</span>
       </div>
     </div>
 

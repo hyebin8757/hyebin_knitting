@@ -13,6 +13,7 @@ interface CartItem {
 
 export const useCartStore = defineStore("cart", () => {
   const cartItems = ref<CartItem[]>([]);
+  const wishlist = ref<number[]>([]);
   
   // 최근 본 상품 ID 리스트 (최대 5개 영속성 저장)
   const recentlyViewed = ref<number[]>([]);
@@ -25,9 +26,11 @@ export const useCartStore = defineStore("cart", () => {
     img: string;
     selectedColor: string;
     selectedSize?: number | null;
+    qty?: number;
   }) => {
     const color = product.selectedColor;
     const size = product.selectedSize || null;
+    const addQty = product.qty || 1;
 
     const existing = cartItems.value.find(
       (item) => item.id === product.id && 
@@ -36,7 +39,7 @@ export const useCartStore = defineStore("cart", () => {
     );
 
     if (existing) {
-      existing.qty++;
+      existing.qty += addQty;
     } else {
       cartItems.value.push({
         id: product.id,
@@ -45,9 +48,23 @@ export const useCartStore = defineStore("cart", () => {
         img: product.img,
         selectedColor: color,
         selectedSize: size || undefined,
-        qty: 1
+        qty: addQty
       });
     }
+  };
+
+  // 위시리스트 토글
+  const toggleWishlist = (productId: number) => {
+    if (wishlist.value.includes(productId)) {
+      wishlist.value = wishlist.value.filter(id => id !== productId);
+    } else {
+      wishlist.value.push(productId);
+    }
+  };
+
+  // 위시리스트 확인
+  const isInWishlist = (productId: number) => {
+    return wishlist.value.includes(productId);
   };
 
   // 최근 본 상품 추가 액션
@@ -98,8 +115,11 @@ export const useCartStore = defineStore("cart", () => {
 
   return {
     cartItems,
+    wishlist,
     recentlyViewed,
     addToCart,
+    toggleWishlist,
+    isInWishlist,
     addRecentlyViewed,
     increaseQty,
     decreaseQty,

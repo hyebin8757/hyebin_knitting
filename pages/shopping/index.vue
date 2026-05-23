@@ -24,6 +24,7 @@ const isMobile = computed(() => windowWidth.value <= 768);
  * Dynamic Data (쇼핑몰 상태)
  ************************************************************/
 import { useCartStore } from "~/stores/useCartStore";
+import { PRODUCTS } from "~/constants/products";
 
 const cartStore = useCartStore();
 
@@ -32,57 +33,34 @@ const cartItems = computed(() => cartStore.cartItems);
 const totalPrice = computed(() => cartStore.totalPrice);
 const totalCartCount = computed(() => cartStore.totalCartCount);
 
-// 살로몬 오마주 리팩토링 슈즈 상품 리스트
-const products = ref([
-  {
-    id: 1,
-    name: "XT-6 COSMIC NEON BLUE",
-    price: "₩ 260,000",
-    desc: "아웃도어 기술력과 은하수 궤도 느낌의 네온 블루 컬러웨이가 결합된 트레일 아이콘 슈즈",
-    img: "/images/salomon_xt6.png",
-    tag: "BEST",
-    selectedColor: "NEON BLUE",
-    swatches: [
-      { color: "#00f2fe", name: "NEON BLUE", label: "네온 블루 배합 컬러 옵션" },
-      { color: "#2b2b2b", name: "CYBER BLACK", label: "사이버 블랙 단색 컬러 옵션" },
-      { color: "#e6e6e6", name: "VANILLA ICE", label: "바닐라 아이스 투톤 배합 컬러 옵션" },
-      { color: "#ff7b7b", name: "SALMON PINK", label: "살몬 핑크 네온 포인트 컬러 옵션" },
-      { color: "#c0c0c0", name: "METALLIC SILVER", label: "메탈릭 실버 반사광 컬러 옵션" },
-      { color: "#ffffff", name: "PURE WHITE", label: "퓨어 화이트 미니멀 컬러 옵션" }
-    ]
-  },
-  {
-    id: 2,
-    name: "XT-6 ASTRONAUT SHADOW",
-    price: "₩ 260,000",
-    desc: "달 표면을 탐사하는 듯한 은은한 다크 실버와 매트 블랙 스피드로 레이싱이 가능한 스포티 슈즈",
-    img: "/images/salomon_xt6.png",
-    tag: "NEW",
-    selectedColor: "CYBER BLACK",
-    swatches: [
-      { color: "#2b2b2b", name: "CYBER BLACK", label: "사이버 블랙 단색 컬러 옵션" },
-      { color: "#c0c0c0", name: "METALLIC SILVER", label: "메탈릭 실버 반사광 컬러 옵션" },
-      { color: "#00f2fe", name: "NEON BLUE", label: "네온 블루 배합 컬러 옵션" },
-      { color: "#e6e6e6", name: "VANILLA ICE", label: "바닐라 아이스 투톤 배합 컬러 옵션" },
-      { color: "#ffffff", name: "PURE WHITE", label: "퓨어 화이트 미니멀 컬러 옵션" }
-    ]
-  },
-  {
-    id: 3,
-    name: "XT-SPECIAL HYDRO SLICK",
-    price: "₩ 280,000",
-    desc: "고어텍스 코팅과 오렌지 퀵레이스 포인트가 빛나는 스페셜 한정 컬렉션 트레일 기어",
-    img: "/images/salomon_xt6.png",
-    tag: "LIMITED",
-    selectedColor: "SALMON PINK",
-    swatches: [
-      { color: "#ff7b7b", name: "SALMON PINK", label: "살몬 핑크 네온 포인트 컬러 옵션" },
-      { color: "#2b2b2b", name: "CYBER BLACK", label: "사이버 블랙 단색 컬러 옵션" },
-      { color: "#c0c0c0", name: "METALLIC SILVER", label: "메탈릭 실버 반사광 컬러 옵션" },
-      { color: "#00f2fe", name: "NEON BLUE", label: "네온 블루 배합 컬러 옵션" }
-    ]
+// 5대 핵심 개선 슈즈 상품 리스트 (Constants에서 안전하게 로드)
+const products = ref(PRODUCTS.map(p => ({
+  ...p,
+  selectedColor: p.swatches[0]?.name || ""
+})));
+
+// 필터 및 정렬 상태 관리
+const activeTagFilter = ref("ALL");
+const activeSort = ref("default");
+
+// 필터링 및 정렬이 적용된 상품 목록
+const filteredAndSortedProducts = computed(() => {
+  let list = [...products.value];
+  
+  if (activeTagFilter.value !== "ALL") {
+    list = list.filter(p => p.tag === activeTagFilter.value);
   }
-]);
+  
+  if (activeSort.value === "price-low") {
+    list.sort((a, b) => a.rawPrice - b.rawPrice);
+  } else if (activeSort.value === "price-high") {
+    list.sort((a, b) => b.rawPrice - a.rawPrice);
+  } else if (activeSort.value === "newest") {
+    list.sort((a, b) => b.id - a.id);
+  }
+  
+  return list;
+});
 
 /************************************************************
  * Function
@@ -91,7 +69,14 @@ const goBackToPortfolio = () => {
   router.push("/main/main");
 };
 
-// 장바구니 담기 (비회원 로그인 장벽 X // 즉각 반영)
+// 히어로 쇼핑하기 클릭 시 부드럽게 목록으로 스크롤
+const scrollToProducts = () => {
+  document.querySelector(".products-section")?.scrollIntoView({
+    behavior: "smooth"
+  });
+};
+
+// 장바구니 담기
 const addToCart = (product: any) => {
   cartStore.addToCart({
     id: product.id,
@@ -100,8 +85,16 @@ const addToCart = (product: any) => {
     img: product.img,
     selectedColor: product.selectedColor
   });
-  // 추가 후 장바구니 자동 오픈 (매끄러운 피드백 제공)
   isCartOpen.value = true;
+};
+
+// 위시리스트 토글 및 조회
+const toggleWishlist = (productId: number) => {
+  cartStore.toggleWishlist(productId);
+};
+
+const isInWishlist = (productId: number) => {
+  return cartStore.isInWishlist(productId);
 };
 
 // 장바구니 삭제 및 수량 조작
@@ -117,8 +110,11 @@ const removeCartItem = (item: any) => {
   cartStore.removeCartItem(item);
 };
 
-const selectColor = (prodIndex: number, colorName: string) => {
-  products.value[prodIndex].selectedColor = colorName;
+const selectColor = (productItem: any, colorName: string) => {
+  const found = products.value.find(p => p.id === productItem.id);
+  if (found) {
+    found.selectedColor = colorName;
+  }
 };
 
 /************************************************************
@@ -232,6 +228,39 @@ const Styles = {
           box-shadow: 0 0 12px rgba(0, 242, 254, 0.6);
         }
       }
+      
+      .wishlist-icon {
+        cursor: pointer;
+        position: relative;
+        color: rgba(255, 255, 255, 0.9);
+        transition: all 0.3s ease;
+
+        &:hover {
+          color: #ff4081;
+          transform: scale(1.05);
+        }
+
+        .material-icons {
+          font-size: 2.8rem;
+        }
+
+        .wishlist-badge {
+          position: absolute;
+          top: -3px;
+          right: -5px;
+          background: #ff4081;
+          color: #ffffff;
+          font-size: 1.1rem;
+          font-weight: 900;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 0 12px rgba(255, 64, 129, 0.6);
+        }
+      }
 
       .back-btn {
         background: rgba(255, 255, 255, 0.04) !important;
@@ -290,6 +319,21 @@ const Styles = {
         height: 100%;
         object-fit: cover;
         object-position: center;
+        transform: scale(1.07) translate3d(0, 0, 0);
+        will-change: transform;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        backface-visibility: hidden;
+        animation: heroZoom 10s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      }
+
+      @keyframes heroZoom {
+        from {
+          transform: scale(1.07) translate3d(0, 0, 0);
+        }
+        to {
+          transform: scale(1.0) translate3d(0, 0, 0);
+        }
       }
 
       .overlay {
@@ -300,9 +344,10 @@ const Styles = {
         height: 100%;
         background: linear-gradient(
           to right,
-          rgba(11, 11, 11, 0.95) 25%,
-          rgba(11, 11, 11, 0.6) 65%,
-          rgba(11, 11, 11, 0.2) 100-percent
+          rgba(11, 11, 11, 0.9) 0%,
+          rgba(11, 11, 11, 0.65) 40%,
+          rgba(11, 11, 11, 0.2) 75%,
+          rgba(11, 11, 11, 0.1) 100%
         );
       }
     }
@@ -402,7 +447,7 @@ const Styles = {
     padding: 0 4rem;
     
     .section-header {
-      margin-bottom: 5.6rem;
+      margin-bottom: 4.8rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       padding-bottom: 2.4rem;
       
@@ -420,6 +465,79 @@ const Styles = {
       }
     }
 
+    .filter-sorting-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4.8rem;
+      flex-wrap: wrap;
+      gap: 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 2rem;
+      
+      .filter-chips {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        
+        .chip {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.6);
+          padding: 0.8rem 1.8rem;
+          border-radius: 30px;
+          font-size: 1.2rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          
+          &:hover {
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+          }
+          
+          &.active {
+            background: #00f2fe;
+            border-color: #00f2fe;
+            color: #0b0b0b;
+            font-weight: 900;
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.4);
+          }
+        }
+      }
+      
+      .sort-select-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        
+        span {
+          font-size: 1.2rem;
+          color: rgba(255, 255, 255, 0.4);
+          font-weight: 700;
+        }
+        
+        select {
+          background: #111111;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #ffffff;
+          padding: 0.8rem 1.6rem;
+          border-radius: 4px;
+          font-size: 1.3rem;
+          font-weight: 700;
+          cursor: pointer;
+          outline: none;
+          transition: all 0.3s ease;
+          
+          &:focus {
+            border-color: #00f2fe;
+            box-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
+          }
+        }
+      }
+    }
+
     .product-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -432,7 +550,6 @@ const Styles = {
       overflow: hidden;
       cursor: pointer;
       
-      // 핵심 개선 2: 1px 투명 보더 기본 선점하여 호버 시 CLS 레이아웃 흔들림 방지
       .product-card-inner {
         border: 1.5px solid transparent;
         border-radius: 8px;
@@ -475,6 +592,42 @@ const Styles = {
           border-radius: 2px;
           z-index: 10;
           letter-spacing: 0.05em;
+        }
+
+        .wishlist-btn {
+          position: absolute;
+          top: 18px;
+          right: 18px;
+          background: rgba(11, 11, 11, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.8);
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          z-index: 12;
+          padding: 0;
+          
+          &:hover {
+            background: #ffffff;
+            color: #ff4081;
+            transform: scale(1.1);
+            box-shadow: 0 0 12px rgba(255, 64, 129, 0.5);
+          }
+          
+          &.active {
+            color: #ff4081;
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #ff4081;
+          }
+
+          .material-icons {
+            font-size: 2rem;
+          }
         }
 
         img {
@@ -548,6 +701,30 @@ const Styles = {
           margin-bottom: 1rem;
           color: #ffffff;
           line-height: 1.3;
+        }
+
+        .rating-row {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          margin-bottom: 1.2rem;
+          
+          .stars {
+            display: flex;
+            align-items: center;
+            color: #ffb703;
+            gap: 0.2rem;
+            
+            .material-icons {
+              font-size: 1.6rem;
+            }
+          }
+          
+          .count {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 700;
+          }
         }
         
         .product-desc {
@@ -663,6 +840,42 @@ const Styles = {
       }
       .product-grid {
         grid-template-columns: 1fr;
+      }
+    }
+  `,
+
+  Showcase360: css`
+    max-width: 1440px;
+    margin: 12rem auto;
+    padding: 0 4rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 8rem;
+
+    .showcase-header {
+      text-align: center;
+      margin-bottom: 5rem;
+      
+      .title {
+        font-size: 3.6rem;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        color: #ffffff;
+        
+        span {
+          background: linear-gradient(135deg, #ffffff, #00f2fe);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 0 0 25px rgba(0, 242, 254, 0.35);
+        }
+      }
+
+      .sub {
+        font-size: 1.4rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin-top: 1.2rem;
+        letter-spacing: 0.02em;
+        line-height: 1.6;
+        word-break: keep-all;
       }
     }
   `,
@@ -965,14 +1178,20 @@ const Styles = {
       <div class="header-inner">
         <div class="logo" @click="router.push('/main/main')">
           <span class="logo-text">SALOMON</span>
-          <span class="logo-sub">REFACTORING</span>
+          <span class="logo-sub">OFFICIAL HOMAGE</span>
         </div>
 
         <div class="ux-tag-badge">
-          <span>PORTFOLIO UX/UI IMPROVED</span>
+          <span>PORTFOLIO UX/UI PREMIUM</span>
         </div>
 
         <div class="header-actions">
+          <!-- 위시리스트 아이콘 -->
+          <div class="wishlist-icon" @click="isCartOpen = false; alert('상세 페이지나 카드에서 마음에 드는 상품의 하트를 눌러보세요!')">
+            <span class="material-icons">favorite</span>
+            <span v-if="cartStore.wishlist.length > 0" class="wishlist-badge" v-text="cartStore.wishlist.length"></span>
+          </div>
+
           <!-- 비회원 바로 진입 가능한 장바구니 아이콘 -->
           <div class="cart-icon" @click="isCartOpen = !isCartOpen">
             <span class="material-icons">shopping_bag</span>
@@ -995,51 +1214,69 @@ const Styles = {
     <!-- 히어로 배너 (살로몬 특유의 시크하고 강렬한 아웃도어 테마) -->
     <section :class="cx('hero-section', Styles.Hero)">
       <div class="hero-bg">
-        <img src="/images/salomon_xt6.png" alt="Salomon XT-6 Cosmic" />
+        <img src="/images/img/salomon/bg/salomon_bg.jpg" alt="Salomon ACS Pro Shell" />
         <div class="overlay"></div>
       </div>
 
       <div class="hero-content">
         <div class="refactoring-label">
-          <span class="material-icons">architecture</span>
-          살로몬 공식몰 5대 UI/UX 개선 오마주
+          <span class="material-icons">flare</span>
+          SALOMON HERITAGE ARCHIVE
         </div>
         <h1 class="hero-title">
-          XT-6 <span>COSMIC SHIELD</span>
+          ACS 프로 <span>SHELL</span>
         </h1>
         <p class="hero-desc">
-          레이아웃 흔들림(CLS) 방지, 비회원 장바구니 로그인 장벽 제거, 모바일 스와치 가로 최적화 및 스크린 리더 대체 텍스트(A11y) 확보 등 
-          기존 사이트의 병목 문제를 완전무결하게 리팩토링한 퍼블리싱 포트폴리오 에디션.
+          트레일 러닝의 독보적인 아이콘, ACS 프로 SHELL 컬렉션. 산악 지형에서 검증된 강력한 퍼포먼스 기술력과 현대 도심 속 고프코어 스타일이 결합되어 어떤 순간에도 흔들림 없는 완벽한 실루엣을 완성합니다.
         </p>
         <div class="hero-btn-row">
           <BaseBtn
             class="hero-primary-btn"
             :hover="false"
             variant="flat"
-            @on-click="isCartOpen = true"
+            @on-click="scrollToProducts"
           >
-            장바구니 확인하기 🛍
+            컬렉션 탐색하기 🛒
           </BaseBtn>
         </div>
       </div>
     </section>
-
-    <!-- 신규 360도 인터랙티브 디테일 탐색기 -->
-    <Interactive360Viewer />
 
     <!-- 상품 목록 섹션 -->
     <section :class="cx('products-section', Styles.Products)">
       <div class="section-header">
         <div>
           <h2 class="title">XT-6 SPORTSWEAR COLLECTION</h2>
-          <p class="sub">마우스 호버 시의 테두리 영역 흔들림(CLS)과 모바일 뷰포트 스와치 축약 기능이 내장되어 있습니다.</p>
+          <p class="sub">살로몬 고유의 엔지니어링 감각과 미래지향적 실루엣이 담긴 스페셜 라인업입니다.</p>
+        </div>
+      </div>
+
+      <!-- 필터 및 정렬 바 -->
+      <div class="filter-sorting-bar">
+        <div class="filter-chips">
+          <button 
+            v-for="filter in ['ALL', 'BEST', 'NEW', 'LIMITED']" 
+            :key="filter"
+            :class="['chip', { active: activeTagFilter === filter }]"
+            @click="activeTagFilter = filter"
+            v-text="filter"
+          ></button>
+        </div>
+        <div class="sort-select-wrapper">
+          <span>정렬 기준</span>
+          <select v-model="activeSort">
+            <option value="default">기본 정렬</option>
+            <option value="price-low">가격 낮은 순</option>
+            <option value="price-high">가격 높은 순</option>
+            <option value="newest">신상품 순</option>
+          </select>
         </div>
       </div>
 
       <!-- 상품 그리드 -->
       <div class="product-grid">
         <div
-          v-for="(prod, prodIdx) in products"
+          v-for="(prod, prodIdx) in filteredAndSortedProducts"
           :key="prod.id"
           class="product-card"
           @click="router.push('/shopping/' + prod.id)"
@@ -1048,11 +1285,22 @@ const Styles = {
           <div class="product-card-inner">
             <div class="image-box">
               <span v-if="prod.tag" class="tag-badge" v-text="prod.tag"></span>
+              
+              <!-- 위시리스트 토글 버튼 -->
+              <button 
+                class="wishlist-btn" 
+                :class="{ active: isInWishlist(prod.id) }"
+                @click.stop="toggleWishlist(prod.id)"
+                :aria-label="prod.name + ' 위시리스트 토글'"
+              >
+                <span class="material-icons" v-text="isInWishlist(prod.id) ? 'favorite' : 'favorite_border'"></span>
+              </button>
+
               <img :src="prod.img" :alt="prod.name" />
               
               <div class="hover-actions">
-                <button class="action-btn rect" @click.stop="addToCart(prod)">
-                  QUICK ADD TO CART
+                <button class="action-btn rect" @click.stop="router.push('/shopping/' + prod.id)">
+                  자세히 보기
                 </button>
               </div>
             </div>
@@ -1065,6 +1313,15 @@ const Styles = {
               </div>
 
               <h3 class="product-name" v-text="prod.name"></h3>
+              
+              <!-- 별점 레이아웃 추가 -->
+              <div class="rating-row">
+                <div class="stars">
+                  <span class="material-icons" v-for="n in 5" :key="n">star</span>
+                </div>
+                <span class="count">(124)</span>
+              </div>
+
               <p class="product-desc" v-text="prod.desc"></p>
 
               <!-- 컬러 스와치 (모바일 축약 렌더링 지원 및 웹 접근성 A11y 적용) -->
@@ -1076,7 +1333,7 @@ const Styles = {
                     :class="['swatch-btn', { active: prod.selectedColor === sw.name }]"
                     :style="{ backgroundColor: sw.color }"
                     :aria-label="sw.label"
-                    @click.stop="selectColor(prodIdx, sw.name)"
+                    @click.stop="selectColor(prod, sw.name)"
                   >
                     <span class="blind" v-text="sw.name"></span>
                   </button>
@@ -1101,6 +1358,15 @@ const Styles = {
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- 신규 360도 인터랙티브 디테일 탐색기 (상품 하단 Feature Showcase로 아름답게 배치) -->
+    <section :class="cx('showcase-360-section', Styles.Showcase360)">
+      <div class="showcase-header">
+        <h2 class="title">XT-6 <span>3D INTERACTIVE EXPLORER</span></h2>
+        <p class="sub">신발을 클릭 후 좌우로 드래그해 보세요! 실제 쇼핑몰처럼 관성을 받아 부드럽고 생동감 있게 360도 전 방향을 탐색합니다.</p>
+      </div>
+      <Interactive360Viewer />
     </section>
 
     <!-- 비회원 전용 사이드 카트 서랍 (Friction 0% 장바구니 구현) -->
