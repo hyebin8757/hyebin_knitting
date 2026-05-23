@@ -79,6 +79,48 @@ export const MainNoticeDialogStyle = {
         }
       }
     }
+
+    // 라이트 모드 오버라이드
+    html[dark-mode="true"] & {
+      &.v-dialog {
+        .v-overlay__content {
+          > .v-card {
+            background: rgba(255, 255, 255, 0.85) !important;
+            border: 1px solid rgba(79, 70, 229, 0.15) !important;
+            box-shadow: 0 20px 50px rgba(79, 70, 229, 0.08), 
+                        0 0 20px rgba(79, 70, 229, 0.05) !important;
+            color: #1e293b !important;
+
+            .v-card-item {
+              border-bottom: 1px solid rgba(79, 70, 229, 0.1) !important;
+
+              .v-card-title {
+                background: linear-gradient(135deg, #4f46e5, #7c3aed);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                text-shadow: 0 0 30px rgba(79, 70, 229, 0.1);
+              }
+
+              .v-btn {
+                color: #475569 !important;
+                
+                &:hover {
+                  color: #4f46e5 !important;
+                }
+              }
+            }
+
+            > .v-card-text {
+              color: #334155;
+            }
+
+            .v-card-actions {
+              border-top: 1px solid rgba(79, 70, 229, 0.1) !important;
+            }
+          }
+        }
+      }
+    }
   `,
 
   PopupContent: css`
@@ -176,6 +218,59 @@ export const MainNoticeDialogStyle = {
         }
       }
     }
+
+    // 라이트 모드 오버라이드
+    html[dark-mode="true"] & {
+      .badge {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.1));
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        color: #4f46e5;
+        box-shadow: 0 0 15px rgba(79, 70, 229, 0.05);
+      }
+
+      .main-title {
+        color: #1e293b;
+
+        span {
+          background: linear-gradient(135deg, #4f46e5, #7c3aed);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+      }
+
+      .desc {
+        color: #475569;
+
+        strong {
+          color: #1e293b;
+        }
+      }
+
+      .options-row {
+        .dont-show-again {
+          color: #64748b;
+
+          &:hover {
+            color: #1e293b;
+          }
+
+          input[type="checkbox"] {
+            border: 1.5px solid rgba(79, 70, 229, 0.3);
+            background: rgba(79, 70, 229, 0.03);
+
+            &:checked {
+              background: #4f46e5;
+              border-color: #4f46e5;
+
+              &::after {
+                content: "✓";
+                color: #ffffff;
+              }
+            }
+          }
+        }
+      }
+    }
   `,
 
   ActionButtons: css`
@@ -216,6 +311,35 @@ export const MainNoticeDialogStyle = {
       
       &:active {
         transform: translateY(0);
+      }
+    }
+
+    // 라이트 모드 오버라이드
+    html[dark-mode="true"] & {
+      .btn-close {
+        background: rgba(79, 70, 229, 0.06) !important;
+        border: 1px solid rgba(79, 70, 229, 0.12) !important;
+        color: #4f46e5 !important;
+
+        &:hover {
+          background: rgba(79, 70, 229, 0.12) !important;
+          color: #312e81 !important;
+        }
+      }
+
+      .btn-go {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.25) !important;
+
+        &:hover {
+          box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4) !important;
+          transform: translateY(-2px);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
       }
     }
   `

@@ -372,22 +372,57 @@ export const MainStyle = {
 
   ButtonGroup : css`
     ${StyleUtils.FlexUtils("center", "center")};
-    gap: 10rem;
+    gap: 4rem;
     margin-top: 4rem;
     position: relative;
     z-index: 1;
 
     .v-btn.v-btn--density-default {
       flex: 1;
-      max-width: 20rem;
-      height: 5rem;
-      font-size: 1.8rem;
+      max-width: 22rem;
+      height: 5.2rem;
+      font-size: 1.6rem;
       font-weight: 700;
       background: var( --background-color-4 );
+      border-radius: 12px;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+      
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 242, 254, 0.15);
+      }
       
       img {
-        width: 3rem;
-        height: auto;
+        width: 2.8rem;
+        height: 2.8rem;
+        object-fit: contain;
+        margin-right: 0.8rem;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      gap: 2rem;
+      .v-btn.v-btn--density-default {
+        max-width: 18rem;
+        font-size: 1.4rem;
+        
+        img {
+          width: 2.4rem;
+          height: 2.4rem;
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      gap: 1.5rem;
+      .v-btn.v-btn--density-default {
+        max-width: 16rem;
+        font-size: 1.3rem;
+        
+        img {
+          width: 2rem;
+          height: 2rem;
+        }
       }
     }
   `,

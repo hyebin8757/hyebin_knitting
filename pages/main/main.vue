@@ -283,7 +283,13 @@ const changeCatGuide = ( type? : string, value? : boolean ) => {
     return catGuide.value = "구경 할래 냥?";
   }
 
-  catGuide.value = "project" === type ? "오! 좋아 프로젝트 구경 시켜줄께~" : "연락? 무조건 환영이야~";
+  if ( "project" === type ) {
+    catGuide.value = "오! 좋아 프로젝트 구경 시켜줄께~";
+  } else if ( "store" === type ) {
+    catGuide.value = "와! 프리미엄 오마주 스토어 구경가자 냥!";
+  } else {
+    catGuide.value = "연락? 무조건 환영이야~";
+  }
 }
 
 const goToShoppingMall = () => {
@@ -711,6 +717,17 @@ definePageMeta( {
       >
         <img src="@/assets/images/icon/icon_project.png" alt="">
         <span>프로젝트 보러가기</span>
+      </BaseBtn>
+
+      <BaseBtn
+        :hover="false"
+        variant="text"
+        @on-click="goToShoppingMall"
+        @mouseenter="changeCatGuide( 'store', true )"
+        @mouseleave="changeCatGuide( false )"
+      >
+        <img src="@/assets/images/icon/icon_store.png" alt="">
+        <span>오마주 스토어 입장 👟</span>
       </BaseBtn>
 
       <BaseBtn

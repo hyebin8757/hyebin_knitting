@@ -10,16 +10,22 @@ import BaseBtn from "~/components/base/btn/BaseBtn.vue";
 /************************************************************
  * Style
  ************************************************************/
-import { MainNoticeDialogStyle, MainNoticeDialogStyleClass } from "~/components/dialog/main/style/MainNoticeDialogStyle";
+import {
+  MainNoticeDialogStyle,
+  MainNoticeDialogStyleClass,
+} from "~/components/dialog/main/style/MainNoticeDialogStyle";
 
 /************************************************************
  * Props
  ************************************************************/
-const props = withDefaults(defineProps<{
-  modelValue: boolean;
-}>(), {
-  modelValue: false,
-});
+const props = withDefaults(
+  defineProps<{
+    modelValue: boolean;
+  }>(),
+  {
+    modelValue: false,
+  }
+);
 
 /************************************************************
  * Emit
@@ -75,11 +81,7 @@ const onCheck = () => {
         <div class="title">
           <span>SALOMON PORTFOLIO</span>
         </div>
-        <BaseBtn
-          :hover="false"
-          variant="text"
-          @on-click="onClose"
-        >
+        <BaseBtn :hover="false" variant="text" @on-click="onClose">
           <span class="material-icons">close</span>
         </BaseBtn>
       </template>
@@ -89,24 +91,25 @@ const onCheck = () => {
         <div :class="cx(MainNoticeDialogStyle.PopupContent)">
           <div class="badge">🏆 UX/UI REFACTORING</div>
           <h2 class="main-title">
-            살로몬 공식 스토어<br>
+            살로몬 공식 스토어<br />
             <span>UX/UI 개선 오마주 프로젝트</span>
           </h2>
           <p class="desc">
-            살로몬 공식 온라인스토어의 **5대 사용자 병목 요인**<br>
-            (비회원 장바구니 강제 로그인 장벽, 호버 시 레이아웃 시프트(CLS),<br>
-            무거운 jQuery 의존성, 모바일 스와치 과다 노출, 웹 접근성 위배)을<br>
-            <strong>완벽히 리팩토링한 퍼블리싱 포트폴리오</strong>를 구축했습니다.<br>
+            <strong>
+              클로드(Claude)와 antigravity를 적극 활용한 획기적인 <br />
+              '바이브 코딩(Vibe Coding)' 기술력</strong>을 통해, <br />
+            살로몬 공식 온라인스토어의 **5대 사용자 병목 요인**<br />
+            (비회원 장바구니 강제 로그인 장벽, 호버 시 레이아웃 시프트(CLS),<br />
+            무거운 jQuery 의존성, 모바일 스와치 과다 노출, 웹 접근성 위배)을<br />
+            <strong>완벽히 리팩토링한 퍼블리싱 포트폴리오</strong>를
+            구축했습니다.<br />
             이력서 검토를 위해 준비된 실무형 결과물을 지금 경험해 보세요!
           </p>
 
           <!-- 옵션 영역 (오늘 하루 보지 않기) -->
           <div class="options-row">
             <label class="dont-show-again">
-              <input
-                type="checkbox"
-                v-model="dontShowAgain"
-              />
+              <input type="checkbox" v-model="dontShowAgain" />
               <span>오늘 하루 이 창을 열지 않기</span>
             </label>
           </div>

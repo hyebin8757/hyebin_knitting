@@ -117,6 +117,7 @@ const onLogin = () => {
 const changeMode = () => {
 
   headerBooleanData.isLightMode = !headerBooleanData.isLightMode;
+  localStorage.setItem( "theme_mode", headerBooleanData.isLightMode ? "light" : "dark" );
 
   onDarkMode();
 }
@@ -126,10 +127,10 @@ const onDarkMode = () => {
   const htmlDom = document.documentElement;
 
   if ( !headerBooleanData.isLightMode ) {
-    return htmlDom.removeAttribute( "dark-mode" );
+    htmlDom.removeAttribute( "dark-mode" );
+  } else {
+    htmlDom.setAttribute( "dark-mode", "true" );
   }
-
-  htmlDom.setAttribute( "dark-mode", "true" )
 }
 
 const toggleMobileSidebar = () => {
@@ -144,6 +145,12 @@ const toggleMobileSidebar = () => {
  * Mounted
  ************************************************************/
 onMounted( () => {
+  const savedTheme = localStorage.getItem( "theme_mode" );
+  if ( savedTheme === "light" ) {
+    headerBooleanData.isLightMode = true;
+  } else {
+    headerBooleanData.isLightMode = false;
+  }
   onDarkMode();
 })
 
