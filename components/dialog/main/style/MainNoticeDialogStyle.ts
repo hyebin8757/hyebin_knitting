@@ -24,12 +24,18 @@ export const MainNoticeDialogStyle = {
                       0 0 20px rgba(0, 242, 254, 0.15) !important;
           overflow: hidden;
           color: #ffffff !important;
+          
+          /* flex 레이아웃으로 변경 및 높이 제한 */
+          display: flex !important;
+          flex-direction: column !important;
+          max-height: calc(100vh - 48px) !important;
 
           // 헤더 스타일링
           .v-card-item {
             padding: 2.4rem 2.8rem 1.6rem !important;
             background: transparent !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+            flex-shrink: 0 !important;
 
             .v-card-title {
               ${StyleUtils.FlexUtils("center", "space-between")};
@@ -63,6 +69,11 @@ export const MainNoticeDialogStyle = {
             font-size: 1.6rem;
             line-height: 1.7;
             color: rgba(255, 255, 255, 0.85);
+            
+            /* 본문에만 유연하게 줄어들도록 설정 및 내부 스크롤 허용 */
+            flex: 1 !important;
+            overflow-y: auto !important;
+            ${CommonStyle.Scroll};
           }
 
           // 액션 버튼 영역 스타일링
@@ -71,9 +82,44 @@ export const MainNoticeDialogStyle = {
             background: transparent !important;
             border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
             gap: 1.2rem;
+            flex-shrink: 0 !important;
 
             .v-spacer {
               display: none; // 스페이서 대신 양옆 배치나 플렉스 활용
+            }
+          }
+        }
+      }
+    }
+
+    // 모바일/태블릿용 고대비 및 타이트한 패딩 반응형 스타일
+    @media (max-width: 640px) {
+      &.v-dialog {
+        .v-overlay__content {
+          margin: 12px auto;
+          width: calc(100% - 24px) !important;
+
+          > .v-card {
+            border-radius: 16px !important;
+            max-height: calc(100vh - 24px) !important;
+
+            .v-card-item {
+              padding: 1.6rem 2rem 1.2rem !important;
+              
+              .v-card-title {
+                font-size: 1.8rem;
+              }
+              .v-btn .material-icons {
+                font-size: 2rem;
+              }
+            }
+
+            > .v-card-text {
+              padding: 2rem 2rem !important;
+            }
+
+            .v-card-actions {
+              padding: 1.2rem 2rem 1.6rem !important;
             }
           }
         }
@@ -219,6 +265,39 @@ export const MainNoticeDialogStyle = {
       }
     }
 
+    // 모바일 전용 타이포 및 마진 축소 반응형 스타일
+    @media (max-width: 640px) {
+      .badge {
+        font-size: 1.1rem;
+        padding: 0.4rem 1.2rem;
+        margin-bottom: 1.2rem;
+      }
+
+      .main-title {
+        font-size: 2rem;
+        margin-bottom: 1.2rem;
+        line-height: 1.3;
+      }
+
+      .desc {
+        font-size: 1.3rem;
+        line-height: 1.55;
+        margin-bottom: 1.6rem;
+        
+        br {
+          display: none; /* 모바일에서 불필요한 줄바꿈 제거로 밀림 방지 */
+        }
+      }
+
+      .options-row {
+        padding-top: 0.4rem;
+        
+        .dont-show-again {
+          font-size: 1.2rem;
+        }
+      }
+    }
+
     // 라이트 모드 오버라이드
     html[dark-mode="true"] & {
       .badge {
@@ -311,6 +390,17 @@ export const MainNoticeDialogStyle = {
       
       &:active {
         transform: translateY(0);
+      }
+    }
+
+    // 모바일 전용 버튼 높이 및 둥글기 반응형 스타일
+    @media (max-width: 640px) {
+      gap: 0.8rem;
+      
+      .btn-close, .btn-go {
+        height: 4.2rem !important;
+        font-size: 1.35rem !important;
+        border-radius: 8px !important;
       }
     }
 
