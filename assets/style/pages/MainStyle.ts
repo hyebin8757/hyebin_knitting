@@ -468,6 +468,11 @@ const MediaStyle = {
             }
           }
         }
+
+        .skip-tooltip {
+          left: 3rem;
+          right: auto;
+        }
       }
     `,
 
@@ -520,13 +525,21 @@ const MediaStyle = {
             .code-box-code {
               font-size: 1.4rem;
             }
+            
+            .skip-tooltip {
+              left: 50%;
+              right: auto;
+              transform: translateX(-50%);
+              bottom: 1.5rem;
+              font-size: 1.2rem;
+              padding: 0.6rem 1.2rem;
+              white-space: nowrap;
+            }
           }
         }
         
         .cat-box {
-          [ class ^= "cat" ] {
-            display: none;
-          }
+          display: none;
         }
       }
     `,

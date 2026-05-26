@@ -711,7 +711,7 @@ definePageMeta( {
       <BaseBtn
         :hover="false"
         variant="text"
-        @on-click="() => router.push( '/project/project' )"
+        @on-click="() => router.push( '/project' )"
         @mouseenter="changeCatGuide( 'project', true )"
         @mouseleave="changeCatGuide( false )"
       >
@@ -733,7 +733,7 @@ definePageMeta( {
       <BaseBtn
         :hover="false"
         variant="text"
-        @on-click="() => router.push( '/contact/contact' )"
+        @on-click="() => router.push( '/contact' )"
         @mouseenter="changeCatGuide( 'contact', true )"
         @mouseleave="changeCatGuide( false )"
       >

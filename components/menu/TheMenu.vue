@@ -71,22 +71,22 @@ const menuData = reactive<{
   originalMenuList : [
     {
       title : "home.vue",
-      path : "/main/main",
+      path : "/main",
       value : "main",
     },
     {
       title : "about.html",
-      path : "/about/about",
+      path : "/about",
       value : "about",
     },
     {
       title : "contact.css",
-      path : "/contact/contact",
+      path : "/contact",
       value : "contact",
     },
     {
       title : "project.js",
-      path : "/project/project",
+      path : "/project",
       value : "project",
     },
   ],

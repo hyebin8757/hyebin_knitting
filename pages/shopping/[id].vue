@@ -1680,7 +1680,7 @@ const Styles = {
     <main :class="cx(Styles.ContentWrapper)">
       <!-- 브레드크럼 네비게이션 -->
       <div class="breadcrumbs">
-        <span class="crumb-link" @click="router.push('/main/main')">Home</span>
+        <span class="crumb-link" @click="router.push('/main')">Home</span>
         <span class="crumb-separator">></span>
         <span class="crumb-link" @click="router.push('/shopping')">Shop</span>
         <span class="crumb-separator">></span>

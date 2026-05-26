@@ -66,7 +66,7 @@ const filteredAndSortedProducts = computed(() => {
  * Function
  ************************************************************/
 const goBackToPortfolio = () => {
-  router.push("/main/main");
+  router.push("/main");
 };
 
 // 히어로 쇼핑하기 클릭 시 부드럽게 목록으로 스크롤
@@ -1282,7 +1282,7 @@ const Styles = {
     <!-- 네비게이션 헤더 -->
     <header :class="cx('shop-header', Styles.Header)">
       <div class="header-inner">
-        <div class="logo" @click="router.push('/main/main')">
+        <div class="logo" @click="router.push('/main')">
           <span class="logo-text">SALOMON</span>
           <span class="logo-sub">OFFICIAL HOMAGE</span>
         </div>

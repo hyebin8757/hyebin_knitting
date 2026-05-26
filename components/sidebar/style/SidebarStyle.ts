@@ -16,21 +16,32 @@ export const SidebarStyle = {
   Default : css`
     ${StyleUtils.FlexUtils("stretch", "flex-start")};
     height: 100%;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    .menu-list {
+      &:after {
+        content: "";
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -10;
+        width: 100vw;
+        height: 100vh;
+        background: rgba( 0, 0, 0, 0.5 );
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+    }
 
     &.is-show-mobile {
       transform: translateX(0) !important;
-      transition: transform 0.3s ease-in-out;
       
       .menu-list {
         &:after {
-          content: "";
-          display: block;
-          position: fixed;
-          left: 0;
-          z-index: -10;
-          width: 100vw;
-          height: 100vh;
-          background: rgba( 0, 0, 0, 0.5 );
+          opacity: 1;
+          pointer-events: auto;
         } 
       }
     }

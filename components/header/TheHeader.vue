@@ -110,7 +110,7 @@ const onSearch = () => {
 
 // 로그인 페이지로 이동
 const onLogin = () => {
-  router.push("/login/login");
+  router.push("/login");
 }
 
 // 다크모드 설정
