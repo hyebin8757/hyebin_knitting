@@ -197,6 +197,11 @@ const Styles = {
     flex-direction: column;
     align-items: center;
     overflow: hidden;
+
+    @media (max-width: 768px) {
+      padding: ${props.isDetail ? "0" : "2rem 1.6rem"};
+      margin: ${props.isDetail ? "0" : "3rem auto"};
+    }
   `,
 
   Header: css`
@@ -242,6 +247,10 @@ const Styles = {
     &:active {
       cursor: grabbing;
     }
+
+    @media (max-width: 768px) {
+      height: 280px; /* 모바일에서 세로 영역 축소 */
+    }
   `,
 
   // 쏘렌토 360 복각 핵심: 신발 하단에 입체 투영되는 '3D 회전 오빗 링' UI
@@ -284,6 +293,17 @@ const Styles = {
       transform: rotateX(-75deg); /* 텍스트는 납작해지지 않고 똑바로 보이도록 보정 */
       transition: all 0.4s ease;
     }
+
+    @media (max-width: 768px) {
+      bottom: 15px;
+      height: 50px;
+      width: 75%;
+
+      .spin-indicator-text {
+        bottom: -22px;
+        font-size: 1rem;
+      }
+    }
   `,
 
   SpriteImage: css`
@@ -293,6 +313,11 @@ const Styles = {
     z-index: 2;
     pointer-events: none;
     transition: opacity 0.18s ease;
+
+    @media (max-width: 768px) {
+      width: 220px; /* 모바일에서 320px -> 220px로 축소하여 가로 짤림 원천 방지 */
+      height: 220px;
+    }
   `,
 
   Indicator: css`
@@ -325,6 +350,16 @@ const Styles = {
     @keyframes spinIndicator {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      bottom: 80px; /* 뷰포트 축소 대응 포지셔닝 */
+      padding: 0.4rem 1.2rem;
+      font-size: 1rem;
+
+      .material-icons {
+        font-size: 1.3rem;
+      }
     }
   `,
 

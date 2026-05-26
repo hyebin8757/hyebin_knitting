@@ -569,11 +569,19 @@ const Styles = {
         align-items: center;
         justify-content: center;
 
+        @media (max-width: 768px) {
+          cursor: default; /* 모바일 돋보기 커서 비활성화 */
+        }
+
         img {
           width: 80%;
           height: auto;
           object-fit: contain;
           transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+          @media (max-width: 768px) {
+            transform: scale(1) !important; /* 모바일에서 강제 확대 줌 현상 방지 */
+          }
         }
 
         .zoom-guide-toast {
@@ -598,6 +606,10 @@ const Styles = {
           .material-icons {
             font-size: 1.6rem;
             color: #00f2fe;
+          }
+
+          @media (max-width: 768px) {
+            display: none !important; /* 모바일에서 스크린샷의 지저분한 확대 문구 완벽 제거 */
           }
         }
 
