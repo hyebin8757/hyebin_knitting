@@ -56,6 +56,7 @@ const currentDate = ref(new Date());
 const isCheckedIn = ref(false);
 const isAdminApproved = ref(false); // 관리자 승인 데모 상태 스위치용
 const isLeaveConfirmOpen = ref(false);
+const bypassTimeLimit = ref(false); // 오전 6시 제한 해제용 데모 스위치
 
 // Mock attendance history
 const attendanceHistory = ref<Record<string, "day" | "night" | "field" | "absent" | "leave">>({
@@ -193,6 +194,12 @@ const isTodayEarlyLeave = computed(() => {
   return attendanceHistory.value[todayStr] === "leave";
 });
 
+const isCheckInDisabled = computed(() => {
+  if (bypassTimeLimit.value) return false;
+  const currentHour = new Date().getHours();
+  return currentHour >= 6;
+});
+
 /************************************************************
  * Watch
  ************************************************************/
@@ -225,9 +232,15 @@ definePageMeta({
 <template>
   <div :class="cx('attendance-page', AttendanceStyle.Default)">
     <!-- Admin Simulation Switch (관리자 승인 데모 상태 스위치) -->
-    <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.2rem; margin-bottom: 1.6rem; display: flex; align-items: center; justify-content: space-between;">
-      <span style="font-size: 1.2rem; color: var(--text-color-3);">[데모용] 관리자 출근 완료(승인) 토글 스위치</span>
-      <v-switch v-model="isAdminApproved" hide-details density="compact" color="primary"></v-switch>
+    <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.2rem; margin-bottom: 1.6rem; display: flex; flex-direction: column; gap: 0.8rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 1.2rem; color: var(--text-color-3);">[데모용] 관리자 출근 완료(승인) 토글 스위치</span>
+        <v-switch v-model="isAdminApproved" hide-details density="compact" color="primary"></v-switch>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 0.8rem;">
+        <span style="font-size: 1.2rem; color: var(--text-color-3);">[데모용] 오전 06시 출근 제한 강제 해제</span>
+        <v-switch v-model="bypassTimeLimit" hide-details density="compact" color="success"></v-switch>
+      </div>
     </div>
 
     <!-- Profile Card (출퇴근 통계, 생일, 입사일) -->
@@ -340,12 +353,15 @@ definePageMeta({
 
     <!-- Actions (출퇴근 체크 버튼 - 관리자 승인 전까지만 노출) -->
     <div v-if="!isAdminApproved" :class="cx('action-area', AttendanceStyle.ActionArea)">
-      <v-btn v-if="!isCheckedIn" class="check-btn" @click="toggleCheckIn">
+      <v-btn v-if="!isCheckedIn" class="check-btn" :disabled="isCheckInDisabled" @click="toggleCheckIn">
         출근 등록
       </v-btn>
       <v-btn v-else class="cancel-btn" @click="toggleCheckIn">
         출근 취소
       </v-btn>
+      <div v-if="!isCheckedIn && isCheckInDisabled" style="text-align: center; font-size: 1.2rem; color: var(--system-red-color); margin-top: 0.6rem; font-weight: 600;">
+        * 출근 등록은 오전 06시까지만 가능합니다.
+      </div>
     </div>
 
     <!-- Early Leave Confirmation Dialog -->

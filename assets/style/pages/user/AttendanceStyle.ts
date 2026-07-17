@@ -241,6 +241,13 @@ export const AttendanceStyle = {
       &:hover {
         opacity: 0.9;
       }
+
+      &:disabled, &.v-btn--disabled {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: rgba(255, 255, 255, 0.3) !important;
+        box-shadow: none !important;
+        cursor: not-allowed;
+      }
     }
 
     .cancel-btn {
