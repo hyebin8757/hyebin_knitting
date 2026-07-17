@@ -17,6 +17,8 @@ export interface WorkerModel {
   checkedIn: boolean;
   status: "day" | "night" | "field" | "absent" | "leave" | "none";
   location: string;
+  birthDate?: string;
+  joinDate?: string;
 }
 
 export interface NoticeModel {
@@ -111,7 +113,9 @@ export const useUserStore = defineStore( "user", () => {
           group: w.group,
           checkedIn: w.checked_in,
           status: w.status,
-          location: w.location || ""
+          location: w.location || "",
+          birthDate: w.birth_date || "",
+          joinDate: w.join_date || ""
         }));
       } else if (!errWorkers) {
         // 테이블이 존재하지만 비어있는 경우 시딩 진행
@@ -122,7 +126,9 @@ export const useUserStore = defineStore( "user", () => {
           group: w.group,
           checked_in: w.checkedIn,
           status: w.status,
-          location: w.location
+          location: w.location,
+          birth_date: w.birthDate || "",
+          join_date: w.joinDate || ""
         })));
       }
 
@@ -265,7 +271,7 @@ export const useUserStore = defineStore( "user", () => {
   }
 
   // 신규 조합원 등록 액션 (어드민용)
-  const addWorkerAction = async (name: string, phone: string, role: string, group: number) => {
+  const addWorkerAction = async (name: string, phone: string, role: string, group: number, birthDate: string, joinDate: string) => {
     const supabase = useSupabaseClient();
     const newWorker = {
       name,
@@ -274,7 +280,9 @@ export const useUserStore = defineStore( "user", () => {
       group,
       checked_in: false,
       status: "none",
-      location: ""
+      location: "",
+      birth_date: birthDate,
+      join_date: joinDate
     };
     try {
       const { data } = await supabase.from("workers").insert([newWorker]).select();
@@ -286,7 +294,9 @@ export const useUserStore = defineStore( "user", () => {
           group: data[0].group,
           checkedIn: data[0].checked_in,
           status: data[0].status as any,
-          location: data[0].location || ""
+          location: data[0].location || "",
+          birthDate: data[0].birth_date || "",
+          joinDate: data[0].join_date || ""
         });
       } else {
         workers.value.push({
@@ -296,7 +306,9 @@ export const useUserStore = defineStore( "user", () => {
           group,
           checkedIn: false,
           status: "none",
-          location: ""
+          location: "",
+          birthDate,
+          joinDate
         });
       }
     } catch (e) {
@@ -308,7 +320,9 @@ export const useUserStore = defineStore( "user", () => {
         group,
         checkedIn: false,
         status: "none",
-        location: ""
+        location: "",
+        birthDate,
+        joinDate
       });
     }
   }

@@ -26,6 +26,8 @@ interface GroupMember {
   name: string;
   role: "반장" | "좌상" | "조장" | "조합원";
   phone: string;
+  birthDate?: string;
+  joinDate?: string;
 }
 
 interface GroupData {
@@ -63,7 +65,9 @@ const groups = computed<GroupData[]>(() => {
       members: list.map(w => ({
         name: w.name,
         role: w.role as any,
-        phone: w.phone
+        phone: w.phone,
+        birthDate: w.birthDate,
+        joinDate: w.joinDate
       }))
     };
   });
@@ -79,6 +83,8 @@ const memberForm = reactive({
   phone: "",
   role: "조합원" as "반장" | "좌상" | "조장" | "조합원",
   group: 1,
+  birthDate: "",
+  joinDate: "",
 });
 
 /************************************************************
@@ -95,12 +101,21 @@ const openMemberRegister = () => {
   memberForm.phone = "";
   memberForm.role = "조합원";
   memberForm.group = activeGroupNum;
+  memberForm.birthDate = "";
+  memberForm.joinDate = "";
   isMemberFormOpen.value = true;
 };
 
 const registerMember = async () => {
   if (isEmpty(memberForm.name) || isEmpty(memberForm.phone)) return;
-  await userStore.addWorkerAction(memberForm.name, memberForm.phone, memberForm.role, memberForm.group);
+  await userStore.addWorkerAction(
+    memberForm.name,
+    memberForm.phone,
+    memberForm.role,
+    memberForm.group,
+    memberForm.birthDate,
+    memberForm.joinDate
+  );
   isMemberFormOpen.value = false;
 };
 
@@ -183,6 +198,10 @@ definePageMeta({
           <div class="name-phone">
             <span class="name">{{ member.name }}</span>
             <span class="phone">{{ member.phone }}</span>
+            <div v-if="member.birthDate || member.joinDate" class="dates-info" style="font-size: 1.1rem; color: rgba(255, 255, 255, 0.4); margin-top: 0.4rem; display: flex; gap: 0.8rem; font-weight: 400;">
+              <span v-if="member.birthDate">생일: {{ member.birthDate }}</span>
+              <span v-if="member.joinDate">입사: {{ member.joinDate }}</span>
+            </div>
           </div>
         </div>
         
@@ -196,7 +215,7 @@ definePageMeta({
     <!-- Member Registration Dialog -->
     <v-dialog v-model="isMemberFormOpen" max-width="400">
       <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
-        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1.6rem !important;">
           조합원 등록
         </v-card-title>
         
@@ -218,6 +237,28 @@ definePageMeta({
               v-model="memberForm.phone"
               variant="solo"
               placeholder="예: 010-1234-5678"
+              hide-details
+              autocomplete="off"
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;"
+            />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">생년월일</label>
+            <v-text-field
+              v-model="memberForm.birthDate"
+              variant="solo"
+              placeholder="예: 1990-01-01"
+              hide-details
+              autocomplete="off"
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;"
+            />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">입사일</label>
+            <v-text-field
+              v-model="memberForm.joinDate"
+              variant="solo"
+              placeholder="예: 2020-05-10"
               hide-details
               autocomplete="off"
               style="--v-input-control-background: rgba(255,255,255,0.04); color: white;"
