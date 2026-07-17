@@ -1,5 +1,5 @@
 [build]
-command = "pwd && ls -al && yarn install && yarn generate && ls -al dist"
+command = "pwd && ls -al && yarn install --ignore-engines && yarn generate && ls -al dist"
 publish = "dist"
 
 [context.production.environment]
