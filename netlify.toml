@@ -1,5 +1,5 @@
 [build]
-command = "yarn install --ignore-engines && yarn generate"
+command = "yarn generate"
 publish = ".output/public"
 
 [context.production.environment]
