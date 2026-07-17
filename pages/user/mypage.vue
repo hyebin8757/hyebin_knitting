@@ -32,6 +32,7 @@ const router = useRouter();
 
 const userStore = useUserStore();
 const { isEmpty } = useUtil.typeValidation;
+const userRole = computed(() => userStore.userRole);
 
 /************************************************************
  * Props
@@ -164,7 +165,7 @@ definePageMeta({
     </div>
 
     <!-- ID/Password One-time Change Area -->
-    <div :class="cx('change-credentials-card', MypageStyle.ChangeCard)">
+    <div v-if="userRole !== 'admin'" :class="cx('change-credentials-card', MypageStyle.ChangeCard)">
       <div class="title">
         <i class="material-icons">lock_reset</i>
         <span>로그인 정보 변경</span>

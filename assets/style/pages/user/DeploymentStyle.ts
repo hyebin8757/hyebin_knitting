@@ -10,7 +10,7 @@ export const DeploymentStyle = {
 
   DashboardSummary : css`
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.2rem;
     margin-bottom: 2.4rem;
 

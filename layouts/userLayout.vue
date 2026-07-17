@@ -2,38 +2,14 @@
 import { computed, onMounted, ref, provide } from "vue";
 import { cx } from "@emotion/css";
 import { UserLayoutStyle } from "~/layouts/style/UserLayoutStyle";
+import { useUserStore } from "~/stores/useUserStore";
 
-/************************************************************
- * Components
- ************************************************************/
+const userStore = useUserStore();
+const userRole = computed(() => userStore.userRole);
 
-/************************************************************
- * Style
- ************************************************************/
-
-/************************************************************
- * Utils, Constants...
- ************************************************************/
-
-/************************************************************
- * Types, Interface
- ************************************************************/
-
-/************************************************************
- * External Dependencies ( 외부 종속성 )
- ************************************************************/
-
-/************************************************************
- * Props
- ************************************************************/
-
-/************************************************************
- * Emit
- ************************************************************/
-
-/************************************************************
- * Raw Data ( 원시 데이터 )
- ************************************************************/
+const toggleRole = () => {
+  userStore.userRole = userStore.userRole === "member" ? "admin" : "member";
+};
 
 /************************************************************
  * Dynamic Data ( 동적 데이터 )
@@ -56,10 +32,6 @@ const setWindowWidth = (data: UIEvent) => {
 };
 
 /************************************************************
- * Watch
- ************************************************************/
-
-/************************************************************
  * Mounted
  ************************************************************/
 onMounted(() => {
@@ -75,7 +47,12 @@ onMounted(() => {
         <!-- Top Header -->
         <header :class="cx('user-layout-header', UserLayoutStyle.Header)">
           <div class="header-logo">
-            인천노조 시스템 <span class="logo-badge">조합원용</span>
+            인천노조 시스템 
+            <span v-if="userRole === 'admin'" class="logo-badge" style="background: rgba(225, 60, 60, 0.2); color: var(--system-red-color); border: 1px solid rgba(225, 60, 60, 0.3);">관리자용</span>
+            <span v-else class="logo-badge">조합원용</span>
+            <v-btn size="x-small" variant="outlined" color="primary" style="margin-left: 0.8rem; font-size: 1rem; border-color: rgba(35, 102, 180, 0.4);" @click="toggleRole">
+              {{ userRole === 'member' ? '관리자모드' : '조합원모드' }}
+            </v-btn>
           </div>
           <div class="header-user">
             <span><strong>홍길동</strong> 님</span>

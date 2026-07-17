@@ -3,6 +3,7 @@ import { onMounted, onBeforeUnmount, ref, inject, computed } from "vue";
 import { cx } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
 import { definePageMeta } from "~/.nuxt/imports";
+import { useUserStore } from "~/stores/useUserStore";
 
 /************************************************************
  * Components
@@ -23,7 +24,7 @@ import { useUtil } from "~/utils/useUtil";
  ************************************************************/
 interface Worker {
   name: string;
-  role: "반장" | "조장" | "좌상" | "조합원";
+  role: string;
   phone: string;
   status: string;
 }
@@ -38,6 +39,7 @@ interface SiteDeployment {
  ************************************************************/
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 
 const { isEmpty } = useUtil.typeValidation;
 
@@ -52,65 +54,16 @@ const { isEmpty } = useUtil.typeValidation;
 /************************************************************
  * Raw Data ( 원시 데이터 )
  ************************************************************/
-const siteData = ref<SiteDeployment[]>([
-  {
-    siteName: "경인서부",
-    workers: [
-      { name: "김철수", role: "반장", phone: "010-1234-5678", status: "근무중" },
-      { name: "이민우", role: "조장", phone: "010-2345-6789", status: "근무중" },
-      { name: "박영희", role: "조합원", phone: "010-3456-7890", status: "근무중" },
-      { name: "최동해", role: "조합원", phone: "010-4567-8901", status: "대기중" },
-    ],
-  },
-  {
-    siteName: "인천",
-    workers: [
-      { name: "홍길동", role: "반장", phone: "010-5678-1234", status: "근무중" },
-      { name: "한지민", role: "좌상", phone: "010-6789-2345", status: "근무중" },
-      { name: "강현우", role: "조합원", phone: "010-7890-3456", status: "근무중" },
-    ],
-  },
-  {
-    siteName: "객선",
-    workers: [
-      { name: "윤서준", role: "조장", phone: "010-8901-4567", status: "근무중" },
-      { name: "조현아", role: "조합원", phone: "010-9012-5678", status: "근무중" },
-    ],
-  },
-  {
-    siteName: "남항",
-    workers: [
-      { name: "오세훈", role: "반장", phone: "010-1111-2222", status: "근무중" },
-      { name: "정다은", role: "조합원", phone: "010-3333-4444", status: "근무중" },
-    ],
-  },
-  {
-    siteName: "임항",
-    workers: [
-      { name: "신동엽", role: "좌상", phone: "010-5555-6666", status: "근무중" },
-      { name: "유재석", role: "조합원", phone: "010-7777-8888", status: "근무중" },
-    ],
-  },
-  {
-    siteName: "현장",
-    workers: [
-      { name: "강호동", role: "반장", phone: "010-9999-0000", status: "근무중" },
-      { name: "이수근", role: "조합원", phone: "010-1212-3434", status: "근무중" },
-    ],
-  },
-  {
-    siteName: "야간",
-    workers: [
-      { name: "김병만", role: "조장", phone: "010-5656-7878", status: "근무중" },
-      { name: "노우진", role: "조합원", phone: "010-9898-7676", status: "근무중" },
-    ],
-  },
-]);
+const locationsList = ["경인서부", "인천", "객선", "남항", "임항", "현장", "야간"];
 
 /************************************************************
  * Dynamic Data ( 동적 데이터 )
  ************************************************************/
 const activeTab = ref(0);
+
+// 관리자 배치 이동 다이얼로그용
+const isReassignDialogOpen = ref(false);
+const selectedWorkerName = ref("");
 
 /************************************************************
  * Provide / inject Data
@@ -120,23 +73,50 @@ const windowWidth = inject("windowWidth") as any;
 /************************************************************
  * Function
  ************************************************************/
+const openReassignment = (workerName: string) => {
+  if (userRole.value !== "admin") return;
+  selectedWorkerName.value = workerName;
+  isReassignDialogOpen.value = true;
+};
+
+const executeReassignment = (loc: string) => {
+  userStore.deployWorker(selectedWorkerName.value, loc);
+  isReassignDialogOpen.value = false;
+};
 
 /************************************************************
  * Computed
  ************************************************************/
+const userRole = computed(() => userStore.userRole);
+
+// Pinia 전역 스토어 조합원들로부터 동적으로 사이트 배치 구성
+const siteData = computed<SiteDeployment[]>(() => {
+  return locationsList.map((loc) => {
+    const list = userStore.workers.filter((w) => w.location === loc);
+    return {
+      siteName: loc,
+      workers: list.map((w) => ({
+        name: w.name,
+        role: w.role,
+        phone: w.phone,
+        status: w.checkedIn ? "근무중" : "대기중",
+      })),
+    };
+  });
+});
+
 const activeSite = computed(() => {
   return siteData.value[activeTab.value] || { siteName: "", workers: [] };
 });
 
 const totalWorkersCount = computed(() => {
-  return siteData.value.reduce((acc, curr) => acc + curr.workers.length, 0);
+  // 현장에 배치되어 있는 총 인원 수
+  return userStore.workers.filter((w) => !!w.location).length;
 });
 
 const activeWorkersCount = computed(() => {
-  return siteData.value.reduce(
-    (acc, curr) => acc + curr.workers.filter((w) => w.status === "근무중").length,
-    0
-  );
+  // 배치되어 있으면서 출근 완료인 인원 수
+  return userStore.workers.filter((w) => !!w.location && w.checkedIn).length;
 });
 
 const totalSitesCount = computed(() => {
@@ -164,6 +144,12 @@ definePageMeta({
 
 <template>
   <div :class="cx('deployment-page', DeploymentStyle.Default)">
+    <!-- Admin Role Info Banner -->
+    <div v-if="userRole === 'admin'" style="background: rgba(255, 60, 60, 0.08); border: 1px dashed rgba(225, 60, 60, 0.2); border-radius: 1.2rem; padding: 1.2rem; margin-bottom: 1.6rem; display: flex; align-items: center; gap: 0.8rem;">
+      <i class="material-icons" style="color: var(--system-red-color); font-size: 1.8rem;">info</i>
+      <span style="font-size: 1.2rem; color: #ffffff; font-weight: 600;">관리자 모드: 조합원을 클릭하여 근무 현장을 이동/변경할 수 있습니다.</span>
+    </div>
+
     <!-- Dashboard Summary (대시보드 통계 카드) -->
     <div :class="cx('summary-container', DeploymentStyle.DashboardSummary)">
       <div class="summary-card">
@@ -171,12 +157,8 @@ definePageMeta({
         <span class="value">{{ totalSitesCount }}곳</span>
       </div>
       <div class="summary-card">
-        <span class="label">전체 인원</span>
+        <span class="label">배치 인원</span>
         <span class="value">{{ totalWorkersCount }}명</span>
-      </div>
-      <div class="summary-card">
-        <span class="label">현재 투입인원</span>
-        <span class="value">{{ activeWorkersCount }}명</span>
       </div>
     </div>
 
@@ -203,6 +185,8 @@ definePageMeta({
         v-for="(worker, idx) in activeSite.workers"
         :key="idx"
         class="member-item"
+        :style="{ cursor: userRole === 'admin' ? 'pointer' : 'default' }"
+        @click="openReassignment(worker.name)"
       >
         <div class="info">
           <div class="name-wrapper">
@@ -220,11 +204,46 @@ definePageMeta({
           </div>
           <div class="phone">{{ worker.phone }}</div>
         </div>
-        <div class="status-tag">
-          {{ worker.status }}
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <div class="status-tag">
+            {{ worker.status }}
+          </div>
+          <i v-if="userRole === 'admin'" class="material-icons" style="font-size: 1.6rem; color: var(--text-color-3);">swap_horiz</i>
         </div>
       </div>
     </div>
+
+    <!-- Reassignment Dialog -->
+    <v-dialog v-model="isReassignDialogOpen" max-width="320">
+      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.6rem; color: #ffffff; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); display: flex; align-items: center; gap: 0.8rem; padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <i class="material-icons" style="color: var(--primary-lighten-color-1);">swap_horiz</i>
+          <span>위치 변경 ({{ selectedWorkerName }})</span>
+        </v-card-title>
+        
+        <v-card-text class="py-4 px-0" style="font-size: 1.3rem; color: rgba(255, 255, 255, 0.7); line-height: 1.5;">
+          이동할 현장을 선택해 주세요:
+        </v-card-text>
+
+        <!-- Location List Selector -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-height: 240px; overflow-y: auto; padding-right: 0.4rem;">
+          <v-btn
+            v-for="loc in locationsList"
+            :key="loc"
+            style="background: rgba(35, 102, 180, 0.15) !important; color: #88c5ff !important; font-weight: 700; border-radius: 1rem; border: 1px solid rgba(136, 197, 255, 0.2) !important; height: 4.4rem !important; font-size: 1.3rem !important; transition: all 0.2s;"
+            onmouseover="this.style.background='rgba(35, 102, 180, 0.3)'; this.style.borderColor='#88c5ff';"
+            onmouseout="this.style.background='rgba(35, 102, 180, 0.15)'; this.style.borderColor='rgba(136, 197, 255, 0.2)';"
+            @click="executeReassignment(loc)"
+          >
+            {{ loc }}
+          </v-btn>
+        </div>
+
+        <v-card-actions class="justify-end px-0 pt-6">
+          <v-btn style="background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; border-radius: 0.8rem; padding: 0.8rem 2rem !important; height: auto !important; min-width: 8rem !important; font-size: 1.3rem; font-weight: 600;" @click="isReassignDialogOpen = false">닫기</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 

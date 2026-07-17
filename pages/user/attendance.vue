@@ -3,6 +3,7 @@ import { onMounted, onBeforeUnmount, ref, inject, computed } from "vue";
 import { cx } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
 import { definePageMeta } from "~/.nuxt/imports";
+import { useUserStore } from "~/stores/useUserStore";
 
 /************************************************************
  * Components
@@ -32,6 +33,7 @@ interface AttendanceDay {
  ************************************************************/
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 
 const { isEmpty } = useUtil.typeValidation;
 
@@ -48,6 +50,7 @@ const { isEmpty } = useUtil.typeValidation;
  ************************************************************/
 const hireDate = "2024-03-02";
 const birthDate = "1992-07-28";
+const locationsList = ["경인서부", "인천", "객선", "남항", "임항", "현장", "야간"];
 
 /************************************************************
  * Dynamic Data ( 동적 데이터 )
@@ -58,7 +61,14 @@ const isAdminApproved = ref(false); // 관리자 승인 데모 상태 스위치�
 const isLeaveConfirmOpen = ref(false);
 const bypassTimeLimit = ref(false); // 오전 6시 제한 해제용 데모 스위치
 
-// Mock attendance history
+// 관리자 뷰용 동적 상태
+const activeAdminGroupTab = ref(1); // 1~4조
+const isDeployDialogOpen = ref(false);
+const deployTarget = ref<"individual" | "group">("individual");
+const selectedWorkerName = ref("");
+const selectedGroupId = ref<number | null>(null);
+
+// Mock attendance history (조합원 모드용)
 const attendanceHistory = ref<Record<string, "day" | "night" | "field" | "absent" | "leave">>({
   "2026-07-01": "day",
   "2026-07-02": "day",
@@ -126,9 +136,40 @@ const getFormattedDate = (date: Date): string => {
   return `${y}-${m}-${d}`;
 };
 
+// 관리자 액션
+const openDeployIndividual = (workerName: string) => {
+  deployTarget.value = "individual";
+  selectedWorkerName.value = workerName;
+  isDeployDialogOpen.value = true;
+};
+
+const openDeployGroup = (groupId: number) => {
+  deployTarget.value = "group";
+  selectedGroupId.value = groupId;
+  isDeployDialogOpen.value = true;
+};
+
+const executeDeployment = (loc: string) => {
+  if (deployTarget.value === "individual") {
+    userStore.deployWorker(selectedWorkerName.value, loc);
+  } else if (deployTarget.value === "group" && selectedGroupId.value !== null) {
+    userStore.deployGroup(selectedGroupId.value, loc);
+  }
+  isDeployDialogOpen.value = false;
+};
+
 /************************************************************
  * Computed
  ************************************************************/
+const userRole = computed(() => userStore.userRole);
+
+// 관리자 조별 출근 인원 필터링 목록
+const checkedInGroupWorkers = computed(() => {
+  return userStore.workers.filter(
+    (w) => w.group === activeAdminGroupTab.value && w.checkedIn
+  );
+});
+
 const currentYearMonthLabel = computed(() => {
   return `${currentDate.value.getFullYear()}년 ${currentDate.value.getMonth() + 1}월`;
 });
@@ -230,7 +271,8 @@ definePageMeta({
 </script>
 
 <template>
-  <div :class="cx('attendance-page', AttendanceStyle.Default)">
+  <!-- 1. 조합원 모드 화면 -->
+  <div v-if="userRole === 'member'" :class="cx('attendance-page', AttendanceStyle.Default)">
     <!-- Admin Simulation Switch (관리자 승인 데모 상태 스위치) -->
     <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.2rem; margin-bottom: 1.6rem; display: flex; flex-direction: column; gap: 0.8rem;">
       <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -382,8 +424,128 @@ definePageMeta({
       </v-card>
     </v-dialog>
   </div>
-</template>
 
-<style lang="scss" scoped></style>
+  <!-- 2. 관리자 모드 화면 -->
+  <div v-else :class="cx('attendance-page', AttendanceStyle.Default)">
+    <!-- Admin Dashboard Info -->
+    <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.6rem; padding: 2rem; margin-bottom: 2rem;">
+      <div style="display: flex; align-items: center; gap: 0.8rem; font-size: 1.6rem; font-weight: 700; color: var(--white-color); margin-bottom: 1.2rem;">
+        <i class="material-icons" style="color: var(--primary-lighten-color-1);">supervised_user_circle</i>
+        <span>당일 출근 현황 및 배치 배정</span>
+      </div>
+      <p style="font-size: 1.2rem; color: var(--text-color-3); line-height: 1.5; margin: 0;">
+        금일 출근을 완료한 조합원 목록입니다. 각 조별 출근 인원을 확인하고 각 현장 배치 지정을 완료해 주세요.
+      </p>
+    </div>
+
+    <!-- Group Selector Tabs -->
+    <div style="display: flex; gap: 0.8rem; margin-bottom: 1.6rem; background: rgba(255, 255, 255, 0.03); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; white-space: nowrap;">
+      <button
+        v-for="g in [1, 2, 3, 5, 6, 7, 8]"
+        :key="g"
+        style="flex: 1; min-width: 5rem; padding: 1rem 0; font-size: 1.3rem; font-weight: 700; border-radius: 0.8rem; border: none; cursor: pointer; transition: all 0.2s;"
+        :style="{
+          background: activeAdminGroupTab === g ? 'var(--primary-darken-color-1)' : 'transparent',
+          color: activeAdminGroupTab === g ? '#ffffff' : 'var(--text-color-3)'
+        }"
+        @click="activeAdminGroupTab = g"
+      >
+        {{ g }}조
+      </button>
+    </div>
+
+    <!-- Group Action Button (조 전체 배치) -->
+    <div style="margin-bottom: 1.6rem;">
+      <v-btn
+        style="width: 100%; height: 4.8rem !important; background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; font-weight: 700; font-size: 1.4rem !important; border-radius: 1rem;"
+        @click="openDeployGroup(activeAdminGroupTab)"
+      >
+        {{ activeAdminGroupTab }}조 전체 현장 배치 지정
+      </v-btn>
+    </div>
+
+    <!-- Worker List Table/Card Form -->
+    <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+      <div v-if="checkedInGroupWorkers.length === 0" style="text-align: center; padding: 4rem 0; font-size: 1.3rem; color: var(--text-color-3);">
+        금일 출근 등록한 {{ activeAdminGroupTab }}조 조합원이 없습니다.
+      </div>
+      
+      <div
+        v-for="w in checkedInGroupWorkers"
+        :key="w.name"
+        style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.2rem; padding: 1.6rem; display: flex; align-items: center; justify-content: space-between;"
+      >
+        <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+          <div style="display: flex; align-items: center; gap: 0.8rem;">
+            <span style="font-size: 1.5rem; font-weight: 700; color: #ffffff;">{{ w.name }}</span>
+            <span
+              style="font-size: 1.1rem; padding: 0.2rem 0.6rem; border-radius: 0.4rem; font-weight: 600;"
+              :style="[
+                w.role === '반장' || w.role === '조장' ? 'background: rgba(249, 149, 0, 0.15); color: var(--secondary-darken-color-1);' :
+                w.role === '좌상' ? 'background: rgba(255, 181, 38, 0.15); color: var(--secondary-darken-color-2);' :
+                'background: rgba(136, 197, 255, 0.1); color: var(--primary-lighten-color-1);'
+              ]"
+            >
+              {{ w.role }}
+            </span>
+          </div>
+          <span style="font-size: 1.1rem; color: var(--text-color-3);">{{ w.phone }}</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1.2rem;">
+          <div style="text-align: right;">
+            <span style="font-size: 1.1rem; color: var(--text-color-3); display: block;">현재 배치</span>
+            <span
+              style="font-size: 1.3rem; font-weight: 700;"
+              :style="{ color: w.location ? 'var(--system-green-color)' : 'var(--system-red-color)' }"
+            >
+              {{ w.location || '미배치' }}
+            </span>
+          </div>
+
+          <v-btn
+            size="small"
+            style="background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #ffffff !important; border-radius: 0.8rem; font-weight: 600; padding: 0.6rem 1.2rem !important; height: auto !important; min-width: 6.8rem !important; font-size: 1.2rem;"
+            @click="openDeployIndividual(w.name)"
+          >
+            배치 지정
+          </v-btn>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group/Individual Location Deployment Dialog -->
+    <v-dialog v-model="isDeployDialogOpen" max-width="320">
+      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.6rem; color: #ffffff; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); display: flex; align-items: center; gap: 0.8rem; padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <i class="material-icons" style="color: var(--primary-lighten-color-1);">business_center</i>
+          <span>{{ deployTarget === 'individual' ? `${selectedWorkerName} 배치 지정` : `${selectedGroupId}조 전체 배치 지정` }}</span>
+        </v-card-title>
+        
+        <v-card-text class="py-4 px-0" style="font-size: 1.3rem; color: rgba(255, 255, 255, 0.7); line-height: 1.5;">
+          배치할 현장을 선택해 주세요:
+        </v-card-text>
+
+        <!-- Location List Selector -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-height: 240px; overflow-y: auto; padding-right: 0.4rem;">
+          <v-btn
+            v-for="loc in locationsList"
+            :key="loc"
+            style="background: rgba(35, 102, 180, 0.15) !important; color: #88c5ff !important; font-weight: 700; border-radius: 1rem; border: 1px solid rgba(136, 197, 255, 0.2) !important; height: 4.4rem !important; font-size: 1.3rem !important; transition: all 0.2s;"
+            onmouseover="this.style.background='rgba(35, 102, 180, 0.3)'; this.style.borderColor='#88c5ff';"
+            onmouseout="this.style.background='rgba(35, 102, 180, 0.15)'; this.style.borderColor='rgba(136, 197, 255, 0.2)';"
+            @click="executeDeployment(loc)"
+          >
+            {{ loc }}
+          </v-btn>
+        </div>
+
+        <v-card-actions class="justify-end px-0 pt-6">
+          <v-btn style="background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; border-radius: 0.8rem; padding: 0.8rem 2rem !important; height: auto !important; min-width: 8rem !important; font-size: 1.3rem; font-weight: 600;" @click="isDeployDialogOpen = false">닫기</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
 
 <style lang="scss" scoped></style>

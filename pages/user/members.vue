@@ -3,6 +3,7 @@ import { onMounted, onBeforeUnmount, ref, inject, computed } from "vue";
 import { cx } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
 import { definePageMeta } from "~/.nuxt/imports";
+import { useUserStore } from "~/stores/useUserStore";
 
 /************************************************************
  * Components
@@ -37,6 +38,7 @@ interface GroupData {
  ************************************************************/
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 
 const { isEmpty } = useUtil.typeValidation;
 
@@ -51,43 +53,21 @@ const { isEmpty } = useUtil.typeValidation;
 /************************************************************
  * Raw Data ( 원시 데이터 )
  ************************************************************/
-const groups = ref<GroupData[]>([
-  {
-    groupName: "1조",
-    members: [
-      { name: "김철수", role: "반장", phone: "010-1234-5678" },
-      { name: "이영희", role: "좌상", phone: "010-2345-6789" },
-      { name: "박민수", role: "조장", phone: "010-3456-7890" },
-      { name: "최동해", role: "조합원", phone: "010-4567-8901" },
-      { name: "정서율", role: "조합원", phone: "010-5678-9012" },
-    ],
-  },
-  {
-    groupName: "2조",
-    members: [
-      { name: "홍길동", role: "반장", phone: "010-5678-1234" },
-      { name: "한지우", role: "조장", phone: "010-6789-2345" },
-      { name: "강현석", role: "조합원", phone: "010-7890-3456" },
-      { name: "윤서아", role: "조합원", phone: "010-8901-4567" },
-    ],
-  },
-  {
-    groupName: "3조",
-    members: [
-      { name: "임꺽정", role: "반장", phone: "010-1111-2222" },
-      { name: "신사임당", role: "좌상", phone: "010-3333-4444" },
-      { name: "성춘향", role: "조합원", phone: "010-5555-6666" },
-    ],
-  },
-  {
-    groupName: "4조",
-    members: [
-      { name: "이순신", role: "반장", phone: "010-7777-8888" },
-      { name: "장보고", role: "조장", phone: "010-9999-0000" },
-      { name: "김유신", role: "조합원", phone: "010-1212-3434" },
-    ],
-  },
-]);
+const groupNumbers = [1, 2, 3, 5, 6, 7, 8];
+
+const groups = computed<GroupData[]>(() => {
+  return groupNumbers.map(g => {
+    const list = userStore.workers.filter(w => w.group === g);
+    return {
+      groupName: `${g}조`,
+      members: list.map(w => ({
+        name: w.name,
+        role: w.role as any,
+        phone: w.phone
+      }))
+    };
+  });
+});
 
 /************************************************************
  * Dynamic Data ( 동적 데이터 )

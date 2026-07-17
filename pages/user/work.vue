@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, inject, computed } from "vue";
+import { onMounted, onBeforeUnmount, ref, inject, computed, reactive } from "vue";
 import { cx } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
 import { definePageMeta } from "~/.nuxt/imports";
+import { useUserStore } from "~/stores/useUserStore";
 
 /************************************************************
  * Components
@@ -41,6 +42,7 @@ interface WorkItem {
  ************************************************************/
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 
 const { isEmpty } = useUtil.typeValidation;
 
@@ -55,64 +57,6 @@ const { isEmpty } = useUtil.typeValidation;
 /************************************************************
  * Raw Data ( 원시 데이터 )
  ************************************************************/
-const notices = ref<Notice[]>([
-  {
-    id: 1,
-    title: "여름철 안전 조업 및 수분 섭취 가이드 공지",
-    content:
-      "최근 연안 부두 온도가 33도 이상 상승함에 따라, 모든 조합원 여러분께서는 40분 작업 후 15분 휴식 및 충분한 이온음료 섭취를 반드시 준수해 주시기 바랍니다.",
-    date: "2026-07-15",
-  },
-  {
-    id: 2,
-    title: "신임 조합장 취임 및 정기 간담회 안내",
-    content:
-      "다음 주 수요일(7월 22일) 18:00에 조합 강당에서 신임 조합장님 취임 인사 및 현안 해결을 위한 조합원 정기 간담회가 개최될 예정입니다.",
-    date: "2026-07-10",
-  },
-  {
-    id: 3,
-    title: "작업장 안전 보호구(안전화, 헬멧) 교체 사업",
-    content:
-      "노후화된 안전 장구 무상 교체 신청이 진행 중입니다. 각 조 반장님들을 통해 사이즈 취합 후 본관 행정실로 제출 바랍니다.",
-    date: "2026-07-05",
-  },
-]);
-
-const workList = ref<WorkItem[]>([
-  {
-    id: 1,
-    location: "남항 부두 A선석",
-    cargo: "컨테이너 화물 하역 작업",
-    details:
-      "오전 09:00 ~ 오후 18:00 컨테이너 크레인 하역 및 트랙터 이동 작업. 지반 침하 주의.",
-    safetyInstruction: "크레인 작업 반경 내 보행 금지 및 유도원 배치 필수",
-  },
-  {
-    id: 1,
-    location: "남항 부두 A선석",
-    cargo: "컨테이너 화물 하역 작업",
-    details:
-      "오전 09:00 ~ 오후 18:00 컨테이너 크레인 하역 및 트랙터 이동 작업. 지반 침하 주의.",
-    safetyInstruction: "크레인 작업 반경 내 보행 금지 및 유도원 배치 필수",
-  },
-  {
-    id: 1,
-    location: "남항 부두 A선석",
-    cargo: "컨테이너 화물 하역 작업",
-    details:
-      "오전 09:00 ~ 오후 18:00 컨테이너 크레인 하역 및 트랙터 이동 작업. 지반 침하 주의.",
-    safetyInstruction: "크레인 작업 반경 내 보행 금지 및 유도원 배치 필수",
-  },
-  {
-    id: 2,
-    location: "임항 제3부두",
-    cargo: "벌크선 석탄 선적 보조",
-    details:
-      "벨트 컨베이어 라인 모니터링 및 선내 투입 배치. 미세먼지 마스크 착용 필.",
-    safetyInstruction: "낙하 위험 구역 진입 통제 및 무전 통신 철저 준수",
-  },
-]);
 
 /************************************************************
  * Dynamic Data ( 동적 데이터 )
@@ -121,6 +65,25 @@ const selectedNotice = ref<Notice | null>(null);
 const dialog = ref(false);
 const isWorkExpanded = ref(true);
 const isNoticeExpanded = ref(true);
+
+// 관리자 에디터 다이얼로그용 상태
+const isNoticeFormOpen = ref(false);
+const isWorkFormOpen = ref(false);
+const formMode = ref<"add" | "edit">("add");
+
+const noticeForm = reactive({
+  id: null as number | null,
+  title: "",
+  content: "",
+});
+
+const workForm = reactive({
+  id: null as number | null,
+  location: "",
+  cargo: "",
+  details: "",
+  safetyInstruction: "",
+});
 
 /************************************************************
  * Provide / inject Data
@@ -142,6 +105,99 @@ const toggleWork = () => {
 const toggleNotice = () => {
   isNoticeExpanded.value = !isNoticeExpanded.value;
 };
+
+// 공지사항 등록 / 수정 핸들러
+const openNoticeEditor = (mode: "add" | "edit", item?: Notice) => {
+  formMode.value = mode;
+  if (mode === "edit" && item) {
+    noticeForm.id = item.id;
+    noticeForm.title = item.title;
+    noticeForm.content = item.content;
+  } else {
+    noticeForm.id = null;
+    noticeForm.title = "";
+    noticeForm.content = "";
+  }
+  isNoticeFormOpen.value = true;
+};
+
+const saveNotice = () => {
+  if (isEmpty(noticeForm.title) || isEmpty(noticeForm.content)) return;
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  if (formMode.value === "add") {
+    const nextId = userStore.notices.length > 0 ? Math.max(...userStore.notices.map(n => n.id)) + 1 : 1;
+    userStore.notices.unshift({
+      id: nextId,
+      title: noticeForm.title,
+      content: noticeForm.content,
+      date: todayStr,
+    });
+  } else {
+    const idx = userStore.notices.findIndex((n) => n.id === noticeForm.id);
+    if (idx !== -1) {
+      userStore.notices[idx].title = noticeForm.title;
+      userStore.notices[idx].content = noticeForm.content;
+      userStore.notices[idx].date = todayStr;
+    }
+  }
+  isNoticeFormOpen.value = false;
+};
+
+// 현장 작업 안내 등록 / 수정 핸들러
+const openWorkEditor = (mode: "add" | "edit", item?: WorkItem) => {
+  formMode.value = mode;
+  if (mode === "edit" && item) {
+    workForm.id = item.id;
+    workForm.location = item.location;
+    workForm.cargo = item.cargo;
+    workForm.details = item.details;
+    workForm.safetyInstruction = item.safetyInstruction;
+  } else {
+    workForm.id = null;
+    workForm.location = "";
+    workForm.cargo = "";
+    workForm.details = "";
+    workForm.safetyInstruction = "";
+  }
+  isWorkFormOpen.value = true;
+};
+
+const saveWork = () => {
+  if (
+    isEmpty(workForm.location) ||
+    isEmpty(workForm.cargo) ||
+    isEmpty(workForm.details)
+  )
+    return;
+
+  if (formMode.value === "add") {
+    const nextId = userStore.fieldWorks.length > 0 ? Math.max(...userStore.fieldWorks.map(w => w.id)) + 1 : 1;
+    userStore.fieldWorks.unshift({
+      id: nextId,
+      location: workForm.location,
+      cargo: workForm.cargo,
+      details: workForm.details,
+      safetyInstruction: workForm.safetyInstruction,
+    });
+  } else {
+    const idx = userStore.fieldWorks.findIndex((w) => w.id === workForm.id);
+    if (idx !== -1) {
+      userStore.fieldWorks[idx].location = workForm.location;
+      userStore.fieldWorks[idx].cargo = workForm.cargo;
+      userStore.fieldWorks[idx].details = workForm.details;
+      userStore.fieldWorks[idx].safetyInstruction = workForm.safetyInstruction;
+    }
+  }
+  isWorkFormOpen.value = false;
+};
+
+/************************************************************
+ * Computed
+ ************************************************************/
+const userRole = computed(() => userStore.userRole);
+const notices = computed(() => userStore.notices);
+const workList = computed(() => userStore.fieldWorks);
 
 /************************************************************
  * Watch
@@ -195,17 +251,26 @@ definePageMeta({
 
     <!-- Field Work Details (현장 작업 내용) -->
     <div :class="cx('work-details-card', WorkStyle.WorkDetailsCard)">
-      <div class="section-header" @click="toggleWork">
-        <div class="title">
+      <div class="section-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="title" style="display: flex; align-items: center; gap: 0.8rem; cursor: pointer;" @click="workList.length >= 3 ? toggleWork() : null">
           <i class="material-icons">build</i>
           <span>오늘의 현장 작업 안내</span>
+          <i v-if="workList.length >= 3" :class="['material-icons', 'arrow-icon', { rotated: !isWorkExpanded }]">expand_more</i>
         </div>
-        <i :class="['material-icons', 'arrow-icon', { rotated: !isWorkExpanded }]">expand_more</i>
+        <v-btn
+          v-if="userRole === 'admin'"
+          size="x-small"
+          color="primary"
+          style="border-radius: 0.6rem; font-weight: 700; font-size: 1rem; padding: 0 0.8rem !important; height: 2.4rem !important;"
+          @click.stop="openWorkEditor('add')"
+        >
+          등록
+        </v-btn>
       </div>
 
       <div class="work-item-list">
-        <div v-for="work in (isWorkExpanded ? workList : workList.slice(0, 2))" :key="work.id" class="work-item">
-          <div class="work-header">
+        <div v-for="work in (isWorkExpanded ? workList : (workList.length >= 3 ? workList.slice(0, 2) : workList))" :key="work.id" class="work-item" style="position: relative;">
+          <div class="work-header" style="padding-right: 4rem;">
             <span class="loc">{{ work.location }}</span>
             <span class="badge">{{ work.cargo }}</span>
           </div>
@@ -214,55 +279,189 @@ definePageMeta({
             <i class="material-icons">warning</i>
             <span>{{ work.safetyInstruction }}</span>
           </div>
+          
+          <v-btn
+            v-if="userRole === 'admin'"
+            icon
+            size="x-small"
+            style="position: absolute; top: 1.2rem; right: 1.2rem; background: rgba(255,255,255,0.05); color: #ffffff;"
+            @click.stop="openWorkEditor('edit', work)"
+          >
+            <i class="material-icons" style="font-size: 1.6rem;">edit</i>
+          </v-btn>
         </div>
       </div>
     </div>
 
     <!-- Notice Board (공지사항) -->
     <div :class="cx('notices-card', WorkStyle.NoticesCard)">
-      <div class="section-header" @click="toggleNotice">
-        <div class="title">
+      <div class="section-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="title" style="display: flex; align-items: center; gap: 0.8rem; cursor: pointer;" @click="notices.length >= 3 ? toggleNotice() : null">
           <i class="material-icons">campaign</i>
           <span>노동조합 공지사항</span>
+          <i v-if="notices.length >= 3" :class="['material-icons', 'arrow-icon', { rotated: !isNoticeExpanded }]">expand_more</i>
         </div>
-        <i :class="['material-icons', 'arrow-icon', { rotated: !isNoticeExpanded }]">expand_more</i>
+        <v-btn
+          v-if="userRole === 'admin'"
+          size="x-small"
+          color="primary"
+          style="border-radius: 0.6rem; font-weight: 700; font-size: 1rem; padding: 0 0.8rem !important; height: 2.4rem !important;"
+          @click.stop="openNoticeEditor('add')"
+        >
+          등록
+        </v-btn>
       </div>
 
       <div class="notice-list">
         <div
-          v-for="notice in (isNoticeExpanded ? notices : notices.slice(0, 2))"
+          v-for="notice in (isNoticeExpanded ? notices : (notices.length >= 3 ? notices.slice(0, 2) : notices))"
           :key="notice.id"
           class="notice-item"
+          style="position: relative; padding-right: 5rem;"
           @click="openNotice(notice)"
         >
           <span class="nt-title">{{ notice.title }}</span>
           <span class="nt-date">{{ notice.date }}</span>
+          
+          <v-btn
+            v-if="userRole === 'admin'"
+            icon
+            size="x-small"
+            style="position: absolute; top: 50%; transform: translateY(-50%); right: 1.2rem; background: rgba(255,255,255,0.05); color: #ffffff;"
+            @click.stop="openNoticeEditor('edit', notice)"
+          >
+            <i class="material-icons" style="font-size: 1.6rem;">edit</i>
+          </v-btn>
         </div>
       </div>
     </div>
 
-    <!-- Notice View Dialog -->
+    <!-- Notice View Dialog (상세 보기) -->
     <v-dialog v-model="dialog" width="500">
-      <v-card v-if="selectedNotice">
-        <v-card-title
-          class="text-h6 bg-primary-darken-color-1 text-white py-4 px-6"
-        >
+      <v-card v-if="selectedNotice" class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
           {{ selectedNotice.title }}
         </v-card-title>
-        <v-card-text
-          class="pa-6 text-body-1"
-          style="line-height: 1.6; color: var(--text-color-1)"
-        >
+        <v-card-text class="py-4 px-0 text-body-1" style="line-height: 1.6; color: rgba(255, 255, 255, 0.8);">
           {{ selectedNotice.content }}
         </v-card-text>
-        <v-card-actions class="justify-end pa-4">
-          <v-btn color="primary" variant="text" @click="dialog = false"
-            >닫기</v-btn
-          >
+        <v-card-actions class="justify-end px-0 pt-4">
+          <v-btn style="background: rgba(255, 255, 255, 0.1) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="dialog = false">닫기</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Notice Editor Form Dialog (공지사항 등록/수정) -->
+    <v-dialog v-model="isNoticeFormOpen" max-width="400">
+      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          {{ formMode === 'add' ? '공지사항 등록' : '공지사항 수정' }}
+        </v-card-title>
+        
+        <div style="display: flex; flex-direction: column; gap: 1.6rem; margin-top: 1.6rem;">
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">공지 제목</label>
+            <v-text-field
+              v-model="noticeForm.title"
+              variant="solo"
+              placeholder="제목을 입력하세요"
+              hide-details
+              autocomplete="off"
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;"
+            />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">공지 본문</label>
+            <v-textarea
+              v-model="noticeForm.content"
+              variant="solo"
+              placeholder="공지 내용을 자세히 작성해 주세요"
+              hide-details
+              autocomplete="off"
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;"
+            />
+          </div>
+        </div>
+
+        <v-card-actions class="justify-end gap-2 px-0 pt-6">
+          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isNoticeFormOpen = false">취소</v-btn>
+          <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="saveNotice">저장</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Work Editor Form Dialog (현장 작업 안내 등록/수정) -->
+    <v-dialog v-model="isWorkFormOpen" max-width="400">
+      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          {{ formMode === 'add' ? '현장 작업 안내 등록' : '현장 작업 안내 수정' }}
+        </v-card-title>
+        
+        <div style="display: flex; flex-direction: column; gap: 1.6rem; margin-top: 1.6rem;">
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">작업 위치</label>
+            <v-text-field
+              v-model="workForm.location"
+              variant="solo"
+              placeholder="예: 남항 부두 A선석"
+              hide-details
+              autocomplete="off"
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;"
+            />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">작업 화물 / 구분</label>
+            <v-text-field
+              v-model="workForm.cargo"
+              variant="solo"
+              placeholder="예: 컨테이너 하역"
+              hide-details
+              autocomplete="off"
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;"
+            />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">작업 상세</label>
+            <v-textarea
+              v-model="workForm.details"
+              variant="solo"
+              placeholder="상세 작업 일정 및 유의사항 기술"
+              hide-details
+              rows="3"
+              autocomplete="off"
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;"
+            />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">안전 수칙</label>
+            <v-text-field
+              v-model="workForm.safetyInstruction"
+              variant="solo"
+              placeholder="예: 안전모 착용 필수"
+              hide-details
+              autocomplete="off"
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;"
+            />
+          </div>
+        </div>
+
+        <v-card-actions class="justify-end gap-2 px-0 pt-6">
+          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isWorkFormOpen = false">취소</v-btn>
+          <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="saveWork">저장</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+:deep(.v-textarea) {
+  padding: 0 !important;
+  .v-field__input {
+    padding: 1rem !important;
+    line-height: 1.6 !important;
+    font-size: 1.4rem !important;
+    color: #222222 !important;
+  }
+}
+</style>
