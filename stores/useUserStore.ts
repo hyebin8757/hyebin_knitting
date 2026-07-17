@@ -1,12 +1,14 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import CryptoJS from "crypto-js";
-import { useSupabaseClient } from "#imports";
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseInstance = ref<any>(null);
+const supabaseUrl = process.env.SUPABASE_URL || "https://fuuowmiapdqrrkkytiux.supabase.co";
+const supabaseKey = process.env.SUPABASE_KEY || "sb_publishable_TmguTJ2on1AnBu2cE460JQ_Hhch2lbt";
+const globalSupabase = createClient(supabaseUrl, supabaseKey);
 
 const getSupabase = () => {
-  return supabaseInstance.value;
+  return globalSupabase;
 };
 
 interface UserModel {
@@ -389,10 +391,6 @@ export const useUserStore = defineStore( "user", () => {
     location.href = "/login";
   };
 
-  const setSupabaseInstance = (client: any) => {
-    supabaseInstance.value = client;
-  };
-
   return {
     isLogin,
     userRole,
@@ -414,7 +412,6 @@ export const useUserStore = defineStore( "user", () => {
     deleteWorkerAction,
     deleteWorkAction,
     deleteNoticeAction,
-    setSupabaseInstance,
     logout,
   };
 }, {
