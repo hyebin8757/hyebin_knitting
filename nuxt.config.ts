@@ -1,6 +1,16 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import {resolve} from "path"
 
+const cleanEnvValue = (val?: string) => {
+  if (!val) return val;
+  // 만약 마크다운 링크 형식 ([url](url))인 경우 실제 값만 추출
+  const match = val.match(/\[.*?\]\((.*?)\)/);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  return val.replace(/[\[\]\(\)]/g, '').trim();
+};
+
 /**
  * Nuxt Configuration
  * 설정은 통일
@@ -107,8 +117,8 @@ const nuxtConfig: any = {
   ],
 
   supabase: {
-    url: process.env.SUPABASE_URL,
-    key: process.env.SUPABASE_KEY,
+    url: cleanEnvValue(process.env.SUPABASE_URL),
+    key: cleanEnvValue(process.env.SUPABASE_KEY),
     redirect: false,
   },
 
