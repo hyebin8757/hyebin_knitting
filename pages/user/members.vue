@@ -87,6 +87,19 @@ const memberForm = reactive({
   joinDate: "",
 });
 
+// 회원 상세 모달
+const isMemberDetailOpen = ref(false);
+const isEditMode = ref(false);
+const selectedMember = reactive({
+  originalName: '',
+  name: '',
+  phone: '',
+  role: '조합원' as '반장' | '좌상' | '조장' | '조합원',
+  group: 1,
+  birthDate: '',
+  joinDate: '',
+});
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
@@ -117,6 +130,40 @@ const registerMember = async () => {
     memberForm.joinDate
   );
   isMemberFormOpen.value = false;
+};
+
+const openMemberDetail = (member: GroupMember) => {
+  if (userRole.value !== 'admin') return;
+  const activeGroupNum = groupNumbers[activeTab.value] || 1;
+  selectedMember.originalName = member.name;
+  selectedMember.name = member.name;
+  selectedMember.phone = member.phone;
+  selectedMember.role = member.role;
+  selectedMember.group = activeGroupNum;
+  selectedMember.birthDate = member.birthDate || '';
+  selectedMember.joinDate = member.joinDate || '';
+  isEditMode.value = false;
+  isMemberDetailOpen.value = true;
+};
+
+const updateMember = async () => {
+  if (isEmpty(selectedMember.name) || isEmpty(selectedMember.phone)) return;
+  await userStore.updateWorkerAction(
+    selectedMember.originalName,
+    selectedMember.name,
+    selectedMember.phone,
+    selectedMember.role,
+    selectedMember.group,
+    selectedMember.birthDate,
+    selectedMember.joinDate
+  );
+  isMemberDetailOpen.value = false;
+};
+
+const deleteMember = async () => {
+  if (!confirm(`${selectedMember.name} 조합원을 삭제하시겠습니까?`)) return;
+  await userStore.deleteWorkerAction(selectedMember.originalName);
+  isMemberDetailOpen.value = false;
 };
 
 /************************************************************
@@ -190,6 +237,8 @@ definePageMeta({
         v-for="(member, idx) in activeGroup.members"
         :key="idx"
         class="member-card"
+        :style="{ cursor: userRole === 'admin' ? 'pointer' : 'default' }"
+        @click="userRole === 'admin' ? openMemberDetail(member) : null"
       >
         <div class="details">
           <div :class="['role-badge', getRoleClass(member.role)]">
@@ -289,6 +338,80 @@ definePageMeta({
         <v-card-actions class="justify-end gap-2 px-0 pt-6">
           <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isMemberFormOpen = false">취소</v-btn>
           <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="registerMember">저장</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Member Detail / Edit Dialog -->
+    <v-dialog v-model="isMemberDetailOpen" max-width="400">
+      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1.6rem !important; display: flex; align-items: center; justify-content: space-between;">
+          <span>{{ isEditMode ? '조합원 수정' : '조합원 정보' }}</span>
+          <v-btn v-if="!isEditMode" icon size="x-small" style="background: rgba(255,255,255,0.08); color: #88c5ff;" @click="isEditMode = true">
+            <i class="material-icons" style="font-size: 1.6rem;">edit</i>
+          </v-btn>
+        </v-card-title>
+        
+        <!-- View Mode -->
+        <div v-if="!isEditMode" style="display: flex; flex-direction: column; gap: 1.4rem; margin-top: 1.6rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; background: rgba(255,255,255,0.03); border-radius: 0.8rem;">
+            <span style="font-size: 1.2rem; color: var(--text-color-3);">이름</span>
+            <span style="font-size: 1.4rem; font-weight: 600; color: #ffffff;">{{ selectedMember.name }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; background: rgba(255,255,255,0.03); border-radius: 0.8rem;">
+            <span style="font-size: 1.2rem; color: var(--text-color-3);">연락처</span>
+            <span style="font-size: 1.4rem; font-weight: 600; color: #ffffff;">{{ selectedMember.phone }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; background: rgba(255,255,255,0.03); border-radius: 0.8rem;">
+            <span style="font-size: 1.2rem; color: var(--text-color-3);">직책</span>
+            <span style="font-size: 1.4rem; font-weight: 600; color: #ffffff;">{{ selectedMember.role }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; background: rgba(255,255,255,0.03); border-radius: 0.8rem;">
+            <span style="font-size: 1.2rem; color: var(--text-color-3);">소속 조</span>
+            <span style="font-size: 1.4rem; font-weight: 600; color: #ffffff;">{{ selectedMember.group }}조</span>
+          </div>
+          <div v-if="selectedMember.birthDate" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; background: rgba(255,255,255,0.03); border-radius: 0.8rem;">
+            <span style="font-size: 1.2rem; color: var(--text-color-3);">생년월일</span>
+            <span style="font-size: 1.4rem; font-weight: 600; color: #ffffff;">{{ selectedMember.birthDate }}</span>
+          </div>
+          <div v-if="selectedMember.joinDate" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; background: rgba(255,255,255,0.03); border-radius: 0.8rem;">
+            <span style="font-size: 1.2rem; color: var(--text-color-3);">입사일</span>
+            <span style="font-size: 1.4rem; font-weight: 600; color: #ffffff;">{{ selectedMember.joinDate }}</span>
+          </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div v-else style="display: flex; flex-direction: column; gap: 1.6rem; margin-top: 1.6rem;">
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">이름</label>
+            <v-text-field v-model="selectedMember.name" variant="solo" hide-details autocomplete="off" style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">연락처</label>
+            <v-text-field v-model="selectedMember.phone" variant="solo" hide-details autocomplete="off" style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">생년월일</label>
+            <v-text-field v-model="selectedMember.birthDate" variant="solo" placeholder="예: 1990-01-01" hide-details autocomplete="off" style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">입사일</label>
+            <v-text-field v-model="selectedMember.joinDate" variant="solo" placeholder="예: 2020-05-10" hide-details autocomplete="off" style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">직책</label>
+            <v-select v-model="selectedMember.role" :items="['반장', '좌상', '조장', '조합원']" variant="solo" hide-details style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">소속 조</label>
+            <v-select v-model="selectedMember.group" :items="[1, 2, 3, 5, 6, 7, 8]" variant="solo" hide-details style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" />
+          </div>
+        </div>
+
+        <v-card-actions class="justify-end gap-2 px-0 pt-6">
+          <v-btn v-if="!isEditMode" style="background: rgba(224, 87, 128, 0.15) !important; border: 1px solid rgba(224, 87, 128, 0.3) !important; color: #e05780 !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="deleteMember">삭제</v-btn>
+          <v-btn style="background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; border-radius: 0.8rem; padding: 0.8rem 2rem !important; height: auto !important; min-width: 8rem !important; font-size: 1.3rem; font-weight: 600;" @click="isMemberDetailOpen = false">닫기</v-btn>
+          <v-btn v-if="isEditMode" style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="updateMember">저장</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

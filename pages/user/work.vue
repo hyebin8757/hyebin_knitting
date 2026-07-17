@@ -166,6 +166,16 @@ const saveWork = async () => {
   isWorkFormOpen.value = false;
 };
 
+const deleteWork = async (id: number) => {
+  if (!confirm('이 작업 안내를 삭제하시겠습니까?')) return;
+  await userStore.deleteWorkAction(id);
+};
+
+const deleteNotice = async (id: number) => {
+  if (!confirm('이 공지사항을 삭제하시겠습니까?')) return;
+  await userStore.deleteNoticeAction(id);
+};
+
 /************************************************************
  * Computed
  ************************************************************/
@@ -244,7 +254,7 @@ definePageMeta({
 
       <div class="work-item-list">
         <div v-for="work in (isWorkExpanded ? workList : (workList.length >= 3 ? workList.slice(0, 2) : workList))" :key="work.id" class="work-item" style="position: relative;">
-          <div class="work-header" :style="{ paddingRight: userRole === 'admin' ? '4rem' : '0' }">
+          <div class="work-header" :style="{ paddingRight: userRole === 'admin' ? '7.2rem' : '0' }">
             <span class="loc">{{ work.location }}</span>
             <span v-if="work.cargo" class="badge">{{ work.cargo }}</span>
           </div>
@@ -254,15 +264,14 @@ definePageMeta({
             <span>{{ work.safetyInstruction || work.safety_instruction }}</span>
           </div>
           
-          <v-btn
-            v-if="userRole === 'admin'"
-            icon
-            size="x-small"
-            style="position: absolute; top: 1.2rem; right: 1.2rem; background: rgba(255,255,255,0.05); color: #ffffff;"
-            @click.stop="openWorkEditor('edit', work)"
-          >
-            <i class="material-icons" style="font-size: 1.6rem;">edit</i>
-          </v-btn>
+          <div v-if="userRole === 'admin'" style="position: absolute; top: 1.2rem; right: 1.2rem; display: flex; gap: 0.4rem;">
+            <v-btn icon size="x-small" style="background: rgba(255,255,255,0.05); color: #ffffff;" @click.stop="openWorkEditor('edit', work)">
+              <i class="material-icons" style="font-size: 1.6rem;">edit</i>
+            </v-btn>
+            <v-btn icon size="x-small" style="background: rgba(224, 87, 128, 0.15); color: #e05780;" @click.stop="deleteWork(work.id)">
+              <i class="material-icons" style="font-size: 1.6rem;">delete</i>
+            </v-btn>
+          </div>
         </div>
       </div>
     </div>
@@ -291,21 +300,27 @@ definePageMeta({
           v-for="notice in (isNoticeExpanded ? notices : (notices.length >= 3 ? notices.slice(0, 2) : notices))"
           :key="notice.id"
           class="notice-item"
-          :style="{ position: 'relative', paddingRight: userRole === 'admin' ? '5rem' : '1.6rem' }"
+          :style="{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            gap: '0.4rem',
+            paddingRight: userRole === 'admin' ? '8.2rem' : '1.6rem'
+          }"
           @click="openNotice(notice)"
         >
-          <span class="nt-title">{{ notice.title }}</span>
-          <span class="nt-date">{{ notice.date }}</span>
+          <span class="nt-title" style="max-width: 100%; margin-right: 0;">{{ notice.title }}</span>
+          <span class="nt-date" style="margin-top: 0.2rem;">{{ notice.date }}</span>
           
-          <v-btn
-            v-if="userRole === 'admin'"
-            icon
-            size="x-small"
-            style="position: absolute; top: 50%; transform: translateY(-50%); right: 1.2rem; background: rgba(255,255,255,0.05); color: #ffffff;"
-            @click.stop="openNoticeEditor('edit', notice)"
-          >
-            <i class="material-icons" style="font-size: 1.6rem;">edit</i>
-          </v-btn>
+          <div v-if="userRole === 'admin'" style="position: absolute; top: 50%; transform: translateY(-50%); right: 1.2rem; display: flex; gap: 0.4rem;">
+            <v-btn icon size="x-small" style="background: rgba(255,255,255,0.05); color: #ffffff;" @click.stop="openNoticeEditor('edit', notice)">
+              <i class="material-icons" style="font-size: 1.6rem;">edit</i>
+            </v-btn>
+            <v-btn icon size="x-small" style="background: rgba(224, 87, 128, 0.15); color: #e05780;" @click.stop="deleteNotice(notice.id)">
+              <i class="material-icons" style="font-size: 1.6rem;">delete</i>
+            </v-btn>
+          </div>
         </div>
       </div>
     </div>

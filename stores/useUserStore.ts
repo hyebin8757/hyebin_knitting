@@ -321,6 +321,69 @@ export const useUserStore = defineStore( "user", () => {
     workers.value.push(localWorker);
   }
 
+  // 출근 취소 (관리자용)
+  const cancelCheckIn = async (name: string) => {
+    const supabase = getSupabase();
+    const idx = workers.value.findIndex(w => w.name === name);
+    if (idx !== -1) {
+      workers.value[idx].checkedIn = false;
+      workers.value[idx].status = 'none';
+      workers.value[idx].location = '';
+      if (supabase) {
+        try {
+          await supabase.from('workers').update({ checked_in: false, status: 'none', location: '' }).eq('name', name);
+        } catch (e) { console.error('Cancel check-in failed', e); }
+      }
+    }
+  }
+
+  // 조합원 정보 수정 (관리자용)
+  const updateWorkerAction = async (originalName: string, name: string, phone: string, role: string, group: number, birthDate: string, joinDate: string) => {
+    const supabase = getSupabase();
+    const idx = workers.value.findIndex(w => w.name === originalName);
+    if (idx !== -1) {
+      workers.value[idx] = { ...workers.value[idx], name, phone, role, group, birthDate, joinDate };
+      if (supabase) {
+        try {
+          await supabase.from('workers').update({ name, phone, role, group, birth_date: birthDate, join_date: joinDate }).eq('name', originalName);
+        } catch (e) { console.error('Update worker failed', e); }
+      }
+    }
+  }
+
+  // 조합원 삭제 (관리자용)
+  const deleteWorkerAction = async (name: string) => {
+    const supabase = getSupabase();
+    workers.value = workers.value.filter(w => w.name !== name);
+    if (supabase) {
+      try {
+        await supabase.from('workers').delete().eq('name', name);
+      } catch (e) { console.error('Delete worker failed', e); }
+    }
+  }
+
+  // 현장작업 삭제
+  const deleteWorkAction = async (id: number) => {
+    const supabase = getSupabase();
+    fieldWorks.value = fieldWorks.value.filter(w => w.id !== id);
+    if (supabase) {
+      try {
+        await supabase.from('field_works').delete().eq('id', id);
+      } catch (e) { console.error('Delete work failed', e); }
+    }
+  }
+
+  // 공지사항 삭제
+  const deleteNoticeAction = async (id: number) => {
+    const supabase = getSupabase();
+    notices.value = notices.value.filter(n => n.id !== id);
+    if (supabase) {
+      try {
+        await supabase.from('notices').delete().eq('id', id);
+      } catch (e) { console.error('Delete notice failed', e); }
+    }
+  }
+
   // 로그아웃
   const logout = () => {
     sessionStorage.removeItem( "user" );
@@ -345,6 +408,11 @@ export const useUserStore = defineStore( "user", () => {
     saveNoticeAction,
     saveWorkAction,
     addWorkerAction,
+    cancelCheckIn,
+    updateWorkerAction,
+    deleteWorkerAction,
+    deleteWorkAction,
+    deleteNoticeAction,
     logout,
   };
 }, {

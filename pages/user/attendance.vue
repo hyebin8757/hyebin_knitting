@@ -67,6 +67,7 @@ const isDeployDialogOpen = ref(false);
 const deployTarget = ref<"individual" | "group">("individual");
 const selectedWorkerName = ref("");
 const selectedGroupId = ref<number | null>(null);
+const selectedDeployLocation = ref('');
 
 // Mock attendance history (조합원 모드용)
 const attendanceHistory = ref<Record<string, "day" | "night" | "field" | "absent" | "leave">>({
@@ -140,22 +141,29 @@ const getFormattedDate = (date: Date): string => {
 const openDeployIndividual = (workerName: string) => {
   deployTarget.value = "individual";
   selectedWorkerName.value = workerName;
+  selectedDeployLocation.value = '';
   isDeployDialogOpen.value = true;
 };
 
 const openDeployGroup = (groupId: number) => {
   deployTarget.value = "group";
   selectedGroupId.value = groupId;
+  selectedDeployLocation.value = '';
   isDeployDialogOpen.value = true;
 };
 
-const executeDeployment = (loc: string) => {
+const confirmDeployment = () => {
+  if (isEmpty(selectedDeployLocation.value)) return;
   if (deployTarget.value === "individual") {
-    userStore.deployWorker(selectedWorkerName.value, loc);
+    userStore.deployWorker(selectedWorkerName.value, selectedDeployLocation.value);
   } else if (deployTarget.value === "group" && selectedGroupId.value !== null) {
-    userStore.deployGroup(selectedGroupId.value, loc);
+    userStore.deployGroup(selectedGroupId.value, selectedDeployLocation.value);
   }
   isDeployDialogOpen.value = false;
+};
+
+const cancelWorkerCheckIn = async (name: string) => {
+  await userStore.cancelCheckIn(name);
 };
 
 /************************************************************
@@ -473,28 +481,29 @@ definePageMeta({
       <div
         v-for="w in checkedInGroupWorkers"
         :key="w.name"
-        style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.2rem; padding: 1.6rem; display: flex; align-items: center; justify-content: space-between;"
+        style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.2rem; padding: 1.6rem; display: flex; flex-direction: column; gap: 1.4rem;"
       >
-        <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-          <div style="display: flex; align-items: center; gap: 0.8rem;">
-            <span style="font-size: 1.5rem; font-weight: 700; color: #ffffff;">{{ w.name }}</span>
-            <span
-              style="font-size: 1.1rem; padding: 0.2rem 0.6rem; border-radius: 0.4rem; font-weight: 600;"
-              :style="[
-                w.role === '반장' || w.role === '조장' ? 'background: rgba(249, 149, 0, 0.15); color: var(--secondary-darken-color-1);' :
-                w.role === '좌상' ? 'background: rgba(255, 181, 38, 0.15); color: var(--secondary-darken-color-2);' :
-                'background: rgba(136, 197, 255, 0.1); color: var(--primary-lighten-color-1);'
-              ]"
-            >
-              {{ w.role }}
-            </span>
+        <!-- 상단 행: 조합원 정보 및 현재 배치 정보 -->
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <div style="display: flex; align-items: center; gap: 0.8rem;">
+              <span style="font-size: 1.5rem; font-weight: 700; color: #ffffff;">{{ w.name }}</span>
+              <span
+                style="font-size: 1.1rem; padding: 0.2rem 0.6rem; border-radius: 0.4rem; font-weight: 600;"
+                :style="[
+                  w.role === '반장' || w.role === '조장' ? 'background: rgba(249, 149, 0, 0.15); color: var(--secondary-darken-color-1);' :
+                  w.role === '좌상' ? 'background: rgba(255, 181, 38, 0.15); color: var(--secondary-darken-color-2);' :
+                  'background: rgba(136, 197, 255, 0.1); color: var(--primary-lighten-color-1);'
+                ]"
+              >
+                {{ w.role }}
+              </span>
+            </div>
+            <span style="font-size: 1.1rem; color: var(--text-color-3);">{{ w.phone }}</span>
           </div>
-          <span style="font-size: 1.1rem; color: var(--text-color-3);">{{ w.phone }}</span>
-        </div>
 
-        <div style="display: flex; align-items: center; gap: 1.2rem;">
           <div style="text-align: right;">
-            <span style="font-size: 1.1rem; color: var(--text-color-3); display: block;">현재 배치</span>
+            <span style="font-size: 1.1rem; color: var(--text-color-3); display: block; margin-bottom: 0.2rem;">현재 배치</span>
             <span
               style="font-size: 1.3rem; font-weight: 700;"
               :style="{ color: w.location ? 'var(--system-green-color)' : 'var(--system-red-color)' }"
@@ -502,13 +511,23 @@ definePageMeta({
               {{ w.location || '미배치' }}
             </span>
           </div>
+        </div>
 
+        <!-- 하단 행: 관리자 전용 액션 버튼들 (1:1 너비 반응형 배치) -->
+        <div style="display: flex; gap: 0.8rem; width: 100%;">
           <v-btn
             size="small"
-            style="background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #ffffff !important; border-radius: 0.8rem; font-weight: 600; padding: 0.6rem 1.2rem !important; height: auto !important; min-width: 6.8rem !important; font-size: 1.2rem;"
+            style="flex: 1; background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #ffffff !important; border-radius: 0.8rem; font-weight: 600; padding: 0.6rem 0 !important; height: 3.6rem !important; min-width: auto !important; font-size: 1.2rem;"
             @click="openDeployIndividual(w.name)"
           >
             배치 지정
+          </v-btn>
+          <v-btn
+            size="small"
+            style="background: rgba(224, 87, 128, 0.15) !important; border: 1px solid rgba(224, 87, 128, 0.3) !important; color: #e05780 !important; border-radius: 0.8rem; font-weight: 600; padding: 0.6rem 0 !important; height: 3.6rem !important; min-width: auto !important; font-size: 1.2rem; flex: 1;"
+            @click="cancelWorkerCheckIn(w.name)"
+          >
+            출근 취소
           </v-btn>
         </div>
       </div>
@@ -531,17 +550,27 @@ definePageMeta({
           <v-btn
             v-for="loc in locationsList"
             :key="loc"
-            style="background: rgba(35, 102, 180, 0.15) !important; color: #88c5ff !important; font-weight: 700; border-radius: 1rem; border: 1px solid rgba(136, 197, 255, 0.2) !important; height: 4.4rem !important; font-size: 1.3rem !important; transition: all 0.2s;"
-            onmouseover="this.style.background='rgba(35, 102, 180, 0.3)'; this.style.borderColor='#88c5ff';"
-            onmouseout="this.style.background='rgba(35, 102, 180, 0.15)'; this.style.borderColor='rgba(136, 197, 255, 0.2)';"
-            @click="executeDeployment(loc)"
+            :style="{
+              background: selectedDeployLocation === loc ? 'rgba(35, 102, 180, 0.45) !important' : 'rgba(35, 102, 180, 0.12) !important',
+              color: selectedDeployLocation === loc ? '#ffffff !important' : '#88c5ff !important',
+              borderColor: selectedDeployLocation === loc ? '#88c5ff !important' : 'rgba(136, 197, 255, 0.15) !important',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              fontWeight: '700',
+              borderRadius: '1rem',
+              height: '4.4rem',
+              fontSize: '1.3rem',
+              transition: 'all 0.2s'
+            }"
+            @click="selectedDeployLocation = loc"
           >
             {{ loc }}
           </v-btn>
         </div>
 
-        <v-card-actions class="justify-end px-0 pt-6">
+        <v-card-actions class="justify-end gap-2 px-0 pt-6">
           <v-btn style="background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; border-radius: 0.8rem; padding: 0.8rem 2rem !important; height: auto !important; min-width: 8rem !important; font-size: 1.3rem; font-weight: 600;" @click="isDeployDialogOpen = false">닫기</v-btn>
+          <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; height: auto !important; min-width: 8rem !important; font-size: 1.3rem;" @click="confirmDeployment">변경</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
