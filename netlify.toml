@@ -3,4 +3,4 @@ command = "pwd && ls -al && yarn install && yarn generate && ls -al dist"
 publish = "dist"
 
 [context.production.environment]
-NODE_VERSION = "18"
+NODE_VERSION = "22"
