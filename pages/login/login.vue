@@ -54,30 +54,7 @@ const { isEmpty, isNotEmpty } = useUtil.typeValidation;
 const loginData = reactive({
   id: "",
   password: "",
-  menuList: [
-    {
-      title: "아이디 찾기",
-      event: (itemInfo: any) => {
-        findDialogToggle(itemInfo.title);
-      },
-    },
-    {
-      title: "비밀번호 찾기",
-      event: (itemInfo: any) => {
-        findDialogToggle(itemInfo.title);
-      },
-    },
-    {
-      title: "회원가입",
-      path: "/join",
-      event: (itemInfo: any) => {
-        if (isEmpty(itemInfo.path)) {
-          return;
-        }
-        router.push(itemInfo.path);
-      },
-    },
-  ],
+  menuList: [],
   findTitle: "",
   alertText: "",
 });
@@ -154,12 +131,13 @@ const loginValidation = () => {
   }
 
   // 2. 등록된 조합원 중 일치하는 계정 찾기
-  // ID = 이름, 비밀번호 = 휴대폰 번호 전체 혹은 뒷 4자리
-  const worker = userStore.workers.find(w => w.name === loginData.id);
+  // ID = 실명 혹은 설정된 loginId, 비밀번호 = 설정된 loginPassword 혹은 휴대폰 번호 뒷 4자리/전체
+  const worker = userStore.workers.find(w => w.name === loginData.id || w.loginId === loginData.id);
   if (worker) {
     const rawPhone = worker.phone.replace(/[^0-9]/g, '');
-    const inputPassword = loginData.password.replace(/[^0-9]/g, '');
-    if (rawPhone === inputPassword || rawPhone.slice(-4) === inputPassword) {
+    const defaultPassword = rawPhone.slice(-4);
+    const correctPassword = worker.loginPassword || defaultPassword;
+    if (loginData.password === correctPassword || rawPhone === loginData.password) {
       return true;
     }
   }

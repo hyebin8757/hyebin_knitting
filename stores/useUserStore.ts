@@ -34,6 +34,8 @@ export interface WorkerModel {
   location: string;
   birthDate?: string;
   joinDate?: string;
+  loginId?: string;
+  loginPassword?: string;
 }
 
 export interface NoticeModel {
@@ -83,7 +85,9 @@ export const useUserStore = defineStore( "user", () => {
           status: w.status,
           location: w.location || "",
           birthDate: w.birth_date || "",
-          joinDate: w.join_date || ""
+          joinDate: w.join_date || "",
+          loginId: w.login_id || "",
+          loginPassword: w.login_password || ""
         }));
       }
 
@@ -141,13 +145,28 @@ export const useUserStore = defineStore( "user", () => {
   }
 
   // ID/비밀번호 변경 액션 (최초 1회 제한용)
-  const changeCredentials = (newId: string, newPassword: string) => {
-    const userInfo: UserModel = {
-      id: newId,
-      password: newPassword,
-      hasChangedCredentials: true
-    };
-    setUserInfo(userInfo);
+  const changeCredentials = async (newId: string, newPassword: string) => {
+    const supabase = getSupabase();
+    const currentName = loggedInUser.value?.name;
+    if (currentName) {
+      const idx = workers.value.findIndex(w => w.name === currentName);
+      if (idx !== -1) {
+        workers.value[idx].loginId = newId;
+        workers.value[idx].loginPassword = newPassword;
+        if (supabase) {
+          try {
+            await supabase.from('workers').update({
+              login_id: newId,
+              login_password: newPassword
+            }).eq('name', currentName);
+          } catch (e) {
+            console.error("Update credentials failed", e);
+          }
+        }
+        loggedInUser.value.loginId = newId;
+        loggedInUser.value.loginPassword = newPassword;
+      }
+    }
   }
 
   // 조합원 개별 배치 지정
@@ -419,6 +438,31 @@ export const useUserStore = defineStore( "user", () => {
     }
   }
 
+  // 조합원 로그인 정보 초기화 (관리자용)
+  const resetWorkerCredentials = async (workerName: string) => {
+    const supabase = getSupabase();
+    const idx = workers.value.findIndex(w => w.name === workerName);
+    if (idx !== -1) {
+      const worker = workers.value[idx];
+      const defaultId = worker.name;
+      const defaultPassword = worker.phone.replace(/[^0-9]/g, '').slice(-4);
+      
+      worker.loginId = defaultId;
+      worker.loginPassword = defaultPassword;
+      
+      if (supabase) {
+        try {
+          await supabase.from('workers').update({
+            login_id: defaultId,
+            login_password: defaultPassword
+          }).eq('name', workerName);
+        } catch (e) {
+          console.error("Reset worker credentials failed", e);
+        }
+      }
+    }
+  }
+
   // 로그아웃
   const logout = () => {
     sessionStorage.removeItem( "user" );
@@ -452,6 +496,7 @@ export const useUserStore = defineStore( "user", () => {
     attendanceRecords,
     checkInWorker,
     getTodayStr,
+    resetWorkerCredentials,
     logout,
   };
 }, {

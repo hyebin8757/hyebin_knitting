@@ -181,6 +181,13 @@ const executeDelete = async () => {
   isMemberDetailOpen.value = false;
 };
 
+const resetCredentials = async () => {
+  await userStore.resetWorkerCredentials(selectedMember.originalName);
+  alertText.value = `${selectedMember.name} 조합원의 로그인 정보가 실명과 전화번호 뒷자리 4자리로 초기화되었습니다.`;
+  isAlertOpen.value = true;
+  isMemberDetailOpen.value = false;
+};
+
 /************************************************************
  * Computed
  ************************************************************/
@@ -425,6 +432,7 @@ definePageMeta({
 
         <v-card-actions class="justify-end gap-2 px-0 pt-6">
           <v-btn v-if="!isEditMode" style="background: rgba(224, 87, 128, 0.15) !important; border: 1px solid rgba(224, 87, 128, 0.3) !important; color: #e05780 !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="deleteMember">삭제</v-btn>
+          <v-btn v-if="!isEditMode" style="background: rgba(255, 153, 0, 0.15) !important; border: 1px solid rgba(255, 153, 0, 0.3) !important; color: #ff9900 !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="resetCredentials">정보 초기화</v-btn>
           <v-btn style="background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; border-radius: 0.8rem; padding: 0.8rem 2rem !important; height: auto !important; min-width: 8rem !important; font-size: 1.3rem; font-weight: 600;" @click="isMemberDetailOpen = false">닫기</v-btn>
           <v-btn v-if="isEditMode" style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="updateMember">저장</v-btn>
         </v-card-actions>
