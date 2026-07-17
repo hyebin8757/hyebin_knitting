@@ -99,6 +99,13 @@ const nuxtConfig: any = {
     "@nuxtjs/supabase",
   ],
 
+  runtimeConfig: {
+    public: {
+      supabaseUrl: cleanEnvValue(process.env.SUPABASE_URL),
+      supabaseKey: cleanEnvValue(process.env.SUPABASE_KEY),
+    }
+  },
+
   supabase: {
     url: cleanEnvValue(process.env.SUPABASE_URL),
     key: cleanEnvValue(process.env.SUPABASE_KEY),

@@ -6,8 +6,12 @@ import { useSupabaseClient } from "#imports";
 /** Supabase 클라이언트를 안전하게 획득 – Nuxt 컨텍스트가 없으면 null 반환 */
 const getSupabase = () => {
   try {
-    return useSupabaseClient();
-  } catch {
+    const client = useSupabaseClient();
+    // 만약 주소나 키가 제대로 주입되지 않았다면 콘솔에 경고를 띄웁니다.
+    if (!client) console.error("Supabase 클라이언트 생성 실패: 설정 확인 필요");
+    return client;
+  } catch (e) {
+    console.error("Nuxt context 없음 또는 Supabase 에러:", e);
     return null;
   }
 };
