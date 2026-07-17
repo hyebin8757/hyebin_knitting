@@ -147,19 +147,21 @@ const openWorkEditor = (mode: "add" | "edit", item?: WorkItem) => {
 };
 
 const saveWork = async () => {
-  if (
-    isEmpty(workForm.location) ||
-    isEmpty(workForm.cargo) ||
-    isEmpty(workForm.details)
-  )
+  if (isEmpty(workForm.location)) {
+    alert("작업 위치를 입력해주세요.");
     return;
+  }
+  if (isEmpty(workForm.details)) {
+    alert("작업 상세를 입력해주세요.");
+    return;
+  }
 
   await userStore.saveWorkAction(
     workForm.id,
     workForm.location,
-    workForm.cargo,
+    workForm.cargo || "",
     workForm.details,
-    workForm.safetyInstruction
+    workForm.safetyInstruction || ""
   );
   isWorkFormOpen.value = false;
 };
@@ -244,12 +246,12 @@ definePageMeta({
         <div v-for="work in (isWorkExpanded ? workList : (workList.length >= 3 ? workList.slice(0, 2) : workList))" :key="work.id" class="work-item" style="position: relative;">
           <div class="work-header" :style="{ paddingRight: userRole === 'admin' ? '4rem' : '0' }">
             <span class="loc">{{ work.location }}</span>
-            <span class="badge">{{ work.cargo }}</span>
+            <span v-if="work.cargo" class="badge">{{ work.cargo }}</span>
           </div>
           <div class="desc">{{ work.details }}</div>
-          <div class="safety-rules">
+          <div v-if="work.safetyInstruction || work.safety_instruction" class="safety-rules">
             <i class="material-icons">warning</i>
-            <span>{{ work.safetyInstruction }}</span>
+            <span>{{ work.safetyInstruction || work.safety_instruction }}</span>
           </div>
           
           <v-btn
@@ -371,7 +373,7 @@ definePageMeta({
         
         <div style="display: flex; flex-direction: column; gap: 1.6rem; margin-top: 1.6rem;">
           <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label style="font-size: 1.2rem; color: var(--text-color-3);">작업 위치</label>
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">작업 위치 <em style="color: var(--system-red-color); font-style: normal;">*</em></label>
             <v-text-field
               v-model="workForm.location"
               variant="solo"
@@ -393,7 +395,7 @@ definePageMeta({
             />
           </div>
           <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label style="font-size: 1.2rem; color: var(--text-color-3);">작업 상세</label>
+            <label style="font-size: 1.2rem; color: var(--text-color-3);">작업 상세 <em style="color: var(--system-red-color); font-style: normal;">*</em></label>
             <v-textarea
               v-model="workForm.details"
               variant="solo"

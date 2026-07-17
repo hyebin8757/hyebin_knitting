@@ -64,6 +64,7 @@ const activeTab = ref(0);
 // 관리자 배치 이동 다이얼로그용
 const isReassignDialogOpen = ref(false);
 const selectedWorkerName = ref("");
+const selectedLocation = ref("");
 
 /************************************************************
  * Provide / inject Data
@@ -76,11 +77,14 @@ const windowWidth = inject("windowWidth") as any;
 const openReassignment = (workerName: string) => {
   if (userRole.value !== "admin") return;
   selectedWorkerName.value = workerName;
+  const worker = userStore.workers.find(w => w.name === workerName);
+  selectedLocation.value = worker ? worker.location : "";
   isReassignDialogOpen.value = true;
 };
 
-const executeReassignment = (loc: string) => {
-  userStore.deployWorker(selectedWorkerName.value, loc);
+const confirmReassignment = async () => {
+  if (isEmpty(selectedLocation.value)) return;
+  await userStore.deployWorker(selectedWorkerName.value, selectedLocation.value);
   isReassignDialogOpen.value = false;
 };
 
@@ -230,17 +234,27 @@ definePageMeta({
           <v-btn
             v-for="loc in locationsList"
             :key="loc"
-            style="background: rgba(35, 102, 180, 0.15) !important; color: #88c5ff !important; font-weight: 700; border-radius: 1rem; border: 1px solid rgba(136, 197, 255, 0.2) !important; height: 4.4rem !important; font-size: 1.3rem !important; transition: all 0.2s;"
-            onmouseover="this.style.background='rgba(35, 102, 180, 0.3)'; this.style.borderColor='#88c5ff';"
-            onmouseout="this.style.background='rgba(35, 102, 180, 0.15)'; this.style.borderColor='rgba(136, 197, 255, 0.2)';"
-            @click="executeReassignment(loc)"
+            :style="{
+              background: selectedLocation === loc ? 'rgba(35, 102, 180, 0.45) !important' : 'rgba(35, 102, 180, 0.12) !important',
+              color: selectedLocation === loc ? '#ffffff !important' : '#88c5ff !important',
+              borderColor: selectedLocation === loc ? '#88c5ff !important' : 'rgba(136, 197, 255, 0.15) !important',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              fontWeight: '700',
+              borderRadius: '1rem',
+              height: '4.4rem',
+              fontSize: '1.3rem',
+              transition: 'all 0.2s'
+            }"
+            @click="selectedLocation = loc"
           >
             {{ loc }}
           </v-btn>
         </div>
 
-        <v-card-actions class="justify-end px-0 pt-6">
+        <v-card-actions class="justify-end gap-2 px-0 pt-6">
           <v-btn style="background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; border-radius: 0.8rem; padding: 0.8rem 2rem !important; height: auto !important; min-width: 8rem !important; font-size: 1.3rem; font-weight: 600;" @click="isReassignDialogOpen = false">닫기</v-btn>
+          <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; height: auto !important; min-width: 8rem !important; font-size: 1.3rem;" @click="confirmReassignment">변경</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
