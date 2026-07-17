@@ -28,8 +28,6 @@ export interface NoticeModel {
 }
 
 export const useUserStore = defineStore( "user", () => {
-  const supabase = useSupabaseClient();
-
   // 로그인 유무 확인
   const isLogin = ref<boolean>( false );
   
@@ -101,6 +99,7 @@ export const useUserStore = defineStore( "user", () => {
 
   // Supabase 데이터 초기 로드 및 시딩(자동 데이터베이스 생성 테이블 확인용)
   const fetchAllData = async () => {
+    const supabase = useSupabaseClient();
     try {
       // 1. 조합원 조회
       const { data: dbWorkers, error: errWorkers } = await supabase.from("workers").select("*");
@@ -184,6 +183,7 @@ export const useUserStore = defineStore( "user", () => {
 
   // 조합원 개별 배치 지정
   const deployWorker = async (name: string, location: string) => {
+    const supabase = useSupabaseClient();
     const idx = workers.value.findIndex(w => w.name === name);
     if (idx !== -1) {
       workers.value[idx].location = location;
@@ -205,6 +205,7 @@ export const useUserStore = defineStore( "user", () => {
 
   // 조별 단체 배치 지정
   const deployGroup = async (groupId: number, location: string) => {
+    const supabase = useSupabaseClient();
     workers.value.forEach(w => {
       if (w.group === groupId && w.checkedIn) {
         w.location = location;
@@ -219,6 +220,7 @@ export const useUserStore = defineStore( "user", () => {
 
   // 공지사항 데이터베이스 추가/수정 CRUD 액션
   const saveNoticeAction = async (id: number | null, title: string, content: string) => {
+    const supabase = useSupabaseClient();
     const todayStr = new Date().toISOString().split("T")[0];
     if (id === null) {
       const { data } = await supabase.from("notices").insert([{ title, content, date: todayStr }]).select();
@@ -241,6 +243,7 @@ export const useUserStore = defineStore( "user", () => {
 
   // 현장작업 데이터베이스 추가/수정 CRUD 액션
   const saveWorkAction = async (id: number | null, location: string, cargo: string, details: string, safetyInstruction: string) => {
+    const supabase = useSupabaseClient();
     if (id === null) {
       const { data } = await supabase.from("field_works").insert([{ location, cargo, details, safety_instruction: safetyInstruction }]).select();
       if (data && data.length > 0) {
@@ -263,6 +266,7 @@ export const useUserStore = defineStore( "user", () => {
 
   // 신규 조합원 등록 액션 (어드민용)
   const addWorkerAction = async (name: string, phone: string, role: string, group: number) => {
+    const supabase = useSupabaseClient();
     const newWorker = {
       name,
       role,
