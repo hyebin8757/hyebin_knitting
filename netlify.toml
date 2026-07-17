@@ -1,6 +1,6 @@
 [build]
-command = "pwd && ls -al && yarn install --ignore-engines && yarn generate && ls -al dist"
-publish = "dist"
+command = "yarn install --ignore-engines && yarn generate"
+publish = ".output/public"
 
 [context.production.environment]
 NODE_VERSION = "22"
