@@ -39,7 +39,7 @@ const emit = defineEmits<{
   /**
    *
    */
-  ( eventName: "" ): void,
+  (eventName: ""): void;
 }>();
 
 /************************************************************
@@ -59,8 +59,8 @@ const emit = defineEmits<{
  ************************************************************/
 // 로그인 페이지로 이동
 const onLogin = () => {
-  router.push("/login");
-}
+  router.push("/login/login");
+};
 
 /************************************************************
  * Watch
@@ -69,32 +69,27 @@ const onLogin = () => {
 /************************************************************
  * Mounted
  ************************************************************/
-onMounted( () => {
-
-})
+onMounted(() => {});
 
 /************************************************************
  * Layout
  ************************************************************/
-
 </script>
 
 <template>
-  <div :class="cx('header', HeaderStyle.Default )">
-    <div :class="cx('left', HeaderStyle.Left )">
+  <div :class="cx('header', HeaderStyle.Default)">
+    <div :class="cx('left', HeaderStyle.Left)"></div>
 
-    </div>
-
-    <div :class="cx('center', HeaderStyle.Center )">
-      <div :class="cx( HeaderStyle.Title )">
+    <div :class="cx('center', HeaderStyle.Center)">
+      <div :class="cx(HeaderStyle.Title)">
         <span>인천 항운 노조 양육반 관리 시스템</span>
       </div>
     </div>
 
-    <div :class="cx('right', HeaderStyle.Right )">
+    <div :class="cx('right', HeaderStyle.Right)">
       <v-btn
         v-if="!isLogin"
-        :class="cx( 'login-btn' )"
+        :class="cx('login-btn')"
         :ripple="false"
         variant="text"
         @click="onLogin"
@@ -104,7 +99,7 @@ onMounted( () => {
 
       <v-btn
         v-if="isLogin"
-        :class="cx( 'logout-btn' )"
+        :class="cx('logout-btn')"
         :ripple="false"
         variant="text"
         @click="logout"

@@ -123,6 +123,7 @@ export const WorkStyle = {
 
       .work-header {
         ${StyleUtils.FlexUtils("center", "space-between")};
+        gap: 0.6rem;
         .loc {
           font-size: 1.5rem;
           font-weight: 700;

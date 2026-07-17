@@ -270,7 +270,7 @@ definePageMeta({
 
       <div class="work-item-list">
         <div v-for="work in (isWorkExpanded ? workList : (workList.length >= 3 ? workList.slice(0, 2) : workList))" :key="work.id" class="work-item" style="position: relative;">
-          <div class="work-header" style="padding-right: 4rem;">
+          <div class="work-header" :style="{ paddingRight: userRole === 'admin' ? '4rem' : '0' }">
             <span class="loc">{{ work.location }}</span>
             <span class="badge">{{ work.cargo }}</span>
           </div>
@@ -317,7 +317,7 @@ definePageMeta({
           v-for="notice in (isNoticeExpanded ? notices : (notices.length >= 3 ? notices.slice(0, 2) : notices))"
           :key="notice.id"
           class="notice-item"
-          style="position: relative; padding-right: 5rem;"
+          :style="{ position: 'relative', paddingRight: userRole === 'admin' ? '5rem' : '1.6rem' }"
           @click="openNotice(notice)"
         >
           <span class="nt-title">{{ notice.title }}</span>

@@ -3,7 +3,7 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 
-router.push( "/main");
+router.push("/login/login");
 
 </script>
 <template>

@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, inject, computed, reactive } from "vue";
+import {
+  onMounted,
+  onBeforeUnmount,
+  ref,
+  inject,
+  computed,
+  reactive,
+} from "vue";
 import { cx } from "@emotion/css";
 import { useRoute, useRouter } from "vue-router";
 import { definePageMeta } from "~/.nuxt/imports";
@@ -82,7 +89,7 @@ const handleLogout = () => {
 const confirmLogout = () => {
   isLogoutConfirmOpen.value = false;
   userStore.setLogin(false);
-  router.push("/login");
+  router.push("/login/login");
 };
 
 const triggerChange = () => {
@@ -91,7 +98,7 @@ const triggerChange = () => {
     isErrorOpen.value = true;
     return;
   }
-  
+
   if (newCredentials.id.length < 4 || newCredentials.password.length < 4) {
     errorText.value = "아이디와 비밀번호는 각각 최소 4글자 이상이어야 합니다.";
     isErrorOpen.value = true;
@@ -103,14 +110,14 @@ const triggerChange = () => {
 
 const confirmChange = () => {
   isConfirmOpen.value = false;
-  
+
   // 변경 실행
   userStore.changeCredentials(newCredentials.id, newCredentials.password);
-  
+
   // 로컬 바인딩 업데이트
   loginUser.value = userStore.getLoginUser();
   isSuccessOpen.value = true;
-  
+
   // 폼 비우기
   newCredentials.id = "";
   newCredentials.password = "";
@@ -165,7 +172,10 @@ definePageMeta({
     </div>
 
     <!-- ID/Password One-time Change Area -->
-    <div v-if="userRole !== 'admin'" :class="cx('change-credentials-card', MypageStyle.ChangeCard)">
+    <div
+      v-if="userRole !== 'admin'"
+      :class="cx('change-credentials-card', MypageStyle.ChangeCard)"
+    >
       <div class="title">
         <i class="material-icons">lock_reset</i>
         <span>로그인 정보 변경</span>
@@ -182,7 +192,8 @@ definePageMeta({
         <div class="warning-box">
           <i class="material-icons">info_outline</i>
           <span>
-            ID/비밀번호 변경은 <strong>최초 1회만 가능</strong>하며, 변경 후에는 안전을 위해 다시 수정하실 수 없습니다.
+            ID/비밀번호 변경은 <strong>최초 1회만 가능</strong>하며, 변경 후에는
+            안전을 위해 다시 수정하실 수 없습니다.
           </span>
         </div>
 
@@ -216,74 +227,254 @@ definePageMeta({
 
     <!-- Action Areas (Logout Button) -->
     <div :class="cx('logout-container', MypageStyle.LogoutArea)">
-      <v-btn class="logout-btn" @click="handleLogout">
-        로그아웃
-      </v-btn>
+      <v-btn class="logout-btn" @click="handleLogout"> 로그아웃 </v-btn>
     </div>
 
     <!-- Confirmation Warning Alert Dialog -->
     <v-dialog v-model="isConfirmOpen" max-width="320">
-      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
-        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--secondary-darken-color-1); display: flex; align-items: center; gap: 0.8rem;">
+      <v-card
+        class="pa-6"
+        style="
+          background: #0d1e33;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 1.6rem;
+          color: #ffffff;
+        "
+      >
+        <v-card-title
+          class="text-h6 font-weight-bold px-0"
+          style="
+            color: var(--secondary-darken-color-1);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+          "
+        >
           <i class="material-icons">warning</i>
           <span>변경 확인 알림</span>
         </v-card-title>
-        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.8);">
+        <v-card-text
+          class="py-4 px-0"
+          style="
+            font-size: 1.4rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+          "
+        >
           ID와 비밀번호를 변경하시겠습니까?<br />
           변경 완료 후에는 <strong>추가 변경이 절대 불가능</strong>합니다.
         </v-card-text>
         <v-card-actions class="justify-end gap-2 px-0 pt-4">
-          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isConfirmOpen = false">취소</v-btn>
-          <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="confirmChange">확인 및 변경</v-btn>
+          <v-btn
+            variant="text"
+            style="
+              color: rgba(255, 255, 255, 0.6);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              border-radius: 0.8rem;
+              padding: 0.8rem 2rem !important;
+              min-width: 8rem !important;
+              height: auto !important;
+              font-size: 1.4rem;
+            "
+            @click="isConfirmOpen = false"
+            >취소</v-btn
+          >
+          <v-btn
+            style="
+              background: linear-gradient(
+                135deg,
+                var(--primary-darken-color-1) 0%,
+                #153c6c 100%
+              ) !important;
+              color: white !important;
+              border-radius: 0.8rem;
+              font-weight: 600;
+              padding: 0.8rem 2rem !important;
+              min-width: 8rem !important;
+              height: auto !important;
+              font-size: 1.4rem;
+            "
+            @click="confirmChange"
+            >확인 및 변경</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Success Alert Dialog -->
     <v-dialog v-model="isSuccessOpen" max-width="320">
-      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
-        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--system-green-color); display: flex; align-items: center; gap: 0.8rem;">
+      <v-card
+        class="pa-6"
+        style="
+          background: #0d1e33;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 1.6rem;
+          color: #ffffff;
+        "
+      >
+        <v-card-title
+          class="text-h6 font-weight-bold px-0"
+          style="
+            color: var(--system-green-color);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+          "
+        >
           <i class="material-icons">check_circle_outline</i>
           <span>변경 완료</span>
         </v-card-title>
-        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.8);">
+        <v-card-text
+          class="py-4 px-0"
+          style="
+            font-size: 1.4rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+          "
+        >
           아이디 및 비밀번호 변경이 성공적으로 완료되었습니다.
         </v-card-text>
         <v-card-actions class="justify-end px-0 pt-4">
-          <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isSuccessOpen = false">확인</v-btn>
+          <v-btn
+            style="
+              background: linear-gradient(
+                135deg,
+                var(--primary-darken-color-1) 0%,
+                #153c6c 100%
+              ) !important;
+              color: white !important;
+              border-radius: 0.8rem;
+              font-weight: 600;
+              padding: 0.8rem 2rem !important;
+              min-width: 8rem !important;
+              height: auto !important;
+              font-size: 1.4rem;
+            "
+            @click="isSuccessOpen = false"
+            >확인</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Error Alert Dialog -->
     <v-dialog v-model="isErrorOpen" max-width="320">
-      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
-        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--system-red-color); display: flex; align-items: center; gap: 0.8rem;">
+      <v-card
+        class="pa-6"
+        style="
+          background: #0d1e33;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 1.6rem;
+          color: #ffffff;
+        "
+      >
+        <v-card-title
+          class="text-h6 font-weight-bold px-0"
+          style="
+            color: var(--system-red-color);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+          "
+        >
           <i class="material-icons">error_outline</i>
           <span>입력 오류</span>
         </v-card-title>
-        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.8);">
+        <v-card-text
+          class="py-4 px-0"
+          style="
+            font-size: 1.4rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+          "
+        >
           {{ errorText }}
         </v-card-text>
         <v-card-actions class="justify-end px-0 pt-4">
-          <v-btn style="background: rgba(255, 255, 255, 0.1) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isErrorOpen = false">확인</v-btn>
+          <v-btn
+            style="
+              background: rgba(255, 255, 255, 0.1) !important;
+              color: white !important;
+              border-radius: 0.8rem;
+              font-weight: 600;
+              padding: 0.8rem 2rem !important;
+              min-width: 8rem !important;
+              height: auto !important;
+              font-size: 1.4rem;
+            "
+            @click="isErrorOpen = false"
+            >확인</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Logout Confirmation Dialog -->
     <v-dialog v-model="isLogoutConfirmOpen" max-width="320">
-      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
-        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--system-red-color); display: flex; align-items: center; gap: 0.8rem;">
+      <v-card
+        class="pa-6"
+        style="
+          background: #0d1e33;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 1.6rem;
+          color: #ffffff;
+        "
+      >
+        <v-card-title
+          class="text-h6 font-weight-bold px-0"
+          style="
+            color: var(--system-red-color);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+          "
+        >
           <i class="material-icons">exit_to_app</i>
           <span>로그아웃 확인</span>
         </v-card-title>
-        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.8);">
+        <v-card-text
+          class="py-4 px-0"
+          style="
+            font-size: 1.4rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+          "
+        >
           정말 로그아웃 하시겠습니까?
         </v-card-text>
         <v-card-actions class="justify-end gap-2 px-0 pt-4">
-          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isLogoutConfirmOpen = false">취소</v-btn>
-          <v-btn style="background: linear-gradient(135deg, rgba(225, 60, 60, 0.8) 0%, rgba(180, 30, 30, 0.8) 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="confirmLogout">로그아웃</v-btn>
+          <v-btn
+            variant="text"
+            style="
+              color: rgba(255, 255, 255, 0.6);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              border-radius: 0.8rem;
+              padding: 0.8rem 2rem !important;
+              min-width: 8rem !important;
+              height: auto !important;
+              font-size: 1.4rem;
+            "
+            @click="isLogoutConfirmOpen = false"
+            >취소</v-btn
+          >
+          <v-btn
+            style="
+              background: linear-gradient(
+                135deg,
+                rgba(225, 60, 60, 0.8) 0%,
+                rgba(180, 30, 30, 0.8) 100%
+              ) !important;
+              color: white !important;
+              border-radius: 0.8rem;
+              font-weight: 600;
+              padding: 0.8rem 2rem !important;
+              min-width: 8rem !important;
+              height: auto !important;
+              font-size: 1.4rem;
+            "
+            @click="confirmLogout"
+            >로그아웃</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>

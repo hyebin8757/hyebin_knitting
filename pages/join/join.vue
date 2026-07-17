@@ -76,7 +76,7 @@ const joinBooleanData = reactive({
  ************************************************************/
 // 로그인 페이지 이동
 const onLogin = () => {
-  router.push("/login");
+  router.push("/login/login");
 };
 
 // 생년월일 현재로 날짜 설정
@@ -146,7 +146,7 @@ const joinValidation = () => {
 };
 
 const onClose = () => {
-  router.push("/login");
+  router.push("/login/login");
 };
 
 /************************************************************
@@ -263,10 +263,7 @@ definePageMeta({
       </div>
 
       <div :class="cx(JoinStyle.JoinBtn)">
-        <BaseBtn
-          :class="cx( 'close-btn' )"
-          @on-click="onClose"
-        >
+        <BaseBtn :class="cx('close-btn')" @on-click="onClose">
           <span>취소</span>
         </BaseBtn>
 

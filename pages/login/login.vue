@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { reactive, computed, watch, onMounted, onBeforeUnmount, ref } from "vue";
+import {
+  reactive,
+  computed,
+  watch,
+  onMounted,
+  onBeforeUnmount,
+  ref,
+} from "vue";
 import { cx } from "@emotion/css";
 import { useRouter } from "vue-router";
 import { definePageMeta } from "~/.nuxt/imports";
@@ -97,12 +104,7 @@ const moveHome = () => {
 };
 
 const onLogin = async () => {
-  const isCheck = loginValidation();
-
-  if (!isCheck) {
-    return (loginBooleanData.alert = true);
-  }
-
+  // 데모 테스트 편의를 위해 아이디/비밀번호 정보 없이도 바로 로그인을 통과시킵니다.
   setLogin(true);
   moveHome();
 };
@@ -138,7 +140,8 @@ const loginValidation = () => {
     return false;
   } else if (
     isNotEmpty(loginUser) &&
-    (loginData.id !== loginUser?.id || loginData.password !== loginUser?.password)
+    (loginData.id !== loginUser?.id ||
+      loginData.password !== loginUser?.password)
   ) {
     loginData.alertText =
       "아이디 혹은 비밀번호를 잘못 입력하였습니다. 입력하신 내용을 다시 확인해주세요.";
@@ -186,8 +189,7 @@ onMounted(() => {
     <div :class="cx(LoginStyle.Container)">
       <div :class="cx('form-card', LoginStyle.FormCard)">
         <div :class="cx('title', LoginStyle.Title)">
-          인천노조 시스템
-          <span>조합원 모바일 로그인</span>
+          인천 양육반
         </div>
 
         <div :class="cx(LoginStyle.Content)">
@@ -196,7 +198,6 @@ onMounted(() => {
               <div :class="cx(LoginStyle.InfoItem)">
                 <div class="is-flex">
                   <span class="title">아이디</span>
-                  <em>* testUser / 0000</em>
                 </div>
                 <v-text-field
                   v-model="loginData.id"
@@ -206,7 +207,10 @@ onMounted(() => {
                 />
               </div>
               <div :class="cx(LoginStyle.InfoItem)">
-                <span class="title">비밀번호</span>
+                <div class="is-flex">
+                  <span class="title">비밀번호</span>
+                </div>
+
                 <v-text-field
                   v-model="loginData.password"
                   variant="solo"
@@ -216,17 +220,16 @@ onMounted(() => {
                   "
                   :type="loginBooleanData.passwordShow ? 'text' : 'password'"
                   @click:append="
-                    loginBooleanData.passwordShow = !loginBooleanData.passwordShow
+                    loginBooleanData.passwordShow =
+                      !loginBooleanData.passwordShow
                   "
                   hide-details
                 />
               </div>
             </div>
-            
+
             <div :class="cx(LoginStyle.LoginBtn)">
-              <v-btn type="submit">
-                로그인
-              </v-btn>
+              <v-btn type="submit"> 로그인 </v-btn>
             </div>
           </form>
 

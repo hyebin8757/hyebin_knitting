@@ -96,8 +96,23 @@ export const LoginStyle = {
       border: 1px solid rgba(255, 255, 255, 0.08) !important;
       border-radius: 1rem !important;
       
+      .v-field {
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+      
+      .v-field__overlay {
+        display: none !important;
+      }
+      
       input {
         color: var(--white-color) !important;
+        background: transparent !important;
+      }
+      
+      i, .v-icon {
+        color: #ffffff !important;
+        opacity: 0.8 !important;
       }
     }
   `,
