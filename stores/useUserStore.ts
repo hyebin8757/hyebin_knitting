@@ -144,9 +144,21 @@ export const useUserStore = defineStore( "user", () => {
       // 2. 현장작업 조회
       const { data: dbFW, error: errFW } = await supabase.from("field_works").select("*").order("id", { ascending: false });
       if (dbFW && dbFW.length > 0) {
-        fieldWorks.value = dbFW;
+        fieldWorks.value = dbFW.map(f => ({
+          id: f.id,
+          location: f.location,
+          cargo: f.cargo,
+          details: f.details,
+          safetyInstruction: f.safety_instruction || ""
+        }));
       } else if (!errFW) {
-        await supabase.from("field_works").insert(fieldWorks.value);
+        // 데이터베이스 컬럼명인 safety_instruction으로 매칭하고 자동 생성되는 id는 제외합니다.
+        await supabase.from("field_works").insert(fieldWorks.value.map(w => ({
+          location: w.location,
+          cargo: w.cargo,
+          details: w.details,
+          safety_instruction: w.safetyInstruction || ""
+        })));
       }
 
       // 3. 공지사항 조회
@@ -154,7 +166,12 @@ export const useUserStore = defineStore( "user", () => {
       if (dbNotices && dbNotices.length > 0) {
         notices.value = dbNotices;
       } else if (!errNotices) {
-        await supabase.from("notices").insert(notices.value);
+        // 데이터베이스가 id를 자동으로 관리하므로 id를 빼고 본문 데이터만 밀어 넣습니다.
+        await supabase.from("notices").insert(notices.value.map(n => ({
+          title: n.title,
+          content: n.content,
+          date: n.date
+        })));
       }
     } catch (e) {
       console.warn("Supabase 연결 실패 혹은 테이블 없음 - 로컬 상태 유지", e);
