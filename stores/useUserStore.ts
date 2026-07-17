@@ -3,22 +3,10 @@ import { defineStore } from "pinia";
 import CryptoJS from "crypto-js";
 import { useSupabaseClient } from "#imports";
 
+const supabaseInstance = ref<any>(null);
+
 const getSupabase = () => {
-  try {
-    // 1. nuxt.config.ts에 등록한 runtimeConfig 설정을 안전하게 가져옵니다.
-    const config = useRuntimeConfig();
-    
-    // 2. 만약 Netlify 환경 변수가 제대로 주입되었다면 Nuxt 내장 client를 반환합니다.
-    if (config.public.supabaseUrl && config.public.supabaseKey) {
-      return useSupabaseClient();
-    }
-    
-    console.error("Netlify 환경 변수 주입 누락 확인 필요");
-    return null;
-  } catch (e) {
-    console.error("Nuxt 컨텍스트 에러:", e);
-    return null;
-  }
+  return supabaseInstance.value;
 };
 
 interface UserModel {
@@ -401,6 +389,10 @@ export const useUserStore = defineStore( "user", () => {
     location.href = "/login";
   };
 
+  const setSupabaseInstance = (client: any) => {
+    supabaseInstance.value = client;
+  };
+
   return {
     isLogin,
     userRole,
@@ -422,6 +414,7 @@ export const useUserStore = defineStore( "user", () => {
     deleteWorkerAction,
     deleteWorkAction,
     deleteNoticeAction,
+    setSupabaseInstance,
     logout,
   };
 }, {
