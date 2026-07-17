@@ -99,6 +99,7 @@ const nuxtConfig: any = {
     "@pinia-plugin-persistedstate/nuxt", // pinia 상태 지속
     "@nuxt-alt/proxy", // proxy
     "nuxt-lodash",
+    "@nuxtjs/supabase",
   ],
 
   webpack: {},
