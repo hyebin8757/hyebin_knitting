@@ -56,12 +56,12 @@ const locationsList = ["경인서부", "인천", "객선", "남항", "임항", "
  * Dynamic Data ( 동적 데이터 )
  ************************************************************/
 const currentDate = ref(new Date());
-const isCheckedIn = ref(false);
 const isAdminApproved = ref(false); // 관리자 승인 데모 상태 스위치용
 const isLeaveConfirmOpen = ref(false);
 const bypassTimeLimit = ref(false); // 오전 6시 제한 해제용 데모 스위치
 
 // 관리자 뷰용 동적 상태
+const adminSubTab = ref<'today' | 'history'>('today'); // 'today' | 'history'
 const activeAdminGroupTab = ref(1); // 1~4조
 const isDeployDialogOpen = ref(false);
 const deployTarget = ref<"individual" | "group">("individual");
@@ -74,20 +74,49 @@ const isCustomCancelConfirmOpen = ref(false);
 const cancelTargetType = ref<"self" | "admin_worker">("self");
 const cancelTargetName = ref("");
 
-// Mock attendance history (조합원 모드용)
-const attendanceHistory = ref<Record<string, "day" | "night" | "field" | "absent" | "leave">>({
-  "2026-07-01": "day",
-  "2026-07-02": "day",
-  "2026-07-03": "day",
-  "2026-07-06": "day",
-  "2026-07-07": "night",
-  "2026-07-08": "absent",
-  "2026-07-09": "field",
-  "2026-07-10": "day",
-  "2026-07-13": "field",
-  "2026-07-14": "night",
-  "2026-07-15": "day",
-  "2026-07-16": "day",
+// 로그인된 사용자의 출근 여부 동적 감지
+const isCheckedIn = computed(() => {
+  const currentName = userStore.loggedInUser?.name;
+  if (!currentName) return false;
+  const worker = userStore.workers.find(w => w.name === currentName);
+  return worker ? worker.checkedIn : false;
+});
+
+// 로그인된 사용자의 출퇴근 기록 매핑
+const attendanceHistory = computed(() => {
+  const history: Record<string, "day" | "night" | "field" | "absent" | "leave"> = {};
+  const currentName = userStore.loggedInUser?.name;
+  if (!currentName) return history;
+  
+  userStore.attendanceRecords.forEach(r => {
+    if (r.worker_name === currentName) {
+      history[r.date] = r.status as any;
+    }
+  });
+  return history;
+});
+
+// 일자별 출근 기록 그룹화 (관리자용)
+const attendanceByDate = computed(() => {
+  const grouped: Record<string, { worker_name: string; role: string; group: number; status: string; location: string }[]> = {};
+  
+  const sortedRecords = [...userStore.attendanceRecords].sort((a, b) => b.date.localeCompare(a.date));
+  
+  sortedRecords.forEach(r => {
+    if (!grouped[r.date]) {
+      grouped[r.date] = [];
+    }
+    const worker = userStore.workers.find(w => w.name === r.worker_name);
+    grouped[r.date].push({
+      worker_name: r.worker_name,
+      role: worker ? worker.role : "조합원",
+      group: worker ? worker.group : 1,
+      status: r.status,
+      location: r.location || "지정 대기"
+    });
+  });
+  
+  return grouped;
 });
 
 /************************************************************
@@ -114,21 +143,23 @@ const nextMonth = () => {
   );
 };
 
-const toggleCheckIn = () => {
+const toggleCheckIn = async () => {
   const todayStr = getFormattedDate(new Date());
+  const currentName = userStore.loggedInUser?.name;
+  if (!currentName) return;
   if (!isCheckedIn.value) {
-    attendanceHistory.value[todayStr] = "day";
-    isCheckedIn.value = true;
+    await userStore.checkInWorker(currentName, "day");
   } else {
     cancelTargetType.value = "self";
+    cancelTargetName.value = currentName;
     isCustomCancelConfirmOpen.value = true;
   }
 };
 
-const executeSelfCancel = () => {
-  const todayStr = getFormattedDate(new Date());
-  delete attendanceHistory.value[todayStr];
-  isCheckedIn.value = false;
+const executeSelfCancel = async () => {
+  const currentName = userStore.loggedInUser?.name;
+  if (!currentName) return;
+  await userStore.cancelCheckIn(currentName);
   isCustomCancelConfirmOpen.value = false;
 };
 
@@ -136,9 +167,10 @@ const triggerLeave = () => {
   isLeaveConfirmOpen.value = true;
 };
 
-const confirmLeave = () => {
-  const todayStr = getFormattedDate(new Date());
-  attendanceHistory.value[todayStr] = "leave";
+const confirmLeave = async () => {
+  const currentName = userStore.loggedInUser?.name;
+  if (!currentName) return;
+  await userStore.checkInWorker(currentName, "leave");
   isLeaveConfirmOpen.value = false;
 };
 
@@ -276,17 +308,7 @@ const isCheckInDisabled = computed(() => {
  * Mounted
  ************************************************************/
 onMounted(() => {
-  // Check if already checked in today
-  const todayStr = getFormattedDate(new Date());
-  const todayStatus = attendanceHistory.value[todayStr];
-  if (
-    todayStatus === "day" ||
-    todayStatus === "night" ||
-    todayStatus === "field" ||
-    todayStatus === "leave"
-  ) {
-    isCheckedIn.value = true;
-  }
+  //
 });
 
 /************************************************************
@@ -315,12 +337,12 @@ definePageMeta({
     <!-- Profile Card (출퇴근 통계, 생일, 입사일) -->
     <div :class="cx('profile-card', AttendanceStyle.ProfileCard)">
       <div class="profile-info">
-        <div class="avatar">홍</div>
+        <div class="avatar">{{ loggedInUser ? loggedInUser.name.slice(0, 1) : '홍' }}</div>
         <div class="meta">
-          <div class="name">홍길동 조합원</div>
+          <div class="name">{{ loggedInUser ? loggedInUser.name : '홍길동' }} 조합원</div>
           <div class="dates">
-            <span>입사일: {{ hireDate }}</span>
-            <span>생일: {{ birthDate }}</span>
+            <span>입사일: {{ loggedInUser?.joinDate || hireDate }}</span>
+            <span>생일: {{ loggedInUser?.birthDate || birthDate }}</span>
           </div>
         </div>
       </div>
@@ -454,8 +476,44 @@ definePageMeta({
 
   <!-- 2. 관리자 모드 화면 -->
   <div v-else :class="cx('attendance-page', AttendanceStyle.Default)">
-    <!-- Admin Dashboard Info -->
-    <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.6rem; padding: 2rem; margin-bottom: 2rem;">
+    <!-- Admin Sub-tab Selector (당일 현황 vs 일자별 기록) -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem;">
+      <button 
+        :style="{
+          padding: '0.8rem 1.6rem',
+          borderRadius: '0.8rem',
+          fontSize: '1.4rem',
+          fontWeight: '700',
+          transition: 'all 0.2s',
+          background: adminSubTab === 'today' ? 'rgba(35, 102, 180, 0.2) !important' : 'transparent',
+          color: adminSubTab === 'today' ? '#88c5ff' : 'rgba(255,255,255,0.6)',
+          border: '1px solid ' + (adminSubTab === 'today' ? 'rgba(136, 197, 255, 0.3)' : 'transparent')
+        }"
+        @click="adminSubTab = 'today'"
+      >
+        당일 현황 및 배치
+      </button>
+      <button 
+        :style="{
+          padding: '0.8rem 1.6rem',
+          borderRadius: '0.8rem',
+          fontSize: '1.4rem',
+          fontWeight: '700',
+          transition: 'all 0.2s',
+          background: adminSubTab === 'history' ? 'rgba(35, 102, 180, 0.2) !important' : 'transparent',
+          color: adminSubTab === 'history' ? '#88c5ff' : 'rgba(255,255,255,0.6)',
+          border: '1px solid ' + (adminSubTab === 'history' ? 'rgba(136, 197, 255, 0.3)' : 'transparent')
+        }"
+        @click="adminSubTab = 'history'"
+      >
+        일자별 출근 대장
+      </button>
+    </div>
+
+    <!-- 2-A. 당일 현황 및 배치 지정 화면 -->
+    <div v-if="adminSubTab === 'today'" style="display: flex; flex-direction: column; gap: 1.6rem; width: 100%;">
+      <!-- Admin Dashboard Info -->
+      <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.6rem; padding: 2rem; margin-bottom: 2rem;">
       <div style="display: flex; align-items: center; gap: 0.8rem; font-size: 1.6rem; font-weight: 700; color: var(--white-color); margin-bottom: 1.2rem;">
         <i class="material-icons" style="color: var(--primary-lighten-color-1);">supervised_user_circle</i>
         <span>당일 출근 현황 및 배치 배정</span>
@@ -548,6 +606,66 @@ definePageMeta({
           >
             출근 취소
           </v-btn>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- 2-B. 일자별 출근 기록 화면 -->
+    <div v-else-if="adminSubTab === 'history'" style="display: flex; flex-direction: column; gap: 1.6rem; width: 100%;">
+      <div v-if="Object.keys(attendanceByDate).length === 0" style="text-align: center; padding: 6rem 2rem; background: rgba(255,255,255,0.02); border-radius: 1.6rem; border: 1px dashed rgba(255,255,255,0.1); font-size: 1.4rem; color: var(--text-color-3);">
+        <i class="material-icons" style="font-size: 3.6rem; color: rgba(255,255,255,0.15); margin-bottom: 1rem; display: block;">event_busy</i>
+        기록된 출퇴근 대장이 없습니다.
+      </div>
+      <div 
+        v-for="(records, date) in attendanceByDate" 
+        :key="date"
+        style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.6rem; padding: 1.6rem; display: flex; flex-direction: column; gap: 1.2rem;"
+      >
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem;">
+          <span style="font-size: 1.5rem; font-weight: 700; color: #88c5ff; display: flex; align-items: center; gap: 0.6rem;">
+            <i class="material-icons" style="font-size: 1.8rem; color: #88c5ff;">calendar_today</i>
+            {{ date }}
+          </span>
+          <span style="font-size: 1.2rem; background: rgba(35, 102, 180, 0.2); color: #88c5ff; padding: 0.2rem 0.8rem; border-radius: 2rem; font-weight: 600;">
+            총 {{ records.length }}명 출근
+          </span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+          <div 
+            v-for="r in records" 
+            :key="r.worker_name"
+            style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 1rem 1.2rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.03);"
+          >
+            <div style="display: flex; align-items: center; gap: 0.8rem;">
+              <span style="font-size: 1.4rem; font-weight: 600; color: #ffffff;">{{ r.worker_name }}</span>
+              <span style="font-size: 1.1rem; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.08); padding: 0.1rem 0.6rem; border-radius: 0.4rem; font-weight: 600;">
+                {{ r.role }} ({{ r.group }}조)
+              </span>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 0.8rem;">
+              <span 
+                :style="{
+                  fontSize: '1.1rem',
+                  fontWeight: '700',
+                  padding: '0.2rem 0.8rem',
+                  borderRadius: '0.6rem',
+                  color: r.status === 'day' ? '#1ad1b1' : r.status === 'night' ? '#ffcc00' : r.status === 'field' ? '#3a86ff' : '#e05780',
+                  background: r.status === 'day' ? 'rgba(26, 209, 177, 0.15)' : r.status === 'night' ? 'rgba(255, 204, 0, 0.15)' : r.status === 'field' ? 'rgba(58, 134, 255, 0.15)' : 'rgba(224, 87, 128, 0.15)'
+                }"
+              >
+                {{ r.status === 'day' ? '주간' : r.status === 'night' ? '야간' : r.status === 'field' ? '외근' : '조퇴' }}
+              </span>
+              <span 
+                v-if="r.location && r.location !== '지정 대기'"
+                style="font-size: 1.1rem; color: #88c5ff; background: rgba(136, 197, 255, 0.1); border: 1px solid rgba(136, 197, 255, 0.15); padding: 0.2rem 0.8rem; border-radius: 0.6rem;"
+              >
+                {{ r.location }}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

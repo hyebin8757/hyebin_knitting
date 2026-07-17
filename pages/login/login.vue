@@ -37,7 +37,7 @@ import { useUserStore } from "~/stores/useUserStore";
  * External Dependencies ( 외부 종속성 )
  ************************************************************/
 const router = useRouter();
-const { setLogin, getLoginUser } = useUserStore();
+const userStore = useUserStore();
 const { isEmpty, isNotEmpty } = useUtil.typeValidation;
 
 /************************************************************
@@ -104,8 +104,26 @@ const moveHome = () => {
 };
 
 const onLogin = async () => {
-  // 데모 테스트 편의를 위해 아이디/비밀번호 정보 없이도 바로 로그인을 통과시킵니다.
-  setLogin(true);
+  if (!loginValidation()) {
+    return (loginBooleanData.alert = true);
+  }
+  
+  userStore.setLogin(true);
+  
+  if (loginData.id === 'admin') {
+    userStore.userRole = 'admin';
+    userStore.loggedInUser = { name: '관리자', role: '관리자', phone: '010-0000-0000', group: 0 };
+  } else {
+    userStore.userRole = 'member';
+    const worker = userStore.workers.find(w => w.name === loginData.id);
+    if (worker) {
+      userStore.loggedInUser = worker;
+    } else {
+      // 혹시 정보가 누락되었을 경우 폴백
+      userStore.loggedInUser = { name: loginData.id, role: '조합원', phone: loginData.password, group: 1 };
+    }
+  }
+  
   moveHome();
 };
 
@@ -119,36 +137,35 @@ const findDialogToggle = (title: string) => {
 };
 
 const loginValidation = () => {
-  const loginUser = getLoginUser();
-
   if (isEmpty(loginData.id) && isEmpty(loginData.password)) {
     loginData.alertText = "아이디 와 비밀번호를 입력해주세요.";
     return false;
-  } else if (isEmpty(loginData.id) && isNotEmpty(loginData.password)) {
+  } else if (isEmpty(loginData.id)) {
     loginData.alertText = "아이디를 입력해주세요.";
     return false;
-  } else if (isNotEmpty(loginData.id) && isEmpty(loginData.password)) {
+  } else if (isEmpty(loginData.password)) {
     loginData.alertText = "비밀번호를 입력해주세요.";
-    return false;
-  } else if (
-    isEmpty(loginUser) &&
-    "testUser" !== loginData.id &&
-    "0000" !== loginData.password
-  ) {
-    loginData.alertText =
-      "아이디 혹은 비밀번호를 잘못 입력하였습니다. 입력하신 내용을 다시 확인해주세요.";
-    return false;
-  } else if (
-    isNotEmpty(loginUser) &&
-    (loginData.id !== loginUser?.id ||
-      loginData.password !== loginUser?.password)
-  ) {
-    loginData.alertText =
-      "아이디 혹은 비밀번호를 잘못 입력하였습니다. 입력하신 내용을 다시 확인해주세요.";
     return false;
   }
 
-  return true;
+  // 1. 관리자 계정 로그인 체크
+  if (loginData.id === 'admin' && loginData.password === '0000') {
+    return true;
+  }
+
+  // 2. 등록된 조합원 중 일치하는 계정 찾기
+  // ID = 이름, 비밀번호 = 휴대폰 번호 전체 혹은 뒷 4자리
+  const worker = userStore.workers.find(w => w.name === loginData.id);
+  if (worker) {
+    const rawPhone = worker.phone.replace(/[^0-9]/g, '');
+    const inputPassword = loginData.password.replace(/[^0-9]/g, '');
+    if (rawPhone === inputPassword || rawPhone.slice(-4) === inputPassword) {
+      return true;
+    }
+  }
+
+  loginData.alertText = "아이디 혹은 비밀번호를 잘못 입력하였습니다. 입력하신 내용을 다시 확인해주세요.";
+  return false;
 };
 
 /************************************************************

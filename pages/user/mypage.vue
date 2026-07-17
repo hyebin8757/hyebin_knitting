@@ -52,11 +52,11 @@ const userRole = computed(() => userStore.userRole);
 /************************************************************
  * Raw Data ( 원시 데이터 )
  ************************************************************/
-const name = "홍길동";
-const role = "조합원 (2조)";
-const hireDate = "2024-03-02";
-const birthDate = "1992-07-28";
-const phone = "010-5678-1234";
+const name = computed(() => userStore.loggedInUser?.name || "홍길동");
+const role = computed(() => userStore.loggedInUser ? `${userStore.loggedInUser.role} (${userStore.loggedInUser.group}조)` : "관리자");
+const hireDate = computed(() => userStore.loggedInUser?.joinDate || "2024-03-02");
+const birthDate = computed(() => userStore.loggedInUser?.birthDate || "1992-07-28");
+const phone = computed(() => userStore.loggedInUser?.phone || "010-5678-1234");
 
 /************************************************************
  * Dynamic Data ( 동적 데이터 )

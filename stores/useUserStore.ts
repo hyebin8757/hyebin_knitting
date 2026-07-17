@@ -3,8 +3,15 @@ import { defineStore } from "pinia";
 import CryptoJS from "crypto-js";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL || "https://fuuowmiapdqrrkkytiux.supabase.co";
-const supabaseKey = process.env.SUPABASE_KEY || "sb_publishable_TmguTJ2on1AnBu2cE460JQ_Hhch2lbt";
+const getEnvValue = (key: string): string => {
+  if (typeof process !== "undefined" && process.env && process.env[key]) {
+    return process.env[key]!;
+  }
+  return "";
+};
+
+const supabaseUrl = getEnvValue("SUPABASE_URL") || "https://fuuowmiapdqrrkkytiux.supabase.co";
+const supabaseKey = getEnvValue("SUPABASE_KEY") || "sb_publishable_TmguTJ2on1AnBu2cE460JQ_Hhch2lbt";
 const globalSupabase = createClient(supabaseUrl, supabaseKey);
 
 const getSupabase = () => {
@@ -53,6 +60,12 @@ export const useUserStore = defineStore( "user", () => {
   // 공지사항 데이터 (비어있음)
   const notices = ref<any[]>([]);
 
+  // 현재 로그인한 사용자 정보
+  const loggedInUser = ref<any>(null);
+
+  // 전체 출퇴근 기록 대장
+  const attendanceRecords = ref<any[]>([]);
+
   // Supabase 데이터 초기 로드 및 시딩(자동 데이터베이스 생성 테이블 확인용)
   const fetchAllData = async () => {
     const supabase = getSupabase();
@@ -90,6 +103,12 @@ export const useUserStore = defineStore( "user", () => {
       const { data: dbNotices, error: errNotices } = await supabase.from("notices").select("*").order("id", { ascending: false });
       if (dbNotices) {
         notices.value = dbNotices;
+      }
+
+      // 4. 출퇴근 기록 조회
+      const { data: dbAttendance, error: errAttendance } = await supabase.from("attendance").select("*");
+      if (dbAttendance) {
+        attendanceRecords.value = dbAttendance;
       }
     } catch (e) {
       console.warn("Supabase 데이터 조회 실패 - 로컬 상태 유지", e);
@@ -150,6 +169,18 @@ export const useUserStore = defineStore( "user", () => {
       } catch (e) {
         console.error("Supabase update failed", e);
       }
+
+      // 오늘자 출퇴근 기록도 업데이트
+      const todayStr = getTodayStr();
+      const recordIdx = attendanceRecords.value.findIndex(r => r.worker_name === name && r.date === todayStr);
+      if (recordIdx !== -1) {
+        attendanceRecords.value[recordIdx].location = location;
+        if (supabase) {
+          try {
+            await supabase.from("attendance").update({ location }).eq("worker_name", name).eq("date", todayStr);
+          } catch (e) { console.error("Attendance location update failed", e); }
+        }
+      }
     }
   }
 
@@ -165,6 +196,22 @@ export const useUserStore = defineStore( "user", () => {
       await supabase?.from("workers").update({ location: location }).eq("group", groupId).eq("checked_in", true);
     } catch (e) {
       console.error("Supabase group update failed", e);
+    }
+
+    // 오늘자 출퇴근 기록도 업데이트
+    const todayStr = getTodayStr();
+    for (const w of workers.value) {
+      if (w.group === groupId && w.checkedIn) {
+        const recordIdx = attendanceRecords.value.findIndex(r => r.worker_name === w.name && r.date === todayStr);
+        if (recordIdx !== -1) {
+          attendanceRecords.value[recordIdx].location = location;
+          if (supabase) {
+            try {
+              await supabase.from("attendance").update({ location }).eq("worker_name", w.name).eq("date", todayStr);
+            } catch (e) { console.error("Attendance location group update failed", e); }
+          }
+        }
+      }
     }
   }
 
@@ -255,7 +302,15 @@ export const useUserStore = defineStore( "user", () => {
     workers.value.push(localWorker);
   }
 
-  // 출근 취소 (관리자용)
+  const getTodayStr = () => {
+    const date = new Date();
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+
+  // 출근 취소 (관리자용 / 사용자용 공용)
   const cancelCheckIn = async (name: string) => {
     const supabase = getSupabase();
     const idx = workers.value.findIndex(w => w.name === name);
@@ -268,6 +323,52 @@ export const useUserStore = defineStore( "user", () => {
           await supabase.from('workers').update({ checked_in: false, status: 'none', location: '' }).eq('name', name);
         } catch (e) { console.error('Cancel check-in failed', e); }
       }
+    }
+
+    const todayStr = getTodayStr();
+    attendanceRecords.value = attendanceRecords.value.filter(r => !(r.worker_name === name && r.date === todayStr));
+    if (supabase) {
+      try {
+        await supabase.from('attendance').delete().eq('worker_name', name).eq('date', todayStr);
+      } catch (e) { console.error('Attendance delete failed', e); }
+    }
+  }
+
+  // 출근/조퇴 등록
+  const checkInWorker = async (name: string, status: "day" | "night" | "field" | "absent" | "leave") => {
+    const supabase = getSupabase();
+    const idx = workers.value.findIndex(w => w.name === name);
+    if (idx !== -1) {
+      workers.value[idx].checkedIn = (status !== "absent" && status !== "none");
+      workers.value[idx].status = status;
+      if (supabase) {
+        try {
+          await supabase.from('workers').update({ checked_in: workers.value[idx].checkedIn, status }).eq('name', name);
+        } catch (e) { console.error('Worker status update failed', e); }
+      }
+    }
+
+    const todayStr = getTodayStr();
+    const record = { worker_name: name, date: todayStr, status, location: idx !== -1 ? workers.value[idx].location : "" };
+    const existingIdx = attendanceRecords.value.findIndex(r => r.worker_name === name && r.date === todayStr);
+    if (existingIdx !== -1) {
+      attendanceRecords.value[existingIdx].status = status;
+      if (supabase) {
+        try {
+          await supabase.from('attendance').update({ status }).eq('worker_name', name).eq('date', todayStr);
+        } catch (e) { console.error('Attendance update failed', e); }
+      }
+    } else {
+      if (supabase) {
+        try {
+          const { data } = await supabase.from('attendance').insert([record]).select();
+          if (data && data.length > 0) {
+            attendanceRecords.value.push(data[0]);
+            return;
+          }
+        } catch (e) { console.error('Attendance insert failed', e); }
+      }
+      attendanceRecords.value.push(record);
     }
   }
 
@@ -347,6 +448,10 @@ export const useUserStore = defineStore( "user", () => {
     deleteWorkerAction,
     deleteWorkAction,
     deleteNoticeAction,
+    loggedInUser,
+    attendanceRecords,
+    checkInWorker,
+    getTodayStr,
     logout,
   };
 }, {

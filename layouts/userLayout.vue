@@ -6,6 +6,7 @@ import { useUserStore } from "~/stores/useUserStore";
 
 const userStore = useUserStore();
 const userRole = computed(() => userStore.userRole);
+const loggedInUserName = computed(() => userStore.loggedInUser?.name || '방문자');
 
 const toggleRole = () => {
   userStore.userRole = userStore.userRole === "member" ? "admin" : "member";
@@ -55,7 +56,7 @@ onMounted(() => {
             </v-btn>
           </div>
           <div class="header-user">
-            <span><strong>홍길동</strong> 님</span>
+            <span><strong>{{ loggedInUserName }}</strong> 님</span>
           </div>
         </header>
 
