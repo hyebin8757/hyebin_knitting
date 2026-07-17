@@ -34,6 +34,7 @@ interface AttendanceDay {
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
+const loggedInUser = computed(() => userStore.loggedInUser);
 
 const { isEmpty } = useUtil.typeValidation;
 

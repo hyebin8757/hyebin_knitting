@@ -69,6 +69,8 @@ const loginBooleanData = reactive({
   findDialog: false,
 });
 
+const rememberId = ref(false);
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
@@ -96,9 +98,16 @@ const onLogin = async () => {
     if (worker) {
       userStore.loggedInUser = worker;
     } else {
-      // 혹시 정보가 누락되었을 경우 폴백
       userStore.loggedInUser = { name: loginData.id, role: '조합원', phone: loginData.password, group: 1 };
     }
+  }
+
+  // 아이디/비밀번호 정보 세션 저장 및 아이디 기억하기 체크 처리
+  userStore.setUserInfo({ id: loginData.id, password: loginData.password });
+  if (rememberId.value) {
+    localStorage.setItem("remember_id", loginData.id);
+  } else {
+    localStorage.removeItem("remember_id");
   }
   
   moveHome();
@@ -176,6 +185,11 @@ watch(
  ************************************************************/
 onMounted(() => {
   document.documentElement.removeAttribute("dark-mode");
+  const savedId = localStorage.getItem("remember_id");
+  if (savedId) {
+    loginData.id = savedId;
+    rememberId.value = true;
+  }
 });
 </script>
 
@@ -221,6 +235,18 @@ onMounted(() => {
                   hide-details
                 />
               </div>
+            </div>
+
+            <!-- 아이디 저장 체크박스 -->
+            <div style="margin-top: 0.8rem; margin-bottom: 1.2rem; display: flex; align-items: center; width: 100%;">
+              <v-checkbox
+                v-model="rememberId"
+                label="아이디 저장"
+                hide-details
+                density="compact"
+                color="primary"
+                style="color: rgba(255,255,255,0.8); font-size: 1.3rem; font-weight: 600;"
+              />
             </div>
 
             <div :class="cx(LoginStyle.LoginBtn)">

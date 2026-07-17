@@ -500,7 +500,5 @@ export const useUserStore = defineStore( "user", () => {
     logout,
   };
 }, {
-  persist : {
-    storage: false,
-  }
+  persist : true
 } );
