@@ -3,15 +3,20 @@ import { defineStore } from "pinia";
 import CryptoJS from "crypto-js";
 import { useSupabaseClient } from "#imports";
 
-/** Supabase 클라이언트를 안전하게 획득 – Nuxt 컨텍스트가 없으면 null 반환 */
 const getSupabase = () => {
   try {
-    const client = useSupabaseClient();
-    // 만약 주소나 키가 제대로 주입되지 않았다면 콘솔에 경고를 띄웁니다.
-    if (!client) console.error("Supabase 클라이언트 생성 실패: 설정 확인 필요");
-    return client;
+    // 1. nuxt.config.ts에 등록한 runtimeConfig 설정을 안전하게 가져옵니다.
+    const config = useRuntimeConfig();
+    
+    // 2. 만약 Netlify 환경 변수가 제대로 주입되었다면 Nuxt 내장 client를 반환합니다.
+    if (config.public.supabaseUrl && config.public.supabaseKey) {
+      return useSupabaseClient();
+    }
+    
+    console.error("Netlify 환경 변수 주입 누락 확인 필요");
+    return null;
   } catch (e) {
-    console.error("Nuxt context 없음 또는 Supabase 에러:", e);
+    console.error("Nuxt 컨텍스트 에러:", e);
     return null;
   }
 };
