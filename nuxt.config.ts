@@ -31,7 +31,7 @@ const nuxtConfig: any = {
       htmlAttrs: {
         lang: "ko",
       },
-      title: "인천 노조 시스템",
+      title: "인천 양육반 디지털 시스템",
       charset: "utf-8",
       viewport:
         "width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1",
@@ -40,7 +40,11 @@ const nuxtConfig: any = {
         { "http-equiv": "Pragma", content: "no-cache" },
         { "http-equiv": "Cache-control", content: "no-cache" },
         { "http-equiv": "Expires", content: "0" },
-        { hid: "og:title", property: "og:title", content: "인천 노조 시스템" },
+        {
+          hid: "og:title",
+          property: "og:title",
+          content: "인천 양육반 디지털 시스템",
+        },
         { hid: "og:image", property: "og:image", content: "/image_og1.png" },
         { hid: "og:description", property: "og:description", content: "설명" },
         { hid: "og:type", property: "og:type", content: "website" },
