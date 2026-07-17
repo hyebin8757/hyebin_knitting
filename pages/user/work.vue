@@ -71,6 +71,13 @@ const isNoticeFormOpen = ref(false);
 const isWorkFormOpen = ref(false);
 const formMode = ref<"add" | "edit">("add");
 
+// 커스텀 삭제 확인용 상태
+const isDeleteConfirmOpen = ref(false);
+const deleteTargetType = ref<"work" | "notice">("work");
+const deleteTargetId = ref<number | null>(null);
+const isAlertOpen = ref(false);
+const alertText = ref("");
+
 const noticeForm = reactive({
   id: null as number | null,
   title: "",
@@ -122,7 +129,11 @@ const openNoticeEditor = (mode: "add" | "edit", item?: Notice) => {
 };
 
 const saveNotice = async () => {
-  if (isEmpty(noticeForm.title) || isEmpty(noticeForm.content)) return;
+  if (isEmpty(noticeForm.title) || isEmpty(noticeForm.content)) {
+    alertText.value = "공지 제목과 본문을 입력해주세요.";
+    isAlertOpen.value = true;
+    return;
+  }
   await userStore.saveNoticeAction(noticeForm.id, noticeForm.title, noticeForm.content);
   isNoticeFormOpen.value = false;
 };
@@ -148,11 +159,13 @@ const openWorkEditor = (mode: "add" | "edit", item?: WorkItem) => {
 
 const saveWork = async () => {
   if (isEmpty(workForm.location)) {
-    alert("작업 위치를 입력해주세요.");
+    alertText.value = "작업 위치를 입력해주세요.";
+    isAlertOpen.value = true;
     return;
   }
   if (isEmpty(workForm.details)) {
-    alert("작업 상세를 입력해주세요.");
+    alertText.value = "작업 상세를 입력해주세요.";
+    isAlertOpen.value = true;
     return;
   }
 
@@ -166,14 +179,29 @@ const saveWork = async () => {
   isWorkFormOpen.value = false;
 };
 
-const deleteWork = async (id: number) => {
-  if (!confirm('이 작업 안내를 삭제하시겠습니까?')) return;
-  await userStore.deleteWorkAction(id);
+const deleteWork = (id: number) => {
+  deleteTargetType.value = "work";
+  deleteTargetId.value = id;
+  isDeleteConfirmOpen.value = true;
 };
 
-const deleteNotice = async (id: number) => {
-  if (!confirm('이 공지사항을 삭제하시겠습니까?')) return;
-  await userStore.deleteNoticeAction(id);
+const deleteNotice = (id: number) => {
+  deleteTargetType.value = "notice";
+  deleteTargetId.value = id;
+  isDeleteConfirmOpen.value = true;
+};
+
+const executeDelete = async () => {
+  if (deleteTargetId.value === null) return;
+  
+  if (deleteTargetType.value === "work") {
+    await userStore.deleteWorkAction(deleteTargetId.value);
+  } else {
+    await userStore.deleteNoticeAction(deleteTargetId.value);
+  }
+  
+  isDeleteConfirmOpen.value = false;
+  deleteTargetId.value = null;
 };
 
 /************************************************************
@@ -437,6 +465,48 @@ definePageMeta({
         <v-card-actions class="justify-end gap-2 px-0 pt-6">
           <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isWorkFormOpen = false">취소</v-btn>
           <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="saveWork">저장</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <!-- Custom Delete Confirmation Dialog -->
+    <v-dialog v-model="isDeleteConfirmOpen" max-width="320">
+      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--system-red-color); display: flex; align-items: center; gap: 0.8rem;">
+          <i class="material-icons">delete_outline</i>
+          <span>삭제 확인</span>
+        </v-card-title>
+        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.8);">
+          {{ deleteTargetType === 'work' ? '이 작업 안내를 삭제하시겠습니까?' : '이 공지사항을 삭제하시겠습니까?' }}
+        </v-card-text>
+        <v-card-actions class="justify-end gap-2 px-0 pt-4">
+          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isDeleteConfirmOpen = false">취소</v-btn>
+          <v-btn
+            style="background: linear-gradient(135deg, rgba(225, 60, 60, 0.8) 0%, rgba(180, 30, 30, 0.8) 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;"
+            @click="executeDelete"
+          >
+            삭제 실행
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Custom Alert Warning Dialog -->
+    <v-dialog v-model="isAlertOpen" max-width="320">
+      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--secondary-darken-color-1); display: flex; align-items: center; gap: 0.8rem;">
+          <i class="material-icons">info_outline</i>
+          <span>입력 오류</span>
+        </v-card-title>
+        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.8);">
+          {{ alertText }}
+        </v-card-text>
+        <v-card-actions class="justify-end px-0 pt-4">
+          <v-btn
+            style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;"
+            @click="isAlertOpen = false"
+          >
+            확인
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

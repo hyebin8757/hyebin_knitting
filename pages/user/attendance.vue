@@ -69,6 +69,11 @@ const selectedWorkerName = ref("");
 const selectedGroupId = ref<number | null>(null);
 const selectedDeployLocation = ref('');
 
+// 커스텀 알림용 상태
+const isCustomCancelConfirmOpen = ref(false);
+const cancelTargetType = ref<"self" | "admin_worker">("self");
+const cancelTargetName = ref("");
+
 // Mock attendance history (조합원 모드용)
 const attendanceHistory = ref<Record<string, "day" | "night" | "field" | "absent" | "leave">>({
   "2026-07-01": "day",
@@ -115,9 +120,16 @@ const toggleCheckIn = () => {
     attendanceHistory.value[todayStr] = "day";
     isCheckedIn.value = true;
   } else {
-    delete attendanceHistory.value[todayStr];
-    isCheckedIn.value = false;
+    cancelTargetType.value = "self";
+    isCustomCancelConfirmOpen.value = true;
   }
+};
+
+const executeSelfCancel = () => {
+  const todayStr = getFormattedDate(new Date());
+  delete attendanceHistory.value[todayStr];
+  isCheckedIn.value = false;
+  isCustomCancelConfirmOpen.value = false;
 };
 
 const triggerLeave = () => {
@@ -163,7 +175,14 @@ const confirmDeployment = () => {
 };
 
 const cancelWorkerCheckIn = async (name: string) => {
-  await userStore.cancelCheckIn(name);
+  cancelTargetType.value = "admin_worker";
+  cancelTargetName.value = name;
+  isCustomCancelConfirmOpen.value = true;
+};
+
+const executeAdminCancel = async () => {
+  await userStore.cancelCheckIn(cancelTargetName.value);
+  isCustomCancelConfirmOpen.value = false;
 };
 
 /************************************************************
@@ -571,6 +590,33 @@ definePageMeta({
         <v-card-actions class="justify-end gap-2 px-0 pt-6">
           <v-btn style="background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.7) !important; border-radius: 0.8rem; padding: 0.8rem 2rem !important; height: auto !important; min-width: 8rem !important; font-size: 1.3rem; font-weight: 600;" @click="isDeployDialogOpen = false">닫기</v-btn>
           <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; height: auto !important; min-width: 8rem !important; font-size: 1.3rem;" @click="confirmDeployment">변경</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Custom Check-in Cancel Confirmation Dialog -->
+    <v-dialog v-model="isCustomCancelConfirmOpen" max-width="320">
+      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--system-red-color); display: flex; align-items: center; gap: 0.8rem;">
+          <i class="material-icons">exit_to_app</i>
+          <span>출근 취소 확인</span>
+        </v-card-title>
+        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.8);">
+          <template v-if="cancelTargetType === 'self'">
+            출근 등록을 취소하시겠습니까?
+          </template>
+          <template v-else>
+            <strong>{{ cancelTargetName }}</strong> 조합원의 출근을 취소하시겠습니까?
+          </template>
+        </v-card-text>
+        <v-card-actions class="justify-end gap-2 px-0 pt-4">
+          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isCustomCancelConfirmOpen = false">닫기</v-btn>
+          <v-btn
+            style="background: linear-gradient(135deg, rgba(225, 60, 60, 0.8) 0%, rgba(180, 30, 30, 0.8) 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;"
+            @click="cancelTargetType === 'self' ? executeSelfCancel() : executeAdminCancel()"
+          >
+            취소 실행
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
