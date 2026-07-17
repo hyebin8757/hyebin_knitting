@@ -78,7 +78,7 @@ onMounted(() => {
  * Layout
  ************************************************************/
 definePageMeta({
-  layout: "layout",
+  layout: "user-layout",
   alias: ["/main"],
 });
 </script>

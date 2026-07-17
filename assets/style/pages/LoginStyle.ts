@@ -1,163 +1,142 @@
-import { css, cx, injectGlobal } from "@emotion/css";
+import { css, cx } from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
 
 const { setMedia } = _uiUtil();
 
-/************************************************************
- * style data
- ************************************************************/
-
-
-/************************************************************
- * style
- ************************************************************/
 export const LoginStyle = {
   Default: css`
-    ${StyleUtils.FlexUtils("center", "center")};
-    width: 100vw;
+    width: 100%;
     height: 100vh;
-    background: linear-gradient(
-      75deg,
-      rgba(12, 32, 52, 1) 10%,
-      rgb(96, 155, 147) 20%,
-      rgba(12, 32, 52, 1) 100%
-    );
-    background-size: 10000px 100%;
-    animation: bg 8s linear infinite;
-
-    @keyframes bg {
-      0% {
-        background-position-x: 0;
-      }
-
-      100% {
-        background-position-x: 10000px;
-      }
-    }
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #050d17; /* 모바일 외부 배경 */
   `,
 
   Container: css`
-    ${StyleUtils.FlexUtils("center", "center")};
     width: 100%;
+    max-width: 640px;
     height: 100%;
-    max-width: 100rem;
-    max-height: 60rem;
-    border-radius: 2rem;
+    display: flex;
+    flex-direction: column;
+    background-color: #081524; /* 모바일 내부 로그인 배경 */
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+    position: relative;
     overflow: hidden;
+    padding: 4rem 2rem;
   `,
 
   FormBg: css`
-    width: 100%;
-    height: 100%;
-
-    img {
-      width: 100%;
-      height: 100%;
-    }
+    display: none;
   `,
 
   FormCard: css`
-    ${StyleUtils.FlexUtils("center", "center", "", "column")};
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
     width: 100%;
-    height: 100%;
-    padding: 2rem 5rem;
-    background: var(--white-color);
+    padding: 2rem;
   `,
 
   Title: css`
-    ${StyleUtils.FlexUtils("center", "center")};
-    gap: 0.5rem;
+    text-align: center;
     margin-bottom: 4rem;
-    font-size: 3rem;
-    font-weight: 700;
-    cursor: pointer;
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: var(--white-color);
+    letter-spacing: -0.05rem;
 
-    br {
-      display: none;
-    }
-
-    img {
-      width: 3rem;
-      height: 3rem;
+    span {
+      display: block;
+      margin-top: 0.8rem;
+      font-size: 1.4rem;
+      color: var(--primary-lighten-color-1);
+      font-weight: 500;
     }
   `,
 
   Content: css`
     width: 100%;
-    height: auto;
   `,
 
   Form: css`
     width: 100%;
-    height: fit-content;
   `,
 
-  InfoArea: css``,
+  InfoArea: css`
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  `,
 
   InfoItem: css`
-    &:nth-of-type(2) {
-      margin-top: 2rem;
-      .title {
-        margin-bottom: 1rem;
-      }
-    }
-
     .is-flex {
-      ${StyleUtils.FlexUtils("center", "flex-start")};
-      gap: 0.5rem;
-      margin-bottom: 1rem;
+      ${StyleUtils.FlexUtils("center", "space-between")};
+      margin-bottom: 0.8rem;
 
-      [class^="material"] {
-        font-size: 1.7rem;
-        cursor: default;
+      em {
+        font-style: normal;
+        font-size: 1.1rem;
+        color: var(--secondary-darken-color-2);
+        opacity: 0.8;
       }
     }
 
     .title {
-      display: inline-block;
       font-size: 1.4rem;
-      font-weight: 500;
+      font-weight: 600;
+      color: var(--white-color);
+    }
+
+    /* Vuetify text field customization for dark theme */
+    .v-input {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 1rem !important;
+      
+      input {
+        color: var(--white-color) !important;
+      }
     }
   `,
 
   LoginBtn: css`
-    ${StyleUtils.FlexUtils("center", "flex-start")};
-    gap: 1.2rem;
+    margin-top: 3.2rem;
     width: 100%;
-    margin: 2rem 0;
 
     .v-btn {
-      flex: 1;
-
-      &.v-btn--density-default {
-        width: 100%;
-        height: 4rem;
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: var(--white-color);
-        background: var(--system-green-color);
-
-        &.close-btn {
-          border: 1px solid var(--border-color-1);
-          color: var(--text-color-1 );
-          background: transparent;
-        }
+      width: 100%;
+      height: 5.4rem !important;
+      border-radius: 1.2rem !important;
+      font-size: 1.6rem !important;
+      font-weight: 700 !important;
+      color: var(--white-color) !important;
+      background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important;
+      box-shadow: 0 4px 12px rgba(35, 102, 180, 0.3);
+      
+      &:hover {
+        opacity: 0.9;
       }
     }
   `,
 
   MenuList: css`
+    margin-top: 2.4rem;
+    
     ul {
-      ${StyleUtils.FlexUtils("center", "flex-end")};
-      gap: 1rem;
+      ${StyleUtils.FlexUtils("center", "center")};
+      gap: 1.6rem;
 
       li {
         font-size: 1.2rem;
+        color: var(--text-color-3);
         cursor: pointer;
+        transition: color 0.2s ease;
 
         &:hover {
-          color: var(--system-green-darken-color);
+          color: var(--primary-lighten-color-1);
         }
       }
     }
@@ -165,67 +144,3 @@ export const LoginStyle = {
 
   LoginTooltip: css``,
 };
-
-/************************************************************
- * global style
- ************************************************************/
-injectGlobal`
-  ${LoginStyle.LoginTooltip};
-`;
-
-/************************************************************
- * media style
- ************************************************************/
-const MediaStyle = {
-  Media : {
-    /** [ 1280px ] */
-    1280 : css`
-    `,
-
-    /** [ 1024px ] */
-    1024 : css`
-      .form-bg {
-        display: none;
-      }
-
-      .form-card {
-        width: 80%;
-        height: 85%;
-        padding: 1rem 2rem;
-        border-radius: 1rem;
-      }
-    `,
-
-    /** [ 768px ] */
-    768 : css`
-      
-    `,
-
-    /** [ 640px ] */
-    640 : css`
-      
-    `,
-
-    /** [ 550px ] */
-    550 : css`
-      .title {
-        br {
-          display: block;
-        }
-      }
-    `,
-
-    /** [ 450px ] */
-    450 : css `
-    `
-  },
-}
-
-/************************************************************
- * style override
- ************************************************************/
-LoginStyle.Default = cx(
-  LoginStyle.Default,
-  // option ( max | min )
-  setMedia( MediaStyle.Media,  "max" )
-);

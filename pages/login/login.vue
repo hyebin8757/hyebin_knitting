@@ -20,7 +20,6 @@ import { LoginStyle } from "~/assets/style/pages/LoginStyle";
  * Util, Constants...
  ************************************************************/
 import { useUtil } from "~/utils/useUtil";
-
 import { useUserStore } from "~/stores/useUserStore";
 
 /************************************************************
@@ -31,9 +30,7 @@ import { useUserStore } from "~/stores/useUserStore";
  * External Dependencies ( 외부 종속성 )
  ************************************************************/
 const router = useRouter();
-
 const { setLogin, getLoginUser } = useUserStore();
-
 const { isEmpty, isNotEmpty } = useUtil.typeValidation;
 
 /************************************************************
@@ -48,52 +45,45 @@ const { isEmpty, isNotEmpty } = useUtil.typeValidation;
  * Raw Data ( 원시 데이터 )
  ************************************************************/
 const loginData = reactive({
-  id : "",
-  password : "",
-  menuList : [
+  id: "",
+  password: "",
+  menuList: [
     {
-      title : "아이디 찾기",
-      event : ( itemInfo : any ) => {
-        findDialogToggle( itemInfo.title );
+      title: "아이디 찾기",
+      event: (itemInfo: any) => {
+        findDialogToggle(itemInfo.title);
       },
     },
     {
-      title : "비밀번호 찾기",
-      event : ( itemInfo : any  ) => {
-        findDialogToggle( itemInfo.title );
+      title: "비밀번호 찾기",
+      event: (itemInfo: any) => {
+        findDialogToggle(itemInfo.title);
       },
     },
     {
-      title : "회원가입",
-      path : "/join",
-      event : ( itemInfo : any  ) => {
-        if ( isEmpty( itemInfo.path ) ) {
+      title: "회원가입",
+      path: "/join",
+      event: (itemInfo: any) => {
+        if (isEmpty(itemInfo.path)) {
           return;
         }
-
-        router.push( itemInfo.path );
+        router.push(itemInfo.path);
       },
-    }
+    },
   ],
-  findTitle : "",
-  alertText :  "",
-})
+  findTitle: "",
+  alertText: "",
+});
 
 /************************************************************
  * Dynamic Data ( 동적 데이터 )
  ************************************************************/
 const loginBooleanData = reactive({
-  passwordShow : false,
-  alert : false,loginData,
-  isFirst : true,
-  findDialog : false,
-})
-
-const windowWidth = ref( 0 );
-
-const isMobile = computed( () => {
-  return 1024 >= windowWidth.value;
-})
+  passwordShow: false,
+  alert: false,
+  isFirst: true,
+  findDialog: false,
+});
 
 /************************************************************
  * Provide / inject Data
@@ -102,186 +92,155 @@ const isMobile = computed( () => {
 /************************************************************
  * Function
  ************************************************************/
-const moveMain = () => {
-  router.push( "/main" );
-}
+const moveHome = () => {
+  router.push("/user/attendance");
+};
 
 const onLogin = async () => {
-  const isCheck = await loginValidation();
+  const isCheck = loginValidation();
 
-  if ( !isCheck ) {
-    return ( loginBooleanData.alert = true );
+  if (!isCheck) {
+    return (loginBooleanData.alert = true);
   }
 
-  setLogin( true );
-  moveMain();
-}
+  setLogin(true);
+  moveHome();
+};
 
-const findDialogToggle = ( title : string ) => {
-  if ( isEmpty( title ) ) {
+const findDialogToggle = (title: string) => {
+  if (isEmpty(title)) {
     return;
   }
 
   loginData.findTitle = title;
-
   loginBooleanData.findDialog = true;
-}
+};
 
 const loginValidation = () => {
   const loginUser = getLoginUser();
 
-  if ( isEmpty( loginData.id ) && isEmpty( loginData.password ) ) {
+  if (isEmpty(loginData.id) && isEmpty(loginData.password)) {
     loginData.alertText = "아이디 와 비밀번호를 입력해주세요.";
     return false;
-  }
-  else if ( isEmpty( loginData.id ) && isNotEmpty( loginData.password ) ) {
+  } else if (isEmpty(loginData.id) && isNotEmpty(loginData.password)) {
     loginData.alertText = "아이디를 입력해주세요.";
     return false;
-  }
-  else if ( isNotEmpty( loginData.id ) && isEmpty( loginData.password ) ) {
+  } else if (isNotEmpty(loginData.id) && isEmpty(loginData.password)) {
     loginData.alertText = "비밀번호를 입력해주세요.";
     return false;
-  }
-  else if ( isEmpty( loginUser ) && ( "testUser" !== loginData.id || "0000" !== loginData.password ) ) {
-    loginData.alertText = "아이디 혹은 비밀번호를 잘못 입력하였습니다. 입력하신 내용을 다시 확인해주세요.";
+  } else if (
+    isEmpty(loginUser) &&
+    "testUser" !== loginData.id &&
+    "0000" !== loginData.password
+  ) {
+    loginData.alertText =
+      "아이디 혹은 비밀번호를 잘못 입력하였습니다. 입력하신 내용을 다시 확인해주세요.";
     return false;
-  }
-  else if ( isNotEmpty( loginUser ) && ( loginData.id !== loginUser?.id || loginData.password !== loginUser?.password )) {
-    loginData.alertText = "아이디 혹은 비밀번호를 잘못 입력하였습니다. 입력하신 내용을 다시 확인해주세요.";
+  } else if (
+    isNotEmpty(loginUser) &&
+    (loginData.id !== loginUser?.id || loginData.password !== loginUser?.password)
+  ) {
+    loginData.alertText =
+      "아이디 혹은 비밀번호를 잘못 입력하였습니다. 입력하신 내용을 다시 확인해주세요.";
     return false;
   }
 
   return true;
-}
-
-const setWindowWidth = ( data : any, isMounted : boolean = false ) => {
-  windowWidth.value = isMounted ? data.innerWidth : data.target.innerWidth;
-}
+};
 
 /************************************************************
  * Watch
  ************************************************************/
-watch( () => loginBooleanData.findDialog, ( newValue : boolean ) => {
-  if( !newValue ) {
-    setTimeout( () => {
-      loginData.findTitle = "";
-    }, 200);
+watch(
+  () => loginBooleanData.findDialog,
+  (newValue: boolean) => {
+    if (!newValue) {
+      setTimeout(() => {
+        loginData.findTitle = "";
+      }, 200);
+    }
   }
-});
+);
 
-watch( () => loginBooleanData.alert, ( newValue : boolean ) => {
-  if ( newValue ) {
-    setTimeout( () => {
-      loginBooleanData.alert = false;
-    }, 1000);
+watch(
+  () => loginBooleanData.alert,
+  (newValue: boolean) => {
+    if (newValue) {
+      setTimeout(() => {
+        loginBooleanData.alert = false;
+      }, 1500);
+    }
   }
-});
+);
 
 /************************************************************
  * Mounted
  ************************************************************/
-onMounted( () => {
-
-  setWindowWidth( document.documentElement, true );
-
-  document.documentElement.removeAttribute( "dark-mode" );
-
-  window.addEventListener( "resize", setWindowWidth );
-})
-
-onBeforeUnmount( () => {
-  window.removeEventListener( "resize", setWindowWidth );
+onMounted(() => {
+  document.documentElement.removeAttribute("dark-mode");
 });
-
-
-/************************************************************
- * Layout
- ************************************************************/
-definePageMeta( {
-  layout: false,
-  alias: [ "/login" ],
-} );
-
 </script>
 
 <template>
-  <div :class="cx( 'login', LoginStyle.Default )">
-    <div :class="cx( LoginStyle.Container )">
-      <div :class="cx( 'form-bg', LoginStyle.FormBg )">
-<!--        <img src="@/assets/images/bg/bg_login.jpg" alt="loginBg">-->
-      </div>
-
-      <div :class="cx( 'form-card', LoginStyle.FormCard )">
-        <div :class="cx( 'title', LoginStyle.Title )" @click="moveMain">
-          <span>로그인</span>
+  <div :class="cx('login', LoginStyle.Default)">
+    <div :class="cx(LoginStyle.Container)">
+      <div :class="cx('form-card', LoginStyle.FormCard)">
+        <div :class="cx('title', LoginStyle.Title)">
+          인천노조 시스템
+          <span>조합원 모바일 로그인</span>
         </div>
 
-        <div :class="cx( LoginStyle.Content )">
-          <form :class="cx( LoginStyle.Form )">
-            <div :class="cx( LoginStyle.InfoArea )">
-              <div :class="cx( LoginStyle.InfoItem )">
+        <div :class="cx(LoginStyle.Content)">
+          <form :class="cx(LoginStyle.Form)" @submit.prevent="onLogin">
+            <div :class="cx(LoginStyle.InfoArea)">
+              <div :class="cx(LoginStyle.InfoItem)">
                 <div class="is-flex">
                   <span class="title">아이디</span>
-                  <em v-if="isMobile">* 아이디 : testUser / 비밀번호 : 0000</em>
-
-                  <v-tooltip
-                    v-if="!isMobile"
-                    content-class="black-tooltip"
-                    location="right"
-                  >
-                    <template v-slot:activator="{ props }">
-                      <span v-bind="props" class="material-icons">error_outline</span>
-                    </template>
-                    <div>
-                      <span>초기 아이디 / 비밀번호</span>
-                      <ul>
-                        <li>
-                          <span>아이디 : testUser</span>
-                        </li>
-                        <li>
-                          <span>비밀번호 : 0000</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </v-tooltip>
+                  <em>* testUser / 0000</em>
                 </div>
                 <v-text-field
                   v-model="loginData.id"
                   variant="solo"
                   placeholder="아이디를 입력해주세요."
+                  hide-details
                 />
               </div>
-              <div :class="cx( LoginStyle.InfoItem )">
+              <div :class="cx(LoginStyle.InfoItem)">
                 <span class="title">비밀번호</span>
                 <v-text-field
                   v-model="loginData.password"
                   variant="solo"
                   placeholder="패스워드를 입력해주세요."
-                  :append-icon="loginBooleanData.passwordShow ? 'mdi-eye' : 'mdi-eye-off'"
+                  :append-icon="
+                    loginBooleanData.passwordShow ? 'mdi-eye' : 'mdi-eye-off'
+                  "
                   :type="loginBooleanData.passwordShow ? 'text' : 'password'"
-                  @click:append="loginBooleanData.passwordShow = !loginBooleanData.passwordShow"
+                  @click:append="
+                    loginBooleanData.passwordShow = !loginBooleanData.passwordShow
+                  "
+                  hide-details
                 />
               </div>
             </div>
-            <div :class="cx( LoginStyle.LoginBtn )">
-              <BaseBtn @on-click="onLogin">
-                <span>로그인</span>
-              </BaseBtn>
+            
+            <div :class="cx(LoginStyle.LoginBtn)">
+              <v-btn type="submit">
+                로그인
+              </v-btn>
             </div>
           </form>
-          <div :class="cx( LoginStyle.MenuList )">
+
+          <div :class="cx(LoginStyle.MenuList)">
             <ul>
-              <li
-                v-for="( item, index ) in loginData.menuList"
-                :key="index"
-              >
-                <span v-text="item.title" @click="item.event( item )"></span>
+              <li v-for="(item, index) in loginData.menuList" :key="index">
+                <span v-text="item.title" @click="item.event(item)"></span>
               </li>
             </ul>
           </div>
         </div>
       </div>
     </div>
+
     <FindDialog
       v-model="loginBooleanData.findDialog"
       :title="loginData.findTitle"

@@ -5,6 +5,7 @@ import CryptoJS from "crypto-js";
 interface UserModel {
   id? : string,
   password? : string,
+  hasChangedCredentials?: boolean;
 }
 
 export const useUserStore = defineStore( "user", () => {
@@ -20,14 +21,32 @@ export const useUserStore = defineStore( "user", () => {
 
   // 로그인 정보 복호화
   const getLoginUser = () => {
-    const decryptData = CryptoJS.AES.decrypt( sessionStorage.getItem( "user" ) || "" , 'info').toString(CryptoJS.enc.Utf8);
-
-    return  decryptData ? JSON.parse( decryptData ) : "";
+    const rawData = sessionStorage.getItem( "user" );
+    if (!rawData) {
+      // 최초 가입 정보 (어드민이 미리 등록한 정보)
+      return { id: "testUser", password: "0000", hasChangedCredentials: false };
+    }
+    try {
+      const decryptData = CryptoJS.AES.decrypt( rawData , 'info').toString(CryptoJS.enc.Utf8);
+      return decryptData ? JSON.parse( decryptData ) : { id: "testUser", password: "0000", hasChangedCredentials: false };
+    } catch (e) {
+      return { id: "testUser", password: "0000", hasChangedCredentials: false };
+    }
   }
 
   // 로그인 유무 설정
   const setLogin = ( state : boolean ) => {
     isLogin.value = state;
+  }
+
+  // ID/비밀번호 변경 액션 (최초 1회 제한용)
+  const changeCredentials = (newId: string, newPassword: string) => {
+    const userInfo: UserModel = {
+      id: newId,
+      password: newPassword,
+      hasChangedCredentials: true
+    };
+    setUserInfo(userInfo);
   }
 
   // 로그아웃
@@ -44,6 +63,7 @@ export const useUserStore = defineStore( "user", () => {
     getLoginUser,
     setUserInfo,
     setLogin,
+    changeCredentials,
     logout,
   };
 }, {
