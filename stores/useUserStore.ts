@@ -1,6 +1,7 @@
-import {ref} from "vue";
-import {defineStore} from "pinia";
+import { ref } from "vue";
+import { defineStore } from "pinia";
 import CryptoJS from "crypto-js";
+import { useSupabaseClient } from "#imports";
 
 interface UserModel {
   id? : string,
@@ -23,17 +24,19 @@ export interface NoticeModel {
   title: string;
   date: string;
   content: string;
-  author: string;
+  author?: string;
 }
 
 export const useUserStore = defineStore( "user", () => {
+  const supabase = useSupabaseClient();
+
   // 로그인 유무 확인
   const isLogin = ref<boolean>( false );
   
   // 역할 관리 ('member' | 'admin')
   const userRole = ref<"member" | "admin">("member");
 
-  // Mock 조합원 데이터 리스트 (1~8조, 4조 제외 총 7개 조)
+  // 기본 조합원 데이터 리스트 (로컬 폴백 및 최초 시딩용)
   const workers = ref<WorkerModel[]>([
     { name: "홍길동", role: "반장", phone: "010-5678-1234", group: 1, checkedIn: true, status: "day", location: "경인서부" },
     { name: "이순신", role: "조합원", phone: "010-1111-2222", group: 1, checkedIn: true, status: "night", location: "인천" },
@@ -68,7 +71,7 @@ export const useUserStore = defineStore( "user", () => {
     {
       id: 2,
       location: "임항 제3부두",
-      cargo: "벌크선 선적 보조",
+      cargo: "벌크선 석탄 선적 보조",
       details: "벨트 컨베이어 라인 모니터링 및 선내 투입 배치. 미세먼지 마스크 착용 필.",
       safetyInstruction: "낙하 위험 구역 진입 통제 및 무전 통신 철저 준수",
     },
@@ -96,10 +99,57 @@ export const useUserStore = defineStore( "user", () => {
     },
   ]);
 
+  // Supabase 데이터 초기 로드 및 시딩(자동 데이터베이스 생성 테이블 확인용)
+  const fetchAllData = async () => {
+    try {
+      // 1. 조합원 조회
+      const { data: dbWorkers, error: errWorkers } = await supabase.from("workers").select("*");
+      if (dbWorkers && dbWorkers.length > 0) {
+        workers.value = dbWorkers.map(w => ({
+          name: w.name,
+          role: w.role,
+          phone: w.phone,
+          group: w.group,
+          checkedIn: w.checked_in,
+          status: w.status,
+          location: w.location || ""
+        }));
+      } else if (!errWorkers) {
+        // 테이블이 존재하지만 비어있는 경우 시딩 진행
+        await supabase.from("workers").insert(workers.value.map(w => ({
+          name: w.name,
+          role: w.role,
+          phone: w.phone,
+          group: w.group,
+          checked_in: w.checkedIn,
+          status: w.status,
+          location: w.location
+        })));
+      }
+
+      // 2. 현장작업 조회
+      const { data: dbFW, error: errFW } = await supabase.from("field_works").select("*").order("id", { ascending: false });
+      if (dbFW && dbFW.length > 0) {
+        fieldWorks.value = dbFW;
+      } else if (!errFW) {
+        await supabase.from("field_works").insert(fieldWorks.value);
+      }
+
+      // 3. 공지사항 조회
+      const { data: dbNotices, error: errNotices } = await supabase.from("notices").select("*").order("id", { ascending: false });
+      if (dbNotices && dbNotices.length > 0) {
+        notices.value = dbNotices;
+      } else if (!errNotices) {
+        await supabase.from("notices").insert(notices.value);
+      }
+    } catch (e) {
+      console.warn("Supabase 연결 실패 혹은 테이블 없음 - 로컬 상태 유지", e);
+    }
+  };
+
   // 로그인 데이터 설정 및 암호화
   const setUserInfo = ( userInfo : UserModel ) => {
     const encryptedData = CryptoJS.AES.encrypt( JSON.stringify( userInfo ), "info" ).toString();
-
     sessionStorage.setItem( "user", encryptedData );
   }
 
@@ -107,7 +157,6 @@ export const useUserStore = defineStore( "user", () => {
   const getLoginUser = () => {
     const rawData = sessionStorage.getItem( "user" );
     if (!rawData) {
-      // 최초 가입 정보 (어드민이 미리 등록한 정보)
       return { id: "testUser", password: "0000", hasChangedCredentials: false };
     }
     try {
@@ -134,7 +183,7 @@ export const useUserStore = defineStore( "user", () => {
   }
 
   // 조합원 개별 배치 지정
-  const deployWorker = (name: string, location: string) => {
+  const deployWorker = async (name: string, location: string) => {
     const idx = workers.value.findIndex(w => w.name === name);
     if (idx !== -1) {
       workers.value[idx].location = location;
@@ -142,16 +191,122 @@ export const useUserStore = defineStore( "user", () => {
         workers.value[idx].checkedIn = true;
         workers.value[idx].status = "day";
       }
+      try {
+        await supabase.from("workers").update({
+          location: workers.value[idx].location,
+          checked_in: workers.value[idx].checkedIn,
+          status: workers.value[idx].status
+        }).eq("name", name);
+      } catch (e) {
+        console.error("Supabase update failed", e);
+      }
     }
   }
 
   // 조별 단체 배치 지정
-  const deployGroup = (groupId: number, location: string) => {
+  const deployGroup = async (groupId: number, location: string) => {
     workers.value.forEach(w => {
       if (w.group === groupId && w.checkedIn) {
         w.location = location;
       }
     });
+    try {
+      await supabase.from("workers").update({ location: location }).eq("group", groupId).eq("checked_in", true);
+    } catch (e) {
+      console.error("Supabase group update failed", e);
+    }
+  }
+
+  // 공지사항 데이터베이스 추가/수정 CRUD 액션
+  const saveNoticeAction = async (id: number | null, title: string, content: string) => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    if (id === null) {
+      const { data } = await supabase.from("notices").insert([{ title, content, date: todayStr }]).select();
+      if (data && data.length > 0) {
+        notices.value.unshift(data[0]);
+      } else {
+        const nextId = notices.value.length > 0 ? Math.max(...notices.value.map(n => n.id)) + 1 : 1;
+        notices.value.unshift({ id: nextId, title, content, date: todayStr });
+      }
+    } else {
+      await supabase.from("notices").update({ title, content, date: todayStr }).eq("id", id);
+      const idx = notices.value.findIndex((n) => n.id === id);
+      if (idx !== -1) {
+        notices.value[idx].title = title;
+        notices.value[idx].content = content;
+        notices.value[idx].date = todayStr;
+      }
+    }
+  }
+
+  // 현장작업 데이터베이스 추가/수정 CRUD 액션
+  const saveWorkAction = async (id: number | null, location: string, cargo: string, details: string, safetyInstruction: string) => {
+    if (id === null) {
+      const { data } = await supabase.from("field_works").insert([{ location, cargo, details, safety_instruction: safetyInstruction }]).select();
+      if (data && data.length > 0) {
+        fieldWorks.value.unshift(data[0]);
+      } else {
+        const nextId = fieldWorks.value.length > 0 ? Math.max(...fieldWorks.value.map(w => w.id)) + 1 : 1;
+        fieldWorks.value.unshift({ id: nextId, location, cargo, details, safetyInstruction });
+      }
+    } else {
+      await supabase.from("field_works").update({ location, cargo, details, safety_instruction: safetyInstruction }).eq("id", id);
+      const idx = fieldWorks.value.findIndex((w) => w.id === id);
+      if (idx !== -1) {
+        fieldWorks.value[idx].location = location;
+        fieldWorks.value[idx].cargo = cargo;
+        fieldWorks.value[idx].details = details;
+        fieldWorks.value[idx].safetyInstruction = safetyInstruction;
+      }
+    }
+  }
+
+  // 신규 조합원 등록 액션 (어드민용)
+  const addWorkerAction = async (name: string, phone: string, role: string, group: number) => {
+    const newWorker = {
+      name,
+      role,
+      phone,
+      group,
+      checked_in: false,
+      status: "none",
+      location: ""
+    };
+    try {
+      const { data } = await supabase.from("workers").insert([newWorker]).select();
+      if (data && data.length > 0) {
+        workers.value.push({
+          name: data[0].name,
+          role: data[0].role,
+          phone: data[0].phone,
+          group: data[0].group,
+          checkedIn: data[0].checked_in,
+          status: data[0].status as any,
+          location: data[0].location || ""
+        });
+      } else {
+        workers.value.push({
+          name,
+          role,
+          phone,
+          group,
+          checkedIn: false,
+          status: "none",
+          location: ""
+        });
+      }
+    } catch (e) {
+      console.error("Supabase insert worker failed", e);
+      workers.value.push({
+        name,
+        role,
+        phone,
+        group,
+        checkedIn: false,
+        status: "none",
+        location: ""
+      });
+    }
   }
 
   // 로그아웃
@@ -159,7 +314,6 @@ export const useUserStore = defineStore( "user", () => {
     sessionStorage.removeItem( "user" );
     sessionStorage.removeItem( "sidebar" );
     sessionStorage.removeItem( "menu" );
-
     location.href = "/login";
   };
 
@@ -169,12 +323,16 @@ export const useUserStore = defineStore( "user", () => {
     workers,
     fieldWorks,
     notices,
+    fetchAllData,
     getLoginUser,
     setUserInfo,
     setLogin,
     changeCredentials,
     deployWorker,
     deployGroup,
+    saveNoticeAction,
+    saveWorkAction,
+    addWorkerAction,
     logout,
   };
 }, {

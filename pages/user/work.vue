@@ -121,26 +121,9 @@ const openNoticeEditor = (mode: "add" | "edit", item?: Notice) => {
   isNoticeFormOpen.value = true;
 };
 
-const saveNotice = () => {
+const saveNotice = async () => {
   if (isEmpty(noticeForm.title) || isEmpty(noticeForm.content)) return;
-  const todayStr = new Date().toISOString().split("T")[0];
-
-  if (formMode.value === "add") {
-    const nextId = userStore.notices.length > 0 ? Math.max(...userStore.notices.map(n => n.id)) + 1 : 1;
-    userStore.notices.unshift({
-      id: nextId,
-      title: noticeForm.title,
-      content: noticeForm.content,
-      date: todayStr,
-    });
-  } else {
-    const idx = userStore.notices.findIndex((n) => n.id === noticeForm.id);
-    if (idx !== -1) {
-      userStore.notices[idx].title = noticeForm.title;
-      userStore.notices[idx].content = noticeForm.content;
-      userStore.notices[idx].date = todayStr;
-    }
-  }
+  await userStore.saveNoticeAction(noticeForm.id, noticeForm.title, noticeForm.content);
   isNoticeFormOpen.value = false;
 };
 
@@ -163,7 +146,7 @@ const openWorkEditor = (mode: "add" | "edit", item?: WorkItem) => {
   isWorkFormOpen.value = true;
 };
 
-const saveWork = () => {
+const saveWork = async () => {
   if (
     isEmpty(workForm.location) ||
     isEmpty(workForm.cargo) ||
@@ -171,24 +154,13 @@ const saveWork = () => {
   )
     return;
 
-  if (formMode.value === "add") {
-    const nextId = userStore.fieldWorks.length > 0 ? Math.max(...userStore.fieldWorks.map(w => w.id)) + 1 : 1;
-    userStore.fieldWorks.unshift({
-      id: nextId,
-      location: workForm.location,
-      cargo: workForm.cargo,
-      details: workForm.details,
-      safetyInstruction: workForm.safetyInstruction,
-    });
-  } else {
-    const idx = userStore.fieldWorks.findIndex((w) => w.id === workForm.id);
-    if (idx !== -1) {
-      userStore.fieldWorks[idx].location = workForm.location;
-      userStore.fieldWorks[idx].cargo = workForm.cargo;
-      userStore.fieldWorks[idx].details = workForm.details;
-      userStore.fieldWorks[idx].safetyInstruction = workForm.safetyInstruction;
-    }
-  }
+  await userStore.saveWorkAction(
+    workForm.id,
+    workForm.location,
+    workForm.cargo,
+    workForm.details,
+    workForm.safetyInstruction
+  );
   isWorkFormOpen.value = false;
 };
 
