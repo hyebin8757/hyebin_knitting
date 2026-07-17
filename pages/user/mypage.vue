@@ -146,7 +146,7 @@ definePageMeta({
   <div :class="cx('mypage-screen', MypageStyle.Default)">
     <!-- Header Avatar Profile Card -->
     <div :class="cx('profile-header', MypageStyle.ProfileHeaderCard)">
-      <div class="avatar">홍</div>
+      <div class="avatar">{{ name ? name.slice(0, 1) : '홍' }}</div>
       <div class="name">{{ name }}</div>
       <div class="sub">{{ role }}</div>
     </div>
