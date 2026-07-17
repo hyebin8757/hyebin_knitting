@@ -237,16 +237,30 @@ onMounted(() => {
               </div>
             </div>
 
-            <!-- 아이디 저장 체크박스 -->
-            <div style="margin-top: 0.8rem; margin-bottom: 1.2rem; display: flex; align-items: center; width: 100%;">
-              <v-checkbox
-                v-model="rememberId"
-                label="아이디 저장"
-                hide-details
-                density="compact"
-                color="primary"
-                style="color: rgba(255,255,255,0.8); font-size: 1.3rem; font-weight: 600;"
-              />
+            <!-- 아이디 저장 체크박스 (커스텀 디자인) -->
+            <div style="margin-top: 1.2rem; margin-bottom: 1.6rem; display: flex; align-items: center; gap: 0.8rem; cursor: pointer; user-select: none; width: fit-content;" @click="rememberId = !rememberId">
+              <div 
+                :style="{
+                  width: '2rem',
+                  height: '2rem',
+                  borderRadius: '0.6rem',
+                  border: '1px solid ' + (rememberId ? 'rgba(136, 197, 255, 0.5)' : 'rgba(255, 255, 255, 0.15)'),
+                  background: rememberId ? 'rgba(35, 102, 180, 0.35)' : 'rgba(255, 255, 255, 0.03)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s'
+                }"
+              >
+                <i 
+                  v-if="rememberId" 
+                  class="material-icons" 
+                  style="font-size: 1.4rem; color: #88c5ff; font-weight: bold;"
+                >
+                  check
+                </i>
+              </div>
+              <span style="color: rgba(255,255,255,0.75); font-size: 1.3rem; font-weight: 600;">아이디 저장</span>
             </div>
 
             <div :class="cx(LoginStyle.LoginBtn)">
