@@ -41,7 +41,7 @@ const nuxtConfig: any = {
         { "http-equiv": "Cache-control", content: "no-cache" },
         { "http-equiv": "Expires", content: "0" },
         { hid: "og:title", property: "og:title", content: "인천 노조 시스템" },
-        { hid: "og:image", property: "og:image", content: "/image_og.png" },
+        { hid: "og:image", property: "og:image", content: "/image_og1.png" },
         { hid: "og:description", property: "og:description", content: "설명" },
         { hid: "og:type", property: "og:type", content: "website" },
         { hid: "og:url", property: "og:url", content: "" },
