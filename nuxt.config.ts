@@ -77,27 +77,10 @@ const nuxtConfig: any = {
 
   nitro: {
     /**
-     * Static으로 Buiid
+     * Static으로 Build
      * public/ 디렉토리를 자산으로 import
      * */
     serveStatic: false,
-
-    rootDir: "./",
-
-    srcDir: "../../src/main/resources/static",
-
-    /**
-     * Static 빌드 결과 폴더 설정
-     * 빌드시
-     * /output
-     *  /public ->
-     *  /server -> ssr : false시 없음
-     * */
-    output: {
-      // dir: "src",
-      // publicDir: "./output/public",
-      dir: ".output",
-    },
 
     externals: {
       inline: ["h3"],
