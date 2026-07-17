@@ -3,4 +3,4 @@ command = "yarn generate"
 publish = ".output/public"
 
 [context.production.environment]
-NODE_VERSION = "22"
+NODE_VERSION = "18"
