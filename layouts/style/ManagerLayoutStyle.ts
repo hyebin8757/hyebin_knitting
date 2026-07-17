@@ -15,7 +15,7 @@ const { getSidebarMenuListWidth } = useSidebarStore();
 /************************************************************
  * style
  ************************************************************/
-export const LayoutStyle = {
+export const ManagerLayoutStyle = {
   Default : css`
     width: 100%;
     height: 100%;

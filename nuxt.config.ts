@@ -19,7 +19,7 @@ const nuxtConfig: any = {
    * */
   alias: {
     "~/*": "./*",
-    "@/*": "./*"
+    "@/*": "./*",
   },
 
   build: {
@@ -31,25 +31,24 @@ const nuxtConfig: any = {
       htmlAttrs: {
         lang: "ko",
       },
-      title: "민우주 포트폴리오",
+      title: "인천 노조 시스템",
       charset: "utf-8",
-      viewport: "width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1",
+      viewport:
+        "width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1",
       meta: [
-        {"http-equiv": "X-UA-Compatible", content: "IE=edge,chrome=1"},
-        {"http-equiv": "Pragma", content: "no-cache"},
-        {"http-equiv": "Cache-control", content: "no-cache"},
-        {"http-equiv": "Expires", content: "0"},
-        { hid : "og:title", property : "og:title", content : "민우주 포트폴리오" },
-        { hid : "og:image", property : "og:image", content : "/image_og.png" },
-        { hid : "og:description", property : "og:description", content : "설명" },
-        { hid : "og:type", property : "og:type", content : "website" },
-        { hid : "og:url", property : "og:url", content : ""},
+        { "http-equiv": "X-UA-Compatible", content: "IE=edge,chrome=1" },
+        { "http-equiv": "Pragma", content: "no-cache" },
+        { "http-equiv": "Cache-control", content: "no-cache" },
+        { "http-equiv": "Expires", content: "0" },
+        { hid: "og:title", property: "og:title", content: "인천 노조 시스템" },
+        { hid: "og:image", property: "og:image", content: "/image_og.png" },
+        { hid: "og:description", property: "og:description", content: "설명" },
+        { hid: "og:type", property: "og:type", content: "website" },
+        { hid: "og:url", property: "og:url", content: "" },
       ],
       script: [],
-      link: [
-        {rel: "icon", type: "image/png", href: "/favicon.png"}
-      ]
-    }
+      link: [{ rel: "icon", type: "image/png", href: "/favicon.png" }],
+    },
   },
 
   /**
@@ -57,13 +56,12 @@ const nuxtConfig: any = {
    * */
   css: [
     "vuetify/lib/styles/main.sass",
-    '@mdi/font/css/materialdesignicons.css',
+    "@mdi/font/css/materialdesignicons.css",
     "material-icons/iconfont/material-icons.css",
     "@/assets/style/CommonStyle.ts",
   ],
 
   nitro: {
-
     /**
      * Static으로 Buiid
      * public/ 디렉토리를 자산으로 import
@@ -84,20 +82,20 @@ const nuxtConfig: any = {
     output: {
       // dir: "src",
       // publicDir: "./output/public",
-      dir: '.output'
+      dir: ".output",
     },
 
     externals: {
-      inline: ['h3']
-    }
+      inline: ["h3"],
+    },
   },
 
   proxy: {
-    proxies: {}
+    proxies: {},
   },
 
   modules: [
-    "@pinia/nuxt",  // pinia,
+    "@pinia/nuxt", // pinia,
     "@pinia-plugin-persistedstate/nuxt", // pinia 상태 지속
     "@nuxt-alt/proxy", // proxy
     "nuxt-lodash",
@@ -120,7 +118,7 @@ const nuxtConfig: any = {
      * */
     typeCheck: false,
 
-    shim: true
+    shim: true,
   },
 
   imports: {
@@ -130,10 +128,9 @@ const nuxtConfig: any = {
       // ... or scan modules nested one level deep with a specific name and file extension
       "composables/*/index.{ts,js,mjs,mts}",
       // ... or scan all modules within given directory
-      "composables/**"
-    ]
+      "composables/**",
+    ],
   },
-
 
   hooks: {
     //
@@ -152,6 +149,6 @@ const nuxtConfig: any = {
       autoprefixer: {},
     },
   },
-}
+};
 
 export default defineNuxtConfig(nuxtConfig)//@ts-ignore

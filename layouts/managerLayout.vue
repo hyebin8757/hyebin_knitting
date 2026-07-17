@@ -2,11 +2,12 @@
 import {useRoute, useRouter} from "vue-router";
 import { computed, onBeforeMount, onMounted, ref, provide, watch } from "vue";
 import { cx } from "@emotion/css";
+
 import TheHeader from "~/components/header/TheHeader.vue";
 import TheSidebar from "~/components/sidebar/TheSidebar.vue";
-import TheMenu from "~/components/menu/TheMenu.vue";
+
 import {useUtil} from "~/utils/useUtil";
-import {LayoutStyle} from "~/layouts/style/LayoutStyle";
+import {ManagerLayoutStyle} from "~/layouts/style/ManagerLayoutStyle";
 
 const route = useRoute();
 const router = useRouter();
@@ -38,20 +39,6 @@ provide( "mobileSidebar", mobileSidebar );
 /************************************************************
  * Function
  ************************************************************/
-// 삭제 된 메뉴 복원
-const onRestore = ( label : string ) => {
-  restoreMenu.value = label;
-}
-
-// 메뉴 reset
-const onMenuReset = () => {
-  if ( isEmpty( menuRef.value ) ) {
-    return;
-  }
-
-  menuRef.value.onMenuReset();
-}
-
 const setWindowWidth = ( data : any ) => {
   windowWidth.value = data.target.innerWidth;
 }
@@ -85,19 +72,16 @@ onBeforeMount( () => {
 
 <template>
   <v-app :full-height="false">
-    <div :class="cx('wrapper', LayoutStyle.Default )">
+    <div :class="cx('wrapper', ManagerLayoutStyle.Default )">
       <!-- Header -->
-      <TheHeader @on-menu-reset="onMenuReset"/>
+      <TheHeader/>
 
-      <section :class="cx(  'container', LayoutStyle.Container )">
+      <section :class="cx(  'container', ManagerLayoutStyle.Container )">
         <!-- Sidebar -->
-        <TheSidebar @on-restore="onRestore"/>
+        <TheSidebar/>
 
         <!-- 실제 콘텐츠 -->
-        <main :class="cx( LayoutStyle.Main )">
-          <!-- menu -->
-          <TheMenu ref="menuRef"  :restore-menu="restoreMenu"/>
-
+        <main :class="cx( ManagerLayoutStyle.Main )">
           <slot/>
         </main>
       </section>

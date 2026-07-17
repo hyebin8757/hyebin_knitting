@@ -184,16 +184,7 @@ definePageMeta({
   <div :class="cx(JoinStyle.Default)">
     <div :class="cx(JoinStyle.Container)">
       <div :class="cx(JoinStyle.Title)" @click="onLogin">
-        <img src="@/assets/images/logo/logo.png" alt="logo" />
-        <span>Min U Ju - IntelliJ IDEA</span>
-        <v-tooltip content-class="black-tooltip" location="top">
-          <template v-slot:activator="{ props }">
-            <span v-bind="props" class="material-icons">error_outline</span>
-          </template>
-          <div>
-            <span>* [필수] 아이디 와 비밀번호만 작성 해주세요.</span>
-          </div>
-        </v-tooltip>
+        <span>회원가입</span>
       </div>
 
       <div :class="cx('join-item', JoinStyle.JoinItem)">

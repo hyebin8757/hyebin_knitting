@@ -80,50 +80,14 @@ const sidebarData = reactive({
       iconName : "home",
       path : "/main",
     },
-    {
-      label : "project",
-      tooltip : "프로젝트",
-      iconName : "code",
-      path : "/project",
-    },
-    {
-      label : "about",
-      tooltip : "자기소개서",
-      iconName : "create",
-      path : "/about",
-    },
-    {
-      label : "contact",
-      tooltip : "연락처",
-      iconName : "mail_outline",
-      path : "/contact",
-    },
   ],
 
-  menuListValue : ["portfolio"],
+  menuListValue : [""],
   menuList : [
     {
-      title : "home.vue",
-      label : "main",
-      path : "/main",
-      bookmark : false,
-    },
-    {
-      title : "about.html",
-      label : "about",
-      path : "/about",
-      bookmark : false,
-    },
-    {
-      title : "contact.css",
-      label : "contact",
-      path : "/contact",
-      bookmark : false,
-    },
-    {
-      title : "project.js",
-      label : "project",
-      path : "/project",
+      title : "main",
+      label : "",
+      path : "/",
       bookmark : false,
     },
   ],
@@ -322,31 +286,6 @@ onMounted( () => {
             @on-restore="onRestore"
           />
         </v-list-group>
-
-        <v-list-item :class="cx( 'bookmark-list', SidebarStyle.BookmarkList )">
-          <div :class="cx( SidebarStyle.BookmarkTitle )">
-            <span>즐겨찾기</span>
-            <v-tooltip
-              v-if="!isLogin"
-              content-class=""
-              location="top"
-            >
-              <template v-slot:activator="{ props }">
-                <span v-bind="props" class="material-icons">error_outline</span>
-              </template>
-              <div>
-                <span>* 로그인 시 사용 가능합니다.</span>
-              </div>
-            </v-tooltip>
-          </div>
-
-          <SidebarList
-            v-if="isLogin"
-            :is-bookmark="true"
-            :menu-list="bookmarkList"
-            @on-restore="onRestore"
-          />
-        </v-list-item>
       </v-list>
 
       <div

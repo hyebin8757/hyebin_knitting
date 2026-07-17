@@ -230,46 +230,6 @@ export const SidebarStyle = {
       }
     }
   `,
-
-  BookmarkList : css`
-    margin-top: 2rem;
-    padding: 0 !important;
-
-    .v-list-item {
-      ${StyleUtils.FlexUtils("center", "flex-start")};
-      gap: 0.8rem;
-      min-height: 4rem;
-      padding-inline-start: 0 !important;
-      padding: 0 1.6rem !important;
-
-      .v-list-item-title {
-        font-size: 1.6rem;
-      }
-
-      &.is-active,
-      &:hover {
-        background: var( --system-green-darken-color );
-      }
-
-      .v-list-item__append {
-        margin-left: auto;
-
-        .bookmark {
-          &.is-active {
-            color: var( --secondary-lighten-color-1);
-          }
-        }
-      }
-    }
-  `,
-
-  BookmarkTitle : css`
-    ${StyleUtils.FlexUtils("center", "space-between")};
-    padding: 1rem;
-    border-bottom: 1px solid var( --border-color-1 );
-    font-size: 1.6rem;
-    font-weight: 500;
-  `,
 }
 
 /************************************************************

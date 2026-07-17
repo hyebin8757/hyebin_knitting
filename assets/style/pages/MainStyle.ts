@@ -1,7 +1,6 @@
 import {css, cx, injectGlobal} from "@emotion/css";
 import {StyleUtils} from "~/styleUtils/styleUtils";
 import {_uiUtil} from "~/utils/core/ui/uiUtil";
-import {MenuStyleData} from "~/components/menu/style/MenuStyle";
 import {useUtil} from "~/utils/useUtil";
 import { CommonStyle } from "assets/style/CommonStyle";
 
@@ -20,7 +19,6 @@ export const MainStyle = {
   Default : css`
     position: relative;
     width: 100%;
-    height: calc( 100% - ${MenuStyleData.menuHeight}rem );
     padding: 3rem;
     overflow: hidden;
     background: #010c17;

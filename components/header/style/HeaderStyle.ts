@@ -118,10 +118,6 @@ export const HeaderStyle = {
     }
   `,
 
-  ModeButton : css`
-  `,
-
-
   MobileMenuButton : css`
     &.v-btn {
       font-size: 2.4rem;

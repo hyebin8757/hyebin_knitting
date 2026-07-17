@@ -208,13 +208,12 @@ definePageMeta( {
   <div :class="cx( 'login', LoginStyle.Default )">
     <div :class="cx( LoginStyle.Container )">
       <div :class="cx( 'form-bg', LoginStyle.FormBg )">
-        <img src="@/assets/images/bg/bg_login.jpg" alt="loginBg">
+<!--        <img src="@/assets/images/bg/bg_login.jpg" alt="loginBg">-->
       </div>
 
       <div :class="cx( 'form-card', LoginStyle.FormCard )">
         <div :class="cx( 'title', LoginStyle.Title )" @click="moveMain">
-          <img src="@/assets/images/logo/logo.png" alt="logo">
-          <span>Min U Ju - <br> IntelliJ IDEA</span>
+          <span>로그인</span>
         </div>
 
         <div :class="cx( LoginStyle.Content )">
