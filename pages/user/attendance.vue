@@ -714,43 +714,74 @@ definePageMeta({
       </v-card>
     </v-dialog>
     <!-- Calendar Date Click Status & Memo Dialog -->
-    <v-dialog v-model="isDateStatusDialogOpen" max-width="340">
-      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.6rem; color: #ffffff; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
-        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); display: flex; align-items: center; gap: 0.8rem; padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
-          <i class="material-icons" style="color: var(--primary-lighten-color-1);">edit_calendar</i>
-          <span>출결 관리 및 날짜 메모</span>
+    <v-dialog v-model="isDateStatusDialogOpen" max-width="360">
+      <v-card class="pa-5" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.6rem; color: #ffffff; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <i class="material-icons" style="color: var(--primary-lighten-color-1);">edit_calendar</i>
+            <span>출결 관리 및 날짜 메모</span>
+          </div>
+          <span style="font-size: 1.2rem; color: #88c5ff; font-weight: 600;">{{ selectedCalendarDate }}</span>
         </v-card-title>
         
-        <v-card-text class="py-4 px-0" style="font-size: 1.3rem; color: rgba(255, 255, 255, 0.7); line-height: 1.5;">
-          선택한 날짜: <strong>{{ selectedCalendarDate }}</strong>
-        </v-card-text>
-
-        <!-- 출결 상태 선택 -->
-        <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 0.2rem; max-height: 200px; overflow-y: auto; padding-right: 0.4rem;">
-          <v-btn
-            v-for="opt in [
-              { label: '주간 근무', val: 'day', color: '#1ad1b1', bg: 'rgba(26, 209, 177, 0.15)' },
-              { label: '야간 근무', val: 'night', color: '#3a86ff', bg: 'rgba(58, 134, 255, 0.15)' },
-              { label: '현장 근무 (외근)', val: 'field', color: '#ffcc00', bg: 'rgba(255, 204, 0, 0.15)' },
-              { label: '조퇴', val: 'leave', color: '#e05780', bg: 'rgba(224, 87, 128, 0.15)' },
-              { label: '결근', val: 'absent', color: '#ff4d4d', bg: 'rgba(255, 77, 77, 0.15)' }
-            ]"
-            :key="opt.val"
-            style="width: 100%; border-radius: 0.8rem; font-weight: 600; font-size: 1.3rem; height: 3.8rem !important; justify-content: flex-start; padding-left: 1.6rem !important;"
-            :style="{ 
-              background: (selectedCalendarDayStatus === opt.val ? opt.bg : 'rgba(255,255,255,0.02)') + ' !important', 
-              color: (selectedCalendarDayStatus === opt.val ? opt.color : 'rgba(255,255,255,0.6)') + ' !important', 
-              border: '1px solid ' + (selectedCalendarDayStatus === opt.val ? opt.color : 'rgba(255,255,255,0.1)') + ' !important' 
-            }"
-            @click="selectedCalendarDayStatus = opt.val"
-          >
-            {{ opt.label }}
-          </v-btn>
+        <!-- 날짜 메모 입력 영역 (상단 우선 배치) -->
+        <div style="margin-top: 1.2rem; margin-bottom: 1.2rem; display: flex; flex-direction: column; gap: 0.6rem; text-align: left;">
+          <label style="font-size: 1.25rem; color: #1ad1b1; font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
+            <i class="material-icons" style="font-size: 1.8rem; color: #1ad1b1;">edit_note</i>
+            <span>날짜 메모 작성</span>
+          </label>
+          <textarea
+            v-model="selectedCalendarDateMemo"
+            placeholder="이 날짜에 기억할 메모를 작성하세요 (예: 14시 병원 방문, 외근 특이사항 등)"
+            rows="3"
+            style="
+              width: 100%;
+              background: rgba(255, 255, 255, 0.05);
+              border: 1px solid rgba(26, 209, 177, 0.4);
+              border-radius: 0.8rem;
+              color: #ffffff;
+              padding: 1rem;
+              font-size: 1.3rem;
+              line-height: 1.5;
+              outline: none;
+              resize: none;
+              box-sizing: border-box;
+            "
+          ></textarea>
         </div>
 
-        <v-card-actions class="justify-end gap-2 px-0 pt-6">
-          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="isDateStatusDialogOpen = false">취소</v-btn>
-          <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="updateDateStatus(selectedCalendarDayStatus)">저장</v-btn>
+        <!-- 출결 상태 선택 (2열 컴팩트 버튼) -->
+        <div style="margin-top: 0.4rem; text-align: left;">
+          <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.6); font-weight: 600; display: block; margin-bottom: 0.6rem;">
+            출결 상태 선택
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem;">
+            <v-btn
+              v-for="opt in [
+                { label: '주간 근무', val: 'day', color: '#1ad1b1', bg: 'rgba(26, 209, 177, 0.15)' },
+                { label: '야간 근무', val: 'night', color: '#3a86ff', bg: 'rgba(58, 134, 255, 0.15)' },
+                { label: '현장 근무', val: 'field', color: '#ffcc00', bg: 'rgba(255, 204, 0, 0.15)' },
+                { label: '조퇴', val: 'leave', color: '#e05780', bg: 'rgba(224, 87, 128, 0.15)' },
+                { label: '결근', val: 'absent', color: '#ff4d4d', bg: 'rgba(255, 77, 77, 0.15)' },
+                { label: '초기화', val: 'none', color: 'rgba(255,255,255,0.4)', bg: 'rgba(255, 255, 255, 0.05)' }
+              ]"
+              :key="opt.val"
+              style="width: 100%; border-radius: 0.8rem; font-weight: 600; font-size: 1.2rem; height: 3.6rem !important; justify-content: center;"
+              :style="{ 
+                background: (selectedCalendarDayStatus === opt.val ? opt.bg : 'rgba(255,255,255,0.02)') + ' !important', 
+                color: (selectedCalendarDayStatus === opt.val ? opt.color : 'rgba(255,255,255,0.6)') + ' !important', 
+                border: '1px solid ' + (selectedCalendarDayStatus === opt.val ? opt.color : 'rgba(255,255,255,0.1)') + ' !important' 
+              }"
+              @click="selectedCalendarDayStatus = opt.val"
+            >
+              {{ opt.label }}
+            </v-btn>
+          </div>
+        </div>
+
+        <v-card-actions class="justify-end gap-2 px-0 pt-4" style="margin-top: 0.8rem;">
+          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 1.6rem !important; min-width: 7rem !important; height: auto !important; font-size: 1.3rem;" @click="isDateStatusDialogOpen = false">취소</v-btn>
+          <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 1.6rem !important; min-width: 7rem !important; height: auto !important; font-size: 1.3rem;" @click="updateDateStatus(selectedCalendarDayStatus)">저장</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
