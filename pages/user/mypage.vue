@@ -75,15 +75,21 @@ const isErrorOpen = ref(false);
 const isLogoutConfirmOpen = ref(false);
 const errorText = ref("");
 
-const loginUser = ref(userStore.getLoginUser());
-
 const hasChangedCredentials = computed(() => {
-  const name = userStore.loggedInUser?.name;
+  const user = userStore.loggedInUser;
+  const name = user?.name;
   const localFlag = name ? localStorage.getItem(`changed_credentials_${name}`) === "true" : false;
+  
+  // 1) explicitly hasChangedCredentials is true
+  // 2) or localFlag is true
+  // 3) or loginId is present and different from name (already changed)
+  const isIdChanged = !!(user?.loginId && user?.loginId !== user?.name);
+  
   return !!(
-    userStore.loggedInUser?.hasChangedCredentials ||
+    user?.hasChangedCredentials ||
     loginUser.value?.hasChangedCredentials ||
-    localFlag
+    localFlag ||
+    isIdChanged
   );
 });
 
@@ -258,78 +264,85 @@ definePageMeta({
         <span>로그인 정보 변경</span>
       </div>
 
-      <!-- If already changed, show completed message -->
-      <div v-if="hasChangedCredentials" class="completed-message">
-        <i class="material-icons">check_circle</i>
+      <!-- If already changed, show completed banner -->
+      <div v-if="hasChangedCredentials" class="completed-message" style="margin-bottom: 1.6rem; padding: 1.2rem 1.6rem; background: rgba(26, 209, 177, 0.12); border: 1px solid rgba(26, 209, 177, 0.3); border-radius: 1rem; color: #1ad1b1; display: flex; align-items: center; gap: 0.8rem; font-size: 1.3rem; font-weight: 600;">
+        <i class="material-icons" style="font-size: 1.8rem; color: #1ad1b1;">check_circle</i>
         <span>로그인 정보 변경이 완료되었습니다 (재변경 불가).</span>
       </div>
 
-      <!-- Else, show the form -->
-      <template v-else>
-        <div class="warning-box">
-          <i class="material-icons">info_outline</i>
-          <span>
-            ID/비밀번호 변경은 <strong>최초 1회만 가능</strong>하며, 변경 후에는
-            안전을 위해 다시 수정하실 수 없습니다.
-          </span>
-        </div>
+      <div v-else class="warning-box">
+        <i class="material-icons">info_outline</i>
+        <span>
+          ID/비밀번호 변경은 <strong>최초 1회만 가능</strong>하며, 변경 후에는
+          안전을 위해 다시 수정하실 수 없습니다.
+        </span>
+      </div>
 
-        <div class="input-group">
-          <div class="input-item">
-            <label>새 아이디</label>
-            <v-text-field
-              v-model="newCredentials.id"
-              variant="solo"
-              placeholder="변경할 아이디 입력"
-              hide-details
-            />
-          </div>
-          <div class="input-item">
-            <label>새 비밀번호</label>
-            <v-text-field
-              v-model="newCredentials.password"
-              variant="solo"
-              type="password"
-              placeholder="변경할 비밀번호 입력 (필수)"
-              hide-details
-            />
-          </div>
-          <div class="input-item">
-            <label>휴대전화</label>
-            <v-text-field
-              v-model="newCredentials.phone"
-              variant="solo"
-              placeholder="예: 010-1234-5678"
-              hide-details
-              @update:model-value="onPhoneInput"
-            />
-          </div>
-          <div class="input-item">
-            <label>입사일자</label>
-            <v-text-field
-              v-model="newCredentials.joinDate"
-              variant="solo"
-              placeholder="예: 2024-03-02"
-              hide-details
-              @update:model-value="onJoinDateInput"
-            />
-          </div>
-          <div class="input-item">
-            <label>생년월일</label>
-            <v-text-field
-              v-model="newCredentials.birthDate"
-              variant="solo"
-              placeholder="예: 1992-07-28"
-              hide-details
-              @update:model-value="onBirthDateInput"
-            />
-          </div>
+      <div class="input-group">
+        <div class="input-item">
+          <label>새 아이디</label>
+          <v-text-field
+            v-model="newCredentials.id"
+            variant="solo"
+            placeholder="변경할 아이디 입력"
+            :disabled="hasChangedCredentials"
+            hide-details
+          />
         </div>
+        <div class="input-item">
+          <label>새 비밀번호</label>
+          <v-text-field
+            v-model="newCredentials.password"
+            variant="solo"
+            type="password"
+            placeholder="변경할 비밀번호 입력 (필수)"
+            :disabled="hasChangedCredentials"
+            hide-details
+          />
+        </div>
+        <div class="input-item">
+          <label>휴대전화</label>
+          <v-text-field
+            v-model="newCredentials.phone"
+            variant="solo"
+            placeholder="예: 010-1234-5678"
+            :disabled="hasChangedCredentials"
+            hide-details
+            @update:model-value="onPhoneInput"
+          />
+        </div>
+        <div class="input-item">
+          <label>입사일자</label>
+          <v-text-field
+            v-model="newCredentials.joinDate"
+            variant="solo"
+            placeholder="예: 2024-03-02"
+            :disabled="hasChangedCredentials"
+            hide-details
+            @update:model-value="onJoinDateInput"
+          />
+        </div>
+        <div class="input-item">
+          <label>생년월일</label>
+          <v-text-field
+            v-model="newCredentials.birthDate"
+            variant="solo"
+            placeholder="예: 1992-07-28"
+            :disabled="hasChangedCredentials"
+            hide-details
+            @update:model-value="onBirthDateInput"
+          />
+        </div>
+      </div>
 
-        <v-btn class="change-btn" @click="triggerChange">
-          로그인 정보 및 개인정보 변경 적용
-        </v-btn>
-      </template>
+      <v-btn 
+        class="change-btn" 
+        :disabled="hasChangedCredentials"
+        :style="hasChangedCredentials ? { opacity: 0.5, cursor: 'not-allowed', background: 'rgba(255,255,255,0.08) !important', color: 'rgba(255,255,255,0.4) !important' } : {}"
+        @click="triggerChange"
+      >
+        {{ hasChangedCredentials ? '변경 완료됨 (재변경 불가)' : '로그인 정보 및 개인정보 변경 적용' }}
+      </v-btn>
     </div>
 
     <!-- Action Areas (Logout Button) -->
