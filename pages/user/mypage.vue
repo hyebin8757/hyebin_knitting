@@ -85,6 +85,35 @@ const windowWidth = inject("windowWidth") as any;
 /************************************************************
  * Function
  ************************************************************/
+const formatPhoneStr = (val: string): string => {
+  if (!val) return "";
+  const nums = val.replace(/[^0-9]/g, "");
+  if (nums.length <= 3) return nums;
+  if (nums.length <= 7) return `${nums.slice(0, 3)}-${nums.slice(3)}`;
+  if (nums.length <= 10) return `${nums.slice(0, 3)}-${nums.slice(3, 6)}-${nums.slice(6)}`;
+  return `${nums.slice(0, 3)}-${nums.slice(3, 7)}-${nums.slice(7, 11)}`;
+};
+
+const formatDateStr = (val: string): string => {
+  if (!val) return "";
+  const nums = val.replace(/[^0-9]/g, "");
+  if (nums.length <= 4) return nums;
+  if (nums.length <= 6) return `${nums.slice(0, 4)}-${nums.slice(4)}`;
+  return `${nums.slice(0, 4)}-${nums.slice(4, 6)}-${nums.slice(6, 8)}`;
+};
+
+const onPhoneInput = () => {
+  newCredentials.phone = formatPhoneStr(newCredentials.phone);
+};
+
+const onJoinDateInput = () => {
+  newCredentials.joinDate = formatDateStr(newCredentials.joinDate);
+};
+
+const onBirthDateInput = () => {
+  newCredentials.birthDate = formatDateStr(newCredentials.birthDate);
+};
+
 const handleLogout = () => {
   isLogoutConfirmOpen.value = true;
 };
@@ -112,19 +141,24 @@ const triggerChange = () => {
     newCredentials.id = userStore.loggedInUser?.loginId || userStore.loggedInUser?.name || "";
   }
 
-  // 휴대폰 번호, 입사일, 생년월일이 작성되지 않았을 경우 "0"숫자로 채우기
-  if (isEmpty(newCredentials.phone)) newCredentials.phone = "0";
-  if (isEmpty(newCredentials.joinDate)) newCredentials.joinDate = "0";
-  if (isEmpty(newCredentials.birthDate)) newCredentials.birthDate = "0";
+  // 휴대폰 번호, 입사일, 생년월일이 작성되지 않았을 경우 기존 정보 유지
+  if (isEmpty(newCredentials.phone)) newCredentials.phone = userStore.loggedInUser?.phone || "";
+  if (isEmpty(newCredentials.joinDate)) newCredentials.joinDate = userStore.loggedInUser?.joinDate || "";
+  if (isEmpty(newCredentials.birthDate)) newCredentials.birthDate = userStore.loggedInUser?.birthDate || "";
+
+  // 하이픈 자동 포맷팅 2차 적용
+  newCredentials.phone = formatPhoneStr(newCredentials.phone);
+  newCredentials.joinDate = formatDateStr(newCredentials.joinDate);
+  newCredentials.birthDate = formatDateStr(newCredentials.birthDate);
 
   isConfirmOpen.value = true;
 };
 
-const confirmChange = () => {
+const confirmChange = async () => {
   isConfirmOpen.value = false;
 
   // 변경 실행
-  userStore.changeCredentials(
+  await userStore.changeCredentials(
     newCredentials.id,
     newCredentials.password,
     newCredentials.phone,
@@ -136,12 +170,13 @@ const confirmChange = () => {
   loginUser.value = userStore.getLoginUser();
   isSuccessOpen.value = true;
 
-  // 폼 비우기
-  newCredentials.id = "";
-  newCredentials.password = "";
-  newCredentials.phone = "";
-  newCredentials.joinDate = "";
-  newCredentials.birthDate = "";
+  // 인풋값을 최신 변경 데이터 포맷으로 유지
+  if (userStore.loggedInUser) {
+    newCredentials.id = userStore.loggedInUser.loginId || userStore.loggedInUser.name || "";
+    newCredentials.phone = userStore.loggedInUser.phone || "";
+    newCredentials.joinDate = userStore.loggedInUser.joinDate || "";
+    newCredentials.birthDate = userStore.loggedInUser.birthDate || "";
+  }
 };
 
 /************************************************************
@@ -155,9 +190,9 @@ onMounted(() => {
   loginUser.value = userStore.getLoginUser();
   if (userStore.loggedInUser) {
     newCredentials.id = userStore.loggedInUser.loginId || userStore.loggedInUser.name || "";
-    newCredentials.phone = userStore.loggedInUser.phone || "";
-    newCredentials.joinDate = userStore.loggedInUser.joinDate || "";
-    newCredentials.birthDate = userStore.loggedInUser.birthDate || "";
+    newCredentials.phone = formatPhoneStr(userStore.loggedInUser.phone || "");
+    newCredentials.joinDate = formatDateStr(userStore.loggedInUser.joinDate || "");
+    newCredentials.birthDate = formatDateStr(userStore.loggedInUser.birthDate || "");
   }
 });
 
@@ -249,8 +284,9 @@ definePageMeta({
             <v-text-field
               v-model="newCredentials.phone"
               variant="solo"
-              placeholder="변경할 휴대전화 입력 (미입력시 0)"
+              placeholder="예: 010-1234-5678"
               hide-details
+              @update:model-value="onPhoneInput"
             />
           </div>
           <div class="input-item">
@@ -258,8 +294,9 @@ definePageMeta({
             <v-text-field
               v-model="newCredentials.joinDate"
               variant="solo"
-              placeholder="변경할 입사일자 입력 (미입력시 0)"
+              placeholder="예: 2024-03-02"
               hide-details
+              @update:model-value="onJoinDateInput"
             />
           </div>
           <div class="input-item">
@@ -267,8 +304,9 @@ definePageMeta({
             <v-text-field
               v-model="newCredentials.birthDate"
               variant="solo"
-              placeholder="변경할 생년월일 입력 (미입력시 0)"
+              placeholder="예: 1992-07-28"
               hide-details
+              @update:model-value="onBirthDateInput"
             />
           </div>
         </div>

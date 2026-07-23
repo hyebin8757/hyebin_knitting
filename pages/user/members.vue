@@ -153,20 +153,41 @@ const openMemberDetail = (member: GroupMember) => {
   isMemberDetailOpen.value = true;
 };
 
+const formatPhoneStr = (val: string): string => {
+  if (!val) return "";
+  const nums = val.replace(/[^0-9]/g, "");
+  if (nums.length <= 3) return nums;
+  if (nums.length <= 7) return `${nums.slice(0, 3)}-${nums.slice(3)}`;
+  if (nums.length <= 10) return `${nums.slice(0, 3)}-${nums.slice(3, 6)}-${nums.slice(6)}`;
+  return `${nums.slice(0, 3)}-${nums.slice(3, 7)}-${nums.slice(7, 11)}`;
+};
+
+const formatDateStr = (val: string): string => {
+  if (!val) return "";
+  const nums = val.replace(/[^0-9]/g, "");
+  if (nums.length <= 4) return nums;
+  if (nums.length <= 6) return `${nums.slice(0, 4)}-${nums.slice(4)}`;
+  return `${nums.slice(0, 4)}-${nums.slice(4, 6)}-${nums.slice(6, 8)}`;
+};
+
 const updateMember = async () => {
   if (isEmpty(selectedMember.name) || isEmpty(selectedMember.phone)) {
     alertText.value = "이름과 휴대폰 번호를 입력해주세요.";
     isAlertOpen.value = true;
     return;
   }
+  const formattedPhone = formatPhoneStr(selectedMember.phone);
+  const formattedBirthDate = formatDateStr(selectedMember.birthDate);
+  const formattedJoinDate = formatDateStr(selectedMember.joinDate);
+
   await userStore.updateWorkerAction(
     selectedMember.originalName,
     selectedMember.name,
-    selectedMember.phone,
+    formattedPhone,
     selectedMember.role,
     selectedMember.group,
-    selectedMember.birthDate,
-    selectedMember.joinDate
+    formattedBirthDate,
+    formattedJoinDate
   );
   isMemberDetailOpen.value = false;
 };

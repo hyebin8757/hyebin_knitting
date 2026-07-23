@@ -181,8 +181,29 @@ export const useUserStore = defineStore( "user", () => {
     isLogin.value = state;
   }
 
+  const formatPhoneStr = (val: string): string => {
+    if (!val) return "";
+    const nums = val.replace(/[^0-9]/g, "");
+    if (nums.length <= 3) return nums;
+    if (nums.length <= 7) return `${nums.slice(0, 3)}-${nums.slice(3)}`;
+    if (nums.length <= 10) return `${nums.slice(0, 3)}-${nums.slice(3, 6)}-${nums.slice(6)}`;
+    return `${nums.slice(0, 3)}-${nums.slice(3, 7)}-${nums.slice(7, 11)}`;
+  };
+
+  const formatDateStr = (val: string): string => {
+    if (!val) return "";
+    const nums = val.replace(/[^0-9]/g, "");
+    if (nums.length <= 4) return nums;
+    if (nums.length <= 6) return `${nums.slice(0, 4)}-${nums.slice(4)}`;
+    return `${nums.slice(0, 4)}-${nums.slice(4, 6)}-${nums.slice(6, 8)}`;
+  };
+
   // ID/비밀번호 및 개인정보 변경 액션 (최초 1회 제한용)
   const changeCredentials = async (newId: string, newPassword: string, phone: string = "", joinDate: string = "", birthDate: string = "") => {
+    const formattedPhone = formatPhoneStr(phone);
+    const formattedJoinDate = formatDateStr(joinDate);
+    const formattedBirthDate = formatDateStr(birthDate);
+
     const supabase = getSupabase();
     const currentName = loggedInUser.value?.name;
     if (currentName) {
@@ -190,27 +211,29 @@ export const useUserStore = defineStore( "user", () => {
       if (idx !== -1) {
         workers.value[idx].loginId = newId;
         workers.value[idx].loginPassword = newPassword;
-        workers.value[idx].phone = phone;
-        workers.value[idx].joinDate = joinDate;
-        workers.value[idx].birthDate = birthDate;
+        workers.value[idx].phone = formattedPhone;
+        workers.value[idx].joinDate = formattedJoinDate;
+        workers.value[idx].birthDate = formattedBirthDate;
         if (supabase) {
           try {
             await supabase.from('workers').update({
               login_id: newId,
               login_password: newPassword,
-              phone: phone,
-              join_date: joinDate,
-              birth_date: birthDate
+              phone: formattedPhone,
+              join_date: formattedJoinDate,
+              birth_date: formattedBirthDate
             }).eq('name', currentName);
           } catch (e) {
             console.error("Update credentials failed", e);
           }
         }
-        loggedInUser.value.loginId = newId;
-        loggedInUser.value.loginPassword = newPassword;
-        loggedInUser.value.phone = phone;
-        loggedInUser.value.joinDate = joinDate;
-        loggedInUser.value.birthDate = birthDate;
+        if (loggedInUser.value) {
+          loggedInUser.value.loginId = newId;
+          loggedInUser.value.loginPassword = newPassword;
+          loggedInUser.value.phone = formattedPhone;
+          loggedInUser.value.joinDate = formattedJoinDate;
+          loggedInUser.value.birthDate = formattedBirthDate;
+        }
       }
     }
   }

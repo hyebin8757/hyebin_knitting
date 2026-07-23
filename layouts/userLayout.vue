@@ -48,7 +48,7 @@ onMounted(() => {
         <!-- Top Header -->
         <header :class="cx('user-layout-header', UserLayoutStyle.Header)">
           <div class="header-logo">
-            인천노조 시스템 
+            인천 항운 노조 시스템
             <span v-if="userRole === 'admin'" class="logo-badge" style="background: rgba(225, 60, 60, 0.2); color: var(--system-red-color); border: 1px solid rgba(225, 60, 60, 0.3);">관리자용</span>
             <span v-else class="logo-badge">조합원용</span>
           </div>
