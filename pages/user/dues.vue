@@ -8,7 +8,7 @@ const userStore = useUserStore();
 const { isEmpty } = useUtil.typeValidation;
 
 // 회비 관리 기입/수정/삭제 권한을 위임할 조합원 이름 변수 목록
-const ALLOWED_EDITORS = ["이주봉", "한주봉"];
+const ALLOWED_EDITORS = ["이주봉"];
 
 // 권한 확인 (관리자 또는 권한을 가진 조합원만 승인)
 const userRole = computed(() => userStore.userRole);
