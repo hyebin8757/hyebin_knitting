@@ -75,6 +75,8 @@ const isErrorOpen = ref(false);
 const isLogoutConfirmOpen = ref(false);
 const errorText = ref("");
 
+const loginUser = ref(userStore.getLoginUser());
+
 const hasChangedCredentials = computed(() => {
   const user = userStore.loggedInUser;
   const name = user?.name;
