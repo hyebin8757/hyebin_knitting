@@ -21,6 +21,13 @@ const isDuesEditor = computed(() => {
 // 조(Group) 선택 탭 - 7조 고정
 const activeGroupTab = ref<number | string>(7);
 
+// 선택 가능한 년도 목록 및 현재 선택된 년도
+const startYear = 2020;
+const futureYears = 5;
+const currentYear = new Date().getFullYear();
+const yearsList = Array.from({ length: (currentYear + futureYears) - startYear + 1 }, (_, i) => startYear + i);
+const selectedYear = ref<number>(currentYear);
+
 // 현재 선택된 월들 목록 (1월 ~ 12월)
 const monthsList = [
   "1월",
@@ -129,7 +136,7 @@ const getDueRecords = (workerName: string, month: string) => {
   if (month === "1월") return [];
 
   return userStore.dues.filter(
-    (d) => d.worker_name === workerName && d.month === month
+    (d) => d.worker_name === workerName && d.month === month && d.year === selectedYear.value
   );
 };
 
@@ -159,7 +166,8 @@ const saveDue = async () => {
     selectedDueData.workerName,
     selectedDueData.month,
     selectedDueData.amount,
-    selectedDueData.paymentMethod
+    selectedDueData.paymentMethod,
+    selectedYear.value
   );
   if (result?.success) {
     showToast(
@@ -308,17 +316,17 @@ const monthlyStats = computed(() => {
   monthsList.forEach((m) => {
     // 1. 해당 월 조합원들의 납입 회비 총합 (수입)
     const duesSum = userStore.dues
-      .filter((d) => d.month === m && d.payment_method !== "미납")
+      .filter((d) => d.month === m && d.year === selectedYear.value && d.payment_method !== "미납")
       .reduce((sum, curr) => sum + (curr.amount || 0), 0);
 
     // 2. 해당 월의 찬조금 수입 (양수 금액)
     const sponsorSum = userStore.duesExpenses
-      .filter((e) => e.month === m && e.amount > 0)
+      .filter((e) => e.month === m && e.year === selectedYear.value && e.amount > 0)
       .reduce((sum, curr) => sum + curr.amount, 0);
 
     // 3. 해당 월의 지출 총합 (음수 금액)
     const expenseSum = userStore.duesExpenses
-      .filter((e) => e.month === m && e.amount < 0)
+      .filter((e) => e.month === m && e.year === selectedYear.value && e.amount < 0)
       .reduce((sum, curr) => sum + Math.abs(curr.amount), 0);
 
     const totalIncome = duesSum + sponsorSum;
@@ -340,11 +348,13 @@ const overallSummary = computed(() => {
 
   // 전체 회비 총합
   const totalDues = userStore.dues
-    .filter((d) => d.payment_method !== "미납")
+    .filter((d) => d.year === selectedYear.value && d.payment_method !== "미납")
     .reduce((sum, curr) => sum + (curr.amount || 0), 0);
 
   // 전체 비고 찬조/지출 총합
-  userStore.duesExpenses.forEach((e) => {
+  userStore.duesExpenses
+    .filter((e) => e.year === selectedYear.value)
+    .forEach((e) => {
     if (e.amount > 0) {
       totalIncome += e.amount;
     } else {
@@ -439,6 +449,16 @@ definePageMeta({
         <div style="display: flex; align-items: center; gap: 0.8rem">
           <i class="material-icons" style="color: #1ad1b1">grid_on</i>
           <span>월회비 납부 현황 (7조 전용)</span>
+          <v-select
+            v-model="selectedYear"
+            :items="yearsList"
+            variant="solo"
+            density="compact"
+            hide-details
+            bg-color="#15263a"
+            class="year-selector"
+          />
+
         </div>
         <v-btn
           v-if="isDuesEditor"
@@ -658,11 +678,11 @@ definePageMeta({
 
       <!-- Expenditures List -->
       <div class="expenses-list">
-        <div v-if="userStore.duesExpenses.length === 0" class="no-records">
+        <div v-if="userStore.duesExpenses.filter(e => e.year === selectedYear).length === 0" class="no-records">
           등록된 지출 및 기타 수입 세부 기록이 없습니다.
         </div>
         <div
-          v-for="item in userStore.duesExpenses"
+          v-for="item in userStore.duesExpenses.filter(e => e.year === selectedYear)"
           :key="item.id"
           class="expense-item-row"
         >
@@ -804,11 +824,10 @@ definePageMeta({
                 v-model="selectedDueData.paymentMethod"
                 :items="['이체', '현금']"
                 variant="solo"
+                density="compact"
                 hide-details
-                style="
-                  --v-input-control-background: rgba(255, 255, 255, 0.04);
-                  color: white;
-                "
+                bg-color="rgba(255, 255, 255, 0.04)"
+                class="dues-input"
               />
             </div>
 
@@ -820,11 +839,10 @@ definePageMeta({
                 v-model.number="selectedDueData.amount"
                 type="number"
                 variant="solo"
+                density="compact"
                 hide-details
-                style="
-                  --v-input-control-background: rgba(255, 255, 255, 0.04);
-                  color: white;
-                "
+                bg-color="rgba(255, 255, 255, 0.04)"
+                class="dues-input"
               />
               <div
                 style="
@@ -892,11 +910,10 @@ definePageMeta({
               v-model="batchDueData.month"
               :items="monthsList"
               variant="solo"
+              density="compact"
               hide-details
-              style="
-                --v-input-control-background: rgba(255, 255, 255, 0.04);
-                color: white;
-              "
+              bg-color="rgba(255, 255, 255, 0.04)"
+              class="dues-input"
             />
           </div>
 
@@ -908,11 +925,10 @@ definePageMeta({
               v-model="batchDueData.paymentMethod"
               :items="['이체', '현금']"
               variant="solo"
+              density="compact"
               hide-details
-              style="
-                --v-input-control-background: rgba(255, 255, 255, 0.04);
-                color: white;
-              "
+              bg-color="rgba(255, 255, 255, 0.04)"
+              class="dues-input"
             />
           </div>
 
@@ -924,11 +940,10 @@ definePageMeta({
               v-model.number="batchDueData.amount"
               type="number"
               variant="solo"
+              density="compact"
               hide-details
-              style="
-                --v-input-control-background: rgba(255, 255, 255, 0.04);
-                color: white;
-              "
+              bg-color="rgba(255, 255, 255, 0.04)"
+              class="dues-input"
             />
             <div
               style="
@@ -1055,11 +1070,10 @@ definePageMeta({
               v-model="selectedExpenseData.month"
               :items="monthsList"
               variant="solo"
+              density="compact"
               hide-details
-              style="
-                --v-input-control-background: rgba(255, 255, 255, 0.04);
-                color: white;
-              "
+              bg-color="rgba(255, 255, 255, 0.04)"
+              class="dues-input"
             />
           </div>
 
@@ -1071,11 +1085,10 @@ definePageMeta({
               v-model="selectedExpenseData.description"
               placeholder="예: 기타 수입 입금 또는 물품 구입"
               variant="solo"
+              density="compact"
               hide-details
-              style="
-                --v-input-control-background: rgba(255, 255, 255, 0.04);
-                color: white;
-              "
+              bg-color="rgba(255, 255, 255, 0.04)"
+              class="dues-input"
             />
           </div>
 
@@ -1088,11 +1101,10 @@ definePageMeta({
               type="number"
               placeholder="예: -50000 또는 100000"
               variant="solo"
+              density="compact"
               hide-details
-              style="
-                --v-input-control-background: rgba(255, 255, 255, 0.04);
-                color: white;
-              "
+              bg-color="rgba(255, 255, 255, 0.04)"
+              class="dues-input"
             />
           </div>
         </div>
@@ -1602,6 +1614,78 @@ definePageMeta({
         border-color: rgba(224, 87, 128, 0.3) !important;
       }
     }
+  }
+}
+
+.year-selector {
+  width: 110px !important;
+  margin-left: 0.8rem !important;
+  padding: 0 !important;
+}
+
+/* 🌟 공통 인풋 & 셀렉트 스펙트럼 디자인 스펙 */
+.year-selector,
+.dues-input {
+  :deep(.v-field) {
+    border-radius: 0.8rem !important;
+    min-height: 3.6rem !important;
+    height: 3.6rem !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(15, 28, 45, 0.8) !important;
+    backdrop-filter: blur(8px) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  :deep(.v-field:hover) {
+    border-color: rgba(26, 209, 177, 0.5) !important;
+    background: rgba(20, 36, 58, 0.9) !important;
+    box-shadow: 0 4px 12px rgba(26, 209, 177, 0.15) !important;
+  }
+
+  :deep(.v-field--focused) {
+    border-color: #1ad1b1 !important;
+    box-shadow: 0 0 0 3px rgba(26, 209, 177, 0.25) !important;
+    background: rgba(22, 42, 68, 0.95) !important;
+  }
+
+  :deep(.v-field__input) {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 1.2rem !important;
+    padding-right: 1.2rem !important;
+    min-height: 3.6rem !important;
+    display: flex !important;
+    align-items: center !important;
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.35) !important;
+      font-weight: 400 !important;
+    }
+  }
+
+  :deep(.v-select__selection) {
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    margin-top: 0 !important;
+  }
+
+  :deep(.v-field__append-inner) {
+    align-items: center !important;
+    padding-top: 0 !important;
+    i {
+      color: rgba(255, 255, 255, 0.6) !important;
+      font-size: 1.8rem !important;
+      transition: transform 0.2s ease;
+    }
+  }
+
+  :deep(.v-field--active .v-field__append-inner i) {
+    color: #1ad1b1 !important;
   }
 }
 </style>

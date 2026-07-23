@@ -542,7 +542,7 @@ export const useUserStore = defineStore( "user", () => {
   }
 
   // 회비 납부 추가
-  const saveDueAction = async (workerName: string, month: string, amount: number, paymentMethod: string) => {
+  const saveDueAction = async (workerName: string, month: string, amount: number, paymentMethod: string, year: number) => {
     const supabase = getSupabase();
     let res = { success: true, error: null as any };
     if (supabase) {
@@ -550,6 +550,7 @@ export const useUserStore = defineStore( "user", () => {
         const { error } = await supabase.from('dues').insert([{
           worker_name: workerName,
           month,
+          year,
           amount,
           payment_method: paymentMethod
         }]);
