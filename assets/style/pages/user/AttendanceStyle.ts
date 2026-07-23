@@ -256,12 +256,12 @@ export const AttendanceStyle = {
       border-radius: 1.2rem !important;
       font-size: 1.6rem !important;
       font-weight: 700 !important;
-      color: var(--text-color-1) !important;
-      background: rgba(255, 255, 255, 0.1) !important;
-      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      color: #ff4d4d !important;
+      background: rgba(255, 77, 77, 0.15) !important;
+      border: 1px solid rgba(255, 77, 77, 0.3) !important;
       
       &:hover {
-        background: rgba(255, 255, 255, 0.15) !important;
+        background: rgba(255, 77, 77, 0.25) !important;
       }
     }
 
