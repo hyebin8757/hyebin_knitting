@@ -91,8 +91,7 @@ const handleLogout = () => {
 
 const confirmLogout = () => {
   isLogoutConfirmOpen.value = false;
-  userStore.setLogin(false);
-  router.push("/login/login");
+  userStore.logout();
 };
 
 const triggerChange = () => {
