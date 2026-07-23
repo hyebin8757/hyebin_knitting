@@ -257,19 +257,37 @@ const calendarDays = computed<AttendanceDay[]>(() => {
 
   const days: AttendanceDay[] = [];
 
+  const todayObj = new Date();
+  todayObj.setHours(0,0,0,0);
+
   // Previous month days
+  const prevYear = month === 0 ? year - 1 : year;
+  const prevMonth = month === 0 ? 11 : month - 1;
   for (let i = firstDayIndex - 1; i >= 0; i--) {
+    const dayNum = prevMonthTotalDays - i;
+    const dateKey = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+    let status = attendanceHistory.value[dateKey] || "none";
+    if (status === "none") {
+      status = "absent";
+    }
     days.push({
-      dayNum: prevMonthTotalDays - i,
+      dayNum,
       isCurrentMonth: false,
-      status: "none",
+      status,
     });
   }
 
   // Current month days
   for (let i = 1; i <= totalDays; i++) {
     const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
-    const status = attendanceHistory.value[dateKey] || "none";
+    let status = attendanceHistory.value[dateKey] || "none";
+    
+    // 타입 설정이 안되어 있고 오늘 또는 과거 일자이면 결근(absent)으로 자동 매핑
+    const dateObj = new Date(year, month, i);
+    if (status === "none" && dateObj <= todayObj) {
+      status = "absent";
+    }
+    
     days.push({
       dayNum: i,
       isCurrentMonth: true,
@@ -303,7 +321,7 @@ const isDateStatusDialogOpen = ref(false);
 const selectedCalendarDate = ref("");
 const selectedCalendarDayStatus = ref("none");
 
-const onCalendarDayClick = (day: any) => {
+const getResolvedDateStr = (day: any): string => {
   const currentYearVal = currentDate.value.getFullYear();
   const currentMonthVal = currentDate.value.getMonth(); // 0-indexed
   
@@ -323,8 +341,21 @@ const onCalendarDayClick = (day: any) => {
       targetYear += 1;
     }
   }
+  return `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-${String(day.dayNum).padStart(2, '0')}`;
+};
 
-  const dateStr = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-${String(day.dayNum).padStart(2, '0')}`;
+const isFutureDate = (dateStr: string): boolean => {
+  const target = new Date(dateStr);
+  target.setHours(0,0,0,0);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return target > today;
+};
+
+const onCalendarDayClick = (day: any) => {
+  const dateStr = getResolvedDateStr(day);
+  if (isFutureDate(dateStr)) return; // 미래 일자는 클릭 비활성화
+  
   selectedCalendarDate.value = dateStr;
   selectedCalendarDayStatus.value = day.status;
   isDateStatusDialogOpen.value = true;
@@ -514,7 +545,7 @@ definePageMeta({
             { 'status-absent': day.isCurrentMonth && day.status === 'absent' },
             { 'status-leave': day.isCurrentMonth && day.status === 'leave' }
           ]"
-          :style="{ cursor: 'pointer' }"
+          :style="{ cursor: isFutureDate(getResolvedDateStr(day)) ? 'default' : 'pointer', opacity: isFutureDate(getResolvedDateStr(day)) ? 0.35 : 1 }"
           @click="onCalendarDayClick(day)"
         >
           {{ day.dayNum }}
