@@ -1622,11 +1622,22 @@ definePageMeta({
     background: #111e30 !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     box-shadow: none !important;
+    --v-field-border-width: 0px !important;
+    --v-field-border-opacity: 0 !important;
   }
   :deep(.v-field__overlay) {
     display: none !important;
     background: transparent !important;
     opacity: 0 !important;
+  }
+  :deep(.v-field__outline) {
+    display: none !important;
+    border: none !important;
+    opacity: 0 !important;
+  }
+  :deep(.v-field__outline *) {
+    display: none !important;
+    border: none !important;
   }
   :deep(.v-field__input),
   :deep(input) {
