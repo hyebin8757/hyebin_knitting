@@ -419,7 +419,8 @@ definePageMeta({
       </div>
     </div>
 
-    <!-- Real-time Shift Controls (조퇴 신청 버튼 영역) -->
+    <!-- Real-time Shift Controls (조퇴 신청 버튼 영역 - 나중에 사용할 예정이므로 임시 주석 처리) -->
+    <!--
     <div v-if="isCheckedIn" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.6rem; padding: 1.6rem; margin-bottom: 2.4rem; display: flex; flex-direction: column; gap: 1.2rem;">
       <div style="display: flex; align-items: center; gap: 0.8rem; font-size: 1.4rem; font-weight: 700; color: var(--white-color);">
         <i class="material-icons" style="color: #b5179e;">time_to_leave</i>
@@ -435,6 +436,7 @@ definePageMeta({
         </v-btn>
       </div>
     </div>
+    -->
 
     <!-- Attendance Calendar -->
     <div :class="cx('attendance-calendar', AttendanceStyle.CalendarContainer)">
