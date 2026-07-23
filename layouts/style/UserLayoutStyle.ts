@@ -15,6 +15,8 @@ export const UserLayoutStyle = {
   Default : css`
     width: 100%;
     height: 100vh;
+    height: 100dvh;
+    min-height: -webkit-fill-available;
     display: flex;
     justify-content: center;
     background-color: #050d17; /* 모바일 외부 배경 (데스크톱 대응용 어두운 테두리 배경) */
@@ -24,6 +26,8 @@ export const UserLayoutStyle = {
     width: 100%;
     max-width: 640px;
     height: 100%;
+    height: 100dvh;
+    min-height: -webkit-fill-available;
     display: flex;
     flex-direction: column;
     background-color: var(--primary-color); /* #0c2034 */
@@ -76,8 +80,9 @@ export const UserLayoutStyle = {
   Main : css`
     flex: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     background-color: #081524; /* 모바일 컨텐츠 영역 배경 */
-    padding-bottom: 5.6rem; /* Bottom Navigation 높이 확보 */
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px)); /* Bottom Navigation + Safe Area 높이 확보 */
     
     &::-webkit-scrollbar {
       width: 4px;
@@ -96,13 +101,15 @@ export const UserLayoutStyle = {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 5.2rem;
+    height: calc(5.2rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     background: rgba(12, 32, 52, 0.95);
     backdrop-filter: blur(15px);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     z-index: 10;
+    box-sizing: border-box;
 
     .nav-item {
       ${StyleUtils.FlexUtils("center", "center")};

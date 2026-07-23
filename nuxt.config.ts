@@ -44,7 +44,7 @@ const nuxtConfig: any = {
       title: "인천 양육반 디지털 시스템",
       charset: "utf-8",
       viewport:
-        "width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1",
+        "width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, viewport-fit=cover",
       meta: [
         { "http-equiv": "X-UA-Compatible", content: "IE=edge,chrome=1" },
         { "http-equiv": "Pragma", content: "no-cache" },
