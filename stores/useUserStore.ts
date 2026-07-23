@@ -521,19 +521,31 @@ export const useUserStore = defineStore( "user", () => {
     }
   }
 
-  // 회비 납부 업데이트
+  // 회비 납부 추가
   const saveDueAction = async (workerName: string, month: string, amount: number, paymentMethod: string) => {
     const supabase = getSupabase();
     if (supabase) {
       try {
-        const { error } = await supabase.from('dues').upsert({
+        const { error } = await supabase.from('dues').insert([{
           worker_name: workerName,
           month,
           amount,
           payment_method: paymentMethod
-        }, { onConflict: 'worker_name,month' });
+        }]);
         if (error) console.error("Save due failed:", error);
       } catch (e) { console.error("Save due failed", e); }
+    }
+    await fetchAllData();
+  };
+
+  // 회비 납부 삭제
+  const deleteDueAction = async (id: number) => {
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('dues').delete().eq('id', id);
+        if (error) console.error("Delete due failed:", error);
+      } catch (e) { console.error("Delete due failed", e); }
     }
     await fetchAllData();
   };
@@ -600,6 +612,7 @@ export const useUserStore = defineStore( "user", () => {
     dues,
     duesExpenses,
     saveDueAction,
+    deleteDueAction,
     saveExpenseAction,
     deleteExpenseAction,
     fetchAllData,

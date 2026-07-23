@@ -10,11 +10,11 @@ const { isEmpty } = useUtil.typeValidation;
 // 권한 확인
 const userRole = computed(() => userStore.userRole);
 
-// 조(Group) 선택 탭
-const activeGroupTab = ref<number | string>("전체");
+// 조(Group) 선택 탭 - 7조 고정
+const activeGroupTab = ref<number | string>(7);
 
-// 현재 선택된 월들 목록 (엑셀 기준)
-const monthsList = ["2월", "3월", "3월추가", "4월", "5월"];
+// 현재 선택된 월들 목록 (3월추가 제외)
+const monthsList = ["2월", "3월", "4월", "5월"];
 
 // 회비 대장 수정 다이얼로그 상태
 const isDueDialogOpen = ref(false);
@@ -22,7 +22,7 @@ const selectedDueData = reactive({
   workerName: "",
   month: "",
   amount: 10000,
-  paymentMethod: "이체" as "이체" | "현금" | "미납"
+  paymentMethod: "이체" as "이체" | "현금"
 });
 
 // 비고(지출/수입) 등록 및 수정 다이얼로그 상태
@@ -34,37 +34,32 @@ const selectedExpenseData = reactive({
   description: ""
 });
 
-// 필터링된 조합원 목록
+// 필터링된 조합원 목록 (7조 고정)
 const filteredWorkers = computed(() => {
-  if (activeGroupTab.value === "전체") {
-    return userStore.workers.filter(w => w.name !== 'admin');
-  }
-  return userStore.workers.filter(w => w.group === Number(activeGroupTab.value) && w.name !== 'admin');
+  return userStore.workers.filter(w => w.group === 7 && w.name !== 'admin');
 });
 
-// 특정 조합원의 월별 납부 내역 찾기
-const getDueRecord = (workerName: string, month: string) => {
-  return userStore.dues.find(d => d.worker_name === workerName && d.month === month);
+// 특정 조합원의 월별 납부 내역들 목록 찾기
+const getDueRecords = (workerName: string, month: string) => {
+  return userStore.dues.filter(d => d.worker_name === workerName && d.month === month);
 };
 
 // 회비 대장 셀 클릭 핸들러 (관리자만 작동)
 const openDueEditor = (workerName: string, month: string) => {
   if (userRole.value !== "admin") return;
-  const record = getDueRecord(workerName, month);
   selectedDueData.workerName = workerName;
   selectedDueData.month = month;
-  selectedDueData.amount = record ? record.amount : 10000;
-  selectedDueData.paymentMethod = record ? (record.payment_method || "이체") : "미납";
+  selectedDueData.amount = 10000;
+  selectedDueData.paymentMethod = "이체";
   isDueDialogOpen.value = true;
 };
 
-// 회비 대장 저장 실행
+// 신규 회비 납부 내역 추가
 const saveDue = async () => {
-  const amt = selectedDueData.paymentMethod === "미납" ? 0 : selectedDueData.amount;
   await userStore.saveDueAction(
     selectedDueData.workerName,
     selectedDueData.month,
-    amt,
+    selectedDueData.amount,
     selectedDueData.paymentMethod
   );
   isDueDialogOpen.value = false;
@@ -204,24 +199,11 @@ definePageMeta({
       </div>
     </div>
 
-    <!-- Group Selector Tabs -->
-    <div class="group-tab-container">
-      <button
-        v-for="g in ['전체', 1, 2, 3, 5, 6, 7, 8]"
-        :key="g"
-        class="tab-btn"
-        :class="{ active: activeGroupTab === g }"
-        @click="activeGroupTab = g"
-      >
-        {{ g === '전체' ? '전체' : g + '조' }}
-      </button>
-    </div>
-
     <!-- Dues Spreadsheet Card -->
     <div class="spreadsheet-card">
       <div class="card-title">
         <i class="material-icons" style="color: #1ad1b1;">grid_on</i>
-        <span>월회비 납부 현황</span>
+        <span>월회비 납부 현황 (7조 전용)</span>
       </div>
 
       <div class="table-scroll-wrapper">
@@ -245,17 +227,17 @@ definePageMeta({
                 :class="{ 'admin-clickable': userRole === 'admin' }"
                 @click="openDueEditor(w.name, m)"
               >
-                <template v-if="getDueRecord(w.name, m)">
+                <div v-if="getDueRecords(w.name, m).length > 0" style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
                   <div 
-                    v-if="getDueRecord(w.name, m).payment_method !== '미납'"
+                    v-for="rec in getDueRecords(w.name, m)"
+                    :key="rec.id"
                     class="due-tag"
-                    :class="getDueRecord(w.name, m).payment_method"
+                    :class="rec.payment_method"
                   >
-                    {{ getDueRecord(w.name, m).amount.toLocaleString() }}
-                    <span class="method-label">{{ getDueRecord(w.name, m).payment_method }}</span>
+                    {{ rec.amount.toLocaleString() }}
+                    <span class="method-label">{{ rec.payment_method }}</span>
                   </div>
-                  <span v-else class="unpaid-label">미납</span>
-                </template>
+                </div>
                 <span v-else class="unpaid-label">미납</span>
               </td>
             </tr>
@@ -355,32 +337,57 @@ definePageMeta({
             <span class="val">{{ selectedDueData.month }}</span>
           </div>
 
+          <!-- 기존 납부 목록 -->
           <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">납부 수단</label>
-            <v-select 
-              v-model="selectedDueData.paymentMethod" 
-              :items="['이체', '현금', '미납']" 
-              variant="solo" 
-              hide-details 
-              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
-            />
+            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">기존 납부 내역</label>
+            <div v-if="getDueRecords(selectedDueData.workerName, selectedDueData.month).length === 0" style="font-size: 1.2rem; color: rgba(255,255,255,0.3); text-align: center; padding: 0.8rem; border: 1px dashed rgba(255,255,255,0.1); border-radius: 0.8rem;">
+              납부 기록이 없습니다 (미납).
+            </div>
+            <div 
+              v-for="rec in getDueRecords(selectedDueData.workerName, selectedDueData.month)" 
+              :key="rec.id"
+              style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 0.6rem 1rem; border-radius: 0.8rem; border: 1px solid rgba(255,255,255,0.05);"
+            >
+              <span style="font-size: 1.3rem; font-weight: 700; color: #88c5ff;">
+                {{ rec.amount.toLocaleString() }}원 ({{ rec.payment_method }})
+              </span>
+              <v-btn icon size="x-small" style="background: rgba(224, 87, 128, 0.15) !important; color: #e05780 !important;" @click="removeDueRecord(rec.id)">
+                <i class="material-icons" style="font-size: 1.4rem;">delete</i>
+              </v-btn>
+            </div>
           </div>
 
-          <div v-if="selectedDueData.paymentMethod !== '미납'" style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">금액 (원)</label>
-            <v-text-field 
-              v-model.number="selectedDueData.amount" 
-              type="number" 
-              variant="solo" 
-              hide-details 
-              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
-            />
+          <!-- 새 납부 내역 추가 -->
+          <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.2rem; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-size: 1.2rem; font-weight: 700; color: #1ad1b1;">+ 내역 추가 기입</label>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+              <label style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">납부 수단</label>
+              <v-select 
+                v-model="selectedDueData.paymentMethod" 
+                :items="['이체', '현금']" 
+                variant="solo" 
+                hide-details 
+                style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+              />
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+              <label style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">금액 (원)</label>
+              <v-text-field 
+                v-model.number="selectedDueData.amount" 
+                type="number" 
+                variant="solo" 
+                hide-details 
+                style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+              />
+            </div>
           </div>
         </div>
 
         <v-card-actions class="justify-end gap-2 px-0 pt-6">
-          <v-btn variant="text" class="cancel" @click="isDueDialogOpen = false">취소</v-btn>
-          <v-btn class="confirm" @click="saveDue">저장</v-btn>
+          <v-btn variant="text" class="cancel" @click="isDueDialogOpen = false">닫기</v-btn>
+          <v-btn class="confirm" @click="saveDue">추가하기</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
