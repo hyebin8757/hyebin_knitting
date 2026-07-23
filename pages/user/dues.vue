@@ -615,7 +615,12 @@ definePageMeta({
               <td
                 v-for="m in monthsList"
                 :key="m"
-                style="text-align: center; font-weight: 700; color: #88c5ff"
+                :style="{
+                  textAlign: 'center',
+                  fontWeight: '700',
+                  color: (monthlyStats[m]?.balance || 0) < 0 ? '#ff4d4d' : '#88c5ff',
+                  background: (monthlyStats[m]?.balance || 0) < 0 ? 'rgba(255, 77, 77, 0.08)' : 'transparent'
+                }"
               >
                 {{ (monthlyStats[m]?.balance || 0).toLocaleString() }}
               </td>
