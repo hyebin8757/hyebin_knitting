@@ -25,6 +25,15 @@ const selectedDueData = reactive({
   paymentMethod: "이체" as "이체" | "현금"
 });
 
+// 일괄 납부 다이얼로그 상태
+const isBatchDialogOpen = ref(false);
+const batchDueData = reactive({
+  month: "2월",
+  amount: 10000,
+  paymentMethod: "이체" as "이체" | "현금"
+});
+const batchWorkersList = ref<any[]>([]); // { name: string, checked: boolean }[]
+
 // 비고(지출/수입) 등록 및 수정 다이얼로그 상태
 const isExpenseDialogOpen = ref(false);
 const selectedExpenseData = reactive({
@@ -45,7 +54,23 @@ const getDueRecords = (workerName: string, month: string) => {
   if (workerName === "한덕희") return [];
   // 1월은 전체 미납 처리
   if (month === "1월") return [];
-  return userStore.dues.filter(d => d.worker_name === workerName && d.month === month);
+
+  const dbRecords = userStore.dues.filter(d => d.worker_name === workerName && d.month === month);
+
+  // 6월, 7월은 한덕희 형님 제외, 민우주 제외 만원씩 입금한 걸로 기본 표시 (DB에 데이터가 없을 경우 기본값으로 노출)
+  if ((month === "6월" || month === "7월") && workerName !== "민우주") {
+    if (dbRecords.length === 0) {
+      return [{
+        id: -1, // 임시 ID
+        worker_name: workerName,
+        month,
+        amount: 10000,
+        payment_method: "이체"
+      }];
+    }
+  }
+
+  return dbRecords;
 };
 
 // 회비 대장 셀 클릭 핸들러 (관리자만 작동)
@@ -58,6 +83,16 @@ const openDueEditor = (workerName: string, month: string) => {
   isDueDialogOpen.value = true;
 };
 
+// 금액 조율용 헬퍼 함수
+const adjustAmount = (val: number) => {
+  selectedDueData.amount = Math.max(0, (selectedDueData.amount || 0) + val);
+};
+
+// 일괄 금액 조율용 헬퍼 함수
+const adjustBatchAmount = (val: number) => {
+  batchDueData.amount = Math.max(0, (batchDueData.amount || 0) + val);
+};
+
 // 신규 회비 납부 내역 추가
 const saveDue = async () => {
   await userStore.saveDueAction(
@@ -67,6 +102,62 @@ const saveDue = async () => {
     selectedDueData.paymentMethod
   );
   isDueDialogOpen.value = false;
+};
+
+// 특정 납부 기록 삭제
+const removeDueRecord = async (id: number) => {
+  if (id === -1) {
+    alert("기본값으로 세팅된 6월/7월 회비 기록은 삭제할 수 없습니다. 수정을 원하시면 해당 셀에 추가 납부 내역을 기입해 주세요.");
+    return;
+  }
+  if (!confirm("이 납부 기록을 삭제하시겠습니까?")) return;
+  await userStore.deleteDueAction(id);
+};
+
+// 일괄 납부 편집 열기
+const openBatchEditor = () => {
+  if (userRole.value !== "admin") return;
+  batchDueData.month = "2월";
+  batchDueData.amount = 10000;
+  batchDueData.paymentMethod = "이체";
+  batchWorkersList.value = userStore.workers
+    .filter(w => w.name !== 'admin' && w.group === 7 && w.name !== '한덕희') // 한덕희 형님은 일괄 등록에서도 제외
+    .map(w => ({
+      name: w.name,
+      checked: true
+    }));
+  isBatchDialogOpen.value = true;
+};
+
+// 일괄 납부 등록 실행
+const executeBatchSave = async () => {
+  const targets = batchWorkersList.value.filter(w => w.checked).map(w => w.name);
+  if (targets.length === 0) {
+    alert("일괄 등록할 조합원을 한 명 이상 선택해 주세요.");
+    return;
+  }
+  for (const name of targets) {
+    await userStore.saveDueAction(name, batchDueData.month, batchDueData.amount, batchDueData.paymentMethod);
+  }
+  isBatchDialogOpen.value = false;
+};
+
+// 일괄 납부 삭제 실행
+const executeBatchDelete = async () => {
+  const targets = batchWorkersList.value.filter(w => w.checked).map(w => w.name);
+  if (targets.length === 0) {
+    alert("일괄 삭제할 조합원을 한 명 이상 선택해 주세요.");
+    return;
+  }
+  if (!confirm(`${batchDueData.month}의 선택된 조합원 회비 기록을 일괄 삭제하시겠습니까?\n(수동 기입된 내역들만 삭제됩니다)`)) return;
+  
+  const recordsToDelete = userStore.dues.filter(
+    d => d.month === batchDueData.month && targets.includes(d.worker_name)
+  );
+  for (const rec of recordsToDelete) {
+    await userStore.deleteDueAction(rec.id);
+  }
+  isBatchDialogOpen.value = false;
 };
 
 // 비고(지출/수입) 등록 및 수정 핸들러
@@ -182,7 +273,7 @@ definePageMeta({
         <span>회비 장부 대장</span>
       </div>
       <p style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.6); margin-top: 0.8rem; line-height: 1.6; margin-bottom: 0;">
-        조합원별 월회비(2월~5월) 납부 현황 및 찬조금/장례식 지출 대장입니다. 
+        조합원별 월회비 납부 현황 및 찬조금/지출 대장입니다.
         <span v-if="userRole === 'admin'" style="color: #ffcc00; font-weight: 600;">* 대장 내 칸을 클릭하여 납부 상태를 편집할 수 있습니다.</span>
       </p>
     </div>
@@ -205,9 +296,19 @@ definePageMeta({
 
     <!-- Dues Spreadsheet Card -->
     <div class="spreadsheet-card">
-      <div class="card-title">
-        <i class="material-icons" style="color: #1ad1b1;">grid_on</i>
-        <span>월회비 납부 현황 (7조 전용)</span>
+      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <i class="material-icons" style="color: #1ad1b1;">grid_on</i>
+          <span>월회비 납부 현황 (7조 전용)</span>
+        </div>
+        <v-btn
+          v-if="userRole === 'admin'"
+          size="small"
+          style="background: rgba(26, 209, 177, 0.15) !important; border: 1px solid rgba(26, 209, 177, 0.3) !important; color: #1ad1b1 !important; font-weight: 600; border-radius: 0.8rem;"
+          @click="openBatchEditor"
+        >
+          <i class="material-icons" style="font-size: 1.4rem; margin-right: 0.4rem;">assignment_turned_in</i> 일괄 납부 관리
+        </v-btn>
       </div>
 
       <div class="table-scroll-wrapper">
@@ -387,6 +488,16 @@ definePageMeta({
                 hide-details 
                 style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
               />
+              <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem;">
+                <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustAmount(1000)">+1천</v-btn>
+                <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustAmount(5000)">+5천</v-btn>
+                <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustAmount(10000)">+1만</v-btn>
+                <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustAmount(100000)">+10만</v-btn>
+                <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustAmount(-1000)">-1천</v-btn>
+                <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustAmount(-5000)">-5천</v-btn>
+                <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustAmount(-10000)">-1만</v-btn>
+                <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustAmount(-100000)">-10만</v-btn>
+              </div>
             </div>
           </div>
         </div>
@@ -394,6 +505,80 @@ definePageMeta({
         <v-card-actions class="justify-end gap-2 px-0 pt-6">
           <v-btn variant="text" class="cancel" @click="isDueDialogOpen = false">닫기</v-btn>
           <v-btn class="confirm" @click="saveDue">추가하기</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dues Batch Edit Modal (Admin Only) -->
+    <v-dialog v-model="isBatchDialogOpen" max-width="380">
+      <v-card class="pa-6 dialog-card">
+        <v-card-title class="text-h6 font-weight-bold px-0 dialog-title">
+          <i class="material-icons">assignment_turned_in</i>
+          <span>일괄 납부 관리 (7조 전용)</span>
+        </v-card-title>
+
+        <div style="display: flex; flex-direction: column; gap: 1.6rem; margin-top: 1.6rem;">
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">대상 월 선택</label>
+            <v-select 
+              v-model="batchDueData.month" 
+              :items="monthsList" 
+              variant="solo" 
+              hide-details 
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+            />
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">납부 수단</label>
+            <v-select 
+              v-model="batchDueData.paymentMethod" 
+              :items="['이체', '현금']" 
+              variant="solo" 
+              hide-details 
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+            />
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">금액 (원)</label>
+            <v-text-field 
+              v-model.number="batchDueData.amount" 
+              type="number" 
+              variant="solo" 
+              hide-details 
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+            />
+            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem;">
+              <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustBatchAmount(1000)">+1천</v-btn>
+              <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustBatchAmount(5000)">+5천</v-btn>
+              <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustBatchAmount(10000)">+1만</v-btn>
+              <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustBatchAmount(100000)">+10만</v-btn>
+              <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustBatchAmount(-1000)">-1천</v-btn>
+              <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustBatchAmount(-5000)">-5천</v-btn>
+              <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustBatchAmount(-10000)">-1만</v-btn>
+              <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustBatchAmount(-100000)">-10만</v-btn>
+            </div>
+          </div>
+
+          <!-- 제외/포함 조합원 목록 체크박스 -->
+          <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); padding: 1rem; border-radius: 0.8rem; background: rgba(0,0,0,0.2);">
+            <label style="font-size: 1.2rem; font-weight: 700; color: #88c5ff; margin-bottom: 0.4rem;">대상 조합원 선택 (체크 해제시 제외)</label>
+            <div 
+              v-for="w in batchWorkersList" 
+              :key="w.name" 
+              style="display: flex; align-items: center; gap: 0.8rem; font-size: 1.3rem;"
+            >
+              <input type="checkbox" v-model="w.checked" :id="'chk_' + w.name" style="width: 1.6rem; height: 1.6rem; accent-color: #1ad1b1;" />
+              <label :for="'chk_' + w.name" style="cursor: pointer;">{{ w.name }}</label>
+            </div>
+          </div>
+        </div>
+
+        <v-card-actions class="justify-end gap-2 px-0 pt-6">
+          <v-btn variant="text" class="cancel" @click="isBatchDialogOpen = false">취소</v-btn>
+          <v-btn style="background: rgba(224, 87, 128, 0.15) !important; border: 1px solid rgba(224, 87, 128, 0.3) !important; color: #e05780 !important; border-radius: 0.8rem; font-weight: 600;" @click="executeBatchDelete">일괄 삭제</v-btn>
+          <v-btn class="confirm" @click="executeBatchSave">일괄 등록</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
