@@ -323,17 +323,7 @@ definePageMeta({
 <template>
   <!-- 1. 조합원 모드 화면 -->
   <div v-if="userRole === 'member'" :class="cx('attendance-page', AttendanceStyle.Default)">
-    <!-- Admin Simulation Switch (관리자 승인 데모 상태 스위치) -->
-    <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.2rem; margin-bottom: 1.6rem; display: flex; flex-direction: column; gap: 0.8rem;">
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 1.2rem; color: var(--text-color-3);">[데모용] 관리자 출근 완료(승인) 토글 스위치</span>
-        <v-switch v-model="isAdminApproved" hide-details density="compact" color="primary"></v-switch>
-      </div>
-      <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 0.8rem;">
-        <span style="font-size: 1.2rem; color: var(--text-color-3);">[데모용] 오전 06시 출근 제한 강제 해제</span>
-        <v-switch v-model="bypassTimeLimit" hide-details density="compact" color="success"></v-switch>
-      </div>
-    </div>
+
 
     <!-- Profile Card (출퇴근 통계, 생일, 입사일) -->
     <div :class="cx('profile-card', AttendanceStyle.ProfileCard)">
@@ -359,8 +349,8 @@ definePageMeta({
       </div>
     </div>
 
-    <!-- Real-time Shift Controls (관리자 승인 완료 시 다른 위치에 뜨는 조퇴 신청 버튼 영역) -->
-    <div v-if="isAdminApproved && isCheckedIn" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.6rem; padding: 1.6rem; margin-bottom: 2.4rem; display: flex; flex-direction: column; gap: 1.2rem;">
+    <!-- Real-time Shift Controls (조퇴 신청 버튼 영역) -->
+    <div v-if="isCheckedIn" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.6rem; padding: 1.6rem; margin-bottom: 2.4rem; display: flex; flex-direction: column; gap: 1.2rem;">
       <div style="display: flex; align-items: center; gap: 0.8rem; font-size: 1.4rem; font-weight: 700; color: var(--white-color);">
         <i class="material-icons" style="color: #b5179e;">time_to_leave</i>
         <span>실시간 근무 조율</span>
@@ -443,8 +433,8 @@ definePageMeta({
       </div>
     </div>
 
-    <!-- Actions (출퇴근 체크 버튼 - 관리자 승인 전까지만 노출) -->
-    <div v-if="!isAdminApproved" :class="cx('action-area', AttendanceStyle.ActionArea)">
+    <!-- Actions (출퇴근 체크 버튼) -->
+    <div :class="cx('action-area', AttendanceStyle.ActionArea)">
       <v-btn v-if="!isCheckedIn" class="check-btn" :disabled="isCheckInDisabled" @click="toggleCheckIn">
         출근 등록
       </v-btn>
