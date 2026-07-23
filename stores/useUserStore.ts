@@ -358,7 +358,8 @@ export const useUserStore = defineStore( "user", () => {
       workers.value[idx].location = '';
       if (supabase) {
         try {
-          await supabase.from('workers').update({ checked_in: false, status: 'none', location: '' }).eq('name', name);
+          const { error } = await supabase.from('workers').update({ checked_in: false, status: 'none', location: '' }).eq('name', name);
+          if (error) console.error('Worker cancel update failed:', error);
         } catch (e) { console.error('Cancel check-in failed', e); }
       }
     }
@@ -367,9 +368,13 @@ export const useUserStore = defineStore( "user", () => {
     attendanceRecords.value = attendanceRecords.value.filter(r => !(r.worker_name === name && r.date === todayStr));
     if (supabase) {
       try {
-        await supabase.from('attendance').delete().eq('worker_name', name).eq('date', todayStr);
+        const { error } = await supabase.from('attendance').delete().eq('worker_name', name).eq('date', todayStr);
+        if (error) console.error('Attendance cancel delete failed:', error);
       } catch (e) { console.error('Attendance delete failed', e); }
     }
+    
+    // 최종 상태 동기화
+    await fetchAllData();
   }
 
   // 출근/조퇴 등록
@@ -381,7 +386,8 @@ export const useUserStore = defineStore( "user", () => {
       workers.value[idx].status = status;
       if (supabase) {
         try {
-          await supabase.from('workers').update({ checked_in: workers.value[idx].checkedIn, status }).eq('name', name);
+          const { error } = await supabase.from('workers').update({ checked_in: workers.value[idx].checkedIn, status }).eq('name', name);
+          if (error) console.error('Worker status update failed:', error);
         } catch (e) { console.error('Worker status update failed', e); }
       }
     }
@@ -393,21 +399,27 @@ export const useUserStore = defineStore( "user", () => {
       attendanceRecords.value[existingIdx].status = status;
       if (supabase) {
         try {
-          await supabase.from('attendance').update({ status }).eq('worker_name', name).eq('date', todayStr);
+          const { error } = await supabase.from('attendance').update({ status }).eq('worker_name', name).eq('date', todayStr);
+          if (error) console.error('Attendance status update failed:', error);
         } catch (e) { console.error('Attendance update failed', e); }
       }
     } else {
       if (supabase) {
         try {
-          const { data } = await supabase.from('attendance').insert([record]).select();
-          if (data && data.length > 0) {
+          const { data, error } = await supabase.from('attendance').insert([record]).select();
+          if (error) {
+            console.error('Attendance insert failed:', error);
+          } else if (data && data.length > 0) {
             attendanceRecords.value.push(data[0]);
-            return;
           }
         } catch (e) { console.error('Attendance insert failed', e); }
+      } else {
+        attendanceRecords.value.push(record);
       }
-      attendanceRecords.value.push(record);
     }
+
+    // 최종 상태 동기화
+    await fetchAllData();
   }
 
   // 조합원 정보 수정 (관리자용)
