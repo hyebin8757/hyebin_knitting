@@ -585,7 +585,7 @@ definePageMeta({
 
         <v-card-actions class="justify-end gap-2 px-0 pt-6">
           <v-btn variant="text" class="cancel" @click="isBatchDialogOpen = false">취소</v-btn>
-          <v-btn style="background: rgba(224, 87, 128, 0.15) !important; border: 1px solid rgba(224, 87, 128, 0.3) !important; color: #e05780 !important; border-radius: 0.8rem; font-weight: 600;" @click="executeBatchDelete">일괄 삭제</v-btn>
+          <v-btn class="delete-batch-btn" @click="executeBatchDelete">일괄 삭제</v-btn>
           <v-btn class="confirm" @click="executeBatchSave">일괄 등록</v-btn>
         </v-card-actions>
       </v-card>
@@ -983,6 +983,26 @@ definePageMeta({
     &:hover {
       box-shadow: 0 6px 16px rgba(26, 80, 140, 0.5) !important;
       opacity: 0.95;
+    }
+  }
+
+  .delete-batch-btn {
+    background: rgba(224, 87, 128, 0.12) !important;
+    border: 1px solid rgba(224, 87, 128, 0.25) !important;
+    color: #ff88a8 !important;
+    border-radius: 0.8rem !important;
+    padding: 0.8rem 2rem !important;
+    height: auto !important;
+    min-width: 8rem !important;
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    text-transform: none;
+    box-shadow: 0 4px 12px rgba(224, 87, 128, 0.1) !important;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(224, 87, 128, 0.22) !important;
+      box-shadow: 0 6px 16px rgba(224, 87, 128, 0.2) !important;
     }
   }
 
