@@ -77,7 +77,7 @@ export const UserLayoutStyle = {
     flex: 1;
     overflow-y: auto;
     background-color: #081524; /* 모바일 컨텐츠 영역 배경 */
-    padding-bottom: 7rem; /* Bottom Navigation 높이 확보 */
+    padding-bottom: 5.6rem; /* Bottom Navigation 높이 확보 */
     
     &::-webkit-scrollbar {
       width: 4px;
@@ -96,18 +96,18 @@ export const UserLayoutStyle = {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 6.8rem;
+    height: 5.2rem;
     background: rgba(12, 32, 52, 0.95);
     backdrop-filter: blur(15px);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     z-index: 10;
 
     .nav-item {
       ${StyleUtils.FlexUtils("center", "center")};
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 0.3rem;
       color: var(--text-color-3);
       text-decoration: none;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -115,12 +115,12 @@ export const UserLayoutStyle = {
       cursor: pointer;
 
       i {
-        font-size: 2.2rem;
+        font-size: 1.8rem;
         transition: transform 0.3s ease;
       }
 
       span {
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 500;
       }
 
