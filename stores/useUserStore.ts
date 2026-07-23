@@ -93,7 +93,8 @@ export const useUserStore = defineStore( "user", () => {
           birthDate: w.birth_date || "",
           joinDate: w.join_date || "",
           loginId: w.login_id || "",
-          loginPassword: w.login_password || ""
+          loginPassword: w.login_password || "",
+          hasChangedCredentials: w.has_changed_credentials || false
         }));
       }
 
