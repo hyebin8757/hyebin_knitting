@@ -455,7 +455,6 @@ definePageMeta({
             variant="solo"
             density="compact"
             hide-details
-            bg-color="#15263a"
             class="year-selector"
           />
 
@@ -826,7 +825,6 @@ definePageMeta({
                 variant="solo"
                 density="compact"
                 hide-details
-                bg-color="rgba(255, 255, 255, 0.04)"
                 class="dues-input"
               />
             </div>
@@ -841,7 +839,6 @@ definePageMeta({
                 variant="solo"
                 density="compact"
                 hide-details
-                bg-color="rgba(255, 255, 255, 0.04)"
                 class="dues-input"
               />
               <div
@@ -912,7 +909,6 @@ definePageMeta({
               variant="solo"
               density="compact"
               hide-details
-              bg-color="rgba(255, 255, 255, 0.04)"
               class="dues-input"
             />
           </div>
@@ -927,7 +923,6 @@ definePageMeta({
               variant="solo"
               density="compact"
               hide-details
-              bg-color="rgba(255, 255, 255, 0.04)"
               class="dues-input"
             />
           </div>
@@ -942,7 +937,6 @@ definePageMeta({
               variant="solo"
               density="compact"
               hide-details
-              bg-color="rgba(255, 255, 255, 0.04)"
               class="dues-input"
             />
             <div
@@ -1072,7 +1066,6 @@ definePageMeta({
               variant="solo"
               density="compact"
               hide-details
-              bg-color="rgba(255, 255, 255, 0.04)"
               class="dues-input"
             />
           </div>
@@ -1087,7 +1080,6 @@ definePageMeta({
               variant="solo"
               density="compact"
               hide-details
-              bg-color="rgba(255, 255, 255, 0.04)"
               class="dues-input"
             />
           </div>
@@ -1103,7 +1095,6 @@ definePageMeta({
               variant="solo"
               density="compact"
               hide-details
-              bg-color="rgba(255, 255, 255, 0.04)"
               class="dues-input"
             />
           </div>
@@ -1623,34 +1614,35 @@ definePageMeta({
   padding: 0 !important;
 }
 
-/* 🌟 공통 인풋 & 셀렉트 스펙트럼 디자인 스펙 */
+/* 🌟 배경 100% 투명화 + 은은한 테두리만 남김 */
 .year-selector,
 .dues-input {
   :deep(.v-field) {
     border-radius: 0.8rem !important;
     min-height: 3.6rem !important;
     height: 3.6rem !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    background: #142235 !important;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    transition: all 0.2s ease !important;
   }
 
   :deep(.v-field__overlay) {
-    background-color: transparent !important;
+    display: none !important;
+    background: transparent !important;
     opacity: 0 !important;
   }
 
   :deep(.v-field:hover) {
-    border-color: rgba(26, 209, 177, 0.5) !important;
-    background: #1a2d45 !important;
-    box-shadow: 0 4px 12px rgba(26, 209, 177, 0.15) !important;
+    border-color: rgba(26, 209, 177, 0.6) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
   }
 
   :deep(.v-field--focused) {
     border-color: #1ad1b1 !important;
-    box-shadow: 0 0 0 3px rgba(26, 209, 177, 0.25) !important;
-    background: #1c324e !important;
+    box-shadow: 0 0 0 2px rgba(26, 209, 177, 0.3) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
   }
 
   :deep(.v-field__input) {
@@ -1684,12 +1676,7 @@ definePageMeta({
     i {
       color: rgba(255, 255, 255, 0.6) !important;
       font-size: 1.8rem !important;
-      transition: transform 0.2s ease;
     }
-  }
-
-  :deep(.v-field--active .v-field__append-inner i) {
-    color: #1ad1b1 !important;
   }
 }
 </style>
