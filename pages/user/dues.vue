@@ -1632,21 +1632,25 @@ definePageMeta({
     height: 3.6rem !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    background: rgba(15, 28, 45, 0.8) !important;
-    backdrop-filter: blur(8px) !important;
+    background: #142235 !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  :deep(.v-field__overlay) {
+    background-color: transparent !important;
+    opacity: 0 !important;
   }
 
   :deep(.v-field:hover) {
     border-color: rgba(26, 209, 177, 0.5) !important;
-    background: rgba(20, 36, 58, 0.9) !important;
+    background: #1a2d45 !important;
     box-shadow: 0 4px 12px rgba(26, 209, 177, 0.15) !important;
   }
 
   :deep(.v-field--focused) {
     border-color: #1ad1b1 !important;
     box-shadow: 0 0 0 3px rgba(26, 209, 177, 0.25) !important;
-    background: rgba(22, 42, 68, 0.95) !important;
+    background: #1c324e !important;
   }
 
   :deep(.v-field__input) {
