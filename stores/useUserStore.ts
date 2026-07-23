@@ -163,8 +163,8 @@ export const useUserStore = defineStore( "user", () => {
     isLogin.value = state;
   }
 
-  // ID/비밀번호 변경 액션 (최초 1회 제한용)
-  const changeCredentials = async (newId: string, newPassword: string) => {
+  // ID/비밀번호 및 개인정보 변경 액션 (최초 1회 제한용)
+  const changeCredentials = async (newId: string, newPassword: string, phone: string = "", joinDate: string = "", birthDate: string = "") => {
     const supabase = getSupabase();
     const currentName = loggedInUser.value?.name;
     if (currentName) {
@@ -172,11 +172,17 @@ export const useUserStore = defineStore( "user", () => {
       if (idx !== -1) {
         workers.value[idx].loginId = newId;
         workers.value[idx].loginPassword = newPassword;
+        workers.value[idx].phone = phone;
+        workers.value[idx].joinDate = joinDate;
+        workers.value[idx].birthDate = birthDate;
         if (supabase) {
           try {
             await supabase.from('workers').update({
               login_id: newId,
-              login_password: newPassword
+              login_password: newPassword,
+              phone: phone,
+              join_date: joinDate,
+              birth_date: birthDate
             }).eq('name', currentName);
           } catch (e) {
             console.error("Update credentials failed", e);
@@ -184,6 +190,9 @@ export const useUserStore = defineStore( "user", () => {
         }
         loggedInUser.value.loginId = newId;
         loggedInUser.value.loginPassword = newPassword;
+        loggedInUser.value.phone = phone;
+        loggedInUser.value.joinDate = joinDate;
+        loggedInUser.value.birthDate = birthDate;
       }
     }
   }

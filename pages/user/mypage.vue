@@ -64,6 +64,9 @@ const phone = computed(() => userStore.loggedInUser?.phone || "010-5678-1234");
 const newCredentials = reactive({
   id: "",
   password: "",
+  phone: "",
+  joinDate: "",
+  birthDate: "",
 });
 
 const isConfirmOpen = ref(false);
@@ -93,17 +96,27 @@ const confirmLogout = () => {
 };
 
 const triggerChange = () => {
-  if (isEmpty(newCredentials.id) || isEmpty(newCredentials.password)) {
-    errorText.value = "새로운 아이디와 비밀번호를 모두 입력해 주세요.";
+  if (isEmpty(newCredentials.password)) {
+    errorText.value = "새로운 비밀번호를 입력해 주세요.";
     isErrorOpen.value = true;
     return;
   }
 
-  if (newCredentials.id.length < 4 || newCredentials.password.length < 4) {
-    errorText.value = "아이디와 비밀번호는 각각 최소 4글자 이상이어야 합니다.";
+  if (newCredentials.password.length < 4) {
+    errorText.value = "비밀번호는 최소 4글자 이상이어야 합니다.";
     isErrorOpen.value = true;
     return;
   }
+
+  // ID가 입력되지 않은 경우 기존 ID(이름)로 대체
+  if (isEmpty(newCredentials.id)) {
+    newCredentials.id = userStore.loggedInUser?.loginId || userStore.loggedInUser?.name || "";
+  }
+
+  // 휴대폰 번호, 입사일, 생년월일이 작성되지 않았을 경우 "0"숫자로 채우기
+  if (isEmpty(newCredentials.phone)) newCredentials.phone = "0";
+  if (isEmpty(newCredentials.joinDate)) newCredentials.joinDate = "0";
+  if (isEmpty(newCredentials.birthDate)) newCredentials.birthDate = "0";
 
   isConfirmOpen.value = true;
 };
@@ -112,7 +125,13 @@ const confirmChange = () => {
   isConfirmOpen.value = false;
 
   // 변경 실행
-  userStore.changeCredentials(newCredentials.id, newCredentials.password);
+  userStore.changeCredentials(
+    newCredentials.id,
+    newCredentials.password,
+    newCredentials.phone,
+    newCredentials.joinDate,
+    newCredentials.birthDate
+  );
 
   // 로컬 바인딩 업데이트
   loginUser.value = userStore.getLoginUser();
@@ -121,6 +140,9 @@ const confirmChange = () => {
   // 폼 비우기
   newCredentials.id = "";
   newCredentials.password = "";
+  newCredentials.phone = "";
+  newCredentials.joinDate = "";
+  newCredentials.birthDate = "";
 };
 
 /************************************************************
@@ -132,6 +154,12 @@ const confirmChange = () => {
  ************************************************************/
 onMounted(() => {
   loginUser.value = userStore.getLoginUser();
+  if (userStore.loggedInUser) {
+    newCredentials.id = userStore.loggedInUser.loginId || userStore.loggedInUser.name || "";
+    newCredentials.phone = userStore.loggedInUser.phone || "";
+    newCredentials.joinDate = userStore.loggedInUser.joinDate || "";
+    newCredentials.birthDate = userStore.loggedInUser.birthDate || "";
+  }
 });
 
 /************************************************************
@@ -213,14 +241,41 @@ definePageMeta({
               v-model="newCredentials.password"
               variant="solo"
               type="password"
-              placeholder="변경할 비밀번호 입력"
+              placeholder="변경할 비밀번호 입력 (필수)"
+              hide-details
+            />
+          </div>
+          <div class="input-item">
+            <label>휴대전화</label>
+            <v-text-field
+              v-model="newCredentials.phone"
+              variant="solo"
+              placeholder="변경할 휴대전화 입력 (미입력시 0)"
+              hide-details
+            />
+          </div>
+          <div class="input-item">
+            <label>입사일자</label>
+            <v-text-field
+              v-model="newCredentials.joinDate"
+              variant="solo"
+              placeholder="변경할 입사일자 입력 (미입력시 0)"
+              hide-details
+            />
+          </div>
+          <div class="input-item">
+            <label>생년월일</label>
+            <v-text-field
+              v-model="newCredentials.birthDate"
+              variant="solo"
+              placeholder="변경할 생년월일 입력 (미입력시 0)"
               hide-details
             />
           </div>
         </div>
 
         <v-btn class="change-btn" @click="triggerChange">
-          ID/비밀번호 변경 적용
+          로그인 정보 및 개인정보 변경 적용
         </v-btn>
       </template>
     </div>
