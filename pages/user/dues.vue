@@ -7,8 +7,13 @@ import { definePageMeta } from "~/.nuxt/imports";
 const userStore = useUserStore();
 const { isEmpty } = useUtil.typeValidation;
 
-// 권한 확인
+// 권한 확인 (관리자 또는 이주봉/한주봉 형님만 기입/수정/삭제 권한 부여)
 const userRole = computed(() => userStore.userRole);
+const isDuesEditor = computed(() => {
+  if (userRole.value === "admin") return true;
+  const name = userStore.loggedInUser?.name;
+  return name === "이주봉" || name === "한주봉";
+});
 
 // 조(Group) 선택 탭 - 7조 고정
 const activeGroupTab = ref<number | string>(7);
@@ -73,9 +78,9 @@ const getDueRecords = (workerName: string, month: string) => {
   return dbRecords;
 };
 
-// 회비 대장 셀 클릭 핸들러 (관리자만 작동)
+// 회비 대장 셀 클릭 핸들러 (권한자만 작동)
 const openDueEditor = (workerName: string, month: string) => {
-  if (userRole.value !== "admin") return;
+  if (!isDuesEditor.value) return;
   selectedDueData.workerName = workerName;
   selectedDueData.month = month;
   selectedDueData.amount = 10000;
@@ -116,7 +121,7 @@ const removeDueRecord = async (id: number) => {
 
 // 일괄 납부 편집 열기
 const openBatchEditor = () => {
-  if (userRole.value !== "admin") return;
+  if (!isDuesEditor.value) return;
   batchDueData.month = "2월";
   batchDueData.amount = 10000;
   batchDueData.paymentMethod = "이체";
@@ -162,7 +167,7 @@ const executeBatchDelete = async () => {
 
 // 비고(지출/수입) 등록 및 수정 핸들러
 const openExpenseEditor = (item: any = null) => {
-  if (userRole.value !== "admin") return;
+  if (!isDuesEditor.value) return;
   if (item) {
     selectedExpenseData.id = item.id;
     selectedExpenseData.month = item.month;
@@ -274,7 +279,7 @@ definePageMeta({
       </div>
       <p style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.6); margin-top: 0.8rem; line-height: 1.6; margin-bottom: 0;">
         조합원별 월회비 납부 현황 및 찬조금/지출 대장입니다.
-        <span v-if="userRole === 'admin'" style="color: #ffcc00; font-weight: 600;">* 대장 내 칸을 클릭하여 납부 상태를 편집할 수 있습니다.</span>
+        <span v-if="isDuesEditor" style="color: #ffcc00; font-weight: 600;">* 대장 내 칸을 클릭하여 납부 상태를 편집할 수 있습니다.</span>
       </p>
     </div>
 
@@ -302,7 +307,7 @@ definePageMeta({
           <span>월회비 납부 현황 (7조 전용)</span>
         </div>
         <v-btn
-          v-if="userRole === 'admin'"
+          v-if="isDuesEditor"
           size="small"
           style="background: rgba(26, 209, 177, 0.15) !important; border: 1px solid rgba(26, 209, 177, 0.3) !important; color: #1ad1b1 !important; font-weight: 600; border-radius: 0.8rem;"
           @click="openBatchEditor"
@@ -329,7 +334,7 @@ definePageMeta({
                 v-for="m in monthsList" 
                 :key="m" 
                 class="status-cell"
-                :class="{ 'admin-clickable': userRole === 'admin' }"
+                :class="{ 'admin-clickable': isDuesEditor }"
                 @click="openDueEditor(w.name, m)"
               >
                 <div v-if="getDueRecords(w.name, m).length > 0" style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
@@ -381,7 +386,7 @@ definePageMeta({
           <span>비고 (지출 및 찬조금 세부 내역)</span>
         </div>
         <v-btn
-          v-if="userRole === 'admin'"
+          v-if="isDuesEditor"
           size="small"
           class="add-expense-btn"
           @click="openExpenseEditor()"
@@ -413,7 +418,7 @@ definePageMeta({
               {{ item.amount > 0 ? '+' : '' }}{{ item.amount.toLocaleString() }}원
             </span>
 
-            <div v-if="userRole === 'admin'" style="display: flex; gap: 0.4rem;">
+            <div v-if="isDuesEditor" style="display: flex; gap: 0.4rem;">
               <v-btn icon size="x-small" class="edit-btn" @click="openExpenseEditor(item)">
                 <i class="material-icons" style="font-size: 1.4rem;">edit</i>
               </v-btn>
