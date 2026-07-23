@@ -145,23 +145,38 @@ const nextMonth = () => {
 };
 
 const toggleCheckIn = async () => {
-  const todayStr = getFormattedDate(new Date());
-  const currentName = userStore.loggedInUser?.name;
-  if (!currentName) return;
-  if (!isCheckedIn.value) {
-    await userStore.checkInWorker(currentName, "day");
-  } else {
-    cancelTargetType.value = "self";
-    cancelTargetName.value = currentName;
-    isCustomCancelConfirmOpen.value = true;
+  try {
+    const todayStr = getFormattedDate(new Date());
+    const currentName = userStore.loggedInUser?.name;
+    console.log("toggleCheckIn clicked. name:", currentName, "isCheckedIn:", isCheckedIn.value);
+    if (!currentName) {
+      alert("로그인된 사용자 정보가 없습니다.");
+      return;
+    }
+    if (!isCheckedIn.value) {
+      await userStore.checkInWorker(currentName, "day");
+    } else {
+      cancelTargetType.value = "self";
+      cancelTargetName.value = currentName;
+      isCustomCancelConfirmOpen.value = true;
+      console.log("isCustomCancelConfirmOpen set to true");
+    }
+  } catch (e: any) {
+    alert("출근 등록/취소 중 오류 발생: " + e.message);
+    console.error(e);
   }
 };
 
 const executeSelfCancel = async () => {
-  const currentName = userStore.loggedInUser?.name;
-  if (!currentName) return;
-  await userStore.cancelCheckIn(currentName);
-  isCustomCancelConfirmOpen.value = false;
+  try {
+    const currentName = userStore.loggedInUser?.name;
+    if (!currentName) return;
+    await userStore.cancelCheckIn(currentName);
+    isCustomCancelConfirmOpen.value = false;
+  } catch (e: any) {
+    alert("출근 취소 처리 중 오류 발생: " + e.message);
+    console.error(e);
+  }
 };
 
 const triggerLeave = () => {
