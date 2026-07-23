@@ -22,11 +22,36 @@ const isDuesEditor = computed(() => {
 const activeGroupTab = ref<number | string>(7);
 
 // 선택 가능한 년도 목록 및 현재 선택된 년도
-const startYear = 2020;
-const futureYears = 5;
 const currentYear = new Date().getFullYear();
-const yearsList = Array.from({ length: (currentYear + futureYears) - startYear + 1 }, (_, i) => startYear + i);
 const selectedYear = ref<number>(currentYear);
+
+// 1. 현재 년도 까지만 볼 수 있음 (미래 년도 제외)
+// 2. 과거 년도는 기본 최대 5년 (데이터가 더 과거에 존재할 경우 해당 최저 년도까지 확장)
+const yearsList = computed(() => {
+  let minYear = currentYear - 5;
+
+  const duesYears = userStore.dues
+    .map((d: any) => Number(d.year) || (d.created_at ? new Date(d.created_at).getFullYear() : null))
+    .filter((y: any): y is number => typeof y === "number" && !isNaN(y) && y > 1900);
+
+  const expenseYears = userStore.duesExpenses
+    .map((e: any) => Number(e.year) || (e.created_at ? new Date(e.created_at).getFullYear() : null))
+    .filter((y: any): y is number => typeof y === "number" && !isNaN(y) && y > 1900);
+
+  const allDbYears = [...duesYears, ...expenseYears];
+  if (allDbYears.length > 0) {
+    const dbMinYear = Math.min(...allDbYears);
+    if (dbMinYear < minYear) {
+      minYear = dbMinYear;
+    }
+  }
+
+  const list: number[] = [];
+  for (let y = minYear; y <= currentYear; y++) {
+    list.push(y);
+  }
+  return list;
+});
 
 // 현재 선택된 월들 목록 (1월 ~ 12월)
 const monthsList = [
