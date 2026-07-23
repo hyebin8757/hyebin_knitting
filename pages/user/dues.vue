@@ -452,7 +452,7 @@ definePageMeta({
           <v-select
             v-model="selectedYear"
             :items="yearsList"
-            variant="solo"
+            variant="outlined"
             density="compact"
             hide-details
             class="year-selector"
@@ -822,7 +822,7 @@ definePageMeta({
               <v-select
                 v-model="selectedDueData.paymentMethod"
                 :items="['이체', '현금']"
-                variant="solo"
+                variant="outlined"
                 density="compact"
                 hide-details
                 class="dues-input"
@@ -836,7 +836,7 @@ definePageMeta({
               <v-text-field
                 v-model.number="selectedDueData.amount"
                 type="number"
-                variant="solo"
+                variant="outlined"
                 density="compact"
                 hide-details
                 class="dues-input"
@@ -906,7 +906,7 @@ definePageMeta({
             <v-select
               v-model="batchDueData.month"
               :items="monthsList"
-              variant="solo"
+              variant="outlined"
               density="compact"
               hide-details
               class="dues-input"
@@ -920,7 +920,7 @@ definePageMeta({
             <v-select
               v-model="batchDueData.paymentMethod"
               :items="['이체', '현금']"
-              variant="solo"
+              variant="outlined"
               density="compact"
               hide-details
               class="dues-input"
@@ -934,7 +934,7 @@ definePageMeta({
             <v-text-field
               v-model.number="batchDueData.amount"
               type="number"
-              variant="solo"
+              variant="outlined"
               density="compact"
               hide-details
               class="dues-input"
@@ -1063,7 +1063,7 @@ definePageMeta({
             <v-select
               v-model="selectedExpenseData.month"
               :items="monthsList"
-              variant="solo"
+              variant="outlined"
               density="compact"
               hide-details
               class="dues-input"
@@ -1077,7 +1077,7 @@ definePageMeta({
             <v-text-field
               v-model="selectedExpenseData.description"
               placeholder="예: 기타 수입 입금 또는 물품 구입"
-              variant="solo"
+              variant="outlined"
               density="compact"
               hide-details
               class="dues-input"
@@ -1092,7 +1092,7 @@ definePageMeta({
               v-model.number="selectedExpenseData.amount"
               type="number"
               placeholder="예: -50000 또는 100000"
-              variant="solo"
+              variant="outlined"
               density="compact"
               hide-details
               class="dues-input"
@@ -1609,74 +1609,26 @@ definePageMeta({
 }
 
 .year-selector {
-  width: 110px !important;
+  width: 100px !important;
   margin-left: 0.8rem !important;
   padding: 0 !important;
 }
 
-/* 🌟 배경 100% 투명화 + 은은한 테두리만 남김 */
 .year-selector,
 .dues-input {
   :deep(.v-field) {
     border-radius: 0.8rem !important;
-    min-height: 3.6rem !important;
-    height: 3.6rem !important;
-    box-shadow: none !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     background: transparent !important;
-    background-color: transparent !important;
-    transition: all 0.2s ease !important;
   }
-
-  :deep(.v-field__overlay) {
-    display: none !important;
-    background: transparent !important;
-    opacity: 0 !important;
-  }
-
-  :deep(.v-field:hover) {
-    border-color: rgba(26, 209, 177, 0.6) !important;
-    background: rgba(255, 255, 255, 0.03) !important;
-  }
-
-  :deep(.v-field--focused) {
-    border-color: #1ad1b1 !important;
-    box-shadow: 0 0 0 2px rgba(26, 209, 177, 0.3) !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-  }
-
   :deep(.v-field__input) {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    padding-left: 1.2rem !important;
-    padding-right: 1.2rem !important;
-    min-height: 3.6rem !important;
-    display: flex !important;
-    align-items: center !important;
+    color: #ffffff !important;
     font-size: 1.3rem !important;
     font-weight: 600 !important;
-    color: #ffffff !important;
-
-    &::placeholder {
-      color: rgba(255, 255, 255, 0.35) !important;
-      font-weight: 400 !important;
-    }
   }
-
   :deep(.v-select__selection) {
+    color: #ffffff !important;
     font-size: 1.3rem !important;
     font-weight: 600 !important;
-    color: #ffffff !important;
-    margin-top: 0 !important;
-  }
-
-  :deep(.v-field__append-inner) {
-    align-items: center !important;
-    padding-top: 0 !important;
-    i {
-      color: rgba(255, 255, 255, 0.6) !important;
-      font-size: 1.8rem !important;
-    }
   }
 }
 </style>
