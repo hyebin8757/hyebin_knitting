@@ -128,26 +128,9 @@ const getDueRecords = (workerName: string, month: string) => {
   // 1월은 전체 미납 처리
   if (month === "1월") return [];
 
-  const dbRecords = userStore.dues.filter(
+  return userStore.dues.filter(
     (d) => d.worker_name === workerName && d.month === month
   );
-
-  // 6월, 7월은 한덕희 형님 제외, 민우주 제외 만원씩 입금한 걸로 기본 표시 (DB에 데이터가 없을 경우 기본값으로 노출)
-  if ((month === "6월" || month === "7월") && workerName !== "민우주") {
-    if (dbRecords.length === 0) {
-      return [
-        {
-          id: -1, // 임시 ID
-          worker_name: workerName,
-          month,
-          amount: 10000,
-          payment_method: "이체",
-        },
-      ];
-    }
-  }
-
-  return dbRecords;
 };
 
 // 회비 대장 셀 클릭 핸들러 (권한자만 작동)
@@ -781,7 +764,6 @@ definePageMeta({
                 {{ rec.amount.toLocaleString() }}원 ({{ rec.payment_method }})
               </span>
               <v-btn
-                v-if="rec.id !== -1"
                 icon
                 size="x-small"
                 style="
