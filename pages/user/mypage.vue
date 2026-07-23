@@ -77,6 +77,10 @@ const errorText = ref("");
 
 const loginUser = ref(userStore.getLoginUser());
 
+const hasChangedCredentials = computed(() => {
+  return !!(userStore.loggedInUser?.hasChangedCredentials || loginUser.value?.hasChangedCredentials);
+});
+
 /************************************************************
  * Provide / inject Data
  ************************************************************/
@@ -244,7 +248,7 @@ definePageMeta({
       </div>
 
       <!-- If already changed, show completed message -->
-      <div v-if="loginUser?.hasChangedCredentials" class="completed-message">
+      <div v-if="hasChangedCredentials" class="completed-message">
         <i class="material-icons">check_circle</i>
         <span>로그인 정보 변경이 완료되었습니다 (재변경 불가).</span>
       </div>

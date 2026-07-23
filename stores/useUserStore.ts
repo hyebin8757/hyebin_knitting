@@ -214,6 +214,8 @@ export const useUserStore = defineStore( "user", () => {
         workers.value[idx].phone = formattedPhone;
         workers.value[idx].joinDate = formattedJoinDate;
         workers.value[idx].birthDate = formattedBirthDate;
+        workers.value[idx].hasChangedCredentials = true;
+        
         if (supabase) {
           try {
             await supabase.from('workers').update({
@@ -221,7 +223,8 @@ export const useUserStore = defineStore( "user", () => {
               login_password: newPassword,
               phone: formattedPhone,
               join_date: formattedJoinDate,
-              birth_date: formattedBirthDate
+              birth_date: formattedBirthDate,
+              has_changed_credentials: true
             }).eq('name', currentName);
           } catch (e) {
             console.error("Update credentials failed", e);
@@ -233,7 +236,15 @@ export const useUserStore = defineStore( "user", () => {
           loggedInUser.value.phone = formattedPhone;
           loggedInUser.value.joinDate = formattedJoinDate;
           loggedInUser.value.birthDate = formattedBirthDate;
+          loggedInUser.value.hasChangedCredentials = true;
         }
+
+        // 세션 정보에도 hasChangedCredentials = true 저장
+        setUserInfo({
+          id: newId,
+          password: newPassword,
+          hasChangedCredentials: true
+        } as any);
       }
     }
   }
