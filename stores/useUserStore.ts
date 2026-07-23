@@ -221,15 +221,20 @@ export const useUserStore = defineStore( "user", () => {
     const idx = workers.value.findIndex(w => w.name === name);
     if (idx !== -1) {
       workers.value[idx].location = location;
-      if (location && workers.value[idx].status === "none") {
-        workers.value[idx].checkedIn = true;
-        workers.value[idx].status = "day";
-      }
+      
+      // 배치 장소에 따른 상태값 매핑 (야간 -> night, 현장 -> field, 그 외 -> day)
+      let newStatus: "day" | "night" | "field" = "day";
+      if (location === "야간") newStatus = "night";
+      else if (location === "현장") newStatus = "field";
+      
+      workers.value[idx].checkedIn = true;
+      workers.value[idx].status = newStatus;
+
       try {
         await supabase?.from("workers").update({
-          location: workers.value[idx].location,
-          checked_in: workers.value[idx].checkedIn,
-          status: workers.value[idx].status
+          location: location,
+          checked_in: true,
+          status: newStatus
         }).eq("name", name);
       } catch (e) {
         console.error("Supabase update failed", e);
@@ -240,44 +245,59 @@ export const useUserStore = defineStore( "user", () => {
       const recordIdx = attendanceRecords.value.findIndex(r => r.worker_name === name && r.date === todayStr);
       if (recordIdx !== -1) {
         attendanceRecords.value[recordIdx].location = location;
+        attendanceRecords.value[recordIdx].status = newStatus;
         if (supabase) {
           try {
-            await supabase.from("attendance").update({ location }).eq("worker_name", name).eq("date", todayStr);
-          } catch (e) { console.error("Attendance location update failed", e); }
+            await supabase.from("attendance").update({ location, status: newStatus }).eq("worker_name", name).eq("date", todayStr);
+          } catch (e) { console.error("Attendance location/status update failed", e); }
         }
+      } else {
+        // 기록이 없는 경우 새로 생성 (배치 지정 시 자동 출근 처리)
+        await checkInWorker(name, newStatus);
+        // checkInWorker에서 fetchAllData를 호출하므로 여기서 리턴 가능
+        return;
       }
     }
+    await fetchAllData();
   }
 
   // 조별 단체 배치 지정
   const deployGroup = async (groupId: number, location: string) => {
     const supabase = getSupabase();
-    workers.value.forEach(w => {
-      if (w.group === groupId && w.checkedIn) {
-        w.location = location;
-      }
-    });
+    
+    // 상태 매핑
+    let newStatus: "day" | "night" | "field" = "day";
+    if (location === "야간") newStatus = "night";
+    else if (location === "현장") newStatus = "field";
+
+    const targetWorkers = workers.value.filter(w => w.group === groupId && w.checkedIn);
+    
+    for (const w of targetWorkers) {
+      w.location = location;
+      w.status = newStatus;
+    }
+
     try {
-      await supabase?.from("workers").update({ location: location }).eq("group", groupId).eq("checked_in", true);
+      await supabase?.from("workers").update({ location: location, status: newStatus }).eq("group", groupId).eq("checked_in", true);
     } catch (e) {
       console.error("Supabase group update failed", e);
     }
 
     // 오늘자 출퇴근 기록도 업데이트
     const todayStr = getTodayStr();
-    for (const w of workers.value) {
-      if (w.group === groupId && w.checkedIn) {
-        const recordIdx = attendanceRecords.value.findIndex(r => r.worker_name === w.name && r.date === todayStr);
-        if (recordIdx !== -1) {
-          attendanceRecords.value[recordIdx].location = location;
-          if (supabase) {
-            try {
-              await supabase.from("attendance").update({ location }).eq("worker_name", w.name).eq("date", todayStr);
-            } catch (e) { console.error("Attendance location group update failed", e); }
-          }
+    for (const w of targetWorkers) {
+      const recordIdx = attendanceRecords.value.findIndex(r => r.worker_name === w.name && r.date === todayStr);
+      if (recordIdx !== -1) {
+        attendanceRecords.value[recordIdx].location = location;
+        attendanceRecords.value[recordIdx].status = newStatus;
+        if (supabase) {
+          try {
+            await supabase.from("attendance").update({ location, status: newStatus }).eq("worker_name", w.name).eq("date", todayStr);
+          } catch (e) { console.error("Attendance location group update failed", e); }
         }
       }
     }
+    await fetchAllData();
   }
 
   // 공지사항 데이터베이스 추가/수정 CRUD 액션

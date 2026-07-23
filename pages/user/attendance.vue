@@ -260,13 +260,13 @@ const currentYearMonthLabel = computed(() => {
 
 const totalWorkedDays = computed(() => {
   return calendarDays.value.filter(
-    (day) => day.isCurrentMonth && (day.status === "day" || day.status === "night" || day.status === "field" || day.status === "leave")
+    (day) => day.isCurrentMonth && (day.status === "day" || day.status === "night" || day.status === "field")
   ).length;
 });
 
 const totalMissedDays = computed(() => {
   return calendarDays.value.filter(
-    (day) => day.isCurrentMonth && day.status === "absent"
+    (day) => day.isCurrentMonth && (day.status === "absent" || day.status === "leave")
   ).length;
 });
 
@@ -393,16 +393,17 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
   if (!name) return;
   
   try {
-    let nextDayStr = "";
-    const currentDateObj = new Date(selectedCalendarDate.value);
-    currentDateObj.setDate(currentDateObj.getDate() + 1);
-    nextDayStr = getFormattedDate(currentDateObj);
+    // YYYY-MM-DD를 로컬 시간 기준으로 파싱 (iOS Safari UTC 버그 방지)
+    const [yr, mo, dy] = selectedCalendarDate.value.split("-").map(Number);
+    const currentDateObj = new Date(yr, mo - 1, dy + 1); // +1일 = 다음 날
+    let nextDayStr = getFormattedDate(currentDateObj);
 
     // 이전에 야간 근무였는지 확인 (다음 날 야간 기록 자동 제거 여부 결정)
     const prevRecord = userStore.attendanceRecords.find(
       r => r.worker_name === name && r.date === selectedCalendarDate.value
     );
     const wasPreviouslyNight = prevRecord?.status === "night";
+    console.log("[updateDateStatus] selected:", selectedCalendarDate.value, "nextDay:", nextDayStr, "wasPreviouslyNight:", wasPreviouslyNight, "newStatus:", status);
 
     if (status === "none") {
       const { error } = await supabase.from("attendance").delete().eq("worker_name", name).eq("date", selectedCalendarDate.value);
