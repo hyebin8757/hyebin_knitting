@@ -1618,17 +1618,33 @@ definePageMeta({
 .dues-input {
   :deep(.v-field) {
     border-radius: 0.8rem !important;
+    background-color: #111e30 !important;
+    background: #111e30 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+  }
+  :deep(.v-field__overlay) {
+    display: none !important;
     background: transparent !important;
+    opacity: 0 !important;
   }
-  :deep(.v-field__input) {
+  :deep(.v-field__input),
+  :deep(input) {
     color: #ffffff !important;
     font-size: 1.3rem !important;
     font-weight: 600 !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: #ffffff !important;
   }
-  :deep(.v-select__selection) {
+  :deep(.v-select__selection),
+  :deep(.v-select__selection-text) {
     color: #ffffff !important;
     font-size: 1.3rem !important;
     font-weight: 600 !important;
+    opacity: 1 !important;
+  }
+  :deep(.v-field__append-inner) {
+    color: rgba(255, 255, 255, 0.7) !important;
   }
 }
 </style>
