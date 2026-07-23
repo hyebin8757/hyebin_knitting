@@ -449,14 +449,9 @@ definePageMeta({
         <div style="display: flex; align-items: center; gap: 0.8rem">
           <i class="material-icons" style="color: #1ad1b1">grid_on</i>
           <span>월회비 납부 현황 (7조 전용)</span>
-          <v-select
-            v-model="selectedYear"
-            :items="yearsList"
-            variant="outlined"
-            density="compact"
-            hide-details
-            class="year-selector"
-          />
+          <select v-model="selectedYear" class="custom-dark-select year-select">
+            <option v-for="y in yearsList" :key="y" :value="y">{{ y }}년</option>
+          </select>
 
         </div>
         <v-btn
@@ -819,27 +814,23 @@ definePageMeta({
               <label style="font-size: 1.1rem; color: rgba(255, 255, 255, 0.5)"
                 >납부 수단</label
               >
-              <v-select
+              <select
                 v-model="selectedDueData.paymentMethod"
-                :items="['이체', '현금']"
-                variant="outlined"
-                density="compact"
-                hide-details
-                class="dues-input"
-              />
+                class="custom-dark-select"
+              >
+                <option value="이체">이체</option>
+                <option value="현금">현금</option>
+              </select>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 0.6rem">
               <label style="font-size: 1.1rem; color: rgba(255, 255, 255, 0.5)"
                 >금액 (원)</label
               >
-              <v-text-field
+              <input
                 v-model.number="selectedDueData.amount"
                 type="number"
-                variant="outlined"
-                density="compact"
-                hide-details
-                class="dues-input"
+                class="custom-dark-input"
               />
               <div
                 style="
@@ -903,41 +894,35 @@ definePageMeta({
             <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
               >대상 월 선택</label
             >
-            <v-select
+            <select
               v-model="batchDueData.month"
-              :items="monthsList"
-              variant="outlined"
-              density="compact"
-              hide-details
-              class="dues-input"
-            />
+              class="custom-dark-select"
+            >
+              <option v-for="m in monthsList" :key="m" :value="m">{{ m }}</option>
+            </select>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.6rem">
             <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
               >납부 수단</label
             >
-            <v-select
+            <select
               v-model="batchDueData.paymentMethod"
-              :items="['이체', '현금']"
-              variant="outlined"
-              density="compact"
-              hide-details
-              class="dues-input"
-            />
+              class="custom-dark-select"
+            >
+              <option value="이체">이체</option>
+              <option value="현금">현금</option>
+            </select>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.6rem">
             <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
               >금액 (원)</label
             >
-            <v-text-field
+            <input
               v-model.number="batchDueData.amount"
               type="number"
-              variant="outlined"
-              density="compact"
-              hide-details
-              class="dues-input"
+              class="custom-dark-input"
             />
             <div
               style="
@@ -1060,27 +1045,22 @@ definePageMeta({
             <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
               >월 선택</label
             >
-            <v-select
+            <select
               v-model="selectedExpenseData.month"
-              :items="monthsList"
-              variant="outlined"
-              density="compact"
-              hide-details
-              class="dues-input"
-            />
+              class="custom-dark-select"
+            >
+              <option v-for="m in monthsList" :key="m" :value="m">{{ m }}</option>
+            </select>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.6rem">
             <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
               >내용</label
             >
-            <v-text-field
+            <input
               v-model="selectedExpenseData.description"
               placeholder="예: 기타 수입 입금 또는 물품 구입"
-              variant="outlined"
-              density="compact"
-              hide-details
-              class="dues-input"
+              class="custom-dark-input"
             />
           </div>
 
@@ -1088,14 +1068,11 @@ definePageMeta({
             <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
               >금액 (원, 지출은 마이너스 기입)</label
             >
-            <v-text-field
+            <input
               v-model.number="selectedExpenseData.amount"
               type="number"
               placeholder="예: -50000 또는 100000"
-              variant="outlined"
-              density="compact"
-              hide-details
-              class="dues-input"
+              class="custom-dark-input"
             />
           </div>
         </div>
@@ -1608,54 +1585,64 @@ definePageMeta({
   }
 }
 
-.year-selector {
-  width: 100px !important;
-  margin-left: 0.8rem !important;
-  padding: 0 !important;
+/* 🌟 완벽한 커스텀 다크 인풋 & 셀렉트 스타일 스펙 */
+.custom-dark-select,
+.custom-dark-input {
+  width: 100%;
+  height: 3.8rem;
+  padding: 0 1.2rem;
+  background-color: #0f1c2e;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.8rem;
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 600;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+
+  &:hover {
+    border-color: rgba(26, 209, 177, 0.5);
+    background-color: #14243b;
+  }
+
+  &:focus {
+    border-color: #1ad1b1;
+    box-shadow: 0 0 0 2px rgba(26, 209, 177, 0.25);
+    background-color: #162842;
+  }
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+    font-weight: 400;
+  }
+
+  option {
+    background-color: #0d1e33;
+    color: #ffffff;
+    padding: 0.8rem;
+  }
 }
 
-.year-selector,
-.dues-input {
-  :deep(.v-field) {
-    border-radius: 0.8rem !important;
-    background-color: #111e30 !important;
-    background: #111e30 !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    box-shadow: none !important;
-    --v-field-border-width: 0px !important;
-    --v-field-border-opacity: 0 !important;
-  }
-  :deep(.v-field__overlay) {
-    display: none !important;
-    background: transparent !important;
-    opacity: 0 !important;
-  }
-  :deep(.v-field__outline) {
-    display: none !important;
-    border: none !important;
-    opacity: 0 !important;
-  }
-  :deep(.v-field__outline *) {
-    display: none !important;
-    border: none !important;
-  }
-  :deep(.v-field__input),
-  :deep(input) {
-    color: #ffffff !important;
-    font-size: 1.3rem !important;
-    font-weight: 600 !important;
-    opacity: 1 !important;
-    -webkit-text-fill-color: #ffffff !important;
-  }
-  :deep(.v-select__selection),
-  :deep(.v-select__selection-text) {
-    color: #ffffff !important;
-    font-size: 1.3rem !important;
-    font-weight: 600 !important;
-    opacity: 1 !important;
-  }
-  :deep(.v-field__append-inner) {
-    color: rgba(255, 255, 255, 0.7) !important;
+.custom-dark-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='rgba(255,255,255,0.7)'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.2rem center;
+  padding-right: 2.8rem;
+
+  &.year-select {
+    width: auto;
+    height: 2.8rem;
+    padding: 0 2.2rem 0 0.8rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-radius: 0.6rem;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    background-position: right 0.6rem center;
+    color: #1ad1b1;
   }
 }
 </style>
