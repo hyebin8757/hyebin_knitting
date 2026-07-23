@@ -593,6 +593,9 @@ export const useUserStore = defineStore( "user", () => {
 
   // 로그아웃
   const logout = () => {
+    isLogin.value = false;
+    userRole.value = "member";
+    loggedInUser.value = null;
     sessionStorage.removeItem( "user" );
     sessionStorage.removeItem( "sidebar" );
     sessionStorage.removeItem( "menu" );
