@@ -492,6 +492,7 @@ definePageMeta({
               <th
                 style="
                   min-width: 8rem;
+                  position: -webkit-sticky;
                   position: sticky;
                   left: 0;
                   background: #0b1a2c;
@@ -514,15 +515,17 @@ definePageMeta({
               <td
                 class="worker-name-cell"
                 style="
+                  position: -webkit-sticky;
                   position: sticky;
                   left: 0;
                   background: #0b1a2c;
-                  font-weight: 700;
                   z-index: 9;
                 "
               >
-                {{ w.name }}
-                <span class="role-sub">{{ w.role }}</span>
+                <div class="name-inner">
+                  <span>{{ w.name }}</span>
+                  <span class="role-sub">{{ w.role }}</span>
+                </div>
               </td>
               <td
                 v-for="m in monthsList"
@@ -578,6 +581,7 @@ definePageMeta({
             <tr class="stats-row sum-row">
               <td
                 style="
+                  position: -webkit-sticky;
                   position: sticky;
                   left: 0;
                   background: #0f243d;
@@ -599,6 +603,7 @@ definePageMeta({
             <tr class="stats-row expense-row">
               <td
                 style="
+                  position: -webkit-sticky;
                   position: sticky;
                   left: 0;
                   background: #0f243d;
@@ -620,6 +625,7 @@ definePageMeta({
             <tr class="stats-row balance-row">
               <td
                 style="
+                  position: -webkit-sticky;
                   position: sticky;
                   left: 0;
                   background: #0f243d;
@@ -1307,8 +1313,13 @@ definePageMeta({
 .table-scroll-wrapper {
   width: 100%;
   overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
   border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
+  /* iOS Safari sticky fix */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .dues-table {
@@ -1332,14 +1343,21 @@ definePageMeta({
   .worker-name-cell {
     font-weight: 700;
     color: #ffffff;
-    display: flex;
-    flex-direction: column;
+    /* iOS Safari: td는 display:flex 금지 - sticky 깨짐 */
+    display: table-cell;
+    vertical-align: middle;
+
+    .name-inner {
+      display: flex;
+      flex-direction: column;
+    }
 
     .role-sub {
       font-size: 1rem;
       color: rgba(255, 255, 255, 0.4);
       font-weight: 500;
       margin-top: 0.2rem;
+      display: block;
     }
   }
 
