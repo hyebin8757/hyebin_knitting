@@ -336,6 +336,7 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
   if (!name) return;
   
   try {
+    let nextDayStr = "";
     if (status === "none") {
       const { error } = await supabase.from("attendance").delete().eq("worker_name", name).eq("date", selectedCalendarDate.value);
       if (error) {
@@ -355,11 +356,37 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
         console.error("Upsert failed:", error);
         return;
       }
+
+      // 야간 근무를 설정한 경우, 다음 날도 자동으로 야간 근무(night)로 등록합니다.
+      if (status === "night") {
+        const currentDateObj = new Date(selectedCalendarDate.value);
+        currentDateObj.setDate(currentDateObj.getDate() + 1);
+        nextDayStr = getFormattedDate(currentDateObj);
+
+        const { error: nextError } = await supabase.from("attendance").upsert({
+          worker_name: name,
+          date: nextDayStr,
+          status: "night",
+          location: ""
+        }, { onConflict: "worker_name,date" });
+        if (nextError) {
+          console.error("Failed to auto-set night shift for the next day:", nextError);
+        }
+      }
     }
     
+    // 오늘 날짜의 출결 상태 동기화 처리
     const todayStr = getFormattedDate(new Date());
+    let activeStatus = status;
+    
     if (selectedCalendarDate.value === todayStr) {
-      if (status === "none") {
+      activeStatus = status;
+    } else if (nextDayStr === todayStr) {
+      activeStatus = "night";
+    }
+    
+    if (selectedCalendarDate.value === todayStr || nextDayStr === todayStr) {
+      if (activeStatus === "none") {
         const { error } = await supabase.from("workers").update({
           checked_in: false,
           status: "none",
@@ -369,8 +396,8 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
       } else {
         const { error } = await supabase.from("workers").update({
           checked_in: true,
-          status: status,
-          location: status === "field" ? "외근" : ""
+          status: activeStatus,
+          location: activeStatus === "field" ? "외근" : ""
         }).eq("name", name);
         if (error) console.error("Worker update failed:", error);
       }
