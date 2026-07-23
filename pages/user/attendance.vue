@@ -337,30 +337,42 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
   
   try {
     if (status === "none") {
-      await supabase.from("attendance").delete().eq("worker_name", name).eq("date", selectedCalendarDate.value);
+      const { error } = await supabase.from("attendance").delete().eq("worker_name", name).eq("date", selectedCalendarDate.value);
+      if (error) {
+        alert("데이터 삭제 실패: " + error.message);
+        console.error("Delete failed:", error);
+        return;
+      }
     } else {
-      await supabase.from("attendance").upsert({
+      const { error } = await supabase.from("attendance").upsert({
         worker_name: name,
         date: selectedCalendarDate.value,
         status: status,
         location: status === "field" ? "외근" : ""
       }, { onConflict: "worker_name,date" });
+      if (error) {
+        alert("데이터 저장 실패: " + error.message);
+        console.error("Upsert failed:", error);
+        return;
+      }
     }
     
     const todayStr = getFormattedDate(new Date());
     if (selectedCalendarDate.value === todayStr) {
       if (status === "none") {
-        await supabase.from("workers").update({
+        const { error } = await supabase.from("workers").update({
           checked_in: false,
           status: "none",
           location: ""
         }).eq("name", name);
+        if (error) console.error("Worker update failed:", error);
       } else {
-        await supabase.from("workers").update({
+        const { error } = await supabase.from("workers").update({
           checked_in: true,
           status: status,
           location: status === "field" ? "외근" : ""
         }).eq("name", name);
+        if (error) console.error("Worker update failed:", error);
       }
     }
     
