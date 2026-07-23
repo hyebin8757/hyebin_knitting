@@ -304,8 +304,27 @@ const selectedCalendarDate = ref("");
 const selectedCalendarDayStatus = ref("none");
 
 const onCalendarDayClick = (day: any) => {
-  if (!day.isCurrentMonth) return;
-  const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(day.dayNum).padStart(2, '0')}`;
+  const currentYearVal = currentDate.value.getFullYear();
+  const currentMonthVal = currentDate.value.getMonth(); // 0-indexed
+  
+  let targetYear = currentYearVal;
+  let targetMonth = currentMonthVal;
+  
+  if (!day.isCurrentMonth && day.dayNum > 15) {
+    targetMonth = currentMonthVal - 1;
+    if (targetMonth < 0) {
+      targetMonth = 11;
+      targetYear -= 1;
+    }
+  } else if (!day.isCurrentMonth && day.dayNum < 15) {
+    targetMonth = currentMonthVal + 1;
+    if (targetMonth > 11) {
+      targetMonth = 0;
+      targetYear += 1;
+    }
+  }
+
+  const dateStr = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-${String(day.dayNum).padStart(2, '0')}`;
   selectedCalendarDate.value = dateStr;
   selectedCalendarDayStatus.value = day.status;
   isDateStatusDialogOpen.value = true;
@@ -454,7 +473,7 @@ definePageMeta({
             { 'status-absent': day.isCurrentMonth && day.status === 'absent' },
             { 'status-leave': day.isCurrentMonth && day.status === 'leave' }
           ]"
-          :style="{ cursor: day.isCurrentMonth ? 'pointer' : 'default' }"
+          :style="{ cursor: 'pointer' }"
           @click="onCalendarDayClick(day)"
         >
           {{ day.dayNum }}
