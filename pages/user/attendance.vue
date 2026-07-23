@@ -235,13 +235,15 @@ const currentYearMonthLabel = computed(() => {
 });
 
 const totalWorkedDays = computed(() => {
-  return Object.values(attendanceHistory.value).filter(
-    (v) => v === "day" || v === "night" || v === "field" || v === "leave"
+  return calendarDays.value.filter(
+    (day) => day.isCurrentMonth && (day.status === "day" || day.status === "night" || day.status === "field" || day.status === "leave")
   ).length;
 });
 
 const totalMissedDays = computed(() => {
-  return Object.values(attendanceHistory.value).filter((v) => v === "absent").length;
+  return calendarDays.value.filter(
+    (day) => day.isCurrentMonth && day.status === "absent"
+  ).length;
 });
 
 const calendarDays = computed<AttendanceDay[]>(() => {
