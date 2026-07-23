@@ -13,8 +13,8 @@ const userRole = computed(() => userStore.userRole);
 // 조(Group) 선택 탭 - 7조 고정
 const activeGroupTab = ref<number | string>(7);
 
-// 현재 선택된 월들 목록 (3월추가 제외)
-const monthsList = ["2월", "3월", "4월", "5월"];
+// 현재 선택된 월들 목록 (1월 ~ 12월)
+const monthsList = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
 
 // 회비 대장 수정 다이얼로그 상태
 const isDueDialogOpen = ref(false);
@@ -41,6 +41,10 @@ const filteredWorkers = computed(() => {
 
 // 특정 조합원의 월별 납부 내역들 목록 찾기
 const getDueRecords = (workerName: string, month: string) => {
+  // 한덕희 형님은 1~12월 전부 미납으로 처리
+  if (workerName === "한덕희") return [];
+  // 1월은 전체 미납 처리
+  if (month === "1월") return [];
   return userStore.dues.filter(d => d.worker_name === workerName && d.month === month);
 };
 
@@ -229,11 +233,13 @@ definePageMeta({
               >
                 <div v-if="getDueRecords(w.name, m).length > 0" style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
                   <div 
-                    v-for="rec in getDueRecords(w.name, m)"
+                    v-for="(rec, idx) in getDueRecords(w.name, m)"
                     :key="rec.id"
                     class="due-tag"
                     :class="rec.payment_method"
+                    :style="idx > 0 ? { borderStyle: 'dashed', background: 'rgba(255, 204, 0, 0.08) !important', color: '#ffcc00 !important', borderColor: 'rgba(255, 204, 0, 0.3) !important' } : {}"
                   >
+                    <span v-if="idx > 0" style="font-size: 0.9rem; font-weight: 800; margin-bottom: 0.1rem; display: block;">추가 +</span>
                     {{ rec.amount.toLocaleString() }}
                     <span class="method-label">{{ rec.payment_method }}</span>
                   </div>
