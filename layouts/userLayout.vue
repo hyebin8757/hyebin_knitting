@@ -68,6 +68,10 @@ onMounted(() => {
             <i class="material-icons">event_available</i>
             <span>출퇴근</span>
           </nuxt-link>
+          <nuxt-link to="/user/dues" class="nav-item">
+            <i class="material-icons">payments</i>
+            <span>회비관리</span>
+          </nuxt-link>
           <!-- 나중에 사용할 예정이므로 임시 비활성화(주석 처리)
           <nuxt-link to="/user/deployment" class="nav-item">
             <i class="material-icons">assignment</i>

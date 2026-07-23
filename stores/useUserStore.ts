@@ -62,6 +62,12 @@ export const useUserStore = defineStore( "user", () => {
   // 공지사항 데이터 (비어있음)
   const notices = ref<any[]>([]);
 
+  // 회비 관련 납부 내역
+  const dues = ref<any[]>([]);
+
+  // 회비 관련 비고/지출 내역
+  const duesExpenses = ref<any[]>([]);
+
   // 현재 로그인한 사용자 정보
   const loggedInUser = ref<any>(null);
 
@@ -113,6 +119,18 @@ export const useUserStore = defineStore( "user", () => {
       const { data: dbAttendance, error: errAttendance } = await supabase.from("attendance").select("*");
       if (dbAttendance) {
         attendanceRecords.value = dbAttendance;
+      }
+
+      // 5. 회비 납부 내역 조회
+      const { data: dbDues, error: errDues } = await supabase.from("dues").select("*");
+      if (dbDues) {
+        dues.value = dbDues;
+      }
+
+      // 6. 회비 비고/지출 내역 조회
+      const { data: dbDuesExp, error: errDuesExp } = await supabase.from("dues_expenses").select("*").order("id", { ascending: true });
+      if (dbDuesExp) {
+        duesExpenses.value = dbDuesExp;
       }
 
       // 로그인 세션 정보 복구 매핑
@@ -503,6 +521,60 @@ export const useUserStore = defineStore( "user", () => {
     }
   }
 
+  // 회비 납부 업데이트
+  const saveDueAction = async (workerName: string, month: string, amount: number, paymentMethod: string) => {
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('dues').upsert({
+          worker_name: workerName,
+          month,
+          amount,
+          payment_method: paymentMethod
+        }, { onConflict: 'worker_name,month' });
+        if (error) console.error("Save due failed:", error);
+      } catch (e) { console.error("Save due failed", e); }
+    }
+    await fetchAllData();
+  };
+
+  // 회비 비고/지출 등록 및 수정
+  const saveExpenseAction = async (id: number | null, month: string, amount: number, description: string) => {
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        if (id) {
+          const { error } = await supabase.from('dues_expenses').update({
+            month,
+            amount,
+            description
+          }).eq('id', id);
+          if (error) console.error("Update expense failed:", error);
+        } else {
+          const { error } = await supabase.from('dues_expenses').insert([{
+            month,
+            amount,
+            description
+          }]);
+          if (error) console.error("Insert expense failed:", error);
+        }
+      } catch (e) { console.error("Save expense failed", e); }
+    }
+    await fetchAllData();
+  };
+
+  // 회비 비고/지출 삭제
+  const deleteExpenseAction = async (id: number) => {
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('dues_expenses').delete().eq('id', id);
+        if (error) console.error("Delete expense failed:", error);
+      } catch (e) { console.error("Delete expense failed", e); }
+    }
+    await fetchAllData();
+  };
+
   const getSupabaseInstance = () => {
     return getSupabase();
   };
@@ -525,6 +597,11 @@ export const useUserStore = defineStore( "user", () => {
     workers,
     fieldWorks,
     notices,
+    dues,
+    duesExpenses,
+    saveDueAction,
+    saveExpenseAction,
+    deleteExpenseAction,
     fetchAllData,
     getLoginUser,
     setUserInfo,
