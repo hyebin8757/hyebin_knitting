@@ -70,6 +70,7 @@ const loginBooleanData = reactive({
 });
 
 const rememberId = ref(false);
+const autoLogin = ref(false);
 
 /************************************************************
  * Provide / inject Data
@@ -102,12 +103,23 @@ const onLogin = async () => {
     }
   }
 
-  // 아이디/비밀번호 정보 세션 저장 및 아이디 기억하기 체크 처리
+  // 아이디/비밀번호 정보 세션 저장 및 아이디 기억하기/자동로그인 체크 처리
   userStore.setUserInfo({ id: loginData.id, password: loginData.password });
+  
   if (rememberId.value) {
     localStorage.setItem("remember_id", loginData.id);
   } else {
     localStorage.removeItem("remember_id");
+  }
+
+  if (autoLogin.value) {
+    localStorage.setItem("auto_login", "true");
+    localStorage.setItem("auto_login_id", loginData.id);
+    localStorage.setItem("auto_login_password", loginData.password);
+  } else {
+    localStorage.removeItem("auto_login");
+    localStorage.removeItem("auto_login_id");
+    localStorage.removeItem("auto_login_password");
   }
   
   moveHome();
@@ -183,12 +195,27 @@ watch(
 /************************************************************
  * Mounted
  ************************************************************/
-onMounted(() => {
+onMounted(async () => {
   document.documentElement.removeAttribute("dark-mode");
   const savedId = localStorage.getItem("remember_id");
   if (savedId) {
     loginData.id = savedId;
     rememberId.value = true;
+  }
+
+  const isAuto = localStorage.getItem("auto_login") === "true";
+  if (isAuto) {
+    const autoId = localStorage.getItem("auto_login_id");
+    const autoPw = localStorage.getItem("auto_login_password");
+    if (autoId && autoPw) {
+      loginData.id = autoId;
+      loginData.password = autoPw;
+      autoLogin.value = true;
+      
+      // 조합원 목록 매핑 대기용 로딩 처리
+      await userStore.fetchAllData();
+      onLogin();
+    }
   }
 });
 </script>
@@ -237,30 +264,59 @@ onMounted(() => {
               </div>
             </div>
 
-            <!-- 아이디 저장 체크박스 (커스텀 디자인) -->
-            <div style="margin-top: 1.2rem; margin-bottom: 1.6rem; display: flex; align-items: center; gap: 0.8rem; cursor: pointer; user-select: none; width: fit-content;" @click="rememberId = !rememberId">
-              <div 
-                :style="{
-                  width: '2rem',
-                  height: '2rem',
-                  borderRadius: '0.6rem',
-                  border: '1px solid ' + (rememberId ? 'rgba(136, 197, 255, 0.5)' : 'rgba(255, 255, 255, 0.15)'),
-                  background: rememberId ? 'rgba(35, 102, 180, 0.35)' : 'rgba(255, 255, 255, 0.03)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s'
-                }"
-              >
-                <i 
-                  v-if="rememberId" 
-                  class="material-icons" 
-                  style="font-size: 1.4rem; color: #88c5ff; font-weight: bold;"
+            <!-- 체크박스 영역 (아이디 저장 & 자동 로그인) -->
+            <div style="margin-top: 1.2rem; margin-bottom: 1.6rem; display: flex; align-items: center; gap: 2rem; width: 100%;">
+              <!-- 아이디 저장 -->
+              <div style="display: flex; align-items: center; gap: 0.8rem; cursor: pointer; user-select: none;" @click="rememberId = !rememberId">
+                <div 
+                  :style="{
+                    width: '2rem',
+                    height: '2rem',
+                    borderRadius: '0.6rem',
+                    border: '1px solid ' + (rememberId ? 'rgba(136, 197, 255, 0.5)' : 'rgba(255, 255, 255, 0.15)'),
+                    background: rememberId ? 'rgba(35, 102, 180, 0.35)' : 'rgba(255, 255, 255, 0.03)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }"
                 >
-                  check
-                </i>
+                  <i 
+                    v-if="rememberId" 
+                    class="material-icons" 
+                    style="font-size: 1.4rem; color: #88c5ff; font-weight: bold;"
+                  >
+                    check
+                  </i>
+                </div>
+                <span style="color: rgba(255,255,255,0.75); font-size: 1.3rem; font-weight: 600;">아이디 저장</span>
               </div>
-              <span style="color: rgba(255,255,255,0.75); font-size: 1.3rem; font-weight: 600;">아이디 저장</span>
+
+              <!-- 자동 로그인 -->
+              <div style="display: flex; align-items: center; gap: 0.8rem; cursor: pointer; user-select: none;" @click="autoLogin = !autoLogin">
+                <div 
+                  :style="{
+                    width: '2rem',
+                    height: '2rem',
+                    borderRadius: '0.6rem',
+                    border: '1px solid ' + (autoLogin ? 'rgba(136, 197, 255, 0.5)' : 'rgba(255, 255, 255, 0.15)'),
+                    background: autoLogin ? 'rgba(35, 102, 180, 0.35)' : 'rgba(255, 255, 255, 0.03)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }"
+                >
+                  <i 
+                    v-if="autoLogin" 
+                    class="material-icons" 
+                    style="font-size: 1.4rem; color: #88c5ff; font-weight: bold;"
+                  >
+                    check
+                  </i>
+                </div>
+                <span style="color: rgba(255,255,255,0.75); font-size: 1.3rem; font-weight: 600;">자동 로그인</span>
+              </div>
             </div>
 
             <div :class="cx(LoginStyle.LoginBtn)">

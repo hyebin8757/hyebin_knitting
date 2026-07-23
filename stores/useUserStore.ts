@@ -491,6 +491,9 @@ export const useUserStore = defineStore( "user", () => {
     sessionStorage.removeItem( "user" );
     sessionStorage.removeItem( "sidebar" );
     sessionStorage.removeItem( "menu" );
+    localStorage.removeItem( "auto_login" );
+    localStorage.removeItem( "auto_login_id" );
+    localStorage.removeItem( "auto_login_password" );
     location.href = "/login";
   };
 
