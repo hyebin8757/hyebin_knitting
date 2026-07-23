@@ -114,6 +114,25 @@ export const useUserStore = defineStore( "user", () => {
       if (dbAttendance) {
         attendanceRecords.value = dbAttendance;
       }
+
+      // 로그인 세션 정보 복구 매핑
+      const savedUser = getLoginUser();
+      if (savedUser && savedUser.id && savedUser.id !== "testUser") {
+        isLogin.value = true;
+        if (savedUser.id === 'admin') {
+          userRole.value = 'admin';
+          loggedInUser.value = { name: '관리자', role: '관리자', phone: '010-0000-0000', group: 0 };
+        } else {
+          userRole.value = 'member';
+          const matched = workers.value.find(w => w.name === savedUser.id || w.loginId === savedUser.id);
+          if (matched) {
+            loggedInUser.value = matched;
+          } else {
+            // 혹시 아직 매칭하지 못한 경우의 임시 정보
+            loggedInUser.value = { name: savedUser.id, role: '조합원', phone: savedUser.password, group: 1 };
+          }
+        }
+      }
     } catch (e) {
       console.warn("Supabase 데이터 조회 실패 - 로컬 상태 유지", e);
     }

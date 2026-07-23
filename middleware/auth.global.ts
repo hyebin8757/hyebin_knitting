@@ -8,8 +8,10 @@ export default defineNuxtRouteMiddleware((to) => {
 
   const userStore = useUserStore();
 
-  // 로그인되지 않은 상태로 다른 페이지 접근 시 로그인 페이지로 강제 이동
-  if (!userStore.isLogin) {
+  // sessionStorage 내에 로그인된 암호화 세션 정보가 존재할 경우 인증 통과로 판정
+  const hasSession = typeof window !== "undefined" && sessionStorage.getItem("user");
+
+  if (!userStore.isLogin && !hasSession) {
     return navigateTo("/login/login");
   }
 });
