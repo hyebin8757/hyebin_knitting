@@ -78,7 +78,13 @@ const errorText = ref("");
 const loginUser = ref(userStore.getLoginUser());
 
 const hasChangedCredentials = computed(() => {
-  return !!(userStore.loggedInUser?.hasChangedCredentials || loginUser.value?.hasChangedCredentials);
+  const name = userStore.loggedInUser?.name;
+  const localFlag = name ? localStorage.getItem(`changed_credentials_${name}`) === "true" : false;
+  return !!(
+    userStore.loggedInUser?.hasChangedCredentials ||
+    loginUser.value?.hasChangedCredentials ||
+    localFlag
+  );
 });
 
 /************************************************************
@@ -160,6 +166,11 @@ const triggerChange = () => {
 
 const confirmChange = async () => {
   isConfirmOpen.value = false;
+
+  const currentName = userStore.loggedInUser?.name;
+  if (currentName) {
+    localStorage.setItem(`changed_credentials_${currentName}`, "true");
+  }
 
   // 변경 실행
   await userStore.changeCredentials(
