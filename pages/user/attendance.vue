@@ -296,10 +296,61 @@ const isTodayEarlyLeave = computed(() => {
 });
 
 const isCheckInDisabled = computed(() => {
-  if (bypassTimeLimit.value) return false;
-  const currentHour = new Date().getHours();
-  return currentHour >= 6;
+  return false;
 });
+
+const isDateStatusDialogOpen = ref(false);
+const selectedCalendarDate = ref("");
+const selectedCalendarDayStatus = ref("none");
+
+const onCalendarDayClick = (day: any) => {
+  if (!day.isCurrentMonth) return;
+  const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(day.dayNum).padStart(2, '0')}`;
+  selectedCalendarDate.value = dateStr;
+  selectedCalendarDayStatus.value = day.status;
+  isDateStatusDialogOpen.value = true;
+};
+
+const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "leave" | "none") => {
+  const supabase = userStore.getSupabase();
+  const name = userStore.loggedInUser?.name;
+  if (!name) return;
+  
+  try {
+    if (status === "none") {
+      await supabase.from("attendance").delete().eq("worker_name", name).eq("date", selectedCalendarDate.value);
+    } else {
+      await supabase.from("attendance").upsert({
+        worker_name: name,
+        date: selectedCalendarDate.value,
+        status: status,
+        location: status === "field" ? "외근" : ""
+      }, { onConflict: "worker_name,date" });
+    }
+    
+    const todayStr = getFormattedDate(new Date());
+    if (selectedCalendarDate.value === todayStr) {
+      if (status === "none") {
+        await supabase.from("workers").update({
+          checked_in: false,
+          status: "none",
+          location: ""
+        }).eq("name", name);
+      } else {
+        await supabase.from("workers").update({
+          checked_in: true,
+          status: status,
+          location: status === "field" ? "외근" : ""
+        }).eq("name", name);
+      }
+    }
+    
+    await userStore.fetchAllData();
+    isDateStatusDialogOpen.value = false;
+  } catch (e) {
+    console.error("Failed to update status", e);
+  }
+};
 
 /************************************************************
  * Watch
@@ -403,6 +454,8 @@ definePageMeta({
             { 'status-absent': day.isCurrentMonth && day.status === 'absent' },
             { 'status-leave': day.isCurrentMonth && day.status === 'leave' }
           ]"
+          :style="{ cursor: day.isCurrentMonth ? 'pointer' : 'default' }"
+          @click="onCalendarDayClick(day)"
         >
           {{ day.dayNum }}
         </div>
@@ -460,6 +513,43 @@ definePageMeta({
         <v-card-actions class="justify-end gap-2 px-0 pt-4">
           <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isLeaveConfirmOpen = false">취소</v-btn>
           <v-btn style="background: linear-gradient(135deg, #e05780 0%, #b5179e 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="confirmLeave">조퇴 실행</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <!-- Calendar Date Click Status Change Dialog -->
+    <v-dialog v-model="isDateStatusDialogOpen" max-width="320">
+      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.6rem; color: #ffffff; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); display: flex; align-items: center; gap: 0.8rem; padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <i class="material-icons" style="color: var(--primary-lighten-color-1);">edit_calendar</i>
+          <span>출결 상태 변경</span>
+        </v-card-title>
+        
+        <v-card-text class="py-4 px-0" style="font-size: 1.3rem; color: rgba(255, 255, 255, 0.7); line-height: 1.5;">
+          선택한 날짜: <strong>{{ selectedCalendarDate }}</strong><br />
+          변경할 출결 타입을 선택해 주세요.
+        </v-card-text>
+
+        <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 0.4rem; max-height: 250px; overflow-y: auto; padding-right: 0.4rem;">
+          <v-btn
+            v-for="opt in [
+              { label: '주간 근무', val: 'day', color: '#1ad1b1', bg: 'rgba(26, 209, 177, 0.15)' },
+              { label: '야간 근무', val: 'night', color: '#ffcc00', bg: 'rgba(255, 204, 0, 0.15)' },
+              { label: '현장 근무 (외근)', val: 'field', color: '#3a86ff', bg: 'rgba(58, 134, 255, 0.15)' },
+              { label: '조퇴', val: 'leave', color: '#e05780', bg: 'rgba(224, 87, 128, 0.15)' },
+              { label: '결근', val: 'absent', color: '#ff4d4d', bg: 'rgba(255, 77, 77, 0.15)' },
+              { label: '기록 삭제', val: 'none', color: '#ffffff', bg: 'rgba(255, 255, 255, 0.1)' }
+            ]"
+            :key="opt.val"
+            style="width: 100%; border-radius: 0.8rem; font-weight: 600; font-size: 1.3rem; height: 4rem !important; justify-content: flex-start; padding-left: 1.6rem !important;"
+            :style="{ background: opt.bg + ' !important', color: opt.color + ' !important', border: '1px solid ' + opt.color + '33 !important' }"
+            @click="updateDateStatus(opt.val)"
+          >
+            {{ opt.label }}
+          </v-btn>
+        </div>
+
+        <v-card-actions class="justify-end gap-2 px-0 pt-6">
+          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="isDateStatusDialogOpen = false">취소</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
