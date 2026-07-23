@@ -193,13 +193,6 @@ const saveDue = async () => {
 
 // 특정 납부 기록 삭제
 const removeDueRecord = (id: number) => {
-  if (id === -1) {
-    showInfo(
-      "삭제 불가",
-      "6월/7월 기본 납부 기록은 삭제할 수 없습니다.\n수정을 원하시면 해당 셀에 추가 납부 내역을 기입해 주세요."
-    );
-    return;
-  }
   showConfirm(
     "납부 내역 삭제",
     "이 납부 기록을 삭제하시겠습니까?",
@@ -788,6 +781,7 @@ definePageMeta({
                 {{ rec.amount.toLocaleString() }}원 ({{ rec.payment_method }})
               </span>
               <v-btn
+                v-if="rec.id !== -1"
                 icon
                 size="x-small"
                 style="
