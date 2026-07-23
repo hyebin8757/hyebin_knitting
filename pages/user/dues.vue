@@ -22,20 +22,38 @@ const isDuesEditor = computed(() => {
 const activeGroupTab = ref<number | string>(7);
 
 // 현재 선택된 월들 목록 (1월 ~ 12월)
-const monthsList = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+const monthsList = [
+  "1월",
+  "2월",
+  "3월",
+  "4월",
+  "5월",
+  "6월",
+  "7월",
+  "8월",
+  "9월",
+  "10월",
+  "11월",
+  "12월",
+];
 
 // 스낙낵바 (토스트) 상태
 const snackbar = reactive({
   show: false,
   message: "",
-  color: "success" as "success" | "error" | "info"
+  color: "success" as "success" | "error" | "info",
 });
 
-const showToast = (message: string, color: "success" | "error" | "info" = "success") => {
+const showToast = (
+  message: string,
+  color: "success" | "error" | "info" = "success"
+) => {
   snackbar.message = message;
   snackbar.color = color;
   snackbar.show = true;
-  setTimeout(() => { snackbar.show = false; }, 2800);
+  setTimeout(() => {
+    snackbar.show = false;
+  }, 2800);
 };
 
 // 커스텀 confirm 다이얼로그 상태
@@ -43,7 +61,7 @@ const confirmDialog = reactive({
   show: false,
   title: "",
   message: "",
-  onConfirm: null as (null | (() => void))
+  onConfirm: null as null | (() => void),
 });
 
 const showConfirm = (title: string, message: string, onConfirm: () => void) => {
@@ -62,7 +80,7 @@ const handleConfirm = () => {
 const infoDialog = reactive({
   show: false,
   title: "",
-  message: ""
+  message: "",
 });
 
 const showInfo = (title: string, message: string) => {
@@ -77,7 +95,7 @@ const selectedDueData = reactive({
   workerName: "",
   month: "",
   amount: 10000,
-  paymentMethod: "이체" as "이체" | "현금"
+  paymentMethod: "이체" as "이체" | "현금",
 });
 
 // 일괄 납부 다이얼로그 상태
@@ -85,7 +103,7 @@ const isBatchDialogOpen = ref(false);
 const batchDueData = reactive({
   month: "2월",
   amount: 10000,
-  paymentMethod: "이체" as "이체" | "현금"
+  paymentMethod: "이체" as "이체" | "현금",
 });
 const batchWorkersList = ref<any[]>([]); // { name: string, checked: boolean }[]
 
@@ -95,12 +113,12 @@ const selectedExpenseData = reactive({
   id: null as number | null,
   month: "2월",
   amount: 0,
-  description: ""
+  description: "",
 });
 
 // 필터링된 조합원 목록 (7조 고정)
 const filteredWorkers = computed(() => {
-  return userStore.workers.filter(w => w.group === 7 && w.name !== 'admin');
+  return userStore.workers.filter((w) => w.group === 7 && w.name !== "admin");
 });
 
 // 특정 조합원의 월별 납부 내역들 목록 찾기
@@ -110,18 +128,22 @@ const getDueRecords = (workerName: string, month: string) => {
   // 1월은 전체 미납 처리
   if (month === "1월") return [];
 
-  const dbRecords = userStore.dues.filter(d => d.worker_name === workerName && d.month === month);
+  const dbRecords = userStore.dues.filter(
+    (d) => d.worker_name === workerName && d.month === month
+  );
 
   // 6월, 7월은 한덕희 형님 제외, 민우주 제외 만원씩 입금한 걸로 기본 표시 (DB에 데이터가 없을 경우 기본값으로 노출)
   if ((month === "6월" || month === "7월") && workerName !== "민우주") {
     if (dbRecords.length === 0) {
-      return [{
-        id: -1, // 임시 ID
-        worker_name: workerName,
-        month,
-        amount: 10000,
-        payment_method: "이체"
-      }];
+      return [
+        {
+          id: -1, // 임시 ID
+          worker_name: workerName,
+          month,
+          amount: 10000,
+          payment_method: "이체",
+        },
+      ];
     }
   }
 
@@ -157,7 +179,12 @@ const saveDue = async () => {
     selectedDueData.paymentMethod
   );
   if (result?.success) {
-    showToast(`${selectedDueData.workerName} 님 ${selectedDueData.month} 회비 ${selectedDueData.amount.toLocaleString()}원 등록 완료!`, "success");
+    showToast(
+      `${selectedDueData.workerName} 님 ${
+        selectedDueData.month
+      } 회비 ${selectedDueData.amount.toLocaleString()}원 등록 완료!`,
+      "success"
+    );
     isDueDialogOpen.value = false;
   } else {
     showToast("등록 중 오류가 발생했습니다. 다시 시도해주세요.", "error");
@@ -167,17 +194,24 @@ const saveDue = async () => {
 // 특정 납부 기록 삭제
 const removeDueRecord = (id: number) => {
   if (id === -1) {
-    showInfo("삭제 불가", "6월/7월 기본 납부 기록은 삭제할 수 없습니다.\n수정을 원하시면 해당 셀에 추가 납부 내역을 기입해 주세요.");
+    showInfo(
+      "삭제 불가",
+      "6월/7월 기본 납부 기록은 삭제할 수 없습니다.\n수정을 원하시면 해당 셀에 추가 납부 내역을 기입해 주세요."
+    );
     return;
   }
-  showConfirm("납부 내역 삭제", "이 납부 기록을 삭제하시겠습니까?", async () => {
-    const result = await userStore.deleteDueAction(id);
-    if (result?.success) {
-      showToast("납부 기록이 삭제되었습니다.", "info");
-    } else {
-      showToast("삭제 중 오류가 발생했습니다.", "error");
+  showConfirm(
+    "납부 내역 삭제",
+    "이 납부 기록을 삭제하시겠습니까?",
+    async () => {
+      const result = await userStore.deleteDueAction(id);
+      if (result?.success) {
+        showToast("납부 기록이 삭제되었습니다.", "info");
+      } else {
+        showToast("삭제 중 오류가 발생했습니다.", "error");
+      }
     }
-  });
+  );
 };
 
 // 일괄 납부 편집 열기
@@ -187,31 +221,43 @@ const openBatchEditor = () => {
   batchDueData.amount = 10000;
   batchDueData.paymentMethod = "이체";
   batchWorkersList.value = userStore.workers
-    .filter(w => w.name !== 'admin' && w.group === 7 && w.name !== '한덕희') // 한덕희 형님은 일괄 등록에서도 제외
-    .map(w => ({
+    .filter((w) => w.name !== "admin" && w.group === 7 && w.name !== "한덕희") // 한덕희 형님은 일괄 등록에서도 제외
+    .map((w) => ({
       name: w.name,
-      checked: true
+      checked: true,
     }));
   isBatchDialogOpen.value = true;
 };
 
 // 일괄 납부 등록 실행
 const executeBatchSave = async () => {
-  const targets = batchWorkersList.value.filter(w => w.checked).map(w => w.name);
+  const targets = batchWorkersList.value
+    .filter((w) => w.checked)
+    .map((w) => w.name);
   if (targets.length === 0) {
     showInfo("선택 필요", "일괄 등록할 조합원을 한 명 이상 선택해 주세요.");
     return;
   }
   for (const name of targets) {
-    await userStore.saveDueAction(name, batchDueData.month, batchDueData.amount, batchDueData.paymentMethod);
+    await userStore.saveDueAction(
+      name,
+      batchDueData.month,
+      batchDueData.amount,
+      batchDueData.paymentMethod
+    );
   }
   isBatchDialogOpen.value = false;
-  showToast(`${batchDueData.month} ${targets.length}명 일괄 등록 완료!`, "success");
+  showToast(
+    `${batchDueData.month} ${targets.length}명 일괄 등록 완료!`,
+    "success"
+  );
 };
 
 // 일괄 납부 삭제 실행
 const executeBatchDelete = () => {
-  const targets = batchWorkersList.value.filter(w => w.checked).map(w => w.name);
+  const targets = batchWorkersList.value
+    .filter((w) => w.checked)
+    .map((w) => w.name);
   if (targets.length === 0) {
     showInfo("선택 필요", "일괄 삭제할 조합원을 한 명 이상 선택해 주세요.");
     return;
@@ -221,13 +267,16 @@ const executeBatchDelete = () => {
     `${batchDueData.month} 선택된 ${targets.length}명의 회비 기록을 일괄 삭제하시겠습니까?\n(수동 기입된 내역만 삭제됩니다)`,
     async () => {
       const recordsToDelete = userStore.dues.filter(
-        d => d.month === batchDueData.month && targets.includes(d.worker_name)
+        (d) => d.month === batchDueData.month && targets.includes(d.worker_name)
       );
       for (const rec of recordsToDelete) {
         await userStore.deleteDueAction(rec.id);
       }
       isBatchDialogOpen.value = false;
-      showToast(`${batchDueData.month} ${targets.length}명 일괄 삭제 완료.`, "info");
+      showToast(
+        `${batchDueData.month} ${targets.length}명 일괄 삭제 완료.`,
+        "info"
+      );
     }
   );
 };
@@ -275,30 +324,33 @@ const deleteExpense = (id: number) => {
 
 // 월별 수입 및 지출 통계 연산
 const monthlyStats = computed(() => {
-  const stats: Record<string, { income: number; expense: number; balance: number }> = {};
-  
-  monthsList.forEach(m => {
+  const stats: Record<
+    string,
+    { income: number; expense: number; balance: number }
+  > = {};
+
+  monthsList.forEach((m) => {
     // 1. 해당 월 조합원들의 납입 회비 총합 (수입)
     const duesSum = userStore.dues
-      .filter(d => d.month === m && d.payment_method !== "미납")
+      .filter((d) => d.month === m && d.payment_method !== "미납")
       .reduce((sum, curr) => sum + (curr.amount || 0), 0);
 
     // 2. 해당 월의 찬조금 수입 (양수 금액)
     const sponsorSum = userStore.duesExpenses
-      .filter(e => e.month === m && e.amount > 0)
+      .filter((e) => e.month === m && e.amount > 0)
       .reduce((sum, curr) => sum + curr.amount, 0);
 
     // 3. 해당 월의 지출 총합 (음수 금액)
     const expenseSum = userStore.duesExpenses
-      .filter(e => e.month === m && e.amount < 0)
+      .filter((e) => e.month === m && e.amount < 0)
       .reduce((sum, curr) => sum + Math.abs(curr.amount), 0);
 
     const totalIncome = duesSum + sponsorSum;
-    
+
     stats[m] = {
       income: totalIncome,
       expense: expenseSum,
-      balance: totalIncome - expenseSum
+      balance: totalIncome - expenseSum,
     };
   });
 
@@ -312,11 +364,11 @@ const overallSummary = computed(() => {
 
   // 전체 회비 총합
   const totalDues = userStore.dues
-    .filter(d => d.payment_method !== "미납")
+    .filter((d) => d.payment_method !== "미납")
     .reduce((sum, curr) => sum + (curr.amount || 0), 0);
-  
+
   // 전체 비고 찬조/지출 총합
-  userStore.duesExpenses.forEach(e => {
+  userStore.duesExpenses.forEach((e) => {
     if (e.amount > 0) {
       totalIncome += e.amount;
     } else {
@@ -329,7 +381,7 @@ const overallSummary = computed(() => {
   return {
     income: finalIncome,
     expense: totalExpense,
-    balance: finalIncome - totalExpense
+    balance: finalIncome - totalExpense,
   };
 });
 
@@ -346,13 +398,32 @@ definePageMeta({
   <div class="dues-page">
     <!-- Header Page Info Card -->
     <div class="page-info-card">
-      <div style="display: flex; align-items: center; gap: 0.8rem; font-size: 1.6rem; font-weight: 700; color: #ffffff;">
-        <i class="material-icons" style="color: #3a86ff;">payments</i>
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          font-size: 1.6rem;
+          font-weight: 700;
+          color: #ffffff;
+        "
+      >
+        <i class="material-icons" style="color: #3a86ff">payments</i>
         <span>회비 장부 대장</span>
       </div>
-      <p style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.6); margin-top: 0.8rem; line-height: 1.6; margin-bottom: 0;">
-        조합원별 월회비 납부 현황 및 기타 수입/지출 대장입니다.
-        <span v-if="isDuesEditor" style="color: #ffcc00; font-weight: 600;">* 대장 내 칸을 클릭하여 납부 상태를 편집할 수 있습니다.</span>
+      <p
+        style="
+          font-size: 1.2rem;
+          color: rgba(255, 255, 255, 0.6);
+          margin-top: 0.8rem;
+          line-height: 1.6;
+          margin-bottom: 0;
+        "
+      >
+        조합원별 월회비 납부 현황 및 기타 수입/지출 대장입니다. <br />
+        <span v-if="isDuesEditor" style="color: #ffcc00; font-weight: 600"
+          >* 대장 내 칸을 클릭하여 납부 상태를 편집할 수 있습니다.</span
+        >
       </p>
     </div>
 
@@ -360,32 +431,57 @@ definePageMeta({
     <div class="summary-widget">
       <div class="summary-item">
         <span class="label">총 수입 (회비 및 기타)</span>
-        <span class="value income">{{ overallSummary.income.toLocaleString() }}원</span>
+        <span class="value income"
+          >{{ overallSummary.income.toLocaleString() }}원</span
+        >
       </div>
       <div class="summary-item">
         <span class="label">총 지출액</span>
-        <span class="value expense">{{ overallSummary.expense.toLocaleString() }}원</span>
+        <span class="value expense"
+          >{{ overallSummary.expense.toLocaleString() }}원</span
+        >
       </div>
       <div class="summary-item">
         <span class="label">현재 대장 잔액</span>
-        <span class="value balance">{{ overallSummary.balance.toLocaleString() }}원</span>
+        <span class="value balance"
+          >{{ overallSummary.balance.toLocaleString() }}원</span
+        >
       </div>
     </div>
 
     <!-- Dues Spreadsheet Card -->
     <div class="spreadsheet-card">
-      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 0.8rem;">
-          <i class="material-icons" style="color: #1ad1b1;">grid_on</i>
+      <div
+        class="card-title"
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+        "
+      >
+        <div style="display: flex; align-items: center; gap: 0.8rem">
+          <i class="material-icons" style="color: #1ad1b1">grid_on</i>
           <span>월회비 납부 현황 (7조 전용)</span>
         </div>
         <v-btn
           v-if="isDuesEditor"
           size="small"
-          style="background: rgba(26, 209, 177, 0.15) !important; border: 1px solid rgba(26, 209, 177, 0.3) !important; color: #1ad1b1 !important; font-weight: 600; border-radius: 0.8rem;"
+          style="
+            background: rgba(26, 209, 177, 0.15) !important;
+            border: 1px solid rgba(26, 209, 177, 0.3) !important;
+            color: #1ad1b1 !important;
+            font-weight: 600;
+            border-radius: 0.8rem;
+          "
           @click="openBatchEditor"
         >
-          <i class="material-icons" style="font-size: 1.4rem; margin-right: 0.4rem;">assignment_turned_in</i> 일괄 납부 관리
+          <i
+            class="material-icons"
+            style="font-size: 1.4rem; margin-right: 0.4rem"
+            >assignment_turned_in</i
+          >
+          일괄 납부 관리
         </v-btn>
       </div>
 
@@ -393,32 +489,83 @@ definePageMeta({
         <table class="dues-table">
           <thead>
             <tr>
-              <th style="min-width: 8rem; position: sticky; left: 0; background: #0b1a2c; z-index: 10;">이름</th>
-              <th v-for="m in monthsList" :key="m" style="min-width: 10rem; text-align: center;">{{ m }}</th>
+              <th
+                style="
+                  min-width: 8rem;
+                  position: sticky;
+                  left: 0;
+                  background: #0b1a2c;
+                  z-index: 10;
+                "
+              >
+                이름
+              </th>
+              <th
+                v-for="m in monthsList"
+                :key="m"
+                style="min-width: 10rem; text-align: center"
+              >
+                {{ m }}
+              </th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="w in filteredWorkers" :key="w.name">
-              <td class="worker-name-cell" style="position: sticky; left: 0; background: #0b1a2c; font-weight: 700; z-index: 9;">
+              <td
+                class="worker-name-cell"
+                style="
+                  position: sticky;
+                  left: 0;
+                  background: #0b1a2c;
+                  font-weight: 700;
+                  z-index: 9;
+                "
+              >
                 {{ w.name }}
                 <span class="role-sub">{{ w.role }}</span>
               </td>
-              <td 
-                v-for="m in monthsList" 
-                :key="m" 
+              <td
+                v-for="m in monthsList"
+                :key="m"
                 class="status-cell"
                 :class="{ 'admin-clickable': isDuesEditor }"
                 @click="openDueEditor(w.name, m)"
               >
-                <div v-if="getDueRecords(w.name, m).length > 0" style="display: flex; flex-direction: column; gap: 0.4rem; align-items: center;">
-                  <div 
+                <div
+                  v-if="getDueRecords(w.name, m).length > 0"
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.4rem;
+                    align-items: center;
+                  "
+                >
+                  <div
                     v-for="(rec, idx) in getDueRecords(w.name, m)"
                     :key="rec.id"
                     class="due-tag"
                     :class="rec.payment_method"
-                    :style="idx > 0 ? { borderStyle: 'dashed', background: 'rgba(255, 204, 0, 0.08) !important', color: '#ffcc00 !important', borderColor: 'rgba(255, 204, 0, 0.3) !important' } : {}"
+                    :style="
+                      idx > 0
+                        ? {
+                            borderStyle: 'dashed',
+                            background: 'rgba(255, 204, 0, 0.08) !important',
+                            color: '#ffcc00 !important',
+                            borderColor: 'rgba(255, 204, 0, 0.3) !important',
+                          }
+                        : {}
+                    "
                   >
-                    <span v-if="idx > 0" style="font-size: 0.9rem; font-weight: 800; margin-bottom: 0.1rem; display: block;">추가 +</span>
+                    <span
+                      v-if="idx > 0"
+                      style="
+                        font-size: 0.9rem;
+                        font-weight: 800;
+                        margin-bottom: 0.1rem;
+                        display: block;
+                      "
+                      >추가 +</span
+                    >
                     {{ rec.amount.toLocaleString() }}
                     <span class="method-label">{{ rec.payment_method }}</span>
                   </div>
@@ -429,20 +576,65 @@ definePageMeta({
 
             <!-- Monthly Sum statistics footer rows -->
             <tr class="stats-row sum-row">
-              <td style="position: sticky; left: 0; background: #0f243d; font-weight: 700; color: #1ad1b1; z-index: 9;">월 수입액</td>
-              <td v-for="m in monthsList" :key="m" style="text-align: center; font-weight: 700; color: #1ad1b1;">
+              <td
+                style="
+                  position: sticky;
+                  left: 0;
+                  background: #0f243d;
+                  font-weight: 700;
+                  color: #1ad1b1;
+                  z-index: 9;
+                "
+              >
+                월 수입액
+              </td>
+              <td
+                v-for="m in monthsList"
+                :key="m"
+                style="text-align: center; font-weight: 700; color: #1ad1b1"
+              >
                 +{{ (monthlyStats[m]?.income || 0).toLocaleString() }}
               </td>
             </tr>
             <tr class="stats-row expense-row">
-              <td style="position: sticky; left: 0; background: #0f243d; font-weight: 700; color: #ff4d4d; z-index: 9;">월 지출액</td>
-              <td v-for="m in monthsList" :key="m" style="text-align: center; font-weight: 700; color: #ff4d4d;">
+              <td
+                style="
+                  position: sticky;
+                  left: 0;
+                  background: #0f243d;
+                  font-weight: 700;
+                  color: #ff4d4d;
+                  z-index: 9;
+                "
+              >
+                월 지출액
+              </td>
+              <td
+                v-for="m in monthsList"
+                :key="m"
+                style="text-align: center; font-weight: 700; color: #ff4d4d"
+              >
                 -{{ (monthlyStats[m]?.expense || 0).toLocaleString() }}
               </td>
             </tr>
             <tr class="stats-row balance-row">
-              <td style="position: sticky; left: 0; background: #0f243d; font-weight: 700; color: #ffffff; z-index: 9;">월말 잔액</td>
-              <td v-for="m in monthsList" :key="m" style="text-align: center; font-weight: 700; color: #88c5ff;">
+              <td
+                style="
+                  position: sticky;
+                  left: 0;
+                  background: #0f243d;
+                  font-weight: 700;
+                  color: #ffffff;
+                  z-index: 9;
+                "
+              >
+                월말 잔액
+              </td>
+              <td
+                v-for="m in monthsList"
+                :key="m"
+                style="text-align: center; font-weight: 700; color: #88c5ff"
+              >
                 {{ (monthlyStats[m]?.balance || 0).toLocaleString() }}
               </td>
             </tr>
@@ -454,8 +646,17 @@ definePageMeta({
     <!-- Remarks / Expenses Card -->
     <div class="expenses-card">
       <div class="card-header">
-        <div style="display: flex; align-items: center; gap: 0.8rem; font-size: 1.5rem; font-weight: 700; color: #ffffff;">
-          <i class="material-icons" style="color: #ffcc00;">list_alt</i>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+          "
+        >
+          <i class="material-icons" style="color: #ffcc00">list_alt</i>
           <span>기타 입출금 세부 내역</span>
         </div>
         <v-btn
@@ -464,7 +665,7 @@ definePageMeta({
           class="add-expense-btn"
           @click="openExpenseEditor()"
         >
-          <i class="material-icons" style="font-size: 1.4rem;">add</i> 내역 추가
+          <i class="material-icons" style="font-size: 1.4rem">add</i> 내역 추가
         </v-btn>
       </div>
 
@@ -473,30 +674,41 @@ definePageMeta({
         <div v-if="userStore.duesExpenses.length === 0" class="no-records">
           등록된 지출 및 기타 수입 세부 기록이 없습니다.
         </div>
-        <div 
-          v-for="item in userStore.duesExpenses" 
-          :key="item.id" 
+        <div
+          v-for="item in userStore.duesExpenses"
+          :key="item.id"
           class="expense-item-row"
         >
-          <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+          <div style="display: flex; align-items: center; gap: 1rem; flex: 1">
             <span class="month-badge">{{ item.month }}</span>
             <span class="description-text">{{ item.description }}</span>
           </div>
 
-          <div style="display: flex; align-items: center; gap: 1.6rem;">
-            <span 
+          <div style="display: flex; align-items: center; gap: 1.6rem">
+            <span
               class="amount-text"
-              :class="{ 'plus': item.amount > 0, 'minus': item.amount < 0 }"
+              :class="{ plus: item.amount > 0, minus: item.amount < 0 }"
             >
-              {{ item.amount > 0 ? '+' : '' }}{{ item.amount.toLocaleString() }}원
+              {{ item.amount > 0 ? "+" : ""
+              }}{{ item.amount.toLocaleString() }}원
             </span>
 
-            <div v-if="isDuesEditor" style="display: flex; gap: 0.4rem;">
-              <v-btn icon size="x-small" class="edit-btn" @click="openExpenseEditor(item)">
-                <i class="material-icons" style="font-size: 1.4rem;">edit</i>
+            <div v-if="isDuesEditor" style="display: flex; gap: 0.4rem">
+              <v-btn
+                icon
+                size="x-small"
+                class="edit-btn"
+                @click="openExpenseEditor(item)"
+              >
+                <i class="material-icons" style="font-size: 1.4rem">edit</i>
               </v-btn>
-              <v-btn icon size="x-small" class="delete-btn" @click="deleteExpense(item.id)">
-                <i class="material-icons" style="font-size: 1.4rem;">delete</i>
+              <v-btn
+                icon
+                size="x-small"
+                class="delete-btn"
+                @click="deleteExpense(item.id)"
+              >
+                <i class="material-icons" style="font-size: 1.4rem">delete</i>
               </v-btn>
             </div>
           </div>
@@ -512,7 +724,14 @@ definePageMeta({
           <span>회비 현황 편집</span>
         </v-card-title>
 
-        <div style="display: flex; flex-direction: column; gap: 1.6rem; margin-top: 1.6rem;">
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 1.6rem;
+            margin-top: 1.6rem;
+          "
+        >
           <div class="dialog-field">
             <span class="label">조합원</span>
             <span class="val">{{ selectedDueData.workerName }}</span>
@@ -523,65 +742,140 @@ definePageMeta({
           </div>
 
           <!-- 기존 납부 목록 -->
-          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">기존 납부 내역</label>
-            <div v-if="getDueRecords(selectedDueData.workerName, selectedDueData.month).length === 0" style="font-size: 1.2rem; color: rgba(255,255,255,0.3); text-align: center; padding: 0.8rem; border: 1px dashed rgba(255,255,255,0.1); border-radius: 0.8rem;">
+          <div style="display: flex; flex-direction: column; gap: 0.6rem">
+            <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
+              >기존 납부 내역</label
+            >
+            <div
+              v-if="
+                getDueRecords(selectedDueData.workerName, selectedDueData.month)
+                  .length === 0
+              "
+              style="
+                font-size: 1.2rem;
+                color: rgba(255, 255, 255, 0.3);
+                text-align: center;
+                padding: 0.8rem;
+                border: 1px dashed rgba(255, 255, 255, 0.1);
+                border-radius: 0.8rem;
+              "
+            >
               납부 기록이 없습니다 (미납).
             </div>
-            <div 
-              v-for="rec in getDueRecords(selectedDueData.workerName, selectedDueData.month)" 
+            <div
+              v-for="rec in getDueRecords(
+                selectedDueData.workerName,
+                selectedDueData.month
+              )"
               :key="rec.id"
-              style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 0.6rem 1rem; border-radius: 0.8rem; border: 1px solid rgba(255,255,255,0.05);"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: rgba(255, 255, 255, 0.02);
+                padding: 0.6rem 1rem;
+                border-radius: 0.8rem;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+              "
             >
-              <span style="font-size: 1.3rem; font-weight: 700; color: #88c5ff;">
+              <span style="font-size: 1.3rem; font-weight: 700; color: #88c5ff">
                 {{ rec.amount.toLocaleString() }}원 ({{ rec.payment_method }})
               </span>
-              <v-btn icon size="x-small" style="background: rgba(224, 87, 128, 0.15) !important; color: #e05780 !important;" @click="removeDueRecord(rec.id)">
-                <i class="material-icons" style="font-size: 1.4rem;">delete</i>
+              <v-btn
+                icon
+                size="x-small"
+                style="
+                  background: rgba(224, 87, 128, 0.15) !important;
+                  color: #e05780 !important;
+                "
+                @click="removeDueRecord(rec.id)"
+              >
+                <i class="material-icons" style="font-size: 1.4rem">delete</i>
               </v-btn>
             </div>
           </div>
 
           <!-- 새 납부 내역 추가 -->
-          <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.2rem; display: flex; flex-direction: column; gap: 1rem;">
-            <label style="font-size: 1.2rem; font-weight: 700; color: #1ad1b1;">+ 내역 추가 기입</label>
-            
-            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-              <label style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">납부 수단</label>
-              <v-select 
-                v-model="selectedDueData.paymentMethod" 
-                :items="['이체', '현금']" 
-                variant="solo" 
-                hide-details 
-                style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+          <div
+            style="
+              border-top: 1px solid rgba(255, 255, 255, 0.08);
+              padding-top: 1.2rem;
+              display: flex;
+              flex-direction: column;
+              gap: 1rem;
+            "
+          >
+            <label style="font-size: 1.2rem; font-weight: 700; color: #1ad1b1"
+              >+ 내역 추가 기입</label
+            >
+
+            <div style="display: flex; flex-direction: column; gap: 0.6rem">
+              <label style="font-size: 1.1rem; color: rgba(255, 255, 255, 0.5)"
+                >납부 수단</label
+              >
+              <v-select
+                v-model="selectedDueData.paymentMethod"
+                :items="['이체', '현금']"
+                variant="solo"
+                hide-details
+                style="
+                  --v-input-control-background: rgba(255, 255, 255, 0.04);
+                  color: white;
+                "
               />
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-              <label style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">금액 (원)</label>
-              <v-text-field 
-                v-model.number="selectedDueData.amount" 
-                type="number" 
-                variant="solo" 
-                hide-details 
-                style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+            <div style="display: flex; flex-direction: column; gap: 0.6rem">
+              <label style="font-size: 1.1rem; color: rgba(255, 255, 255, 0.5)"
+                >금액 (원)</label
+              >
+              <v-text-field
+                v-model.number="selectedDueData.amount"
+                type="number"
+                variant="solo"
+                hide-details
+                style="
+                  --v-input-control-background: rgba(255, 255, 255, 0.04);
+                  color: white;
+                "
               />
-              <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.6rem;">
+              <div
+                style="
+                  display: flex;
+                  flex-wrap: wrap;
+                  gap: 0.6rem;
+                  margin-top: 0.6rem;
+                "
+              >
                 <v-btn class="unit-btn" @click="adjustAmount(1000)">+1천</v-btn>
                 <v-btn class="unit-btn" @click="adjustAmount(5000)">+5천</v-btn>
-                <v-btn class="unit-btn" @click="adjustAmount(10000)">+1만</v-btn>
-                <v-btn class="unit-btn" @click="adjustAmount(100000)">+10만</v-btn>
-                <v-btn class="unit-btn minus" @click="adjustAmount(-1000)">-1천</v-btn>
-                <v-btn class="unit-btn minus" @click="adjustAmount(-5000)">-5천</v-btn>
-                <v-btn class="unit-btn minus" @click="adjustAmount(-10000)">-1만</v-btn>
-                <v-btn class="unit-btn minus" @click="adjustAmount(-100000)">-10만</v-btn>
+                <v-btn class="unit-btn" @click="adjustAmount(10000)"
+                  >+1만</v-btn
+                >
+                <v-btn class="unit-btn" @click="adjustAmount(100000)"
+                  >+10만</v-btn
+                >
+                <v-btn class="unit-btn minus" @click="adjustAmount(-1000)"
+                  >-1천</v-btn
+                >
+                <v-btn class="unit-btn minus" @click="adjustAmount(-5000)"
+                  >-5천</v-btn
+                >
+                <v-btn class="unit-btn minus" @click="adjustAmount(-10000)"
+                  >-1만</v-btn
+                >
+                <v-btn class="unit-btn minus" @click="adjustAmount(-100000)"
+                  >-10만</v-btn
+                >
               </div>
             </div>
           </div>
         </div>
 
         <v-card-actions class="justify-end gap-2 px-0 pt-6">
-          <v-btn variant="text" class="cancel" @click="isDueDialogOpen = false">닫기</v-btn>
+          <v-btn variant="text" class="cancel" @click="isDueDialogOpen = false"
+            >닫기</v-btn
+          >
           <v-btn class="confirm" @click="saveDue">추가하기</v-btn>
         </v-card-actions>
       </v-card>
@@ -595,67 +889,151 @@ definePageMeta({
           <span>일괄 납부 관리 (7조 전용)</span>
         </v-card-title>
 
-        <div style="display: flex; flex-direction: column; gap: 1.6rem; margin-top: 1.6rem;">
-          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">대상 월 선택</label>
-            <v-select 
-              v-model="batchDueData.month" 
-              :items="monthsList" 
-              variant="solo" 
-              hide-details 
-              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 1.6rem;
+            margin-top: 1.6rem;
+          "
+        >
+          <div style="display: flex; flex-direction: column; gap: 0.6rem">
+            <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
+              >대상 월 선택</label
+            >
+            <v-select
+              v-model="batchDueData.month"
+              :items="monthsList"
+              variant="solo"
+              hide-details
+              style="
+                --v-input-control-background: rgba(255, 255, 255, 0.04);
+                color: white;
+              "
             />
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">납부 수단</label>
-            <v-select 
-              v-model="batchDueData.paymentMethod" 
-              :items="['이체', '현금']" 
-              variant="solo" 
-              hide-details 
-              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+          <div style="display: flex; flex-direction: column; gap: 0.6rem">
+            <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
+              >납부 수단</label
+            >
+            <v-select
+              v-model="batchDueData.paymentMethod"
+              :items="['이체', '현금']"
+              variant="solo"
+              hide-details
+              style="
+                --v-input-control-background: rgba(255, 255, 255, 0.04);
+                color: white;
+              "
             />
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">금액 (원)</label>
-            <v-text-field 
-              v-model.number="batchDueData.amount" 
-              type="number" 
-              variant="solo" 
-              hide-details 
-              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+          <div style="display: flex; flex-direction: column; gap: 0.6rem">
+            <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
+              >금액 (원)</label
+            >
+            <v-text-field
+              v-model.number="batchDueData.amount"
+              type="number"
+              variant="solo"
+              hide-details
+              style="
+                --v-input-control-background: rgba(255, 255, 255, 0.04);
+                color: white;
+              "
             />
-            <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.6rem;">
-              <v-btn class="unit-btn" @click="adjustBatchAmount(1000)">+1천</v-btn>
-              <v-btn class="unit-btn" @click="adjustBatchAmount(5000)">+5천</v-btn>
-              <v-btn class="unit-btn" @click="adjustBatchAmount(10000)">+1만</v-btn>
-              <v-btn class="unit-btn" @click="adjustBatchAmount(100000)">+10만</v-btn>
-              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-1000)">-1천</v-btn>
-              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-5000)">-5천</v-btn>
-              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-10000)">-1만</v-btn>
-              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-100000)">-10만</v-btn>
+            <div
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.6rem;
+                margin-top: 0.6rem;
+              "
+            >
+              <v-btn class="unit-btn" @click="adjustBatchAmount(1000)"
+                >+1천</v-btn
+              >
+              <v-btn class="unit-btn" @click="adjustBatchAmount(5000)"
+                >+5천</v-btn
+              >
+              <v-btn class="unit-btn" @click="adjustBatchAmount(10000)"
+                >+1만</v-btn
+              >
+              <v-btn class="unit-btn" @click="adjustBatchAmount(100000)"
+                >+10만</v-btn
+              >
+              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-1000)"
+                >-1천</v-btn
+              >
+              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-5000)"
+                >-5천</v-btn
+              >
+              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-10000)"
+                >-1만</v-btn
+              >
+              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-100000)"
+                >-10만</v-btn
+              >
             </div>
           </div>
 
           <!-- 제외/포함 조합원 목록 체크박스 -->
-          <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); padding: 1rem; border-radius: 0.8rem; background: rgba(0,0,0,0.2);">
-            <label style="font-size: 1.2rem; font-weight: 700; color: #88c5ff; margin-bottom: 0.4rem;">대상 조합원 선택 (체크 해제시 제외)</label>
-            <div 
-              v-for="w in batchWorkersList" 
-              :key="w.name" 
-              style="display: flex; align-items: center; gap: 0.8rem; font-size: 1.3rem;"
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 0.6rem;
+              max-height: 200px;
+              overflow-y: auto;
+              border: 1px solid rgba(255, 255, 255, 0.08);
+              padding: 1rem;
+              border-radius: 0.8rem;
+              background: rgba(0, 0, 0, 0.2);
+            "
+          >
+            <label
+              style="
+                font-size: 1.2rem;
+                font-weight: 700;
+                color: #88c5ff;
+                margin-bottom: 0.4rem;
+              "
+              >대상 조합원 선택 (체크 해제시 제외)</label
             >
-              <input type="checkbox" v-model="w.checked" :id="'chk_' + w.name" style="width: 1.6rem; height: 1.6rem; accent-color: #1ad1b1;" />
-              <label :for="'chk_' + w.name" style="cursor: pointer;">{{ w.name }}</label>
+            <div
+              v-for="w in batchWorkersList"
+              :key="w.name"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.8rem;
+                font-size: 1.3rem;
+              "
+            >
+              <input
+                type="checkbox"
+                v-model="w.checked"
+                :id="'chk_' + w.name"
+                style="width: 1.6rem; height: 1.6rem; accent-color: #1ad1b1"
+              />
+              <label :for="'chk_' + w.name" style="cursor: pointer">{{
+                w.name
+              }}</label>
             </div>
           </div>
         </div>
 
         <v-card-actions class="justify-end gap-2 px-0 pt-6">
-          <v-btn variant="text" class="cancel" @click="isBatchDialogOpen = false">취소</v-btn>
-          <v-btn class="delete-batch-btn" @click="executeBatchDelete">일괄 삭제</v-btn>
+          <v-btn
+            variant="text"
+            class="cancel"
+            @click="isBatchDialogOpen = false"
+            >취소</v-btn
+          >
+          <v-btn class="delete-batch-btn" @click="executeBatchDelete"
+            >일괄 삭제</v-btn
+          >
           <v-btn class="confirm" @click="executeBatchSave">일괄 등록</v-btn>
         </v-card-actions>
       </v-card>
@@ -665,48 +1043,80 @@ definePageMeta({
     <v-dialog v-model="isExpenseDialogOpen" max-width="320">
       <v-card class="pa-6 dialog-card">
         <v-card-title class="text-h6 font-weight-bold px-0 dialog-title">
-          <i class="material-icons">{{ selectedExpenseData.id ? 'edit' : 'add' }}</i>
-          <span>비고 및 지출 내역 {{ selectedExpenseData.id ? '수정' : '등록' }}</span>
+          <i class="material-icons">{{
+            selectedExpenseData.id ? "edit" : "add"
+          }}</i>
+          <span
+            >비고 및 지출 내역
+            {{ selectedExpenseData.id ? "수정" : "등록" }}</span
+          >
         </v-card-title>
 
-        <div style="display: flex; flex-direction: column; gap: 1.6rem; margin-top: 1.6rem;">
-          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">월 선택</label>
-            <v-select 
-              v-model="selectedExpenseData.month" 
-              :items="monthsList" 
-              variant="solo" 
-              hide-details 
-              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 1.6rem;
+            margin-top: 1.6rem;
+          "
+        >
+          <div style="display: flex; flex-direction: column; gap: 0.6rem">
+            <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
+              >월 선택</label
+            >
+            <v-select
+              v-model="selectedExpenseData.month"
+              :items="monthsList"
+              variant="solo"
+              hide-details
+              style="
+                --v-input-control-background: rgba(255, 255, 255, 0.04);
+                color: white;
+              "
             />
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">내용</label>
-            <v-text-field 
-              v-model="selectedExpenseData.description" 
-              placeholder="예: 기타 수입 입금 또는 물품 구입" 
-              variant="solo" 
-              hide-details 
-              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+          <div style="display: flex; flex-direction: column; gap: 0.6rem">
+            <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
+              >내용</label
+            >
+            <v-text-field
+              v-model="selectedExpenseData.description"
+              placeholder="예: 기타 수입 입금 또는 물품 구입"
+              variant="solo"
+              hide-details
+              style="
+                --v-input-control-background: rgba(255, 255, 255, 0.04);
+                color: white;
+              "
             />
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">금액 (원, 지출은 마이너스 기입)</label>
-            <v-text-field 
-              v-model.number="selectedExpenseData.amount" 
-              type="number" 
-              placeholder="예: -50000 또는 100000" 
-              variant="solo" 
-              hide-details 
-              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
+          <div style="display: flex; flex-direction: column; gap: 0.6rem">
+            <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.5)"
+              >금액 (원, 지출은 마이너스 기입)</label
+            >
+            <v-text-field
+              v-model.number="selectedExpenseData.amount"
+              type="number"
+              placeholder="예: -50000 또는 100000"
+              variant="solo"
+              hide-details
+              style="
+                --v-input-control-background: rgba(255, 255, 255, 0.04);
+                color: white;
+              "
             />
           </div>
         </div>
 
         <v-card-actions class="justify-end gap-2 px-0 pt-6">
-          <v-btn variant="text" class="cancel" @click="isExpenseDialogOpen = false">취소</v-btn>
+          <v-btn
+            variant="text"
+            class="cancel"
+            @click="isExpenseDialogOpen = false"
+            >취소</v-btn
+          >
           <v-btn class="confirm" @click="saveExpense">저장</v-btn>
         </v-card-actions>
       </v-card>
@@ -716,10 +1126,18 @@ definePageMeta({
     <v-dialog v-model="confirmDialog.show" max-width="310" persistent>
       <v-card class="pa-6 dialog-card">
         <v-card-title class="text-h6 font-weight-bold px-0 dialog-title">
-          <i class="material-icons" style="color: #ffcc00;">warning_amber</i>
+          <i class="material-icons" style="color: #ffcc00">warning_amber</i>
           <span>{{ confirmDialog.title }}</span>
         </v-card-title>
-        <v-card-text class="px-0 pt-4" style="font-size: 1.35rem; color: rgba(255,255,255,0.8); line-height: 1.7; white-space: pre-line;">
+        <v-card-text
+          class="px-0 pt-4"
+          style="
+            font-size: 1.35rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.7;
+            white-space: pre-line;
+          "
+        >
           {{ confirmDialog.message }}
         </v-card-text>
         <v-card-actions class="justify-end gap-2 px-0 pt-2">
@@ -733,10 +1151,18 @@ definePageMeta({
     <v-dialog v-model="infoDialog.show" max-width="310">
       <v-card class="pa-6 dialog-card">
         <v-card-title class="text-h6 font-weight-bold px-0 dialog-title">
-          <i class="material-icons" style="color: #88c5ff;">info_outline</i>
+          <i class="material-icons" style="color: #88c5ff">info_outline</i>
           <span>{{ infoDialog.title }}</span>
         </v-card-title>
-        <v-card-text class="px-0 pt-4" style="font-size: 1.35rem; color: rgba(255,255,255,0.8); line-height: 1.7; white-space: pre-line;">
+        <v-card-text
+          class="px-0 pt-4"
+          style="
+            font-size: 1.35rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.7;
+            white-space: pre-line;
+          "
+        >
           {{ infoDialog.message }}
         </v-card-text>
         <v-card-actions class="justify-end px-0 pt-2">
@@ -750,18 +1176,29 @@ definePageMeta({
       v-model="snackbar.show"
       :timeout="2800"
       location="top"
-      :color="snackbar.color === 'success' ? '#1ad1b1' : snackbar.color === 'error' ? '#e05780' : '#3a86ff'"
-      style="font-size: 1.3rem; font-weight: 600;"
+      :color="
+        snackbar.color === 'success'
+          ? '#1ad1b1'
+          : snackbar.color === 'error'
+          ? '#e05780'
+          : '#3a86ff'
+      "
+      style="font-size: 1.3rem; font-weight: 600"
       rounded="lg"
     >
-      <div style="display: flex; align-items: center; gap: 0.8rem;">
-        <i class="material-icons" style="font-size: 1.8rem;">
-          {{ snackbar.color === 'success' ? 'check_circle' : snackbar.color === 'error' ? 'error_outline' : 'info' }}
+      <div style="display: flex; align-items: center; gap: 0.8rem">
+        <i class="material-icons" style="font-size: 1.8rem">
+          {{
+            snackbar.color === "success"
+              ? "check_circle"
+              : snackbar.color === "error"
+              ? "error_outline"
+              : "info"
+          }}
         </i>
         {{ snackbar.message }}
       </div>
     </v-snackbar>
-
   </div>
 </template>
 
@@ -787,7 +1224,7 @@ definePageMeta({
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
-  
+
   @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
@@ -805,14 +1242,20 @@ definePageMeta({
       font-size: 1.1rem;
       color: rgba(255, 255, 255, 0.5);
     }
-    
+
     .value {
       font-size: 1.6rem;
       font-weight: 800;
 
-      &.income { color: #1ad1b1; }
-      &.expense { color: #ff4d4d; }
-      &.balance { color: #3a86ff; }
+      &.income {
+        color: #1ad1b1;
+      }
+      &.expense {
+        color: #ff4d4d;
+      }
+      &.balance {
+        color: #3a86ff;
+      }
     }
   }
 }
@@ -829,9 +1272,9 @@ definePageMeta({
     border-radius: 0.8rem;
     font-size: 1.2rem;
     font-weight: 700;
-    border: 1px solid rgba(255,255,255,0.06);
-    background: rgba(255,255,255,0.02);
-    color: rgba(255,255,255,0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.02);
+    color: rgba(255, 255, 255, 0.6);
     cursor: pointer;
     transition: all 0.2s;
 
@@ -865,7 +1308,7 @@ definePageMeta({
   width: 100%;
   overflow-x: auto;
   border-radius: 1rem;
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .dues-table {
@@ -873,7 +1316,8 @@ definePageMeta({
   border-collapse: collapse;
   font-size: 1.3rem;
 
-  th, td {
+  th,
+  td {
     padding: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.06);
     vertical-align: middle;
@@ -881,7 +1325,7 @@ definePageMeta({
 
   th {
     background: #0b1a2c;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255, 255, 255, 0.7);
     font-weight: 700;
   }
 
@@ -893,7 +1337,7 @@ definePageMeta({
 
     .role-sub {
       font-size: 1rem;
-      color: rgba(255,255,255,0.4);
+      color: rgba(255, 255, 255, 0.4);
       font-weight: 500;
       margin-top: 0.2rem;
     }
@@ -901,7 +1345,7 @@ definePageMeta({
 
   .status-cell {
     text-align: center;
-    background: rgba(255,255,255,0.01);
+    background: rgba(255, 255, 255, 0.01);
 
     &.admin-clickable {
       cursor: pointer;
@@ -913,7 +1357,7 @@ definePageMeta({
     }
 
     .unpaid-label {
-      color: rgba(255,255,255,0.25);
+      color: rgba(255, 255, 255, 0.25);
       font-size: 1.2rem;
     }
   }
@@ -967,7 +1411,7 @@ definePageMeta({
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     padding-bottom: 1rem;
   }
 
@@ -989,21 +1433,21 @@ definePageMeta({
     text-align: center;
     padding: 3rem 0;
     font-size: 1.3rem;
-    color: rgba(255,255,255,0.3);
+    color: rgba(255, 255, 255, 0.3);
   }
 
   .expense-item-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
     border-radius: 1rem;
     padding: 1rem 1.2rem;
 
     .month-badge {
       font-size: 1.1rem;
-      background: rgba(255,255,255,0.08);
+      background: rgba(255, 255, 255, 0.08);
       color: #ffffff;
       padding: 0.2rem 0.6rem;
       border-radius: 0.4rem;
@@ -1013,19 +1457,23 @@ definePageMeta({
     .description-text {
       font-size: 1.3rem;
       font-weight: 500;
-      color: rgba(255,255,255,0.9);
+      color: rgba(255, 255, 255, 0.9);
     }
 
     .amount-text {
       font-size: 1.4rem;
       font-weight: 700;
 
-      &.plus { color: #1ad1b1; }
-      &.minus { color: #ff4d4d; }
+      &.plus {
+        color: #1ad1b1;
+      }
+      &.minus {
+        color: #ff4d4d;
+      }
     }
 
     .edit-btn {
-      background: rgba(255,255,255,0.05) !important;
+      background: rgba(255, 255, 255, 0.05) !important;
       color: #ffffff !important;
     }
 
@@ -1041,14 +1489,14 @@ definePageMeta({
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   border-radius: 1.6rem !important;
   color: #ffffff !important;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.5) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5) !important;
 
   .dialog-title {
     color: #88c5ff;
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding-bottom: 1.2rem !important;
   }
 
@@ -1056,13 +1504,13 @@ definePageMeta({
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255,255,255,0.03);
+    background: rgba(255, 255, 255, 0.03);
     padding: 1rem 1.2rem;
     border-radius: 0.8rem;
-    
+
     .label {
       font-size: 1.2rem;
-      color: rgba(255,255,255,0.5);
+      color: rgba(255, 255, 255, 0.5);
     }
     .val {
       font-size: 1.4rem;
