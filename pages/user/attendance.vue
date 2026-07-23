@@ -664,6 +664,32 @@ definePageMeta({
           <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="isDateStatusDialogOpen = false">취소</v-btn>
           <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="updateDateStatus(selectedCalendarDayStatus)">저장</v-btn>
         </v-card-actions>
+    </v-dialog>
+
+    <!-- Custom Check-in Cancel Confirmation Dialog (조합원용) -->
+    <v-dialog v-model="isCustomCancelConfirmOpen" max-width="320">
+      <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--system-red-color); display: flex; align-items: center; gap: 0.8rem;">
+          <i class="material-icons">exit_to_app</i>
+          <span>출근 취소 확인</span>
+        </v-card-title>
+        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.8);">
+          <template v-if="cancelTargetType === 'self'">
+            출근 등록을 취소하시겠습니까?
+          </template>
+          <template v-else>
+            <strong>{{ cancelTargetName }}</strong> 조합원의 출근을 취소하시겠습니까?
+          </template>
+        </v-card-text>
+        <v-card-actions class="justify-end gap-2 px-0 pt-4">
+          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;" @click="isCustomCancelConfirmOpen = false">닫기</v-btn>
+          <v-btn
+            style="background: linear-gradient(135deg, rgba(225, 60, 60, 0.8) 0%, rgba(180, 30, 30, 0.8) 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.4rem;"
+            @click="cancelTargetType === 'self' ? executeSelfCancel() : executeAdminCancel()"
+          >
+            취소 실행
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
   </div>
