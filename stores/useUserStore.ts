@@ -463,6 +463,10 @@ export const useUserStore = defineStore( "user", () => {
     }
   }
 
+  const getSupabaseInstance = () => {
+    return getSupabase();
+  };
+
   // 로그아웃
   const logout = () => {
     sessionStorage.removeItem( "user" );
@@ -472,6 +476,7 @@ export const useUserStore = defineStore( "user", () => {
   };
 
   return {
+    getSupabase: getSupabaseInstance,
     isLogin,
     userRole,
     workers,
