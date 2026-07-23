@@ -7,12 +7,15 @@ import { definePageMeta } from "~/.nuxt/imports";
 const userStore = useUserStore();
 const { isEmpty } = useUtil.typeValidation;
 
-// 권한 확인 (관리자 또는 이주봉/한주봉 형님만 기입/수정/삭제 권한 부여)
+// 회비 관리 기입/수정/삭제 권한을 위임할 조합원 이름 변수 목록
+const ALLOWED_EDITORS = ["이주봉", "한주봉"];
+
+// 권한 확인 (관리자 또는 권한을 가진 조합원만 승인)
 const userRole = computed(() => userStore.userRole);
 const isDuesEditor = computed(() => {
   if (userRole.value === "admin") return true;
   const name = userStore.loggedInUser?.name;
-  return name === "이주봉" || name === "한주봉";
+  return name && ALLOWED_EDITORS.includes(name);
 });
 
 // 조(Group) 선택 탭 - 7조 고정
