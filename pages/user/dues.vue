@@ -24,6 +24,53 @@ const activeGroupTab = ref<number | string>(7);
 // 현재 선택된 월들 목록 (1월 ~ 12월)
 const monthsList = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
 
+// 스낙낵바 (토스트) 상태
+const snackbar = reactive({
+  show: false,
+  message: "",
+  color: "success" as "success" | "error" | "info"
+});
+
+const showToast = (message: string, color: "success" | "error" | "info" = "success") => {
+  snackbar.message = message;
+  snackbar.color = color;
+  snackbar.show = true;
+  setTimeout(() => { snackbar.show = false; }, 2800);
+};
+
+// 커스텀 confirm 다이얼로그 상태
+const confirmDialog = reactive({
+  show: false,
+  title: "",
+  message: "",
+  onConfirm: null as (null | (() => void))
+});
+
+const showConfirm = (title: string, message: string, onConfirm: () => void) => {
+  confirmDialog.title = title;
+  confirmDialog.message = message;
+  confirmDialog.onConfirm = onConfirm;
+  confirmDialog.show = true;
+};
+
+const handleConfirm = () => {
+  confirmDialog.show = false;
+  if (confirmDialog.onConfirm) confirmDialog.onConfirm();
+};
+
+// 커스텀 정보 다이얼로그 상태
+const infoDialog = reactive({
+  show: false,
+  title: "",
+  message: ""
+});
+
+const showInfo = (title: string, message: string) => {
+  infoDialog.title = title;
+  infoDialog.message = message;
+  infoDialog.show = true;
+};
+
 // 회비 대장 수정 다이얼로그 상태
 const isDueDialogOpen = ref(false);
 const selectedDueData = reactive({
@@ -103,23 +150,34 @@ const adjustBatchAmount = (val: number) => {
 
 // 신규 회비 납부 내역 추가
 const saveDue = async () => {
-  await userStore.saveDueAction(
+  const result = await userStore.saveDueAction(
     selectedDueData.workerName,
     selectedDueData.month,
     selectedDueData.amount,
     selectedDueData.paymentMethod
   );
-  isDueDialogOpen.value = false;
+  if (result?.success) {
+    showToast(`${selectedDueData.workerName} 님 ${selectedDueData.month} 회비 ${selectedDueData.amount.toLocaleString()}원 등록 완료!`, "success");
+    isDueDialogOpen.value = false;
+  } else {
+    showToast("등록 중 오류가 발생했습니다. 다시 시도해주세요.", "error");
+  }
 };
 
 // 특정 납부 기록 삭제
-const removeDueRecord = async (id: number) => {
+const removeDueRecord = (id: number) => {
   if (id === -1) {
-    alert("기본값으로 세팅된 6월/7월 회비 기록은 삭제할 수 없습니다. 수정을 원하시면 해당 셀에 추가 납부 내역을 기입해 주세요.");
+    showInfo("삭제 불가", "6월/7월 기본 납부 기록은 삭제할 수 없습니다.\n수정을 원하시면 해당 셀에 추가 납부 내역을 기입해 주세요.");
     return;
   }
-  if (!confirm("이 납부 기록을 삭제하시겠습니까?")) return;
-  await userStore.deleteDueAction(id);
+  showConfirm("납부 내역 삭제", "이 납부 기록을 삭제하시겠습니까?", async () => {
+    const result = await userStore.deleteDueAction(id);
+    if (result?.success) {
+      showToast("납부 기록이 삭제되었습니다.", "info");
+    } else {
+      showToast("삭제 중 오류가 발생했습니다.", "error");
+    }
+  });
 };
 
 // 일괄 납부 편집 열기
@@ -141,31 +199,37 @@ const openBatchEditor = () => {
 const executeBatchSave = async () => {
   const targets = batchWorkersList.value.filter(w => w.checked).map(w => w.name);
   if (targets.length === 0) {
-    alert("일괄 등록할 조합원을 한 명 이상 선택해 주세요.");
+    showInfo("선택 필요", "일괄 등록할 조합원을 한 명 이상 선택해 주세요.");
     return;
   }
   for (const name of targets) {
     await userStore.saveDueAction(name, batchDueData.month, batchDueData.amount, batchDueData.paymentMethod);
   }
   isBatchDialogOpen.value = false;
+  showToast(`${batchDueData.month} ${targets.length}명 일괄 등록 완료!`, "success");
 };
 
 // 일괄 납부 삭제 실행
-const executeBatchDelete = async () => {
+const executeBatchDelete = () => {
   const targets = batchWorkersList.value.filter(w => w.checked).map(w => w.name);
   if (targets.length === 0) {
-    alert("일괄 삭제할 조합원을 한 명 이상 선택해 주세요.");
+    showInfo("선택 필요", "일괄 삭제할 조합원을 한 명 이상 선택해 주세요.");
     return;
   }
-  if (!confirm(`${batchDueData.month}의 선택된 조합원 회비 기록을 일괄 삭제하시겠습니까?\n(수동 기입된 내역들만 삭제됩니다)`)) return;
-  
-  const recordsToDelete = userStore.dues.filter(
-    d => d.month === batchDueData.month && targets.includes(d.worker_name)
+  showConfirm(
+    "일괄 삭제",
+    `${batchDueData.month} 선택된 ${targets.length}명의 회비 기록을 일괄 삭제하시겠습니까?\n(수동 기입된 내역만 삭제됩니다)`,
+    async () => {
+      const recordsToDelete = userStore.dues.filter(
+        d => d.month === batchDueData.month && targets.includes(d.worker_name)
+      );
+      for (const rec of recordsToDelete) {
+        await userStore.deleteDueAction(rec.id);
+      }
+      isBatchDialogOpen.value = false;
+      showToast(`${batchDueData.month} ${targets.length}명 일괄 삭제 완료.`, "info");
+    }
   );
-  for (const rec of recordsToDelete) {
-    await userStore.deleteDueAction(rec.id);
-  }
-  isBatchDialogOpen.value = false;
 };
 
 // 비고(지출/수입) 등록 및 수정 핸들러
@@ -198,9 +262,15 @@ const saveExpense = async () => {
 };
 
 // 비고(지출/수입) 삭제 실행
-const deleteExpense = async (id: number) => {
-  if (!confirm("이 내역을 삭제하시겠습니까?")) return;
-  await userStore.deleteExpenseAction(id);
+const deleteExpense = (id: number) => {
+  showConfirm("내역 삭제", "이 내역을 삭제하시겠습니까?", async () => {
+    const result = await userStore.deleteExpenseAction(id);
+    if (result?.success !== false) {
+      showToast("내역이 삭제되었습니다.", "info");
+    } else {
+      showToast("삭제 중 오류가 발생했습니다.", "error");
+    }
+  });
 };
 
 // 월별 수입 및 지출 통계 연산
@@ -641,6 +711,57 @@ definePageMeta({
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- ✅ 커스텀 Confirm 다이얼로그 -->
+    <v-dialog v-model="confirmDialog.show" max-width="310" persistent>
+      <v-card class="pa-6 dialog-card">
+        <v-card-title class="text-h6 font-weight-bold px-0 dialog-title">
+          <i class="material-icons" style="color: #ffcc00;">warning_amber</i>
+          <span>{{ confirmDialog.title }}</span>
+        </v-card-title>
+        <v-card-text class="px-0 pt-4" style="font-size: 1.35rem; color: rgba(255,255,255,0.8); line-height: 1.7; white-space: pre-line;">
+          {{ confirmDialog.message }}
+        </v-card-text>
+        <v-card-actions class="justify-end gap-2 px-0 pt-2">
+          <v-btn class="cancel" @click="confirmDialog.show = false">취소</v-btn>
+          <v-btn class="delete-batch-btn" @click="handleConfirm">확인</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- ℹ️ 커스텀 Info 다이얼로그 -->
+    <v-dialog v-model="infoDialog.show" max-width="310">
+      <v-card class="pa-6 dialog-card">
+        <v-card-title class="text-h6 font-weight-bold px-0 dialog-title">
+          <i class="material-icons" style="color: #88c5ff;">info_outline</i>
+          <span>{{ infoDialog.title }}</span>
+        </v-card-title>
+        <v-card-text class="px-0 pt-4" style="font-size: 1.35rem; color: rgba(255,255,255,0.8); line-height: 1.7; white-space: pre-line;">
+          {{ infoDialog.message }}
+        </v-card-text>
+        <v-card-actions class="justify-end px-0 pt-2">
+          <v-btn class="confirm" @click="infoDialog.show = false">확인</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 🍞 토스트 스낵바 -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :timeout="2800"
+      location="top"
+      :color="snackbar.color === 'success' ? '#1ad1b1' : snackbar.color === 'error' ? '#e05780' : '#3a86ff'"
+      style="font-size: 1.3rem; font-weight: 600;"
+      rounded="lg"
+    >
+      <div style="display: flex; align-items: center; gap: 0.8rem;">
+        <i class="material-icons" style="font-size: 1.8rem;">
+          {{ snackbar.color === 'success' ? 'check_circle' : snackbar.color === 'error' ? 'error_outline' : 'info' }}
+        </i>
+        {{ snackbar.message }}
+      </div>
+    </v-snackbar>
+
   </div>
 </template>
 
