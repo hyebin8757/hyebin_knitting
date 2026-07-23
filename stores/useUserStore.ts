@@ -157,15 +157,16 @@ export const useUserStore = defineStore( "user", () => {
     }
   };
 
-  // 로그인 데이터 설정 및 암호화
+  // 로그인 데이터 설정 및 암호화 (sessionStorage + 모바일창 닫기 대비 localStorage 듀얼 저장)
   const setUserInfo = ( userInfo : UserModel ) => {
     const encryptedData = CryptoJS.AES.encrypt( JSON.stringify( userInfo ), "info" ).toString();
     sessionStorage.setItem( "user", encryptedData );
+    localStorage.setItem( "user_persistent", encryptedData );
   }
 
   // 로그인 정보 복호화
   const getLoginUser = () => {
-    const rawData = sessionStorage.getItem( "user" );
+    const rawData = sessionStorage.getItem( "user" ) || localStorage.getItem( "user_persistent" );
     if (!rawData) {
       return { id: "testUser", password: "0000", hasChangedCredentials: false };
     }
@@ -685,6 +686,7 @@ export const useUserStore = defineStore( "user", () => {
     sessionStorage.removeItem( "user" );
     sessionStorage.removeItem( "sidebar" );
     sessionStorage.removeItem( "menu" );
+    localStorage.removeItem( "user_persistent" );
     localStorage.removeItem( "auto_login" );
     localStorage.removeItem( "auto_login_id" );
     localStorage.removeItem( "auto_login_password" );

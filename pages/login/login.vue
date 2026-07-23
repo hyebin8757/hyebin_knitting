@@ -291,6 +291,32 @@ onMounted(async () => {
                 </div>
                 <span style="color: rgba(255,255,255,0.75); font-size: 1.3rem; font-weight: 600;">아이디 저장</span>
               </div>
+
+              <!-- 자동 로그인 -->
+              <div style="display: flex; align-items: center; gap: 0.8rem; cursor: pointer; user-select: none;" @click="autoLogin = !autoLogin">
+                <div 
+                  :style="{
+                    width: '2rem',
+                    height: '2rem',
+                    borderRadius: '0.6rem',
+                    border: '1px solid ' + (autoLogin ? 'rgba(136, 197, 255, 0.5)' : 'rgba(255, 255, 255, 0.15)'),
+                    background: autoLogin ? 'rgba(35, 102, 180, 0.35)' : 'rgba(255, 255, 255, 0.03)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }"
+                >
+                  <i 
+                    v-if="autoLogin" 
+                    class="material-icons" 
+                    style="font-size: 1.4rem; color: #88c5ff; font-weight: bold;"
+                  >
+                    check
+                  </i>
+                </div>
+                <span style="color: rgba(255,255,255,0.75); font-size: 1.3rem; font-weight: 600;">자동 로그인</span>
+              </div>
             </div>
 
             <div :class="cx(LoginStyle.LoginBtn)">
