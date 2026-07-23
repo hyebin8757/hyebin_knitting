@@ -256,9 +256,9 @@ definePageMeta({
       </div>
     </div>
 
-    <!-- ID/Password One-time Change Area -->
+    <!-- ID/Password One-time Change Area (변경 완료 시 카드 전체 숨김) -->
     <div
-      v-if="userRole !== 'admin'"
+      v-if="userRole !== 'admin' && !hasChangedCredentials"
       :class="cx('change-credentials-card', MypageStyle.ChangeCard)"
     >
       <div class="title">
@@ -266,13 +266,7 @@ definePageMeta({
         <span>로그인 정보 변경</span>
       </div>
 
-      <!-- If already changed, show completed banner -->
-      <div v-if="hasChangedCredentials" class="completed-message" style="margin-bottom: 1.6rem; padding: 1.2rem 1.6rem; background: rgba(26, 209, 177, 0.12); border: 1px solid rgba(26, 209, 177, 0.3); border-radius: 1rem; color: #1ad1b1; display: flex; align-items: center; gap: 0.8rem; font-size: 1.3rem; font-weight: 600;">
-        <i class="material-icons" style="font-size: 1.8rem; color: #1ad1b1;">check_circle</i>
-        <span>로그인 정보 변경이 완료되었습니다 (재변경 불가).</span>
-      </div>
-
-      <div v-else class="warning-box">
+      <div class="warning-box">
         <i class="material-icons">info_outline</i>
         <span>
           ID/비밀번호 변경은 <strong>최초 1회만 가능</strong>하며, 변경 후에는
@@ -287,7 +281,6 @@ definePageMeta({
             v-model="newCredentials.id"
             variant="solo"
             placeholder="변경할 아이디 입력"
-            :disabled="hasChangedCredentials"
             hide-details
           />
         </div>
@@ -298,7 +291,6 @@ definePageMeta({
             variant="solo"
             type="password"
             placeholder="변경할 비밀번호 입력 (필수)"
-            :disabled="hasChangedCredentials"
             hide-details
           />
         </div>
@@ -308,7 +300,6 @@ definePageMeta({
             v-model="newCredentials.phone"
             variant="solo"
             placeholder="예: 010-1234-5678"
-            :disabled="hasChangedCredentials"
             hide-details
             @update:model-value="onPhoneInput"
           />
@@ -319,7 +310,6 @@ definePageMeta({
             v-model="newCredentials.joinDate"
             variant="solo"
             placeholder="예: 2024-03-02"
-            :disabled="hasChangedCredentials"
             hide-details
             @update:model-value="onJoinDateInput"
           />
@@ -330,7 +320,6 @@ definePageMeta({
             v-model="newCredentials.birthDate"
             variant="solo"
             placeholder="예: 1992-07-28"
-            :disabled="hasChangedCredentials"
             hide-details
             @update:model-value="onBirthDateInput"
           />
@@ -339,11 +328,9 @@ definePageMeta({
 
       <v-btn 
         class="change-btn" 
-        :disabled="hasChangedCredentials"
-        :style="hasChangedCredentials ? { opacity: 0.5, cursor: 'not-allowed', background: 'rgba(255,255,255,0.08) !important', color: 'rgba(255,255,255,0.4) !important' } : {}"
         @click="triggerChange"
       >
-        {{ hasChangedCredentials ? '변경 완료됨 (재변경 불가)' : '로그인 정보 및 개인정보 변경 적용' }}
+        로그인 정보 및 개인정보 변경 적용
       </v-btn>
     </div>
 
