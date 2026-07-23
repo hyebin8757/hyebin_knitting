@@ -394,12 +394,26 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
   
   try {
     let nextDayStr = "";
+    const currentDateObj = new Date(selectedCalendarDate.value);
+    currentDateObj.setDate(currentDateObj.getDate() + 1);
+    nextDayStr = getFormattedDate(currentDateObj);
+
+    // 이전에 야간 근무였는지 확인 (다음 날 야간 기록 자동 제거 여부 결정)
+    const prevRecord = userStore.attendanceRecords.find(
+      r => r.worker_name === name && r.date === selectedCalendarDate.value
+    );
+    const wasPreviouslyNight = prevRecord?.status === "night";
+
     if (status === "none") {
       const { error } = await supabase.from("attendance").delete().eq("worker_name", name).eq("date", selectedCalendarDate.value);
       if (error) {
         alert("데이터 삭제 실패: " + error.message);
         console.error("Delete failed:", error);
         return;
+      }
+      // 이전이 야간이었다면 다음 날 야간 기록도 함께 삭제
+      if (wasPreviouslyNight) {
+        await supabase.from("attendance").delete().eq("worker_name", name).eq("date", nextDayStr);
       }
     } else {
       const { error } = await supabase.from("attendance").upsert({
@@ -414,12 +428,14 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
         return;
       }
 
+      // 이전이 야간이었고 이번에 야간이 아닌 다른 상태로 변경되면 → 다음 날 야간 기록 삭제
+      if (wasPreviouslyNight && status !== "night") {
+        await supabase.from("attendance").delete().eq("worker_name", name).eq("date", nextDayStr);
+        nextDayStr = ""; // 다음 날 처리 초기화
+      }
+
       // 야간 근무를 설정한 경우, 다음 날도 자동으로 야간 근무(night)로 등록합니다.
       if (status === "night") {
-        const currentDateObj = new Date(selectedCalendarDate.value);
-        currentDateObj.setDate(currentDateObj.getDate() + 1);
-        nextDayStr = getFormattedDate(currentDateObj);
-
         const { error: nextError } = await supabase.from("attendance").upsert({
           worker_name: name,
           date: nextDayStr,
