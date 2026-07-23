@@ -496,15 +496,15 @@ definePageMeta({
                 hide-details 
                 style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
               />
-              <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem;">
-                <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustAmount(1000)">+1천</v-btn>
-                <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustAmount(5000)">+5천</v-btn>
-                <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustAmount(10000)">+1만</v-btn>
-                <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustAmount(100000)">+10만</v-btn>
-                <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustAmount(-1000)">-1천</v-btn>
-                <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustAmount(-5000)">-5천</v-btn>
-                <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustAmount(-10000)">-1만</v-btn>
-                <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustAmount(-100000)">-10만</v-btn>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.6rem;">
+                <v-btn class="unit-btn" @click="adjustAmount(1000)">+1천</v-btn>
+                <v-btn class="unit-btn" @click="adjustAmount(5000)">+5천</v-btn>
+                <v-btn class="unit-btn" @click="adjustAmount(10000)">+1만</v-btn>
+                <v-btn class="unit-btn" @click="adjustAmount(100000)">+10만</v-btn>
+                <v-btn class="unit-btn minus" @click="adjustAmount(-1000)">-1천</v-btn>
+                <v-btn class="unit-btn minus" @click="adjustAmount(-5000)">-5천</v-btn>
+                <v-btn class="unit-btn minus" @click="adjustAmount(-10000)">-1만</v-btn>
+                <v-btn class="unit-btn minus" @click="adjustAmount(-100000)">-10만</v-btn>
               </div>
             </div>
           </div>
@@ -557,15 +557,15 @@ definePageMeta({
               hide-details 
               style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
             />
-            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem;">
-              <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustBatchAmount(1000)">+1천</v-btn>
-              <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustBatchAmount(5000)">+5천</v-btn>
-              <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustBatchAmount(10000)">+1만</v-btn>
-              <v-btn size="x-small" style="background: rgba(255,255,255,0.08) !important; color: #ffffff !important;" @click="adjustBatchAmount(100000)">+10만</v-btn>
-              <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustBatchAmount(-1000)">-1천</v-btn>
-              <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustBatchAmount(-5000)">-5천</v-btn>
-              <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustBatchAmount(-10000)">-1만</v-btn>
-              <v-btn size="x-small" style="background: rgba(224, 87, 128, 0.1) !important; color: #e05780 !important;" @click="adjustBatchAmount(-100000)">-10만</v-btn>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.6rem;">
+              <v-btn class="unit-btn" @click="adjustBatchAmount(1000)">+1천</v-btn>
+              <v-btn class="unit-btn" @click="adjustBatchAmount(5000)">+5천</v-btn>
+              <v-btn class="unit-btn" @click="adjustBatchAmount(10000)">+1만</v-btn>
+              <v-btn class="unit-btn" @click="adjustBatchAmount(100000)">+10만</v-btn>
+              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-1000)">-1천</v-btn>
+              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-5000)">-5천</v-btn>
+              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-10000)">-1만</v-btn>
+              <v-btn class="unit-btn minus" @click="adjustBatchAmount(-100000)">-10만</v-btn>
             </div>
           </div>
 
@@ -615,7 +615,7 @@ definePageMeta({
             <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">내용</label>
             <v-text-field 
               v-model="selectedExpenseData.description" 
-              placeholder="예: 박동세좌상님 장례식" 
+              placeholder="예: 찬조금 입금 또는 물품 구입" 
               variant="solo" 
               hide-details 
               style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
@@ -950,22 +950,70 @@ definePageMeta({
   }
 
   .cancel {
-    color: rgba(255,255,255,0.6);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 0.8rem;
-    min-width: 7.2rem !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    border-radius: 0.8rem !important;
+    padding: 0.8rem 2rem !important;
     height: auto !important;
-    font-size: 1.3rem;
+    min-width: 8rem !important;
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    text-transform: none;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12) !important;
+    }
   }
 
   .confirm {
-    background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important;
+    background: linear-gradient(135deg, #1e4f8a 0%, #153c6c 100%) !important;
     color: white !important;
-    border-radius: 0.8rem;
-    font-weight: 600;
-    min-width: 7.2rem !important;
+    border-radius: 0.8rem !important;
+    padding: 0.8rem 2rem !important;
     height: auto !important;
-    font-size: 1.3rem;
+    min-width: 8rem !important;
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    text-transform: none;
+    box-shadow: 0 4px 12px rgba(26, 80, 140, 0.3) !important;
+    transition: all 0.2s;
+
+    &:hover {
+      box-shadow: 0 6px 16px rgba(26, 80, 140, 0.5) !important;
+      opacity: 0.95;
+    }
+  }
+
+  .unit-btn {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 0.8rem !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    padding: 0.5rem 1rem !important;
+    height: auto !important;
+    min-width: unset !important;
+    text-transform: none;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15) !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    &.minus {
+      background: rgba(224, 87, 128, 0.12) !important;
+      color: #ff88a8 !important;
+      border-color: rgba(224, 87, 128, 0.2) !important;
+
+      &:hover {
+        background: rgba(224, 87, 128, 0.2) !important;
+        border-color: rgba(224, 87, 128, 0.3) !important;
+      }
+    }
   }
 }
 </style>
