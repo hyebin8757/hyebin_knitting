@@ -556,12 +556,16 @@ definePageMeta({
               { label: '현장 근무 (외근)', val: 'field', color: '#3a86ff', bg: 'rgba(58, 134, 255, 0.15)' },
               { label: '조퇴', val: 'leave', color: '#e05780', bg: 'rgba(224, 87, 128, 0.15)' },
               { label: '결근', val: 'absent', color: '#ff4d4d', bg: 'rgba(255, 77, 77, 0.15)' },
-              { label: '기록 삭제', val: 'none', color: '#ffffff', bg: 'rgba(255, 255, 255, 0.1)' }
+              { label: '기록 없음 (기록 삭제)', val: 'none', color: '#ffffff', bg: 'rgba(255, 255, 255, 0.08)' }
             ]"
             :key="opt.val"
             style="width: 100%; border-radius: 0.8rem; font-weight: 600; font-size: 1.3rem; height: 4rem !important; justify-content: flex-start; padding-left: 1.6rem !important;"
-            :style="{ background: opt.bg + ' !important', color: opt.color + ' !important', border: '1px solid ' + opt.color + '33 !important' }"
-            @click="updateDateStatus(opt.val)"
+            :style="{ 
+              background: (selectedCalendarDayStatus === opt.val ? opt.bg : 'rgba(255,255,255,0.02)') + ' !important', 
+              color: (selectedCalendarDayStatus === opt.val ? opt.color : 'rgba(255,255,255,0.6)') + ' !important', 
+              border: '1px solid ' + (selectedCalendarDayStatus === opt.val ? opt.color : 'rgba(255,255,255,0.1)') + ' !important' 
+            }"
+            @click="selectedCalendarDayStatus = opt.val"
           >
             {{ opt.label }}
           </v-btn>
@@ -569,6 +573,7 @@ definePageMeta({
 
         <v-card-actions class="justify-end gap-2 px-0 pt-6">
           <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="isDateStatusDialogOpen = false">취소</v-btn>
+          <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; min-width: 8rem !important; height: auto !important; font-size: 1.3rem;" @click="updateDateStatus(selectedCalendarDayStatus)">저장</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
