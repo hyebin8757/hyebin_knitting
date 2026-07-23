@@ -281,7 +281,7 @@ definePageMeta({
         <span>회비 장부 대장</span>
       </div>
       <p style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.6); margin-top: 0.8rem; line-height: 1.6; margin-bottom: 0;">
-        조합원별 월회비 납부 현황 및 찬조금/지출 대장입니다.
+        조합원별 월회비 납부 현황 및 기타 수입/지출 대장입니다.
         <span v-if="isDuesEditor" style="color: #ffcc00; font-weight: 600;">* 대장 내 칸을 클릭하여 납부 상태를 편집할 수 있습니다.</span>
       </p>
     </div>
@@ -289,11 +289,11 @@ definePageMeta({
     <!-- Overall Summary Widget -->
     <div class="summary-widget">
       <div class="summary-item">
-        <span class="label">총 회비+찬조 수입</span>
+        <span class="label">총 수입 (회비 및 기타)</span>
         <span class="value income">{{ overallSummary.income.toLocaleString() }}원</span>
       </div>
       <div class="summary-item">
-        <span class="label">총 경조사 지출</span>
+        <span class="label">총 지출액</span>
         <span class="value expense">{{ overallSummary.expense.toLocaleString() }}원</span>
       </div>
       <div class="summary-item">
@@ -386,7 +386,7 @@ definePageMeta({
       <div class="card-header">
         <div style="display: flex; align-items: center; gap: 0.8rem; font-size: 1.5rem; font-weight: 700; color: #ffffff;">
           <i class="material-icons" style="color: #ffcc00;">list_alt</i>
-          <span>비고 (지출 및 찬조금 세부 내역)</span>
+          <span>기타 입출금 세부 내역</span>
         </div>
         <v-btn
           v-if="isDuesEditor"
@@ -401,7 +401,7 @@ definePageMeta({
       <!-- Expenditures List -->
       <div class="expenses-list">
         <div v-if="userStore.duesExpenses.length === 0" class="no-records">
-          등록된 지출 및 찬조 세부 기록이 없습니다.
+          등록된 지출 및 기타 수입 세부 기록이 없습니다.
         </div>
         <div 
           v-for="item in userStore.duesExpenses" 
@@ -615,7 +615,7 @@ definePageMeta({
             <label style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">내용</label>
             <v-text-field 
               v-model="selectedExpenseData.description" 
-              placeholder="예: 찬조금 입금 또는 물품 구입" 
+              placeholder="예: 기타 수입 입금 또는 물품 구입" 
               variant="solo" 
               hide-details 
               style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" 
