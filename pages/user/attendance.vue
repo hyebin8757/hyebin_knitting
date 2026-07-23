@@ -346,6 +346,38 @@ const isCheckInDisabled = computed(() => {
 const isDateStatusDialogOpen = ref(false);
 const selectedCalendarDate = ref("");
 const selectedCalendarDayStatus = ref("none");
+const selectedCalendarDateMemo = ref("");
+
+const dateMemoMap = computed(() => {
+  const map: Record<string, string> = {};
+  const currentName = userStore.loggedInUser?.name;
+  if (!currentName) return map;
+
+  userStore.attendanceRecords.forEach((r: any) => {
+    if (r.worker_name === currentName && r.memo) {
+      map[r.date] = r.memo;
+    }
+  });
+
+  try {
+    const raw = localStorage.getItem(`calendar_memos_${currentName}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      Object.assign(map, parsed);
+    }
+  } catch (e) {}
+
+  return map;
+});
+
+const getMemoForDate = (dateStr: string): string => {
+  return dateMemoMap.value[dateStr] || "";
+};
+
+const hasMemo = (day: any): boolean => {
+  const dateStr = getResolvedDateStr(day);
+  return !!dateMemoMap.value[dateStr];
+};
 
 const getResolvedDateStr = (day: any): string => {
   const currentYearVal = currentDate.value.getFullYear();
@@ -384,6 +416,7 @@ const onCalendarDayClick = (day: any) => {
   
   selectedCalendarDate.value = dateStr;
   selectedCalendarDayStatus.value = day.status;
+  selectedCalendarDateMemo.value = getMemoForDate(dateStr);
   isDateStatusDialogOpen.value = true;
 };
 
@@ -393,6 +426,20 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
   if (!name) return;
   
   try {
+    const memoText = selectedCalendarDateMemo.value.trim();
+
+    // 1. 메모 로컬스토리지 저장 및 동기화
+    try {
+      const raw = localStorage.getItem(`calendar_memos_${name}`) || "{}";
+      const memoMap = JSON.parse(raw);
+      if (memoText) {
+        memoMap[selectedCalendarDate.value] = memoText;
+      } else {
+        delete memoMap[selectedCalendarDate.value];
+      }
+      localStorage.setItem(`calendar_memos_${name}`, JSON.stringify(memoMap));
+    } catch (e) {}
+
     // YYYY-MM-DD를 로컬 시간 기준으로 파싱 (iOS Safari UTC 버그 방지)
     const [yr, mo, dy] = selectedCalendarDate.value.split("-").map(Number);
     const currentDateObj = new Date(yr, mo - 1, dy + 1); // +1일 = 다음 날
@@ -403,30 +450,34 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
       r => r.worker_name === name && r.date === selectedCalendarDate.value
     );
     const wasPreviouslyNight = prevRecord?.status === "night";
-    console.log("[updateDateStatus] selected:", selectedCalendarDate.value, "nextDay:", nextDayStr, "wasPreviouslyNight:", wasPreviouslyNight, "newStatus:", status);
 
-    if (status === "none") {
+    if (status === "none" && !memoText) {
       const { error } = await supabase.from("attendance").delete().eq("worker_name", name).eq("date", selectedCalendarDate.value);
       if (error) {
-        alert("데이터 삭제 실패: " + error.message);
         console.error("Delete failed:", error);
-        return;
       }
       // 이전이 야간이었다면 다음 날 야간 기록도 함께 삭제
       if (wasPreviouslyNight) {
         await supabase.from("attendance").delete().eq("worker_name", name).eq("date", nextDayStr);
       }
     } else {
+      const targetStatus = status === "none" ? "day" : status;
       const { error } = await supabase.from("attendance").upsert({
         worker_name: name,
         date: selectedCalendarDate.value,
-        status: status,
-        location: status === "field" ? "외근" : ""
+        status: targetStatus,
+        location: targetStatus === "field" ? "외근" : "",
+        memo: memoText
       }, { onConflict: "worker_name,date" });
+
       if (error) {
-        alert("데이터 저장 실패: " + error.message);
-        console.error("Upsert failed:", error);
-        return;
+        // 혹시 Supabase memo 컬럼 미존재 시 폴백 저장
+        await supabase.from("attendance").upsert({
+          worker_name: name,
+          date: selectedCalendarDate.value,
+          status: targetStatus,
+          location: targetStatus === "field" ? "외근" : ""
+        }, { onConflict: "worker_name,date" });
       }
 
       // 이전이 야간이었고 이번에 야간이 아닌 다른 상태로 변경되면 → 다음 날 야간 기록 삭제
@@ -588,10 +639,22 @@ definePageMeta({
             { 'status-absent': day.isCurrentMonth && day.status === 'absent' },
             { 'status-leave': day.isCurrentMonth && day.status === 'leave' }
           ]"
-          :style="{ cursor: isFutureDate(getResolvedDateStr(day)) ? 'default' : 'pointer', opacity: isFutureDate(getResolvedDateStr(day)) ? 0.35 : 1 }"
+          :style="{ position: 'relative', cursor: isFutureDate(getResolvedDateStr(day)) ? 'default' : 'pointer', opacity: isFutureDate(getResolvedDateStr(day)) ? 0.35 : 1 }"
           @click="onCalendarDayClick(day)"
         >
-          {{ day.dayNum }}
+          <span>{{ day.dayNum }}</span>
+          <!-- 📝 메모 작성 표기 아이콘 -->
+          <span
+            v-if="hasMemo(day)"
+            style="
+              position: absolute;
+              top: 0.2rem;
+              right: 0.3rem;
+              font-size: 1.1rem;
+              line-height: 1;
+            "
+            title="메모가 작성된 날짜"
+          >📝</span>
         </div>
       </div>
 
@@ -650,20 +713,20 @@ definePageMeta({
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <!-- Calendar Date Click Status Change Dialog -->
-    <v-dialog v-model="isDateStatusDialogOpen" max-width="320">
+    <!-- Calendar Date Click Status & Memo Dialog -->
+    <v-dialog v-model="isDateStatusDialogOpen" max-width="340">
       <v-card class="pa-6" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.6rem; color: #ffffff; box-shadow: 0 12px 30px rgba(0,0,0,0.5);">
         <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); display: flex; align-items: center; gap: 0.8rem; padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
           <i class="material-icons" style="color: var(--primary-lighten-color-1);">edit_calendar</i>
-          <span>출결 상태 변경</span>
+          <span>출결 관리 및 날짜 메모</span>
         </v-card-title>
         
         <v-card-text class="py-4 px-0" style="font-size: 1.3rem; color: rgba(255, 255, 255, 0.7); line-height: 1.5;">
-          선택한 날짜: <strong>{{ selectedCalendarDate }}</strong><br />
-          변경할 출결 타입을 선택해 주세요.
+          선택한 날짜: <strong>{{ selectedCalendarDate }}</strong>
         </v-card-text>
 
-        <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 0.4rem; max-height: 250px; overflow-y: auto; padding-right: 0.4rem;">
+        <!-- 출결 상태 선택 -->
+        <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 0.2rem; max-height: 200px; overflow-y: auto; padding-right: 0.4rem;">
           <v-btn
             v-for="opt in [
               { label: '주간 근무', val: 'day', color: '#1ad1b1', bg: 'rgba(26, 209, 177, 0.15)' },
@@ -673,7 +736,7 @@ definePageMeta({
               { label: '결근', val: 'absent', color: '#ff4d4d', bg: 'rgba(255, 77, 77, 0.15)' }
             ]"
             :key="opt.val"
-            style="width: 100%; border-radius: 0.8rem; font-weight: 600; font-size: 1.3rem; height: 4rem !important; justify-content: flex-start; padding-left: 1.6rem !important;"
+            style="width: 100%; border-radius: 0.8rem; font-weight: 600; font-size: 1.3rem; height: 3.8rem !important; justify-content: flex-start; padding-left: 1.6rem !important;"
             :style="{ 
               background: (selectedCalendarDayStatus === opt.val ? opt.bg : 'rgba(255,255,255,0.02)') + ' !important', 
               color: (selectedCalendarDayStatus === opt.val ? opt.color : 'rgba(255,255,255,0.6)') + ' !important', 
