@@ -80,7 +80,16 @@ const isCheckedIn = computed(() => {
   const currentName = userStore.loggedInUser?.name;
   if (!currentName) return false;
   const worker = userStore.workers.find(w => w.name === currentName);
-  return worker ? worker.checkedIn : false;
+  if (!worker || !worker.checkedIn) return false;
+
+  // 당일 출결 상태가 결근이면 출근하지 않은 것으로 처리 (버튼 = 출근 등록)
+  const today = new Date().toISOString().split("T")[0];
+  const todayRecord = userStore.attendanceRecords.find(
+    r => r.worker_name === currentName && r.date === today
+  );
+  if (todayRecord?.status === "absent") return false;
+
+  return true;
 });
 
 // 로그인된 사용자의 출퇴근 기록 매핑
