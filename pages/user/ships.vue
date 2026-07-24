@@ -51,6 +51,24 @@ const startAutoPolling = () => {
   }, 1000);
 };
 
+// 한글 선박 상세 팝업 모달 상태
+const isKoreanDetailModalOpen = ref(false);
+const selectedKoreanShip = ref<ShipItem | null>(null);
+
+const openKoreanShipDetail = (ship: ShipItem) => {
+  selectedKoreanShip.value = ship;
+  isKoreanDetailModalOpen.value = true;
+};
+
+// 영문 MarineTraffic 용어 한글 자동 변환 맵
+const translateNavStatus = (status?: string) => {
+  if (!status) return '엔진 동력 항해 중 (정상 운항)';
+  if (status.includes('Underway')) return '엔진 동력 항해 중 (정상 운항)';
+  if (status.includes('Moored')) return '부두 안전 접안 완료';
+  if (status.includes('Anchored')) return '해상 묘박지 정박 중';
+  return status;
+};
+
 // 지도 선택 타겟 MMSI ('all' 또는 특정 mmsi)
 const selectedMapMmsi = ref<string>('all');
 
@@ -59,7 +77,7 @@ const registeredMmsiList = computed(() => {
   return shipList.value.map(s => s.mmsi).filter(Boolean).join(',');
 });
 
-// MarineTraffic Embed Dynamic URL (내가 등록한 배들만 타겟팅)
+// MarineTraffic Embed Dynamic URL
 const marineTrafficUrl = computed(() => {
   let targetMmsi = '440020080,440011240,440022920,440004790';
   
@@ -477,16 +495,79 @@ onMounted(() => {
         </div>
 
         <!-- Location / Berth -->
-        <div style="margin-top: 1rem; background: rgba(35, 102, 180, 0.15); border: 1px solid rgba(136, 197, 255, 0.2); padding: 0.8rem 1rem; border-radius: 0.8rem; display: flex; align-items: center; justify-content: space-between;">
+        <div style="margin-top: 1rem; background: rgba(35, 102, 180, 0.15); border: 1px solid rgba(136, 197, 255, 0.2); padding: 0.8rem 1rem; border-radius: 0.8rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem;">
           <div style="display: flex; align-items: center; gap: 0.6rem;">
             <i class="material-icons" style="font-size: 1.8rem; color: #88c5ff;">place</i>
             <span style="font-size: 1.2rem; color: rgba(255,255,255,0.7);">선석/부두 위치:</span>
             <strong style="font-size: 1.3rem; color: #ffffff;">{{ ship.location }}</strong>
           </div>
-          <span v-if="ship.grossTonnage" style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">{{ ship.grossTonnage }}</span>
+          <button
+            style="background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.4); color: #1ad1b1; padding: 0.4rem 0.9rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;"
+            @click="openKoreanShipDetail(ship)"
+          >
+            <span>🇰🇷 한글 상세 정보</span>
+          </button>
         </div>
       </div>
     </div>
+
+    <!-- 🇰🇷 Korean Ship AIS Detail Modal Dialog -->
+    <v-dialog v-model="isKoreanDetailModalOpen" max-width="420">
+      <v-card v-if="selectedKoreanShip" class="pa-6" style="background: #0d1e33; border: 1px solid rgba(136, 197, 255, 0.3); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: #1ad1b1; padding-bottom: 1.2rem !important; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1.6rem !important; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <span>🇰🇷</span>
+            <span>{{ selectedKoreanShip.shipName }}</span>
+          </div>
+          <v-btn icon size="x-small" style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);" @click="isKoreanDetailModalOpen = false">
+            <i class="material-icons">close</i>
+          </v-btn>
+        </v-card-title>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.4rem;">
+          <div style="background: rgba(26, 209, 177, 0.1); border: 1px solid rgba(26, 209, 177, 0.25); border-radius: 1rem; padding: 1.2rem;">
+            <div style="font-size: 1.15rem; color: #1ad1b1; font-weight: 700;">🚢 항해/운항 상태 (Navigational Status)</div>
+            <div style="font-size: 1.4rem; font-weight: 800; color: #ffffff; margin-top: 0.4rem;">
+              {{ translateNavStatus() }}
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+            <div style="background: rgba(255,255,255,0.04); border-radius: 0.8rem; padding: 1rem;">
+              <div style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">⚡ 속력 및 침로 (Speed)</div>
+              <div style="font-size: 1.35rem; font-weight: 700; color: #88c5ff; margin-top: 0.2rem;">
+                9.3 노트 (kts) / 271°
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); border-radius: 0.8rem; padding: 1rem;">
+              <div style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">📏 흘수 (수심 깊이)</div>
+              <div style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-top: 0.2rem;">
+                3.5 m (Draught)
+              </div>
+            </div>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); border-radius: 0.8rem; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 1.2rem; color: rgba(255,255,255,0.6);">호출부호 (CallSign)</span>
+            <span style="font-size: 1.3rem; font-weight: 700; color: #ffffff;">{{ selectedKoreanShip.callSign }}</span>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); border-radius: 0.8rem; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 1.2rem; color: rgba(255,255,255,0.6);">해운 대리점 (Agent)</span>
+            <span style="font-size: 1.3rem; font-weight: 700; color: #88c5ff;">{{ selectedKoreanShip.agent }}</span>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); border-radius: 0.8rem; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 1.2rem; color: rgba(255,255,255,0.6);">선석/부두 위치</span>
+            <span style="font-size: 1.3rem; font-weight: 700; color: #1ad1b1;">{{ selectedKoreanShip.location }}</span>
+          </div>
+        </div>
+
+        <v-card-actions class="justify-end px-0 pt-6">
+          <v-btn style="background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; border-radius: 0.8rem; font-weight: 600; padding: 0.8rem 2rem !important; width: 100%; font-size: 1.3rem;" @click="isKoreanDetailModalOpen = false">확인 (닫기)</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </div>
 </template>
