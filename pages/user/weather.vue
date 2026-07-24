@@ -37,6 +37,12 @@ const currentWeather = ref({
   waveStatus: '잔잔함 (안전)'
 });
 
+// 기상 특보 및 결항 위험 조건 감지 (풍속 27kts 이상 또는 파고 2m 이상)
+const isWeatherWarning = computed(() => {
+  const wavNum = parseFloat(currentWeather.value.waveHeight.replace('m', '').trim());
+  return currentWeather.value.windKnots >= 27 || (!isNaN(wavNum) && wavNum >= 2.0);
+});
+
 // 현재 시각 기준 향후 24시간 3시간 간격 동적 예보 생성 헬퍼
 const generateDynamicHourlyForecasts = (): HourlyForecast[] => {
   const list: HourlyForecast[] = [];
@@ -129,6 +135,20 @@ onMounted(() => {
 
 <template>
   <div class="weather-page" style="padding: 1.6rem; color: #ffffff;">
+    <!-- 🚨 Weather Warning Alert Banner (1번 기능) -->
+    <div 
+      v-if="isWeatherWarning" 
+      style="background: rgba(224, 87, 128, 0.15); border: 1px solid rgba(224, 87, 128, 0.4); border-radius: 1.2rem; padding: 1.2rem 1.6rem; margin-bottom: 1.6rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;"
+    >
+      <div style="display: flex; align-items: center; gap: 0.8rem;">
+        <i class="material-icons" style="color: #e05780; font-size: 2.4rem;">warning</i>
+        <div>
+          <strong style="font-size: 1.35rem; color: #e05780; display: block;">⚠️ 인천항 해상 풍랑 특보 / 여객선 결항 주의</strong>
+          <span style="font-size: 1.15rem; color: rgba(255,255,255,0.8);">현재 백령·연평도 여객선 항로 풍속 27kts 이상 및 높은 파고로 인한 결항 가능성이 높습니다.</span>
+        </div>
+      </div>
+      <span style="font-size: 1.1rem; color: #e05780; background: rgba(224, 87, 128, 0.2); padding: 0.3rem 0.8rem; border-radius: 0.6rem; font-weight: 700;">특보 발효중</span>
+    </div>
     <!-- Page Title Card -->
     <div style="background: rgba(13, 30, 51, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; padding: 1.8rem; margin-bottom: 1.6rem; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
       <div style="display: flex; align-items: center; justify-content: space-between;">
