@@ -505,7 +505,7 @@ onMounted(() => {
             style="background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.4); color: #1ad1b1; padding: 0.4rem 0.9rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;"
             @click="openKoreanShipDetail(ship)"
           >
-            <span>🇰🇷 한글 상세 정보</span>
+            <span>상세 정보</span>
           </button>
         </div>
       </div>
