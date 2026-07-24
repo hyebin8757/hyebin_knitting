@@ -398,6 +398,11 @@ const overallSummary = computed(() => {
 
 onMounted(async () => {
   await userStore.fetchAllData();
+  const role = userStore.userRole;
+  const isGroup7 = userStore.loggedInUser?.group === 7;
+  if (role !== 'admin' && !isGroup7) {
+    router.replace("/user/attendance");
+  }
 });
 
 definePageMeta({

@@ -8,6 +8,11 @@ const userStore = useUserStore();
 const userRole = computed(() => userStore.userRole);
 const loggedInUserName = computed(() => userStore.loggedInUser?.name || '방문자');
 
+const isGroup7OrAdmin = computed(() => {
+  if (userRole.value === 'admin') return true;
+  return userStore.loggedInUser?.group === 7;
+});
+
 const toggleRole = () => {
   userStore.userRole = userStore.userRole === "member" ? "admin" : "member";
 };
@@ -63,31 +68,22 @@ onMounted(() => {
         </main>
 
         <!-- Bottom Navigation Bar -->
-        <nav :class="cx('user-layout-nav', UserLayoutStyle.BottomNav)">
+        <nav 
+          :class="cx('user-layout-nav', UserLayoutStyle.BottomNav)"
+          :style="{ gridTemplateColumns: isGroup7OrAdmin ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)' }"
+        >
           <nuxt-link to="/user/attendance" class="nav-item">
             <i class="material-icons">event_available</i>
             <span>출퇴근</span>
           </nuxt-link>
-          <nuxt-link to="/user/dues" class="nav-item">
+          <nuxt-link v-if="isGroup7OrAdmin" to="/user/dues" class="nav-item">
             <i class="material-icons">payments</i>
             <span>회비관리</span>
           </nuxt-link>
-          <!-- 나중에 사용할 예정이므로 임시 비활성화(주석 처리)
-          <nuxt-link to="/user/deployment" class="nav-item">
-            <i class="material-icons">assignment</i>
-            <span>배치현황</span>
-          </nuxt-link>
-          -->
           <nuxt-link to="/user/members" class="nav-item">
             <i class="material-icons">groups</i>
             <span>회원관리</span>
           </nuxt-link>
-          <!-- 나중에 사용할 예정이므로 임시 비활성화(주석 처리)
-          <nuxt-link to="/user/work" class="nav-item">
-            <i class="material-icons">dashboard</i>
-            <span>현장정보</span>
-          </nuxt-link>
-          -->
           <nuxt-link to="/user/mypage" class="nav-item">
             <i class="material-icons">person</i>
             <span>마이페이지</span>
