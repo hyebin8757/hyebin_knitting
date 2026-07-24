@@ -37,17 +37,41 @@ const currentWeather = ref({
   waveStatus: '잔잔함 (안전)'
 });
 
-// 시간대별 예보 목록 (파고 m 추가)
-const hourlyForecasts = ref<HourlyForecast[]>([
-  { time: '18:00', temp: 26, sky: '맑음', icon: 'wb_sunny', pop: 10, windSpeed: 4.2, windKnots: 8.1, waveHeight: '0.5 m' },
-  { time: '21:00', temp: 24, sky: '맑음', icon: 'nights_stay', pop: 10, windSpeed: 3.8, windKnots: 7.4, waveHeight: '0.5 m' },
-  { time: '00:00', temp: 23, sky: '구름많음', icon: 'cloud', pop: 20, windSpeed: 3.5, windKnots: 6.8, waveHeight: '0.6 m' },
-  { time: '03:00', temp: 22, sky: '구름많음', icon: 'cloud', pop: 20, windSpeed: 3.1, windKnots: 6.0, waveHeight: '0.6 m' },
-  { time: '06:00', temp: 23, sky: '맑음', icon: 'wb_sunny', pop: 10, windSpeed: 3.6, windKnots: 7.0, waveHeight: '0.7 m' },
-  { time: '09:00', temp: 26, sky: '맑음', icon: 'wb_sunny', pop: 10, windSpeed: 4.5, windKnots: 8.7, waveHeight: '0.8 m' },
-  { time: '12:00', temp: 28, sky: '구름많음', icon: 'wb_cloudy', pop: 30, windSpeed: 5.2, windKnots: 10.1, waveHeight: '1.0 m' },
-  { time: '15:00', temp: 29, sky: '흐림', icon: 'cloud_queue', pop: 40, windSpeed: 5.8, windKnots: 11.3, waveHeight: '1.2 m' }
-]);
+// 현재 시각 기준 향후 24시간 3시간 간격 동적 예보 생성 헬퍼
+const generateDynamicHourlyForecasts = (): HourlyForecast[] => {
+  const list: HourlyForecast[] = [];
+  const now = new Date();
+  
+  for (let i = 0; i < 8; i++) {
+    const targetDate = new Date(now.getTime() + i * 3 * 60 * 60 * 1000);
+    const isTomorrow = targetDate.getDate() !== now.getDate();
+    const hourStr = String(targetDate.getHours()).padStart(2, '0') + ':00';
+    const dayLabel = isTomorrow ? '내일 ' : '오늘 ';
+    const displayTime = `${dayLabel}${hourStr}`;
+
+    const t = Math.round(25 + Math.sin(i) * 3);
+    const kts = parseFloat((4.0 + (i % 3) * 1.2).toFixed(1));
+    const wav = (0.5 + (i % 4) * 0.2).toFixed(1) + ' m';
+    const skyList: Array<'맑음' | '구름많음' | '흐림' | '비'> = ['맑음', '맑음', '구름많음', '구름많음', '맑음', '맑음', '구름많음', '흐림'];
+    const iconList = ['wb_sunny', 'nights_stay', 'cloud', 'cloud', 'wb_sunny', 'wb_sunny', 'wb_cloudy', 'cloud_queue'];
+
+    list.push({
+      time: displayTime,
+      temp: t,
+      sky: skyList[i % skyList.length],
+      icon: iconList[i % iconList.length],
+      pop: (i % 3) * 10 + 10,
+      windSpeed: parseFloat((kts / 1.94).toFixed(1)),
+      windKnots: kts,
+      waveHeight: wav
+    });
+  }
+
+  return list;
+};
+
+// 동적 시간대별 예보 목록 (현재 시각 기준 오늘/내일 HH:00)
+const hourlyForecasts = ref<HourlyForecast[]>(generateDynamicHourlyForecasts());
 
 // 기상청 API 데이터 호출
 const fetchWeatherData = async () => {
@@ -92,6 +116,7 @@ const fetchWeatherData = async () => {
     console.warn("Public Weather API fetch error, using fallback weather:", e.message);
   } finally {
     isLoading.value = false;
+    hourlyForecasts.value = generateDynamicHourlyForecasts();
     const now = new Date();
     lastUpdatedTime.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
   }
