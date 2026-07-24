@@ -183,6 +183,8 @@ onMounted(() => {
       <p style="font-size: 1.2rem; color: rgba(255,255,255,0.6); margin-top: 0.8rem; margin-bottom: 0; line-height: 1.5;">
         공공데이터포털 연동 인천항 실시간 선박 입출항 및 부두 배치 현황입니다.
       </p>
+    </div>
+
     <!-- View Mode Selector -->
     <div style="display: flex; gap: 0.6rem; margin-bottom: 1.2rem; background: rgba(13, 30, 51, 0.8); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.1);">
       <button
@@ -260,8 +262,9 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Filter & Search Bar -->
-    <div v-if="viewMode === 'map_list' || viewMode === 'list_only'" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.6rem;">
+    <!-- Filter & Search Bar + Ship List Area -->
+    <div v-if="viewMode === 'map_list' || viewMode === 'list_only'">
+      <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.6rem;">
       <!-- Tab Buttons (전체 / 즐겨찾기) -->
       <div style="display: flex; gap: 0.8rem; background: rgba(255,255,255,0.03); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.08);">
         <button
@@ -389,6 +392,7 @@ onMounted(() => {
       </div>
     </div>
   </div>
+</div>
 </template>
 
 <style scoped>
