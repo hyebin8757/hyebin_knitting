@@ -292,17 +292,27 @@ const executeBatchDelete = () => {
 
 // 월 컬럼 헤더 클릭 일괄 등록/삭제 다이얼로그 상태 및 로직
 const isMonthHeaderActionOpen = ref(false);
-const selectedMonthForAction = ref('1월');
+const monthHeaderActionData = reactive({
+  month: '1월',
+  amount: 10000,
+  paymentMethod: '이체' as '이체' | '현금',
+});
+
+const adjustHeaderAmount = (val: number) => {
+  monthHeaderActionData.amount = Math.max(0, (monthHeaderActionData.amount || 0) + val);
+};
 
 const onMonthHeaderClick = (month: string) => {
   if (!isDuesEditor.value) return;
-  selectedMonthForAction.value = month;
+  monthHeaderActionData.month = month;
+  monthHeaderActionData.amount = 10000;
+  monthHeaderActionData.paymentMethod = '이체';
   isMonthHeaderActionOpen.value = true;
 };
 
 // 한번에 전원 완납 등록
 const executeMonthBulkRegister = async () => {
-  const targetMonth = selectedMonthForAction.value;
+  const targetMonth = monthHeaderActionData.month;
   const workers = filteredWorkers.value.filter(w => w.name !== '한덕희');
   let count = 0;
 
@@ -312,8 +322,8 @@ const executeMonthBulkRegister = async () => {
       await userStore.saveDueAction(
         w.name,
         targetMonth,
-        10000,
-        '이체',
+        monthHeaderActionData.amount,
+        monthHeaderActionData.paymentMethod,
         selectedYear.value
       );
       count++;
@@ -321,12 +331,15 @@ const executeMonthBulkRegister = async () => {
   }
 
   isMonthHeaderActionOpen.value = false;
-  showToast(`${targetMonth} ${count}명 회비 일괄 완납 등록 완료!`, 'success');
+  showToast(
+    `${targetMonth} ${count}명 (${monthHeaderActionData.amount.toLocaleString()}원 / ${monthHeaderActionData.paymentMethod}) 일괄 등록 완료!`,
+    'success'
+  );
 };
 
 // 한번에 전원 미납 삭제
 const executeMonthBulkDelete = () => {
-  const targetMonth = selectedMonthForAction.value;
+  const targetMonth = monthHeaderActionData.month;
   showConfirm(
     `${targetMonth} 일괄 미납 처리`,
     `${selectedYear.value}년 ${targetMonth}의 모든 회원 회비 납부 내역을 삭제하시겠습니까?`,
@@ -964,31 +977,49 @@ definePageMeta({
     </v-dialog>
 
     <!-- ⚡ Month Header Click Bulk Action Modal -->
-    <v-dialog v-model="isMonthHeaderActionOpen" max-width="360">
+    <v-dialog v-model="isMonthHeaderActionOpen" max-width="380">
       <v-card class="pa-6 dialog-card" style="background: #0d1e33; border: 1px solid rgba(136, 197, 255, 0.3); border-radius: 1.6rem; color: #ffffff;">
         <v-card-title class="text-h6 font-weight-bold px-0 dialog-title" style="color: #88c5ff; font-size: 1.6rem !important; display: flex; align-items: center; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 0.6rem;">
             <i class="material-icons" style="color: #1ad1b1;">flash_on</i>
-            <span>{{ selectedYear }}년 {{ selectedMonthForAction }} 일괄 관리</span>
+            <span>{{ selectedYear }}년 {{ monthHeaderActionData.month }} 일괄 관리</span>
           </div>
           <v-btn icon size="x-small" style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);" @click="isMonthHeaderActionOpen = false">
             <i class="material-icons">close</i>
           </v-btn>
         </v-card-title>
 
-        <div style="margin-top: 1.4rem; display: flex; flex-direction: column; gap: 1.2rem;">
-          <p style="font-size: 1.25rem; color: rgba(255,255,255,0.8); line-height: 1.5; margin-bottom: 0;">
-            <strong>{{ selectedMonthForAction }}</strong> 컬럼을 선택하셨습니다.<br>
-            아래에서 원하시는 일괄 처리 동작을 선택해 주세요.
-          </p>
+        <div style="margin-top: 1.4rem; display: flex; flex-direction: column; gap: 1.4rem;">
+          <!-- 납부 수단 (이체 / 현금) -->
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.6);">납부 수단 (타입 선택)</label>
+            <select v-model="monthHeaderActionData.paymentMethod" class="custom-dark-select">
+              <option value="이체">💳 계좌 이체</option>
+              <option value="현금">💵 현금 납부</option>
+            </select>
+          </div>
 
-          <!-- 🟢 한번에 등록 (일괄 완납) -->
+          <!-- 금액 (원) 설정 및 빠른 단위 버튼 -->
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.6);">일괄 등록 금액 (원)</label>
+            <input v-model.number="monthHeaderActionData.amount" type="number" class="custom-dark-input" />
+            <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.4rem;">
+              <v-btn class="unit-btn" @click="adjustHeaderAmount(1000)">+1천</v-btn>
+              <v-btn class="unit-btn" @click="adjustHeaderAmount(5000)">+5천</v-btn>
+              <v-btn class="unit-btn" @click="adjustHeaderAmount(10000)">+1만</v-btn>
+              <v-btn class="unit-btn" @click="adjustHeaderAmount(100000)">+10만</v-btn>
+              <v-btn class="unit-btn minus" @click="adjustHeaderAmount(-1000)">-1천</v-btn>
+              <v-btn class="unit-btn minus" @click="adjustHeaderAmount(-5000)">-5천</v-btn>
+            </div>
+          </div>
+
+          <!-- 🟢 한번에 등록 (설정 금액/수단 일괄 완납) -->
           <button
             style="background: linear-gradient(135deg, #1ad1b1 0%, #157a6e 100%); border: none; border-radius: 1rem; padding: 1.2rem; color: #ffffff; font-size: 1.35rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem; box-shadow: 0 4px 12px rgba(26, 209, 177, 0.3);"
             @click="executeMonthBulkRegister"
           >
             <i class="material-icons" style="font-size: 1.8rem;">check_circle</i>
-            <span>한번에 완납 등록 (미납자 1만원)</span>
+            <span>한번에 완납 등록 ({{ monthHeaderActionData.amount.toLocaleString() }}원)</span>
           </button>
 
           <!-- 🔴 한번에 삭제 (일괄 미납 처리) -->
