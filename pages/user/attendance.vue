@@ -343,6 +343,68 @@ const isCheckInDisabled = computed(() => {
   return false;
 });
 
+// 년도 / 월 직접 선택 상태
+const isYearPickerOpen = ref(false);
+const isMonthPickerOpen = ref(false);
+
+const selectedYear = computed(() => currentDate.value.getFullYear());
+const selectedMonth = computed(() => currentDate.value.getMonth() + 1);
+
+const yearsList = computed(() => {
+  const thisYear = new Date().getFullYear();
+  let minYear = thisYear - 5; // 기본 과거 최대 5년
+
+  if (userStore.attendanceRecords.length > 0) {
+    userStore.attendanceRecords.forEach((r: any) => {
+      if (r.date) {
+        const y = parseInt(r.date.split("-")[0], 10);
+        if (!isNaN(y) && y < minYear) {
+          minYear = y;
+        }
+      }
+    });
+  }
+
+  const list: number[] = [];
+  for (let y = thisYear; y >= minYear; y--) {
+    list.push(y);
+  }
+  return list;
+});
+
+const changeYear = (year: number) => {
+  const currentMo = currentDate.value.getMonth();
+  const today = new Date();
+  let targetMo = currentMo;
+
+  // 현재 년도를 선택했고, 기존 월이 미래 월인 경우 현재 월로 조정
+  if (year === today.getFullYear() && currentMo > today.getMonth()) {
+    targetMo = today.getMonth();
+  }
+
+  currentDate.value = new Date(year, targetMo, 1);
+  isYearPickerOpen.value = false;
+};
+
+const changeMonth = (month: number) => {
+  const year = currentDate.value.getFullYear();
+  const today = new Date();
+
+  // 미래 월 제한 (현재 년도에서 미래 월 선택 불가)
+  if (year === today.getFullYear() && month - 1 > today.getMonth()) {
+    return;
+  }
+
+  currentDate.value = new Date(year, month - 1, 1);
+  isMonthPickerOpen.value = false;
+};
+
+const isFutureMonth = (month: number): boolean => {
+  const year = currentDate.value.getFullYear();
+  const today = new Date();
+  return year === today.getFullYear() && month - 1 > today.getMonth();
+};
+
 const isDateStatusDialogOpen = ref(false);
 const selectedCalendarDate = ref("");
 const selectedCalendarDayStatus = ref("none");
@@ -605,7 +667,48 @@ definePageMeta({
     <!-- Attendance Calendar -->
     <div :class="cx('attendance-calendar', AttendanceStyle.CalendarContainer)">
       <div class="cal-header">
-        <div class="cal-title">{{ currentYearMonthLabel }}</div>
+        <div class="cal-title" style="display: flex; align-items: center; gap: 0.6rem;">
+          <button 
+            style="
+              background: rgba(255, 255, 255, 0.06); 
+              border: 1px solid rgba(255, 255, 255, 0.12); 
+              border-radius: 0.8rem; 
+              padding: 0.4rem 0.8rem; 
+              color: #ffffff; 
+              font-size: 1.5rem; 
+              font-weight: 700; 
+              display: flex; 
+              align-items: center; 
+              gap: 0.2rem;
+              cursor: pointer;
+              transition: all 0.2s;
+            " 
+            @click="isYearPickerOpen = true"
+          >
+            <span>{{ selectedYear }}년</span>
+            <i class="material-icons" style="font-size: 1.8rem; color: #88c5ff;">arrow_drop_down</i>
+          </button>
+          <button 
+            style="
+              background: rgba(255, 255, 255, 0.06); 
+              border: 1px solid rgba(255, 255, 255, 0.12); 
+              border-radius: 0.8rem; 
+              padding: 0.4rem 0.8rem; 
+              color: #ffffff; 
+              font-size: 1.5rem; 
+              font-weight: 700; 
+              display: flex; 
+              align-items: center; 
+              gap: 0.2rem;
+              cursor: pointer;
+              transition: all 0.2s;
+            " 
+            @click="isMonthPickerOpen = true"
+          >
+            <span>{{ String(selectedMonth).padStart(2, '0') }}월</span>
+            <i class="material-icons" style="font-size: 1.8rem; color: #88c5ff;">arrow_drop_down</i>
+          </button>
+        </div>
         <div class="cal-nav">
           <button @click="prevMonth">
             <i class="material-icons">chevron_left</i>
@@ -809,6 +912,72 @@ definePageMeta({
           >
             취소 실행
           </v-btn>
+        </v-card-actions>
+      </v-card>
+    <!-- Year Picker Dialog (년도 선택 다이얼로그) -->
+    <v-dialog v-model="isYearPickerOpen" max-width="320">
+      <v-card class="pa-5" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <i class="material-icons" style="color: var(--primary-lighten-color-1);">calendar_today</i>
+            <span>년도 선택</span>
+          </div>
+          <span style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">조회할 년도를 선택하세요</span>
+        </v-card-title>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1.2rem; max-height: 280px; overflow-y: auto;">
+          <v-btn
+            v-for="y in yearsList"
+            :key="y"
+            style="width: 100%; border-radius: 0.8rem; font-weight: 700; font-size: 1.4rem; height: 4rem !important;"
+            :style="{
+              background: (selectedYear === y ? 'rgba(35, 102, 180, 0.45)' : 'rgba(255, 255, 255, 0.04)') + ' !important',
+              color: (selectedYear === y ? '#ffffff' : 'rgba(255, 255, 255, 0.8)') + ' !important',
+              border: '1px solid ' + (selectedYear === y ? '#88c5ff' : 'rgba(255, 255, 255, 0.1)') + ' !important'
+            }"
+            @click="changeYear(y)"
+          >
+            {{ y }}년
+          </v-btn>
+        </div>
+
+        <v-card-actions class="justify-end px-0 pt-4" style="margin-top: 0.8rem;">
+          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 1.6rem !important; min-width: 7rem !important; height: auto !important; font-size: 1.3rem;" @click="isYearPickerOpen = false">닫기</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Month Picker Dialog (월 선택 다이얼로그) -->
+    <v-dialog v-model="isMonthPickerOpen" max-width="340">
+      <v-card class="pa-5" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0" style="color: var(--primary-lighten-color-1); display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem !important; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <i class="material-icons" style="color: var(--primary-lighten-color-1);">date_range</i>
+            <span>{{ selectedYear }}년 월 선택</span>
+          </div>
+          <span style="font-size: 1.2rem; color: rgba(255,255,255,0.5);">월을 선택하세요</span>
+        </v-card-title>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-top: 1.2rem;">
+          <v-btn
+            v-for="m in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+            :key="m"
+            :disabled="isFutureMonth(m)"
+            style="width: 100%; border-radius: 0.8rem; font-weight: 700; font-size: 1.3rem; height: 4rem !important;"
+            :style="{
+              background: (selectedMonth === m ? 'rgba(35, 102, 180, 0.45)' : isFutureMonth(m) ? 'rgba(255,255,255,0.02)' : 'rgba(255, 255, 255, 0.04)') + ' !important',
+              color: (selectedMonth === m ? '#ffffff' : isFutureMonth(m) ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.85)') + ' !important',
+              border: '1px solid ' + (selectedMonth === m ? '#88c5ff' : 'rgba(255, 255, 255, 0.1)') + ' !important',
+              opacity: isFutureMonth(m) ? 0.35 : 1
+            }"
+            @click="changeMonth(m)"
+          >
+            {{ m }}월
+          </v-btn>
+        </div>
+
+        <v-card-actions class="justify-end px-0 pt-4" style="margin-top: 0.8rem;">
+          <v-btn variant="text" style="color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem 1.6rem !important; min-width: 7rem !important; height: auto !important; font-size: 1.3rem;" @click="isMonthPickerOpen = false">닫기</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
