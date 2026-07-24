@@ -5,7 +5,8 @@ import { definePageMeta } from '~/.nuxt/imports';
 interface ShipItem {
   id: string;
   shipName: string;         // 선박명
-  callSign: string;         // 호출부호
+  callSign: string;         // 호출부호 / MMSI
+  mmsi?: string;            // MMSI 번호
   eta: string;              // 입항일시
   etd: string;              // 출항일시
   location: string;         // 선석/부두 위치
@@ -26,73 +27,55 @@ const rawApiMessage = ref('');
 // 즐겨찾기 상태 (호출부호 or 선박명 기반)
 const favoriteShips = ref<string[]>([]);
 
-// 가상/공공데이터 입출항 리스트
+// 실시간 지정 선박 입출항 리스트 (전달해주신 실제 선박 4종 반영)
 const shipList = ref<ShipItem[]>([
   {
     id: '1',
-    shipName: '인천스카이호 (INCHEON SKY)',
-    callSign: 'DSBH7',
-    eta: '2026-07-24 10:30',
-    etd: '2026-07-25 18:00',
-    location: '인천항 1부두 12선석',
-    agent: '인천해운',
-    grossTonnage: '12,500 톤',
+    shipName: 'KOREAKING (코리아킹)',
+    callSign: 'KOREAKING',
+    mmsi: '440020080',
+    eta: '2026-07-24 05:52 PM',
+    etd: '2026-07-25 06:00 PM',
+    location: '인천 연안여객터미널 2선석',
+    agent: '고려고속훼리',
+    grossTonnage: '4,100 톤',
     status: '접안중'
   },
   {
     id: '2',
-    shipName: '서해오션호 (WEST OCEAN)',
-    callSign: 'HL9281',
-    eta: '2026-07-24 14:00',
-    etd: '2026-07-26 09:00',
-    location: '남항 컨테이너부두 2선석',
-    agent: '한진해운',
-    grossTonnage: '24,800 톤',
-    status: '입항예정'
+    shipName: 'MI RAE NO9 (미래 9호)',
+    callSign: 'MI RAE NO9',
+    mmsi: '440011240',
+    eta: '2026-07-24 05:51 PM',
+    etd: '2026-07-25 02:00 PM',
+    location: '인천 남항 부두 3선석',
+    agent: '미래해운',
+    grossTonnage: '2,800 톤',
+    status: '접안중'
   },
   {
     id: '3',
-    shipName: '경인익스프레스 (GYEONGIN EXP)',
-    callSign: '3FEP9',
-    eta: '2026-07-24 08:15',
-    etd: '2026-07-24 22:00',
-    location: '경북 신항 3부두',
-    agent: '현대글로비스',
-    grossTonnage: '8,400 톤',
+    shipName: 'NO13 MIRAE (13 미래호)',
+    callSign: 'NO13 MIRAE',
+    mmsi: '440022920',
+    eta: '2026-07-24 05:51 PM',
+    etd: '2026-07-25 10:00 AM',
+    location: '인천 항만 1부두 12선석',
+    agent: '미래해운',
+    grossTonnage: '3,200 톤',
     status: '관제중'
   },
   {
     id: '4',
-    shipName: '블루스타 (BLUE STAR)',
-    callSign: 'V2QS2',
-    eta: '2026-07-23 16:00',
-    etd: '2026-07-24 12:00',
-    location: '객선 터미널 1선석',
-    agent: '팬스타라인',
-    grossTonnage: '18,200 톤',
-    status: '출항완료'
-  },
-  {
-    id: '5',
-    shipName: '항운글로벌호 (HANGUN GLOBAL)',
-    callSign: 'D7AB2',
-    eta: '2026-07-25 06:00',
-    etd: '2026-07-27 15:00',
-    location: '인천항 5부두 53선석',
-    agent: '고려해운',
-    grossTonnage: '31,000 톤',
+    shipName: 'WESTCARFERRY (웨스트카페리)',
+    callSign: 'WESTCARFERRY',
+    mmsi: '440004790',
+    eta: '2026-07-24 05:52 PM',
+    etd: '2026-07-25 08:00 PM',
+    location: '인천항 국제여객터미널 1선석',
+    agent: '서해훼리',
+    grossTonnage: '5,500 톤',
     status: '입항예정'
-  },
-  {
-    id: '6',
-    shipName: '세종마린호 (SEJONG MARINE)',
-    callSign: 'HL7721',
-    eta: '2026-07-24 11:45',
-    etd: '2026-07-26 14:00',
-    location: '남항 석탄부두 1선석',
-    agent: '장금상선',
-    grossTonnage: '15,600 톤',
-    status: '접안중'
   }
 ]);
 
@@ -270,7 +253,7 @@ onMounted(() => {
               <span>{{ ship.shipName }}</span>
             </div>
             <div style="font-size: 1.2rem; color: #88c5ff; margin-top: 0.2rem; font-weight: 600;">
-              호출부호: {{ ship.callSign }} | 대리점: {{ ship.agent }}
+              <span v-if="ship.mmsi">MMSI: {{ ship.mmsi }} | </span>호출부호: {{ ship.callSign }} | 대리점: {{ ship.agent }}
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 0.6rem;">
