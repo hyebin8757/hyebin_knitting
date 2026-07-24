@@ -81,7 +81,7 @@ const registeredMmsiList = computed(() => {
 
 // MarineTraffic Embed Dynamic URL
 const marineTrafficUrl = computed(() => {
-  let targetMmsi = '440027780,440023450,440020080,440004790,440021120';
+  let targetMmsi = '440020080,440011240,440022920,440004790,440027780,440023450,440021120';
   
   if (selectedMapMmsi.value !== 'all') {
     targetMmsi = selectedMapMmsi.value;
@@ -92,7 +92,7 @@ const marineTrafficUrl = computed(() => {
   return `https://www.marinetraffic.com/en/ais/embed/zoom:12/centerv:37.45/centerx:126.62/maptype:1/shownames:true/mmsi:${targetMmsi}/shipid:0/fleet:/fleet_id:/old_maptype:0`;
 });
 
-// 📸 이미지의 5대 주요 인천 연안 여객선 포함 실시간 선박 리스트
+// 📸 이전 등록 선박(미래9호, 13미래호) + 이미지 5대 여객선 완전 통합 실시간 선박 리스트
 const shipList = ref<ShipItem[]>([
   {
     id: '1',
@@ -141,6 +141,36 @@ const shipList = ref<ShipItem[]>([
   },
   {
     id: '4',
+    shipName: 'MI RAE NO9 (미래 9호)',
+    route: '인천 연안 ↔ 서해 인근',
+    shipType: '화물/작업선',
+    feature: '인천 남항 부두 전용 운항 및 작업선',
+    callSign: 'MI RAE NO9',
+    mmsi: '440011240',
+    eta: '2026-07-24 05:51 PM',
+    etd: '2026-07-25 02:00 PM',
+    location: '인천 남항 부두 3선석',
+    agent: '미래해운',
+    grossTonnage: '2,800 톤',
+    status: '접안중'
+  },
+  {
+    id: '5',
+    shipName: 'NO13 MIRAE (13 미래호)',
+    route: '인천항 1부두 전용',
+    shipType: '화물/작업선',
+    feature: '인천 항만 1부두 관제 및 지원선',
+    callSign: 'NO13 MIRAE',
+    mmsi: '440022920',
+    eta: '2026-07-24 05:51 PM',
+    etd: '2026-07-25 10:00 AM',
+    location: '인천 항만 1부두 12선석',
+    agent: '미래해운',
+    grossTonnage: '3,200 톤',
+    status: '관제중'
+  },
+  {
+    id: '6',
     shipName: '웨스트카훼리호 (WESTCARFERRY)',
     route: '인천 ↔ 덕적도 / 자월도 / 이작도 등',
     shipType: '연안 카페리',
@@ -155,7 +185,7 @@ const shipList = ref<ShipItem[]>([
     status: '입항예정'
   },
   {
-    id: '5',
+    id: '7',
     shipName: '코리아나호 (KOREANA)',
     route: '인천 ↔ 덕적도 / 승봉도 등',
     shipType: '고속여객선',
