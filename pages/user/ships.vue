@@ -164,10 +164,6 @@ const isFavorite = (callSign: string) => {
 const filteredShipList = computed(() => {
   let list = shipList.value;
 
-  if (activeTab.value === 'favorites') {
-    list = list.filter(s => favoriteShips.value.includes(s.callSign));
-  }
-
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.trim().toLowerCase();
     list = list.filter(s => 
@@ -368,30 +364,7 @@ onMounted(() => {
     <!-- Filter & Search Bar + Ship List Area -->
     <div v-if="viewMode === 'list_only'">
       <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.6rem;">
-      <!-- Tab Buttons (전체 / 즐겨찾기) -->
-      <div style="display: flex; gap: 0.8rem; background: rgba(255,255,255,0.03); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.08);">
-        <button
-          style="flex: 1; padding: 0.8rem; border-radius: 0.8rem; font-size: 1.3rem; font-weight: 700; transition: all 0.2s;"
-          :style="{
-            background: activeTab === 'all' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
-            color: activeTab === 'all' ? '#ffffff' : 'rgba(255,255,255,0.6)'
-          }"
-          @click="activeTab = 'all'"
-        >
-          전체 선박 ({{ shipList.length }})
-        </button>
-        <button
-          style="flex: 1; padding: 0.8rem; border-radius: 0.8rem; font-size: 1.3rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
-          :style="{
-            background: activeTab === 'favorites' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
-            color: activeTab === 'favorites' ? '#ffcc00' : 'rgba(255,255,255,0.6)'
-          }"
-          @click="activeTab = 'favorites'"
-        >
-          <span>⭐ 즐겨찾기</span>
-          <span>({{ favoriteShips.length }})</span>
-        </button>
-      </div>
+
 
       <!-- Search Input -->
       <div style="position: relative; width: 100%;">
@@ -456,18 +429,7 @@ onMounted(() => {
               {{ ship.status }}
             </span>
 
-            <!-- ⭐ Favorite Button -->
-            <button
-              style="background: none; border: none; cursor: pointer; padding: 0.2rem;"
-              @click="toggleFavorite(ship.callSign)"
-            >
-              <i 
-                class="material-icons" 
-                :style="{ color: isFavorite(ship.callSign) ? '#ffcc00' : 'rgba(255,255,255,0.2)', fontSize: '2.2rem' }"
-              >
-                {{ isFavorite(ship.callSign) ? 'star' : 'star_border' }}
-              </i>
-            </button>
+
           </div>
         </div>
 
