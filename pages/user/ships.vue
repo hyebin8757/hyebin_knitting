@@ -125,17 +125,22 @@ const fetchShipsData = async () => {
       const items = res.data?.response?.body?.items?.item || res.data?.items || [];
       if (Array.isArray(items) && items.length > 0) {
         const mapped: ShipItem[] = items.map((it: any, idx: number) => ({
-          id: String(idx + 1),
-          shipName: it.clsgn ? `${it.vslNm || '선박'} (${it.clsgn})` : (it.vslNm || '선박명 미상'),
+          id: String(idx + 100),
+          shipName: it.vslNm ? `${it.vslNm}` : (it.clsgn || '선박명 미상'),
           callSign: it.clsgn || `CALL-${idx}`,
-          eta: it.etryptDt || it.eta || '정보 없음',
-          etd: it.tkoffDt || it.etd || '정보 없음',
-          location: it.ibPrtNm || it.satntNm || '인천항 지정 부두',
+          mmsi: it.mmsiNo || it.mmsi || undefined,
+          eta: it.etryptDt || it.eta || '접안중',
+          etd: it.tkoffDt || it.etd || '출항예정',
+          location: it.ibPrtNm || it.satntNm || it.ibPrtCd || '인천항 부두',
           agent: it.agntNm || '해운 대리점',
           grossTonnage: it.grt ? `${Number(it.grt).toLocaleString()} 톤` : undefined,
           status: (it.etryptPurpsNm || '접안중') as any
         }));
-        shipList.value = mapped;
+        
+        // 4개 주선박 목록과 공공데이터 목록 병합
+        const existingCallSigns = new Set(shipList.value.map(s => s.callSign));
+        const newItems = mapped.filter(m => !existingCallSigns.has(m.callSign));
+        shipList.value = [...shipList.value, ...newItems];
       }
     }
   } catch (e: any) {
