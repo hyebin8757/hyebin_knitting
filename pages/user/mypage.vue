@@ -256,45 +256,7 @@ definePageMeta({
       </div>
     </div>
 
-    <!-- 📊 조합원 개인별 월간 출근 달성률 & 작업 통계 (My Attendance Stats) -->
-    <div style="background: #0d1e33; border: 1px solid rgba(136, 197, 255, 0.25); border-radius: 1.6rem; padding: 1.8rem; margin-bottom: 1.6rem; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem;">
-        <div style="display: flex; align-items: center; gap: 0.8rem;">
-          <i class="material-icons" style="font-size: 2.2rem; color: #1ad1b1;">bar_chart</i>
-          <span style="font-size: 1.6rem; font-weight: 800; color: #ffffff;">7월 출근 달성률 & 근무 통계</span>
-        </div>
-        <span style="font-size: 1.15rem; color: #1ad1b1; background: rgba(26, 209, 177, 0.15); padding: 0.3rem 0.8rem; border-radius: 0.6rem; font-weight: 700; border: 1px solid rgba(26, 209, 177, 0.3);">
-          실시간 연동중
-        </span>
-      </div>
 
-      <!-- 출근 달성률 프로그래스 바 -->
-      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 1.4rem; margin-bottom: 1.2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-          <span style="font-size: 1.25rem; color: rgba(255,255,255,0.7); font-weight: 600;">당월 출근 달성률</span>
-          <strong style="font-size: 1.7rem; color: #1ad1b1; font-weight: 900;">92% <span style="font-size: 1.2rem; color: rgba(255,255,255,0.5); font-weight: 500;">(23일 / 25일)</span></strong>
-        </div>
-        <div style="width: 100%; height: 12px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
-          <div style="width: 92%; height: 100%; background: linear-gradient(90deg, #1ad1b1 0%, #3a86ff 100%); border-radius: 10px; transition: width 0.5s ease;"></div>
-        </div>
-      </div>
-
-      <!-- 3열 세부 통계 Grid -->
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem; padding: 1.2rem; text-align: center;">
-          <div style="font-size: 1.15rem; color: rgba(255,255,255,0.6); margin-bottom: 0.4rem;">야간/휴일 작업</div>
-          <div style="font-size: 1.6rem; font-weight: 800; color: #ffcc00;">4 회</div>
-        </div>
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem; padding: 1.2rem; text-align: center;">
-          <div style="font-size: 1.15rem; color: rgba(255,255,255,0.6); margin-bottom: 0.4rem;">잔여 연차</div>
-          <div style="font-size: 1.6rem; font-weight: 800; color: #88c5ff;">11 일</div>
-        </div>
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem; padding: 1.2rem; text-align: center;">
-          <div style="font-size: 1.15rem; color: rgba(255,255,255,0.6); margin-bottom: 0.4rem;">누적 작업시간</div>
-          <div style="font-size: 1.6rem; font-weight: 800; color: #ffffff;">184 시간</div>
-        </div>
-      </div>
-    </div>
 
     <!-- ID/Password One-time Change Area (변경 완료 시 카드 전체 숨김) -->
     <div

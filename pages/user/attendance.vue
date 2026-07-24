@@ -270,6 +270,15 @@ const totalMissedDays = computed(() => {
   ).length;
 });
 
+const attendanceAchievementRate = computed(() => {
+  const worked = totalWorkedDays.value;
+  const missed = totalMissedDays.value;
+  const total = worked + missed;
+  if (total === 0) return { rate: 100, worked: 0, total: 0 };
+  const rate = Math.min(100, Math.round((worked / total) * 100));
+  return { rate, worked, total };
+});
+
 const calendarDays = computed<AttendanceDay[]>(() => {
   const year = currentDate.value.getFullYear();
   const month = currentDate.value.getMonth();
@@ -631,6 +640,19 @@ definePageMeta({
             <span>입사일: {{ loggedInUser?.joinDate || hireDate }}</span>
             <span>생일: {{ loggedInUser?.birthDate || birthDate }}</span>
           </div>
+        </div>
+      </div>
+      <!-- 📊 당월 출근 달성률 게이지 바 (출근 일수 / 결근 일수 바로 위쪽) -->
+      <div style="margin-top: 1.2rem; margin-bottom: 1.2rem; padding: 1.2rem; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+          <span style="font-size: 1.2rem; color: rgba(255,255,255,0.7); font-weight: 600;">당월 출근 달성률</span>
+          <strong style="font-size: 1.5rem; color: #1ad1b1; font-weight: 800;">
+            {{ attendanceAchievementRate.rate }}% 
+            <span style="font-size: 1.1rem; color: rgba(255,255,255,0.5); font-weight: 500;">({{ attendanceAchievementRate.worked }}일 / {{ attendanceAchievementRate.total }}일)</span>
+          </strong>
+        </div>
+        <div style="width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
+          <div :style="{ width: attendanceAchievementRate.rate + '%' }" style="height: 100%; background: linear-gradient(90deg, #1ad1b1 0%, #3a86ff 100%); border-radius: 8px; transition: width 0.5s ease;"></div>
         </div>
       </div>
       <div class="stats">
