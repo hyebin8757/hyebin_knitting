@@ -642,17 +642,17 @@ definePageMeta({
           </div>
         </div>
       </div>
-      <!-- 📊 당월 출근 달성률 게이지 바 (출근 일수 / 결근 일수 바로 위쪽) -->
-      <div style="margin-top: 1.2rem; margin-bottom: 1.2rem; padding: 1.2rem; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
-          <span style="font-size: 1.2rem; color: rgba(255,255,255,0.7); font-weight: 600;">당월 출근 달성률</span>
-          <strong style="font-size: 1.5rem; color: #1ad1b1; font-weight: 800;">
+      <!-- 📊 초슬림 컴팩트 당월 출근 달성률 게이지 바 -->
+      <div style="margin-top: 0.8rem; margin-bottom: 0.8rem; padding: 0.6rem 0.8rem; background: rgba(255, 255, 255, 0.03); border-radius: 0.8rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.15rem; margin-bottom: 0.4rem;">
+          <span style="color: rgba(255,255,255,0.6); font-weight: 600;">출근 달성률</span>
+          <strong style="color: #1ad1b1; font-weight: 800;">
             {{ attendanceAchievementRate.rate }}% 
-            <span style="font-size: 1.1rem; color: rgba(255,255,255,0.5); font-weight: 500;">({{ attendanceAchievementRate.worked }}일 / {{ attendanceAchievementRate.total }}일)</span>
+            <span style="font-size: 1rem; color: rgba(255,255,255,0.4); font-weight: 400;">({{ attendanceAchievementRate.worked }}/{{ attendanceAchievementRate.total }}일)</span>
           </strong>
         </div>
-        <div style="width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
-          <div :style="{ width: attendanceAchievementRate.rate + '%' }" style="height: 100%; background: linear-gradient(90deg, #1ad1b1 0%, #3a86ff 100%); border-radius: 8px; transition: width 0.5s ease;"></div>
+        <div style="width: 100%; height: 5px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+          <div :style="{ width: attendanceAchievementRate.rate + '%' }" style="height: 100%; background: linear-gradient(90deg, #1ad1b1 0%, #3a86ff 100%); border-radius: 4px; transition: width 0.4s ease;"></div>
         </div>
       </div>
       <div class="stats">
