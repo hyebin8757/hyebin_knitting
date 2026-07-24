@@ -57,9 +57,36 @@ const { isEmpty } = useUtil.typeValidation;
  ************************************************************/
 const groupNumbers = [1, 2, 3, 5, 6, 7, 8];
 
+const group7Order = [
+  "최상열",
+  "최민운",
+  "한덕희",
+  "이주봉",
+  "박하준",
+  "조정현",
+  "안군호",
+  "김장희",
+  "김태훈",
+  "김재원",
+  "민우주"
+];
+
 const groups = computed<GroupData[]>(() => {
   return groupNumbers.map(g => {
-    const list = userStore.workers.filter(w => w.group === g);
+    let list = userStore.workers.filter(w => w.group === g);
+
+    // 7조인 경우 명패 사진 순서대로 지정 정렬
+    if (g === 7) {
+      list = [...list].sort((a, b) => {
+        const idxA = group7Order.indexOf(a.name);
+        const idxB = group7Order.indexOf(b.name);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return 0;
+      });
+    }
+
     return {
       groupName: `${g}조`,
       members: list.map(w => ({

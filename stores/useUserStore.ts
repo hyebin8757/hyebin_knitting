@@ -82,7 +82,21 @@ export const useUserStore = defineStore( "user", () => {
       // 1. 조합원 조회
       const { data: dbWorkers, error: errWorkers } = await supabase.from("workers").select("*");
       if (dbWorkers) {
-        workers.value = dbWorkers.map(w => ({
+        const group7Order = [
+          "최상열",
+          "최민운",
+          "한덕희",
+          "이주봉",
+          "박하준",
+          "조정현",
+          "안군호",
+          "김장희",
+          "김태훈",
+          "김재원",
+          "민우주"
+        ];
+
+        const mapped = dbWorkers.map(w => ({
           name: w.name,
           role: w.role,
           phone: w.phone,
@@ -96,6 +110,20 @@ export const useUserStore = defineStore( "user", () => {
           loginPassword: w.login_password || "",
           hasChangedCredentials: w.has_changed_credentials || false
         }));
+
+        // 7조 조합원은 명패 사진 순서대로 지정 정렬
+        mapped.sort((a, b) => {
+          if (a.group === 7 && b.group === 7) {
+            const idxA = group7Order.indexOf(a.name);
+            const idxB = group7Order.indexOf(b.name);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+          }
+          return 0;
+        });
+
+        workers.value = mapped;
       }
 
       // 2. 현장작업 조회
