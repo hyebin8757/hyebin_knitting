@@ -310,9 +310,9 @@ onMounted(() => {
         </div>
 
         <!-- Registered Ship Target Selection Chips -->
-        <div style="display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.4rem;">
+        <div style="display: flex; gap: 0.6rem; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 0.6rem; margin-top: 0.4rem; scrollbar-width: none;">
           <button
-            style="padding: 0.4rem 0.9rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; whitespace: nowrap; transition: all 0.2s; cursor: pointer;"
+            style="padding: 0.6rem 1.1rem; border-radius: 0.8rem; font-size: 1.2rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; transition: all 0.2s; cursor: pointer;"
             :style="{
               background: selectedMapMmsi === 'all' ? 'rgba(26, 209, 177, 0.2)' : 'rgba(255, 255, 255, 0.05)',
               color: selectedMapMmsi === 'all' ? '#1ad1b1' : 'rgba(255, 255, 255, 0.7)',
@@ -325,7 +325,7 @@ onMounted(() => {
           <button
             v-for="ship in shipList.filter(s => s.mmsi)"
             :key="ship.mmsi"
-            style="padding: 0.4rem 0.9rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; whitespace: nowrap; transition: all 0.2s; cursor: pointer;"
+            style="padding: 0.6rem 1.1rem; border-radius: 0.8rem; font-size: 1.2rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; transition: all 0.2s; cursor: pointer;"
             :style="{
               background: selectedMapMmsi === ship.mmsi ? 'rgba(58, 134, 255, 0.25)' : 'rgba(255, 255, 255, 0.05)',
               color: selectedMapMmsi === ship.mmsi ? '#88c5ff' : 'rgba(255, 255, 255, 0.7)',

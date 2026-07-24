@@ -122,13 +122,14 @@ export const UserLayoutStyle = {
       cursor: pointer;
 
       i {
-        font-size: 1.8rem;
+        font-size: 1.7rem;
         transition: transform 0.3s ease;
       }
 
       span {
-        font-size: 1rem;
-        font-weight: 500;
+        font-size: 0.95rem;
+        font-weight: 600;
+        white-space: nowrap;
       }
 
       &::after {
