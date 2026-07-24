@@ -70,7 +70,7 @@ onMounted(() => {
         <!-- Bottom Navigation Bar -->
         <nav 
           :class="cx('user-layout-nav', UserLayoutStyle.BottomNav)"
-          :style="{ gridTemplateColumns: isGroup7OrAdmin ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)' }"
+          :style="{ gridTemplateColumns: isGroup7OrAdmin ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)' }"
         >
           <nuxt-link to="/user/attendance" class="nav-item">
             <i class="material-icons">event_available</i>
@@ -79,6 +79,10 @@ onMounted(() => {
           <nuxt-link v-if="isGroup7OrAdmin" to="/user/dues" class="nav-item">
             <i class="material-icons">payments</i>
             <span>회비관리</span>
+          </nuxt-link>
+          <nuxt-link to="/user/ships" class="nav-item">
+            <i class="material-icons">directions_boat</i>
+            <span>운항정보</span>
           </nuxt-link>
           <nuxt-link to="/user/members" class="nav-item">
             <i class="material-icons">groups</i>

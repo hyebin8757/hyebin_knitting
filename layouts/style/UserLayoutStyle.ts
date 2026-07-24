@@ -107,7 +107,7 @@ export const UserLayoutStyle = {
     backdrop-filter: blur(15px);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     z-index: 10;
     box-sizing: border-box;
 

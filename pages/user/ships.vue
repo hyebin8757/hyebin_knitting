@@ -1,0 +1,335 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { definePageMeta } from '~/.nuxt/imports';
+
+interface ShipItem {
+  id: string;
+  shipName: string;         // 선박명
+  callSign: string;         // 호출부호
+  eta: string;              // 입항일시
+  etd: string;              // 출항일시
+  location: string;         // 선석/부두 위치
+  agent: string;            // 대리점/운항사
+  grossTonnage?: string;    // 총톤수
+  status: '입항예정' | '접안중' | '출항완료' | '관제중';
+}
+
+definePageMeta({
+  layout: 'user-layout'
+});
+
+const searchQuery = ref('');
+const activeTab = ref<'all' | 'favorites'>('all');
+const isLoading = ref(false);
+const rawApiMessage = ref('');
+
+// 즐겨찾기 상태 (호출부호 or 선박명 기반)
+const favoriteShips = ref<string[]>([]);
+
+// 가상/공공데이터 입출항 리스트
+const shipList = ref<ShipItem[]>([
+  {
+    id: '1',
+    shipName: '인천스카이호 (INCHEON SKY)',
+    callSign: 'DSBH7',
+    eta: '2026-07-24 10:30',
+    etd: '2026-07-25 18:00',
+    location: '인천항 1부두 12선석',
+    agent: '인천해운',
+    grossTonnage: '12,500 톤',
+    status: '접안중'
+  },
+  {
+    id: '2',
+    shipName: '서해오션호 (WEST OCEAN)',
+    callSign: 'HL9281',
+    eta: '2026-07-24 14:00',
+    etd: '2026-07-26 09:00',
+    location: '남항 컨테이너부두 2선석',
+    agent: '한진해운',
+    grossTonnage: '24,800 톤',
+    status: '입항예정'
+  },
+  {
+    id: '3',
+    shipName: '경인익스프레스 (GYEONGIN EXP)',
+    callSign: '3FEP9',
+    eta: '2026-07-24 08:15',
+    etd: '2026-07-24 22:00',
+    location: '경북 신항 3부두',
+    agent: '현대글로비스',
+    grossTonnage: '8,400 톤',
+    status: '관제중'
+  },
+  {
+    id: '4',
+    shipName: '블루스타 (BLUE STAR)',
+    callSign: 'V2QS2',
+    eta: '2026-07-23 16:00',
+    etd: '2026-07-24 12:00',
+    location: '객선 터미널 1선석',
+    agent: '팬스타라인',
+    grossTonnage: '18,200 톤',
+    status: '출항완료'
+  },
+  {
+    id: '5',
+    shipName: '항운글로벌호 (HANGUN GLOBAL)',
+    callSign: 'D7AB2',
+    eta: '2026-07-25 06:00',
+    etd: '2026-07-27 15:00',
+    location: '인천항 5부두 53선석',
+    agent: '고려해운',
+    grossTonnage: '31,000 톤',
+    status: '입항예정'
+  },
+  {
+    id: '6',
+    shipName: '세종마린호 (SEJONG MARINE)',
+    callSign: 'HL7721',
+    eta: '2026-07-24 11:45',
+    etd: '2026-07-26 14:00',
+    location: '남항 석탄부두 1선석',
+    agent: '장금상선',
+    grossTonnage: '15,600 톤',
+    status: '접안중'
+  }
+]);
+
+// 즐겨찾기 토글
+const toggleFavorite = (callSign: string) => {
+  const idx = favoriteShips.value.indexOf(callSign);
+  if (idx !== -1) {
+    favoriteShips.value.splice(idx, 1);
+  } else {
+    favoriteShips.value.push(callSign);
+  }
+  localStorage.setItem('favorite_ships', JSON.stringify(favoriteShips.value));
+};
+
+const isFavorite = (callSign: string) => {
+  return favoriteShips.value.includes(callSign);
+};
+
+// 검색 및 필터링 적용된 선박 목록
+const filteredShipList = computed(() => {
+  let list = shipList.value;
+
+  if (activeTab.value === 'favorites') {
+    list = list.filter(s => favoriteShips.value.includes(s.callSign));
+  }
+
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.trim().toLowerCase();
+    list = list.filter(s => 
+      s.shipName.toLowerCase().includes(q) ||
+      s.callSign.toLowerCase().includes(q) ||
+      s.location.toLowerCase().includes(q) ||
+      s.agent.toLowerCase().includes(q)
+    );
+  }
+
+  return list;
+});
+
+// 공공데이터 API 데이터 가져오기
+const fetchShipsData = async () => {
+  isLoading.value = true;
+  try {
+    const res: any = await $fetch('/api/ships');
+    if (res && res.success && res.data) {
+      // API 결과 중 items 파싱
+      const items = res.data?.response?.body?.items?.item || res.data?.items || [];
+      if (Array.isArray(items) && items.length > 0) {
+        const mapped: ShipItem[] = items.map((it: any, idx: number) => ({
+          id: String(idx + 1),
+          shipName: it.clsgn ? `${it.vslNm || '선박'} (${it.clsgn})` : (it.vslNm || '선박명 미상'),
+          callSign: it.clsgn || `CALL-${idx}`,
+          eta: it.etryptDt || it.eta || '정보 없음',
+          etd: it.tkoffDt || it.etd || '정보 없음',
+          location: it.ibPrtNm || it.satntNm || '인천항 지정 부두',
+          agent: it.agntNm || '해운 대리점',
+          grossTonnage: it.grt ? `${Number(it.grt).toLocaleString()} 톤` : undefined,
+          status: (it.etryptPurpsNm || '접안중') as any
+        }));
+        shipList.value = mapped;
+      }
+    }
+  } catch (e: any) {
+    console.warn("Public API fetch error, using fallback data:", e.message);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  try {
+    const savedFav = localStorage.getItem('favorite_ships');
+    if (savedFav) {
+      favoriteShips.value = JSON.parse(savedFav);
+    }
+  } catch (e) {}
+
+  fetchShipsData();
+});
+</script>
+
+<template>
+  <div class="ships-page" style="padding: 1.6rem; color: #ffffff;">
+    <!-- Page Header Title Card -->
+    <div style="background: rgba(13, 30, 51, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; padding: 1.8rem; margin-bottom: 1.6rem; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <i class="material-icons" style="font-size: 2.4rem; color: #88c5ff;">directions_boat</i>
+          <span style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.05rem;">인천항 선박 운항 정보</span>
+        </div>
+        <button 
+          style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #88c5ff; border-radius: 0.8rem; padding: 0.6rem 1.2rem; font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;"
+          @click="fetchShipsData"
+        >
+          <i class="material-icons" style="font-size: 1.4rem;">refresh</i>
+          <span>새로고침</span>
+        </button>
+      </div>
+      <p style="font-size: 1.2rem; color: rgba(255,255,255,0.6); margin-top: 0.8rem; margin-bottom: 0; line-height: 1.5;">
+        공공데이터포털 연동 인천항 실시간 선박 입출항 및 부두 배치 현황입니다.
+      </p>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.6rem;">
+      <!-- Tab Buttons (전체 / 즐겨찾기) -->
+      <div style="display: flex; gap: 0.8rem; background: rgba(255,255,255,0.03); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.08);">
+        <button
+          style="flex: 1; padding: 0.8rem; border-radius: 0.8rem; font-size: 1.3rem; font-weight: 700; transition: all 0.2s;"
+          :style="{
+            background: activeTab === 'all' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
+            color: activeTab === 'all' ? '#ffffff' : 'rgba(255,255,255,0.6)'
+          }"
+          @click="activeTab = 'all'"
+        >
+          전체 선박 ({{ shipList.length }})
+        </button>
+        <button
+          style="flex: 1; padding: 0.8rem; border-radius: 0.8rem; font-size: 1.3rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
+          :style="{
+            background: activeTab === 'favorites' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
+            color: activeTab === 'favorites' ? '#ffcc00' : 'rgba(255,255,255,0.6)'
+          }"
+          @click="activeTab = 'favorites'"
+        >
+          <span>⭐ 즐겨찾기</span>
+          <span>({{ favoriteShips.length }})</span>
+        </button>
+      </div>
+
+      <!-- Search Input -->
+      <div style="position: relative; width: 100%;">
+        <i class="material-icons" style="position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.4); font-size: 2rem;">search</i>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="선박명, 호출부호, 부두위치 검색..."
+          style="width: 100%; background: #0d1e33; border: 1px solid rgba(255,255,255,0.15); border-radius: 1rem; padding: 1rem 1.2rem 1rem 4rem; color: #ffffff; font-size: 1.3rem; outline: none;"
+        />
+        <button
+          v-if="searchQuery"
+          style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer;"
+          @click="searchQuery = ''"
+        >
+          <i class="material-icons" style="font-size: 1.8rem;">clear</i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="isLoading" style="text-align: center; padding: 4rem; color: #88c5ff; font-size: 1.4rem; font-weight: 600;">
+      <i class="material-icons" style="font-size: 3rem; animation: spin 1s linear infinite;">sync</i>
+      <div style="margin-top: 0.8rem;">인천항 실시간 운항 정보 조회 중...</div>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else-if="filteredShipList.length === 0" style="text-align: center; padding: 4rem 2rem; background: rgba(13, 30, 51, 0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.6rem;">
+      <i class="material-icons" style="font-size: 4rem; color: rgba(255,255,255,0.2);">directions_boat_filled</i>
+      <div style="font-size: 1.4rem; color: rgba(255,255,255,0.6); margin-top: 1rem; font-weight: 600;">
+        {{ activeTab === 'favorites' ? '즐겨찾기한 선박이 없습니다.' : '조회된 선박 운항 정보가 없습니다.' }}
+      </div>
+    </div>
+
+    <!-- Ship Cards List -->
+    <div v-else style="display: flex; flex-direction: column; gap: 1.2rem;">
+      <div
+        v-for="ship in filteredShipList"
+        :key="ship.callSign"
+        style="background: #0d1e33; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.4rem; padding: 1.6rem; transition: all 0.2s;"
+      >
+        <!-- Header: Ship Name + Status + Favorite Star -->
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+          <div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 0.6rem;">
+              <span>{{ ship.shipName }}</span>
+            </div>
+            <div style="font-size: 1.2rem; color: #88c5ff; margin-top: 0.2rem; font-weight: 600;">
+              호출부호: {{ ship.callSign }} | 대리점: {{ ship.agent }}
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <!-- Status Badge -->
+            <span
+              style="padding: 0.3rem 0.8rem; border-radius: 0.6rem; font-size: 1.1rem; font-weight: 700;"
+              :style="{
+                background: ship.status === '접안중' ? 'rgba(26, 209, 177, 0.15)' : ship.status === '입항예정' ? 'rgba(58, 134, 255, 0.15)' : ship.status === '관제중' ? 'rgba(255, 204, 0, 0.15)' : 'rgba(255,255,255,0.1)',
+                color: ship.status === '접안중' ? '#1ad1b1' : ship.status === '입항예정' ? '#88c5ff' : ship.status === '관제중' ? '#ffcc00' : 'rgba(255,255,255,0.6)',
+                border: '1px solid ' + (ship.status === '접안중' ? '#1ad1b1' : ship.status === '입항예정' ? '#88c5ff' : ship.status === '관제중' ? '#ffcc00' : 'rgba(255,255,255,0.2)')
+              }"
+            >
+              {{ ship.status }}
+            </span>
+
+            <!-- ⭐ Favorite Button -->
+            <button
+              style="background: none; border: none; cursor: pointer; padding: 0.2rem;"
+              @click="toggleFavorite(ship.callSign)"
+            >
+              <i 
+                class="material-icons" 
+                :style="{ color: isFavorite(ship.callSign) ? '#ffcc00' : 'rgba(255,255,255,0.2)', fontSize: '2.2rem' }"
+              >
+                {{ isFavorite(ship.callSign) ? 'star' : 'star_border' }}
+              </i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Details Info Grid -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.2rem;">
+          <div style="background: rgba(255,255,255,0.03); padding: 0.8rem 1rem; border-radius: 0.8rem;">
+            <div style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">입항일시 (ETA)</div>
+            <div style="font-size: 1.3rem; font-weight: 700; color: #1ad1b1; margin-top: 0.2rem;">{{ ship.eta }}</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 0.8rem 1rem; border-radius: 0.8rem;">
+            <div style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">출항일시 (ETD)</div>
+            <div style="font-size: 1.3rem; font-weight: 700; color: #e05780; margin-top: 0.2rem;">{{ ship.etd }}</div>
+          </div>
+        </div>
+
+        <!-- Location / Berth -->
+        <div style="margin-top: 1rem; background: rgba(35, 102, 180, 0.15); border: 1px solid rgba(136, 197, 255, 0.2); padding: 0.8rem 1rem; border-radius: 0.8rem; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <i class="material-icons" style="font-size: 1.8rem; color: #88c5ff;">place</i>
+            <span style="font-size: 1.2rem; color: rgba(255,255,255,0.7);">선석/부두 위치:</span>
+            <strong style="font-size: 1.3rem; color: #ffffff;">{{ ship.location }}</strong>
+          </div>
+          <span v-if="ship.grossTonnage" style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">{{ ship.grossTonnage }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>
