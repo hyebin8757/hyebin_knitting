@@ -643,7 +643,7 @@ definePageMeta({
         </div>
       </div>
       <!-- 📊 초슬림 컴팩트 당월 출근 달성률 게이지 바 -->
-      <div style="margin-top: 0.8rem; margin-bottom: 0.8rem; padding: 0.6rem 0.8rem; background: rgba(255, 255, 255, 0.03); border-radius: 0.8rem;">
+      <div style="margin: 0.2rem 0; padding: 0.4rem 0.6rem; background: rgba(255, 255, 255, 0.03); border-radius: 0.6rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.15rem; margin-bottom: 0.4rem;">
           <span style="color: rgba(255,255,255,0.6); font-weight: 600;">출근 달성률</span>
           <strong style="color: #1ad1b1; font-weight: 800;">

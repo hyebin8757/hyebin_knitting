@@ -14,24 +14,24 @@ export const AttendanceStyle = {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 1.6rem;
-    padding: 2rem;
-    margin-bottom: 2.4rem;
+    padding: 1.4rem;
+    margin-bottom: 1.4rem;
     display: flex;
     flex-direction: column;
-    gap: 1.6rem;
+    gap: 1rem;
 
     .profile-info {
       display: flex;
       align-items: center;
-      gap: 1.6rem;
+      gap: 1.2rem;
 
       .avatar {
-        width: 5.6rem;
-        height: 5.6rem;
+        width: 4.8rem;
+        height: 4.8rem;
         border-radius: 50%;
         background: linear-gradient(135deg, var(--primary-lighten-color-1), var(--primary-darken-color-1));
         ${StyleUtils.FlexUtils("center", "center")};
-        font-size: 2rem;
+        font-size: 1.8rem;
         font-weight: 700;
         color: var(--white-color);
       }
@@ -39,18 +39,18 @@ export const AttendanceStyle = {
       .meta {
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
+        gap: 0.2rem;
 
         .name {
-          font-size: 1.8rem;
+          font-size: 1.6rem;
           font-weight: 700;
         }
 
         .dates {
-          font-size: 1.2rem;
+          font-size: 1.15rem;
           color: var(--text-color-3);
           display: flex;
-          gap: 1rem;
+          gap: 0.8rem;
         }
       }
     }
@@ -58,17 +58,16 @@ export const AttendanceStyle = {
     .stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1.2rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 1.6rem;
+      gap: 1rem;
+      padding-top: 0;
 
       .stat-item {
         ${StyleUtils.FlexUtils("center", "center")};
         flex-direction: column;
-        gap: 0.6rem;
+        gap: 0.4rem;
         background: rgba(255, 255, 255, 0.02);
-        padding: 1.2rem;
-        border-radius: 1rem;
+        padding: 0.8rem;
+        border-radius: 0.8rem;
 
         .label {
           font-size: 1.2rem;
