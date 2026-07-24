@@ -865,8 +865,7 @@ definePageMeta({
                 { label: '야간 근무', val: 'night', color: '#3a86ff', bg: 'rgba(58, 134, 255, 0.15)' },
                 { label: '현장 근무', val: 'field', color: '#ffcc00', bg: 'rgba(255, 204, 0, 0.15)' },
                 { label: '조퇴', val: 'leave', color: '#e05780', bg: 'rgba(224, 87, 128, 0.15)' },
-                { label: '결근', val: 'absent', color: '#ff4d4d', bg: 'rgba(255, 77, 77, 0.15)' },
-                { label: '초기화', val: 'none', color: 'rgba(255,255,255,0.4)', bg: 'rgba(255, 255, 255, 0.05)' }
+                { label: '결근', val: 'absent', color: '#ff4d4d', bg: 'rgba(255, 77, 77, 0.15)' }
               ]"
               :key="opt.val"
               style="width: 100%; border-radius: 0.8rem; font-weight: 600; font-size: 1.2rem; height: 3.6rem !important; justify-content: center;"
