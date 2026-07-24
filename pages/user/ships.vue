@@ -21,7 +21,7 @@ definePageMeta({
 
 const searchQuery = ref('');
 const activeTab = ref<'all' | 'favorites'>('all');
-const viewMode = ref<'list_only' | 'map_only' | 'map_list'>('list_only');
+const viewMode = ref<'list_only' | 'map_only'>('list_only');
 const isLoading = ref(false);
 const rawApiMessage = ref('');
 
@@ -268,46 +268,35 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- View Mode Selector -->
+    <!-- View Mode Selector (2분할 탭: 목록만 보기 / 지도만 보기) -->
     <div style="display: flex; gap: 0.6rem; margin-bottom: 1.2rem; background: rgba(13, 30, 51, 0.8); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.1);">
       <button
-        style="flex: 1; padding: 0.7rem; border-radius: 0.8rem; font-size: 1.25rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
+        style="flex: 1; padding: 0.8rem; border-radius: 0.8rem; font-size: 1.3rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;"
         :style="{
           background: viewMode === 'list_only' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
           color: viewMode === 'list_only' ? '#88c5ff' : 'rgba(255,255,255,0.6)'
         }"
         @click="viewMode = 'list_only'"
       >
-        <i class="material-icons" style="font-size: 1.6rem;">list_alt</i>
+        <i class="material-icons" style="font-size: 1.8rem;">list_alt</i>
         <span>목록만 보기</span>
       </button>
       <button
-        style="flex: 1; padding: 0.7rem; border-radius: 0.8rem; font-size: 1.25rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
+        style="flex: 1; padding: 0.8rem; border-radius: 0.8rem; font-size: 1.3rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;"
         :style="{
           background: viewMode === 'map_only' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
           color: viewMode === 'map_only' ? '#1ad1b1' : 'rgba(255,255,255,0.6)'
         }"
         @click="viewMode = 'map_only'"
       >
-        <i class="material-icons" style="font-size: 1.6rem;">map</i>
+        <i class="material-icons" style="font-size: 1.8rem;">map</i>
         <span>지도만 보기</span>
-      </button>
-      <button
-        style="flex: 1; padding: 0.7rem; border-radius: 0.8rem; font-size: 1.25rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
-        :style="{
-          background: viewMode === 'map_list' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
-          color: viewMode === 'map_list' ? '#ffffff' : 'rgba(255,255,255,0.6)'
-        }"
-        @click="viewMode = 'map_list'"
-      >
-        <i class="material-icons" style="font-size: 1.6rem;">dashboard</i>
-        <span>전체 보기</span>
       </button>
     </div>
 
     <!-- Real-time MarineTraffic Ship Map Embed Card -->
     <div 
-      v-if="viewMode === 'map_list' || viewMode === 'map_only'"
+      v-if="viewMode === 'map_only'"
       style="
         background: #0d1e33;
         border: 1px solid rgba(136, 197, 255, 0.25);
@@ -377,7 +366,7 @@ onMounted(() => {
     </div>
 
     <!-- Filter & Search Bar + Ship List Area -->
-    <div v-if="viewMode === 'map_list' || viewMode === 'list_only'">
+    <div v-if="viewMode === 'list_only'">
       <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.6rem;">
       <!-- Tab Buttons (전체 / 즐겨찾기) -->
       <div style="display: flex; gap: 0.8rem; background: rgba(255,255,255,0.03); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.08);">
