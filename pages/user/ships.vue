@@ -21,6 +21,7 @@ definePageMeta({
 
 const searchQuery = ref('');
 const activeTab = ref<'all' | 'favorites'>('all');
+const viewMode = ref<'map_list' | 'map_only' | 'list_only'>('map_list');
 const isLoading = ref(false);
 const rawApiMessage = ref('');
 
@@ -182,10 +183,85 @@ onMounted(() => {
       <p style="font-size: 1.2rem; color: rgba(255,255,255,0.6); margin-top: 0.8rem; margin-bottom: 0; line-height: 1.5;">
         공공데이터포털 연동 인천항 실시간 선박 입출항 및 부두 배치 현황입니다.
       </p>
+    <!-- View Mode Selector -->
+    <div style="display: flex; gap: 0.6rem; margin-bottom: 1.2rem; background: rgba(13, 30, 51, 0.8); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.1);">
+      <button
+        style="flex: 1; padding: 0.7rem; border-radius: 0.8rem; font-size: 1.25rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
+        :style="{
+          background: viewMode === 'map_list' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
+          color: viewMode === 'map_list' ? '#ffffff' : 'rgba(255,255,255,0.6)'
+        }"
+        @click="viewMode = 'map_list'"
+      >
+        <i class="material-icons" style="font-size: 1.6rem;">dashboard</i>
+        <span>전체 보기</span>
+      </button>
+      <button
+        style="flex: 1; padding: 0.7rem; border-radius: 0.8rem; font-size: 1.25rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
+        :style="{
+          background: viewMode === 'map_only' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
+          color: viewMode === 'map_only' ? '#1ad1b1' : 'rgba(255,255,255,0.6)'
+        }"
+        @click="viewMode = 'map_only'"
+      >
+        <i class="material-icons" style="font-size: 1.6rem;">map</i>
+        <span>지도만 보기</span>
+      </button>
+      <button
+        style="flex: 1; padding: 0.7rem; border-radius: 0.8rem; font-size: 1.25rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
+        :style="{
+          background: viewMode === 'list_only' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
+          color: viewMode === 'list_only' ? '#88c5ff' : 'rgba(255,255,255,0.6)'
+        }"
+        @click="viewMode = 'list_only'"
+      >
+        <i class="material-icons" style="font-size: 1.6rem;">list_alt</i>
+        <span>목록만 보기</span>
+      </button>
+    </div>
+
+    <!-- Real-time MarineTraffic Ship Map Embed Card -->
+    <div 
+      v-if="viewMode === 'map_list' || viewMode === 'map_only'"
+      style="
+        background: #0d1e33;
+        border: 1px solid rgba(136, 197, 255, 0.25);
+        border-radius: 1.6rem;
+        padding: 1.4rem;
+        margin-bottom: 1.6rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      "
+    >
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <i class="material-icons" style="color: #1ad1b1; font-size: 2rem;">map</i>
+          <span style="font-size: 1.5rem; font-weight: 800; color: #ffffff;">실시간 인천항 AIS 선박 위치 지도</span>
+        </div>
+        <span style="font-size: 1.1rem; color: #1ad1b1; background: rgba(26, 209, 177, 0.15); padding: 0.3rem 0.8rem; border-radius: 0.6rem; font-weight: 700; border: 1px solid rgba(26, 209, 177, 0.3);">
+          LIVE AIS
+        </span>
+      </div>
+
+      <!-- MarineTraffic Iframe Wrapper -->
+      <div style="position: relative; width: 100%; height: 450px; border-radius: 1.2rem; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);">
+        <iframe
+          src="https://www.marinetraffic.com/en/ais/embed/zoom:12/centerv:37.45/centerx:126.62/maptype:1/shownames:true/mmsi:0/shipid:0/fleet:/fleet_id:/old_maptype:0"
+          width="100%"
+          height="100%"
+          frameborder="0"
+          scrolling="no"
+          style="border: 0; width: 100%; height: 100%; border-radius: 1.2rem;"
+          allowfullscreen
+        ></iframe>
+      </div>
+      
+      <div style="font-size: 1.1rem; color: rgba(255,255,255,0.5); margin-top: 0.8rem; text-align: right;">
+        * MarineTraffic 인천항 AIS (위도: 37.45, 경도: 126.62) 실시간 위치 지도
+      </div>
     </div>
 
     <!-- Filter & Search Bar -->
-    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.6rem;">
+    <div v-if="viewMode === 'map_list' || viewMode === 'list_only'" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.6rem;">
       <!-- Tab Buttons (전체 / 즐겨찾기) -->
       <div style="display: flex; gap: 0.8rem; background: rgba(255,255,255,0.03); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.08);">
         <button
