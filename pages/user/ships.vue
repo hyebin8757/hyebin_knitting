@@ -392,10 +392,10 @@ onMounted(() => {
               <span v-if="ship.mmsi">MMSI: {{ ship.mmsi }} | </span>호출부호: {{ ship.callSign }} | 대리점: {{ ship.agent }}
             </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0;">
             <!-- Status Badge -->
             <span
-              style="padding: 0.3rem 0.8rem; border-radius: 0.6rem; font-size: 1.1rem; font-weight: 700;"
+              style="padding: 0.3rem 0.8rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;"
               :style="{
                 background: ship.status === '접안중' ? 'rgba(26, 209, 177, 0.15)' : ship.status === '입항예정' ? 'rgba(58, 134, 255, 0.15)' : ship.status === '관제중' ? 'rgba(255, 204, 0, 0.15)' : 'rgba(255,255,255,0.1)',
                 color: ship.status === '접안중' ? '#1ad1b1' : ship.status === '입항예정' ? '#88c5ff' : ship.status === '관제중' ? '#ffcc00' : 'rgba(255,255,255,0.6)',
