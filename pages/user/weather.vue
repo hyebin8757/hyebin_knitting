@@ -10,6 +10,7 @@ interface HourlyForecast {
   pop: number; // 강수확률 (%)
   windSpeed: number; // m/s
   windKnots: number; // Knots
+  waveHeight: string; // 파고 (m)
 }
 
 definePageMeta({
@@ -32,19 +33,20 @@ const currentWeather = ref({
   windSpeed: 4.2, // m/s
   windKnots: 8.1, // Knots (4.2 * 1.94)
   windDirection: '남서풍 (SW)',
-  waveHeight: '0.5 ~ 1.0 m' // 해상 파고
+  waveHeight: '0.6 m', // 해상 파고 (m)
+  waveStatus: '잔잔함 (안전)'
 });
 
-// 시간대별 예보 목록
+// 시간대별 예보 목록 (파고 m 추가)
 const hourlyForecasts = ref<HourlyForecast[]>([
-  { time: '18:00', temp: 26, sky: '맑음', icon: 'wb_sunny', pop: 10, windSpeed: 4.2, windKnots: 8.1 },
-  { time: '21:00', temp: 24, sky: '맑음', icon: 'nights_stay', pop: 10, windSpeed: 3.8, windKnots: 7.4 },
-  { time: '00:00', temp: 23, sky: '구름많음', icon: 'cloud', pop: 20, windSpeed: 3.5, windKnots: 6.8 },
-  { time: '03:00', temp: 22, sky: '구름많음', icon: 'cloud', pop: 20, windSpeed: 3.1, windKnots: 6.0 },
-  { time: '06:00', temp: 23, sky: '맑음', icon: 'wb_sunny', pop: 10, windSpeed: 3.6, windKnots: 7.0 },
-  { time: '09:00', temp: 26, sky: '맑음', icon: 'wb_sunny', pop: 10, windSpeed: 4.5, windKnots: 8.7 },
-  { time: '12:00', temp: 28, sky: '구름많음', icon: 'wb_cloudy', pop: 30, windSpeed: 5.2, windKnots: 10.1 },
-  { time: '15:00', temp: 29, sky: '흐림', icon: 'cloud_queue', pop: 40, windSpeed: 5.8, windKnots: 11.3 }
+  { time: '18:00', temp: 26, sky: '맑음', icon: 'wb_sunny', pop: 10, windSpeed: 4.2, windKnots: 8.1, waveHeight: '0.5 m' },
+  { time: '21:00', temp: 24, sky: '맑음', icon: 'nights_stay', pop: 10, windSpeed: 3.8, windKnots: 7.4, waveHeight: '0.5 m' },
+  { time: '00:00', temp: 23, sky: '구름많음', icon: 'cloud', pop: 20, windSpeed: 3.5, windKnots: 6.8, waveHeight: '0.6 m' },
+  { time: '03:00', temp: 22, sky: '구름많음', icon: 'cloud', pop: 20, windSpeed: 3.1, windKnots: 6.0, waveHeight: '0.6 m' },
+  { time: '06:00', temp: 23, sky: '맑음', icon: 'wb_sunny', pop: 10, windSpeed: 3.6, windKnots: 7.0, waveHeight: '0.7 m' },
+  { time: '09:00', temp: 26, sky: '맑음', icon: 'wb_sunny', pop: 10, windSpeed: 4.5, windKnots: 8.7, waveHeight: '0.8 m' },
+  { time: '12:00', temp: 28, sky: '구름많음', icon: 'wb_cloudy', pop: 30, windSpeed: 5.2, windKnots: 10.1, waveHeight: '1.0 m' },
+  { time: '15:00', temp: 29, sky: '흐림', icon: 'cloud_queue', pop: 40, windSpeed: 5.8, windKnots: 11.3, waveHeight: '1.2 m' }
 ]);
 
 // 기상청 API 데이터 호출
@@ -56,7 +58,7 @@ const fetchWeatherData = async () => {
       const items = res.data?.response?.body?.items?.item || [];
       if (Array.isArray(items) && items.length > 0) {
         items.forEach((it: any) => {
-          // T1H: 기온, REH: 습도, WSD: 풍속, PTY: 강수형태, VEC: 풍향
+          // T1H: 기온, REH: 습도, WSD: 풍속, PTY: 강수형태, WAV: 파고
           if (it.category === 'T1H') {
             currentWeather.value.temp = parseFloat(it.obsrValue);
           } else if (it.category === 'REH') {
@@ -65,6 +67,11 @@ const fetchWeatherData = async () => {
             const ms = parseFloat(it.obsrValue);
             currentWeather.value.windSpeed = ms;
             currentWeather.value.windKnots = parseFloat((ms * 1.94).toFixed(1));
+          } else if (it.category === 'WAV') {
+            const wav = parseFloat(it.obsrValue);
+            if (!isNaN(wav) && wav > 0) {
+              currentWeather.value.waveHeight = `${wav.toFixed(1)} m`;
+            }
           } else if (it.category === 'PTY') {
             const pty = parseInt(it.obsrValue, 10);
             if (pty === 0) {
@@ -148,22 +155,33 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Maritime Specific Metrics Grid (해운/항만 노조 맞춤 기상 지표) -->
-      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.6rem;">
+      <!-- Maritime Specific Metrics Grid (해운/항만 노조 맞춤 기상 지표 3종) -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.6rem;">
         <!-- Wind Speed & Knots -->
         <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 1.2rem;">
           <div style="display: flex; align-items: center; gap: 0.6rem; font-size: 1.2rem; color: rgba(255,255,255,0.6);">
             <i class="material-icons" style="color: #88c5ff; font-size: 1.8rem;">air</i>
-            <span>해상 풍속 (Wind)</span>
+            <span>해상 풍속</span>
           </div>
-          <div style="font-size: 1.8rem; font-weight: 800; color: #88c5ff; margin-top: 0.6rem;">
+          <div style="font-size: 1.7rem; font-weight: 800; color: #88c5ff; margin-top: 0.6rem;">
             {{ currentWeather.windSpeed }} m/s
           </div>
-          <div style="font-size: 1.25rem; font-weight: 700; color: #1ad1b1; margin-top: 0.2rem;">
-            ⚡ {{ currentWeather.windKnots }} Knots (노트)
+          <div style="font-size: 1.2rem; font-weight: 700; color: #1ad1b1; margin-top: 0.2rem;">
+            ⚡ {{ currentWeather.windKnots }} kts
           </div>
-          <div style="font-size: 1.1rem; color: rgba(255,255,255,0.4); margin-top: 0.4rem;">
-            풍향: {{ currentWeather.windDirection }}
+        </div>
+
+        <!-- Wave Height (파고 m) -->
+        <div style="background: rgba(35, 102, 180, 0.2); border: 1px solid rgba(136, 197, 255, 0.35); border-radius: 1.2rem; padding: 1.2rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; font-size: 1.2rem; color: #88c5ff;">
+            <i class="material-icons" style="color: #1ad1b1; font-size: 1.8rem;">waves</i>
+            <span>해상 파고 (Wave)</span>
+          </div>
+          <div style="font-size: 2rem; font-weight: 900; color: #1ad1b1; margin-top: 0.4rem;">
+            {{ currentWeather.waveHeight }}
+          </div>
+          <div style="font-size: 1.15rem; font-weight: 700; color: rgba(255,255,255,0.7); margin-top: 0.2rem;">
+            🌊 {{ currentWeather.waveStatus }}
           </div>
         </div>
 
@@ -171,16 +189,13 @@ onMounted(() => {
         <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 1.2rem;">
           <div style="display: flex; align-items: center; gap: 0.6rem; font-size: 1.2rem; color: rgba(255,255,255,0.6);">
             <i class="material-icons" style="color: #3a86ff; font-size: 1.8rem;">water_drop</i>
-            <span>습도 & 강수확률</span>
+            <span>습도 & 강수</span>
           </div>
-          <div style="font-size: 1.8rem; font-weight: 800; color: #ffffff; margin-top: 0.6rem;">
+          <div style="font-size: 1.7rem; font-weight: 800; color: #ffffff; margin-top: 0.6rem;">
             {{ currentWeather.humidity }}%
           </div>
-          <div style="font-size: 1.25rem; font-weight: 700; color: #e05780; margin-top: 0.2rem;">
-            ☔ 강수확률 {{ currentWeather.rainPop }}%
-          </div>
-          <div style="font-size: 1.1rem; color: rgba(255,255,255,0.4); margin-top: 0.4rem;">
-            파고: {{ currentWeather.waveHeight }}
+          <div style="font-size: 1.2rem; font-weight: 700; color: #e05780; margin-top: 0.2rem;">
+            ☔ 강수 {{ currentWeather.rainPop }}%
           </div>
         </div>
       </div>
@@ -190,22 +205,25 @@ onMounted(() => {
     <div style="background: #0d1e33; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.6rem; padding: 1.6rem;">
       <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.2rem;">
         <i class="material-icons" style="color: #ffcc00; font-size: 2rem;">schedule</i>
-        <span style="font-size: 1.5rem; font-weight: 800; color: #ffffff;">시간대별 예보 및 풍속(Knots)</span>
+        <span style="font-size: 1.5rem; font-weight: 800; color: #ffffff;">시간대별 예보 (기온/풍속 Knots/파고)</span>
       </div>
 
       <div style="display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.8rem; scrollbar-width: thin;">
         <div
           v-for="item in hourlyForecasts"
           :key="item.time"
-          style="min-width: 100px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 1.2rem 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 0.6rem;"
+          style="min-width: 105px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 1.2rem 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 0.6rem;"
         >
           <span style="font-size: 1.2rem; color: rgba(255,255,255,0.6); font-weight: 600;">{{ item.time }}</span>
           <i class="material-icons" style="font-size: 2.8rem; color: #ffcc00;">{{ item.icon }}</i>
           <span style="font-size: 1.6rem; font-weight: 800; color: #ffffff;">{{ item.temp }}°</span>
           <div style="font-size: 1.1rem; color: #1ad1b1; font-weight: 700; background: rgba(26, 209, 177, 0.1); padding: 0.2rem 0.6rem; border-radius: 0.4rem;">
-            {{ item.windKnots }} kts
+            ⚡ {{ item.windKnots }} kts
           </div>
-          <span style="font-size: 1.1rem; color: rgba(255,255,255,0.4);">☔ {{ item.pop }}%</span>
+          <div style="font-size: 1.1rem; color: #88c5ff; font-weight: 700;">
+            🌊 {{ item.waveHeight }}
+          </div>
+          <span style="font-size: 1.05rem; color: rgba(255,255,255,0.4);">☔ {{ item.pop }}%</span>
         </div>
       </div>
     </div>
