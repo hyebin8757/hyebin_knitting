@@ -25,6 +25,27 @@ const viewMode = ref<'map_list' | 'map_only' | 'list_only'>('map_list');
 const isLoading = ref(false);
 const rawApiMessage = ref('');
 
+// 지도 선택 타겟 MMSI ('all' 또는 특정 mmsi)
+const selectedMapMmsi = ref<string>('all');
+
+// 등록된 선박들의 MMSI 전체 목록
+const registeredMmsiList = computed(() => {
+  return shipList.value.map(s => s.mmsi).filter(Boolean).join(',');
+});
+
+// MarineTraffic Embed Dynamic URL (내가 등록한 배들만 타겟팅)
+const marineTrafficUrl = computed(() => {
+  let targetMmsi = '440020080,440011240,440022920,440004790';
+  
+  if (selectedMapMmsi.value !== 'all') {
+    targetMmsi = selectedMapMmsi.value;
+  } else if (registeredMmsiList.value) {
+    targetMmsi = registeredMmsiList.value;
+  }
+
+  return `https://www.marinetraffic.com/en/ais/embed/zoom:12/centerv:37.45/centerx:126.62/maptype:1/shownames:true/mmsi:${targetMmsi}/shipid:0/fleet:/fleet_id:/old_maptype:0`;
+});
+
 // 즐겨찾기 상태 (호출부호 or 선박명 기반)
 const favoriteShips = ref<string[]>([]);
 
@@ -234,20 +255,51 @@ onMounted(() => {
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
       "
     >
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-        <div style="display: flex; align-items: center; gap: 0.6rem;">
-          <i class="material-icons" style="color: #1ad1b1; font-size: 2rem;">map</i>
-          <span style="font-size: 1.5rem; font-weight: 800; color: #ffffff;">실시간 인천항 AIS 선박 위치 지도</span>
+      <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <i class="material-icons" style="color: #1ad1b1; font-size: 2rem;">map</i>
+            <span style="font-size: 1.5rem; font-weight: 800; color: #ffffff;">실시간 인천항 AIS 선박 위치 지도</span>
+          </div>
+          <span style="font-size: 1.1rem; color: #1ad1b1; background: rgba(26, 209, 177, 0.15); padding: 0.3rem 0.8rem; border-radius: 0.6rem; font-weight: 700; border: 1px solid rgba(26, 209, 177, 0.3);">
+            내 등록 선박 추적중
+          </span>
         </div>
-        <span style="font-size: 1.1rem; color: #1ad1b1; background: rgba(26, 209, 177, 0.15); padding: 0.3rem 0.8rem; border-radius: 0.6rem; font-weight: 700; border: 1px solid rgba(26, 209, 177, 0.3);">
-          LIVE AIS
-        </span>
+
+        <!-- Registered Ship Target Selection Chips -->
+        <div style="display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.4rem;">
+          <button
+            style="padding: 0.4rem 0.9rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; whitespace: nowrap; transition: all 0.2s; cursor: pointer;"
+            :style="{
+              background: selectedMapMmsi === 'all' ? 'rgba(26, 209, 177, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+              color: selectedMapMmsi === 'all' ? '#1ad1b1' : 'rgba(255, 255, 255, 0.7)',
+              border: '1px solid ' + (selectedMapMmsi === 'all' ? '#1ad1b1' : 'rgba(255, 255, 255, 0.1)')
+            }"
+            @click="selectedMapMmsi = 'all'"
+          >
+            내 등록 선박 전체 (4척)
+          </button>
+          <button
+            v-for="ship in shipList.filter(s => s.mmsi)"
+            :key="ship.mmsi"
+            style="padding: 0.4rem 0.9rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; whitespace: nowrap; transition: all 0.2s; cursor: pointer;"
+            :style="{
+              background: selectedMapMmsi === ship.mmsi ? 'rgba(58, 134, 255, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+              color: selectedMapMmsi === ship.mmsi ? '#88c5ff' : 'rgba(255, 255, 255, 0.7)',
+              border: '1px solid ' + (selectedMapMmsi === ship.mmsi ? '#88c5ff' : 'rgba(255, 255, 255, 0.1)')
+            }"
+            @click="selectedMapMmsi = ship.mmsi!"
+          >
+            {{ ship.shipName.split(' ')[0] }}
+          </button>
+        </div>
       </div>
 
       <!-- MarineTraffic Iframe Wrapper -->
       <div style="position: relative; width: 100%; height: 450px; border-radius: 1.2rem; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);">
         <iframe
-          src="https://www.marinetraffic.com/en/ais/embed/zoom:12/centerv:37.45/centerx:126.62/maptype:1/shownames:true/mmsi:0/shipid:0/fleet:/fleet_id:/old_maptype:0"
+          :key="marineTrafficUrl"
+          :src="marineTrafficUrl"
           width="100%"
           height="100%"
           frameborder="0"
