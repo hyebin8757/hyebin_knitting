@@ -236,26 +236,7 @@ const resetCredentials = async () => {
   isMemberDetailOpen.value = false;
 };
 
-// 4번 기능: 현재 탭(조)의 전체 조합원에게 단체 문자(SMS) 보내기 헬퍼
-const sendGroupSms = () => {
-  const phoneNumbers = activeMembers.value
-    .map(m => m.phone.replace(/[^0-9]/g, ''))
-    .filter(Boolean);
-  
-  if (phoneNumbers.length === 0) {
-    alertText.value = '연락처가 등록된 조합원이 없습니다.';
-    isAlertOpen.value = true;
-    return;
-  }
 
-  const groupNum = groupNumbers[activeTab.value] || 1;
-  const bodyText = encodeURIComponent(`[인천 항운 노조 ${groupNum}조 긴급 공지] `);
-  
-  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const delimiter = isIOS ? '&' : '?';
-  const smsUrl = `sms:${phoneNumbers.join(',')}${delimiter}body=${bodyText}`;
-  window.location.href = smsUrl;
-};
 
 // 개별 원터치 전화 걸기
 const makePhoneCall = (phone: string, event?: Event) => {
@@ -321,13 +302,7 @@ definePageMeta({
           <span class="info-text">총 {{ activeGroup.members.length }}명</span>
         </div>
         <div style="display: flex; gap: 0.6rem; align-items: center;">
-          <v-btn
-            size="x-small"
-            style="background: rgba(26, 209, 177, 0.15) !important; border: 1px solid rgba(26, 209, 177, 0.4) !important; color: #1ad1b1 !important; border-radius: 0.6rem; font-weight: 700; font-size: 1.1rem; padding: 0 0.8rem !important; height: 2.6rem !important;"
-            @click="sendGroupSms"
-          >
-            💬 조원 단체문자
-          </v-btn>
+
           <v-btn
             v-if="userRole === 'admin'"
             size="x-small"
