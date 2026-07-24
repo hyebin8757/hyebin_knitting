@@ -226,11 +226,12 @@ onMounted(() => {
           <span style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.05rem;">인천항 선박 운항 정보</span>
         </div>
         <button 
-          style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #88c5ff; border-radius: 0.8rem; padding: 0.6rem 1.2rem; font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"
+          class="refresh-btn"
           @click="handleManualRefresh"
+          title="새로고침"
         >
-          <i class="material-icons" style="font-size: 1.4rem;">refresh</i>
-          <span>새로고침</span>
+          <i class="material-icons" style="font-size: 1.6rem;">refresh</i>
+          <span class="refresh-text">새로고침</span>
         </button>
       </div>
       <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; flex-wrap: wrap; gap: 0.6rem;">
@@ -494,5 +495,32 @@ onMounted(() => {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+.refresh-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #88c5ff !important;
+  border-radius: 0.8rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+@media (max-width: 480px) {
+  .refresh-text {
+    display: none !important;
+  }
+  .refresh-btn {
+    padding: 0.6rem 0.6rem !important;
+    border-radius: 50% !important;
+  }
 }
 </style>
