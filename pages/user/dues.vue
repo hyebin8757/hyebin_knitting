@@ -290,6 +290,59 @@ const executeBatchDelete = () => {
   );
 };
 
+// 월 컬럼 헤더 클릭 일괄 등록/삭제 다이얼로그 상태 및 로직
+const isMonthHeaderActionOpen = ref(false);
+const selectedMonthForAction = ref('1월');
+
+const onMonthHeaderClick = (month: string) => {
+  if (!isDuesEditor.value) return;
+  selectedMonthForAction.value = month;
+  isMonthHeaderActionOpen.value = true;
+};
+
+// 한번에 전원 완납 등록
+const executeMonthBulkRegister = async () => {
+  const targetMonth = selectedMonthForAction.value;
+  const workers = filteredWorkers.value.filter(w => w.name !== '한덕희');
+  let count = 0;
+
+  for (const w of workers) {
+    const existing = getDueRecords(w.name, targetMonth);
+    if (existing.length === 0) {
+      await userStore.saveDueAction(
+        w.name,
+        targetMonth,
+        10000,
+        '이체',
+        selectedYear.value
+      );
+      count++;
+    }
+  }
+
+  isMonthHeaderActionOpen.value = false;
+  showToast(`${targetMonth} ${count}명 회비 일괄 완납 등록 완료!`, 'success');
+};
+
+// 한번에 전원 미납 삭제
+const executeMonthBulkDelete = () => {
+  const targetMonth = selectedMonthForAction.value;
+  showConfirm(
+    `${targetMonth} 일괄 미납 처리`,
+    `${selectedYear.value}년 ${targetMonth}의 모든 회원 회비 납부 내역을 삭제하시겠습니까?`,
+    async () => {
+      const recordsToDelete = userStore.dues.filter(
+        (d) => d.month === targetMonth && d.year === selectedYear.value
+      );
+      for (const rec of recordsToDelete) {
+        await userStore.deleteDueAction(rec.id);
+      }
+      isMonthHeaderActionOpen.value = false;
+      showToast(`${targetMonth} 회비 내역 일괄 삭제 완료.`, 'info');
+    }
+  );
+};
+
 // 비고(지출/수입) 등록 및 수정 핸들러
 const openExpenseEditor = (item: any = null) => {
   if (!isDuesEditor.value) return;
@@ -524,9 +577,15 @@ definePageMeta({
               <th
                 v-for="m in monthsList"
                 :key="m"
-                style="min-width: 10rem; text-align: center"
+                style="min-width: 10rem; text-align: center; user-select: none;"
+                :style="{ cursor: isDuesEditor ? 'pointer' : 'default' }"
+                @click="onMonthHeaderClick(m)"
+                :title="isDuesEditor ? `${m} 클릭 시 일괄 완납 등록 또는 일괄 삭제` : ''"
               >
-                {{ m }}
+                <div style="display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                  <span>{{ m }}</span>
+                  <i v-if="isDuesEditor" class="material-icons" style="font-size: 1.3rem; color: #88c5ff; opacity: 0.8;">touch_app</i>
+                </div>
               </th>
             </tr>
           </thead>
@@ -900,6 +959,50 @@ definePageMeta({
             >닫기</v-btn
           >
           <v-btn class="confirm" @click="saveDue">추가하기</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- ⚡ Month Header Click Bulk Action Modal -->
+    <v-dialog v-model="isMonthHeaderActionOpen" max-width="360">
+      <v-card class="pa-6 dialog-card" style="background: #0d1e33; border: 1px solid rgba(136, 197, 255, 0.3); border-radius: 1.6rem; color: #ffffff;">
+        <v-card-title class="text-h6 font-weight-bold px-0 dialog-title" style="color: #88c5ff; font-size: 1.6rem !important; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <i class="material-icons" style="color: #1ad1b1;">flash_on</i>
+            <span>{{ selectedYear }}년 {{ selectedMonthForAction }} 일괄 관리</span>
+          </div>
+          <v-btn icon size="x-small" style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);" @click="isMonthHeaderActionOpen = false">
+            <i class="material-icons">close</i>
+          </v-btn>
+        </v-card-title>
+
+        <div style="margin-top: 1.4rem; display: flex; flex-direction: column; gap: 1.2rem;">
+          <p style="font-size: 1.25rem; color: rgba(255,255,255,0.8); line-height: 1.5; margin-bottom: 0;">
+            <strong>{{ selectedMonthForAction }}</strong> 컬럼을 선택하셨습니다.<br>
+            아래에서 원하시는 일괄 처리 동작을 선택해 주세요.
+          </p>
+
+          <!-- 🟢 한번에 등록 (일괄 완납) -->
+          <button
+            style="background: linear-gradient(135deg, #1ad1b1 0%, #157a6e 100%); border: none; border-radius: 1rem; padding: 1.2rem; color: #ffffff; font-size: 1.35rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem; box-shadow: 0 4px 12px rgba(26, 209, 177, 0.3);"
+            @click="executeMonthBulkRegister"
+          >
+            <i class="material-icons" style="font-size: 1.8rem;">check_circle</i>
+            <span>한번에 완납 등록 (미납자 1만원)</span>
+          </button>
+
+          <!-- 🔴 한번에 삭제 (일괄 미납 처리) -->
+          <button
+            style="background: rgba(224, 87, 128, 0.15); border: 1px solid rgba(224, 87, 128, 0.4); border-radius: 1rem; padding: 1.2rem; color: #e05780; font-size: 1.35rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem;"
+            @click="executeMonthBulkDelete"
+          >
+            <i class="material-icons" style="font-size: 1.8rem;">delete_forever</i>
+            <span>한번에 삭제 (전체 내역 초기화)</span>
+          </button>
+        </div>
+
+        <v-card-actions class="justify-end px-0 pt-4">
+          <v-btn style="background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); border-radius: 0.8rem; font-size: 1.2rem; font-weight: 600; padding: 0.6rem 1.6rem;" @click="isMonthHeaderActionOpen = false">닫기</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
