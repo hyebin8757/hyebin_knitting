@@ -914,6 +914,7 @@ definePageMeta({
           </v-btn>
         </v-card-actions>
       </v-card>
+    </v-dialog>
     <!-- Year Picker Dialog (년도 선택 다이얼로그) -->
     <v-dialog v-model="isYearPickerOpen" max-width="320">
       <v-card class="pa-5" style="background: #0d1e33; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 1.6rem; color: #ffffff;">
