@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { definePageMeta } from '~/.nuxt/imports';
 
 interface ShipItem {
@@ -24,6 +24,32 @@ const activeTab = ref<'all' | 'favorites'>('all');
 const viewMode = ref<'map_list' | 'map_only' | 'list_only'>('map_list');
 const isLoading = ref(false);
 const rawApiMessage = ref('');
+
+// 실시간 자동 갱신 타이머 상태
+const lastUpdatedTime = ref<string>('');
+const countdownSeconds = ref<number>(60);
+let timerId: any = null;
+
+const updateLastTime = () => {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  lastUpdatedTime.value = `${hours}:${minutes}:${seconds}`;
+};
+
+const startAutoPolling = () => {
+  if (timerId) clearInterval(timerId);
+  countdownSeconds.value = 60;
+
+  timerId = setInterval(() => {
+    countdownSeconds.value -= 1;
+    if (countdownSeconds.value <= 0) {
+      fetchShipsData();
+      countdownSeconds.value = 60;
+    }
+  }, 1000);
+};
 
 // 지도 선택 타겟 MMSI ('all' 또는 특정 mmsi)
 const selectedMapMmsi = ref<string>('all');
@@ -169,7 +195,13 @@ const fetchShipsData = async () => {
     console.warn("Public API fetch error, using fallback data:", e.message);
   } finally {
     isLoading.value = false;
+    updateLastTime();
   }
+};
+
+const handleManualRefresh = () => {
+  fetchShipsData();
+  startAutoPolling();
 };
 
 onMounted(() => {
@@ -194,16 +226,27 @@ onMounted(() => {
           <span style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.05rem;">인천항 선박 운항 정보</span>
         </div>
         <button 
-          style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #88c5ff; border-radius: 0.8rem; padding: 0.6rem 1.2rem; font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;"
-          @click="fetchShipsData"
+          style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #88c5ff; border-radius: 0.8rem; padding: 0.6rem 1.2rem; font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;"
+          @click="handleManualRefresh"
         >
           <i class="material-icons" style="font-size: 1.4rem;">refresh</i>
           <span>새로고침</span>
         </button>
       </div>
-      <p style="font-size: 1.2rem; color: rgba(255,255,255,0.6); margin-top: 0.8rem; margin-bottom: 0; line-height: 1.5;">
-        공공데이터포털 연동 인천항 실시간 선박 입출항 및 부두 배치 현황입니다.
-      </p>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; flex-wrap: wrap; gap: 0.6rem;">
+        <p style="font-size: 1.2rem; color: rgba(255,255,255,0.6); margin-bottom: 0; line-height: 1.5;">
+          공공데이터포털 연동 인천항 실시간 선박 입출항 현황입니다.
+        </p>
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <span style="font-size: 1.15rem; color: #1ad1b1; background: rgba(26, 209, 177, 0.12); border: 1px solid rgba(26, 209, 177, 0.3); border-radius: 0.6rem; padding: 0.2rem 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #1ad1b1; display: inline-block;"></span>
+            자동 갱신 중 ({{ countdownSeconds }}초 후)
+          </span>
+          <span v-if="lastUpdatedTime" style="font-size: 1.1rem; color: rgba(255,255,255,0.4);">
+            최종 갱신: {{ lastUpdatedTime }}
+          </span>
+        </div>
+      </div>
     </div>
 
     <!-- View Mode Selector -->
