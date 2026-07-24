@@ -21,7 +21,7 @@ definePageMeta({
 
 const searchQuery = ref('');
 const activeTab = ref<'all' | 'favorites'>('all');
-const viewMode = ref<'map_list' | 'map_only' | 'list_only'>('map_list');
+const viewMode = ref<'list_only' | 'map_only' | 'map_list'>('list_only');
 const isLoading = ref(false);
 const rawApiMessage = ref('');
 
@@ -273,13 +273,13 @@ onMounted(() => {
       <button
         style="flex: 1; padding: 0.7rem; border-radius: 0.8rem; font-size: 1.25rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
         :style="{
-          background: viewMode === 'map_list' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
-          color: viewMode === 'map_list' ? '#ffffff' : 'rgba(255,255,255,0.6)'
+          background: viewMode === 'list_only' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
+          color: viewMode === 'list_only' ? '#88c5ff' : 'rgba(255,255,255,0.6)'
         }"
-        @click="viewMode = 'map_list'"
+        @click="viewMode = 'list_only'"
       >
-        <i class="material-icons" style="font-size: 1.6rem;">dashboard</i>
-        <span>전체 보기</span>
+        <i class="material-icons" style="font-size: 1.6rem;">list_alt</i>
+        <span>목록만 보기</span>
       </button>
       <button
         style="flex: 1; padding: 0.7rem; border-radius: 0.8rem; font-size: 1.25rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
@@ -295,13 +295,13 @@ onMounted(() => {
       <button
         style="flex: 1; padding: 0.7rem; border-radius: 0.8rem; font-size: 1.25rem; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;"
         :style="{
-          background: viewMode === 'list_only' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
-          color: viewMode === 'list_only' ? '#88c5ff' : 'rgba(255,255,255,0.6)'
+          background: viewMode === 'map_list' ? 'linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%)' : 'transparent',
+          color: viewMode === 'map_list' ? '#ffffff' : 'rgba(255,255,255,0.6)'
         }"
-        @click="viewMode = 'list_only'"
+        @click="viewMode = 'map_list'"
       >
-        <i class="material-icons" style="font-size: 1.6rem;">list_alt</i>
-        <span>목록만 보기</span>
+        <i class="material-icons" style="font-size: 1.6rem;">dashboard</i>
+        <span>전체 보기</span>
       </button>
     </div>
 
