@@ -13,6 +13,12 @@ const isGroup7OrAdmin = computed(() => {
   return userStore.loggedInUser?.group === 7;
 });
 
+// 객선 장부 접근 권한: 관리자(admin) 및 간부조 정택광 전용
+const isLedgerAuthorized = computed(() => {
+  if (userRole.value === 'admin') return true;
+  return userStore.loggedInUser?.name === '정택광';
+});
+
 const toggleRole = () => {
   userStore.userRole = userStore.userRole === "member" ? "admin" : "member";
 };
@@ -89,7 +95,7 @@ onMounted(() => {
         <!-- Bottom Navigation Bar -->
         <nav 
           :class="cx('user-layout-nav', UserLayoutStyle.BottomNav)"
-          :style="{ gridTemplateColumns: isGroup7OrAdmin ? 'repeat(6, 1fr)' : 'repeat(5, 1fr)' }"
+          :style="{ gridTemplateColumns: `repeat(${ (isGroup7OrAdmin ? 1 : 0) + (isLedgerAuthorized ? 1 : 0) + 4 }, 1fr)` }"
         >
           <nuxt-link to="/user/attendance" class="nav-item">
             <i class="material-icons">event_available</i>
@@ -111,7 +117,7 @@ onMounted(() => {
             <i class="material-icons">groups</i>
             <span>회원관리</span>
           </nuxt-link>
-          <nuxt-link to="/user/ledger" class="nav-item">
+          <nuxt-link v-if="isLedgerAuthorized" to="/user/ledger" class="nav-item">
             <i class="material-icons">assignment</i>
             <span>객선장부</span>
           </nuxt-link>

@@ -147,7 +147,7 @@ const loginValidation = () => {
   }
 
   // 1. 관리자 계정 (Super Admin) 로그인 체크 (기본: 0000 및 슈퍼패스 7777)
-  const SUPER_ADMIN_PASSWORDS = ['0000', '7777', 'incheon777'];
+  const SUPER_ADMIN_PASSWORDS = [ 'qwe0706' ];
   if (loginData.id === 'admin' && SUPER_ADMIN_PASSWORDS.includes(loginData.password)) {
     return true;
   }
