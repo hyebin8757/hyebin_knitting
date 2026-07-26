@@ -614,7 +614,6 @@ onMounted(() => {
         <div class="sheet-title-row">
           <div>
             <h2>⚡ 엑셀식 연속 입력 스마트 시트</h2>
-            <p>키보드 [Tab] 키를 누르며 엑셀처럼 빠르게 작성 후 [장부 일괄 등록]을 누르세요.</p>
           </div>
 
           <div class="batch-sum-display">
