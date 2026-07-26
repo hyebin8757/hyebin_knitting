@@ -134,20 +134,25 @@ const getETACountdownStr = (etaStr?: string, status?: string) => {
     const now = new Date();
     let etaDate: Date | null = null;
 
+    const isPM = /PM|오후/i.test(etaStr);
+    const isAM = /AM|오전/i.test(etaStr);
     const cleanStr = etaStr.replace(/(AM|PM|오전|오후)/gi, '').trim();
+
+    let hh = 0, mm = 0;
+    let y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
 
     if (cleanStr.includes('-') && cleanStr.includes(':')) {
       const parts = cleanStr.split(' ');
-      const [y, m, d] = parts[0].split('-').map(Number);
-      const [hh, mm] = parts[1].split(':').map(Number);
-      etaDate = new Date(y, m - 1, d, hh || 0, mm || 0);
+      [y, m, d] = parts[0].split('-').map(Number);
+      [hh, mm] = parts[1].split(':').map(Number);
     } else if (cleanStr.includes(':')) {
-      const [hh, mm] = cleanStr.split(':').map(Number);
-      etaDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh || 0, mm || 0);
-      if (etaDate < now) {
-        etaDate.setDate(etaDate.getDate() + 1);
-      }
+      [hh, mm] = cleanStr.split(':').map(Number);
     }
+
+    if (isPM && hh < 12) hh += 12;
+    if (isAM && hh === 12) hh = 0;
+
+    etaDate = new Date(y, m - 1, d, hh, mm);
 
     if (!etaDate || isNaN(etaDate.getTime())) return null;
 
@@ -375,7 +380,10 @@ const getMarineTrafficWebUrl = (ship: ShipItem | null) => {
 const fetchShipsData = async () => {
   isLoading.value = true;
   try {
-    const res: any = await $fetch('/api/ships/all');
+    const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const apiUrl = isLocal ? '/api/ships/all' : '/.netlify/functions/ships';
+    const res: any = await fetch(apiUrl).then(r => r.json()).catch(() => null);
+
     if (res && res.success && res.data) {
       const items = res.data?.response?.body?.items?.item || res.data?.items || [];
       if (Array.isArray(items) && items.length > 0) {
@@ -392,14 +400,33 @@ const fetchShipsData = async () => {
           status: (it.etryptPurpsNm || '접안중') as any
         }));
         
-        // 이미지 5대 여객선 목록과 공공데이터 목록 병합
-        const existingCallSigns = new Set(shipList.value.map(s => s.callSign));
-        const newItems = mapped.filter(m => !existingCallSigns.has(m.callSign));
+        // 기존 선박 목록 실시간 매칭 업데이트
+        const mappedByCall = new Map(mapped.map(m => [m.callSign, m]));
+        const mappedByName = new Map(mapped.map(m => [m.shipName, m]));
+
+        shipList.value = shipList.value.map(ship => {
+          const match = mappedByCall.get(ship.callSign) || mappedByName.get(ship.shipName);
+          if (match) {
+            return {
+              ...ship,
+              eta: match.eta || ship.eta,
+              etd: match.etd || ship.etd,
+              status: match.status || ship.status,
+              location: match.location || ship.location,
+              agent: match.agent || ship.agent
+            };
+          }
+          return ship;
+        });
+
+        // 신규 선박 목록 추가
+        const existingNames = new Set(shipList.value.map(s => s.shipName));
+        const newItems = mapped.filter(m => !existingNames.has(m.shipName));
         shipList.value = [...shipList.value, ...newItems];
       }
     }
   } catch (e: any) {
-    console.warn("Public API fetch notice (Netlify mode fallback):", e.message);
+    console.warn("Public API fetch notice:", e.message);
   } finally {
     isLoading.value = false;
     updateLastTime();
