@@ -641,62 +641,99 @@ onMounted(() => {
       </v-card>
     </v-dialog>
 
-    <!-- ⚙️ 자주 쓰는 선명 / 상회 관리 팝업 모달 -->
-    <v-dialog v-model="isShipManageModalOpen" max-width="500">
+    <!-- ⚙️ 자주 쓰는 선명 / 상회 관리 팝업 모달 (UI 최적화 리디자인) -->
+    <v-dialog v-model="isShipManageModalOpen" max-width="480">
       <v-card class="pa-6 dialog-card">
-        <v-card-title class="dialog-title" style="display: flex; align-items: center; justify-content: space-between;">
-          <div style="display: flex; align-items: center; gap: 0.6rem;">
-            <i class="material-icons" style="color: #1ad1b1;">directions_boat</i>
-            <span>자주 쓰는 선명 / 상회 관리</span>
+        <v-card-title class="dialog-title" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1.2rem !important;">
+          <div style="display: flex; align-items: center; gap: 0.8rem;">
+            <div style="width: 34px; height: 34px; border-radius: 0.8rem; background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.3); display: flex; align-items: center; justify-content: center;">
+              <i class="material-icons" style="color: #1ad1b1; font-size: 2rem;">directions_boat</i>
+            </div>
+            <span style="font-size: 1.65rem; font-weight: 800; color: #ffffff;">자주 쓰는 선명 / 상회 관리</span>
           </div>
-          <v-btn icon size="x-small" variant="text" style="color: rgba(255,255,255,0.6);" @click="isShipManageModalOpen = false">
-            <i class="material-icons">close</i>
+          <v-btn icon size="x-small" variant="text" style="color: rgba(255,255,255,0.5);" @click="isShipManageModalOpen = false">
+            <i class="material-icons" style="font-size: 2rem;">close</i>
           </v-btn>
         </v-card-title>
 
-        <div class="dialog-body" style="gap: 1.4rem;">
-          <!-- 신규 선명 추가 폼 -->
-          <div style="display: flex; gap: 0.6rem;">
+        <div class="dialog-body" style="gap: 1.6rem; margin-top: 1.4rem;">
+          <!-- 신규 선명 추가 통합 폼 (높이 일관성 & 아쿠아 버튼) -->
+          <div style="display: flex; align-items: center; gap: 0.6rem; background: rgba(255,255,255,0.03); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.12);">
             <input 
               type="text" 
               v-model="newShipInput" 
               placeholder="새로운 선명/상회 명칭 입력 (예: 연평(오전))" 
-              class="modal-input" 
-              style="flex: 1;"
+              style="
+                flex: 1;
+                background: transparent;
+                border: none;
+                padding: 0.7rem 0.9rem;
+                color: #ffffff;
+                font-size: 1.3rem;
+                font-weight: 600;
+                outline: none;
+              "
               @keyup.enter="addFrequentShip"
             />
             <button 
-              class="btn-confirm" 
-              style="padding: 0.6rem 1.4rem; white-space: nowrap; height: auto;" 
+              style="
+                background: linear-gradient(135deg, #1ad1b1 0%, #15a088 100%);
+                border: none;
+                color: #0b1a2c;
+                font-weight: 800;
+                font-size: 1.25rem;
+                padding: 0.75rem 1.4rem;
+                border-radius: 0.8rem;
+                cursor: pointer;
+                white-space: nowrap;
+                box-shadow: 0 2px 8px rgba(26, 209, 177, 0.25);
+                transition: all 0.2s;
+              "
               @click="addFrequentShip"
             >
               + 추가
             </button>
           </div>
 
-          <!-- 등록된 선명 칩 목록 & 삭제 버튼 -->
-          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <span style="font-size: 1.2rem; color: rgba(255,255,255,0.6);">현재 등록된 선명 목록 (총 {{ frequentShips.length }}개):</span>
-            <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; max-height: 240px; overflow-y: auto; padding: 0.8rem; background: rgba(0,0,0,0.2); border-radius: 0.8rem; border: 1px solid rgba(255,255,255,0.1);">
+          <!-- 등록된 선명 칩 목록 & 삭제 버튼 (스크롤 & 미니 칩) -->
+          <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 1.2rem; font-weight: 700; color: rgba(255,255,255,0.6);">현재 등록된 선명 목록</span>
+              <span style="font-size: 1.15rem; font-weight: 800; color: #1ad1b1; background: rgba(26, 209, 177, 0.12); padding: 0.15rem 0.6rem; border-radius: 0.5rem;">총 {{ frequentShips.length }}개</span>
+            </div>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; max-height: 220px; overflow-y: auto; padding: 1rem; background: rgba(0, 0, 0, 0.25); border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.08);">
               <div 
                 v-for="sName in frequentShips" 
                 :key="sName"
-                style="display: flex; align-items: center; gap: 0.4rem; background: rgba(136, 197, 255, 0.15); border: 1px solid rgba(136, 197, 255, 0.3); color: #88c5ff; padding: 0.3rem 0.7rem; border-radius: 0.6rem; font-size: 1.25rem; font-weight: 700;"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.4rem;
+                  background: rgba(136, 197, 255, 0.1);
+                  border: 1px solid rgba(136, 197, 255, 0.25);
+                  color: #88c5ff;
+                  padding: 0.35rem 0.8rem;
+                  border-radius: 0.7rem;
+                  font-size: 1.25rem;
+                  font-weight: 700;
+                  transition: all 0.2s;
+                "
               >
                 <span>{{ sName }}</span>
                 <i 
                   class="material-icons" 
-                  style="font-size: 1.4rem; color: #ff5c8d; cursor: pointer;" 
+                  style="font-size: 1.5rem; color: #ff5c8d; cursor: pointer; opacity: 0.8;" 
                   @click="deleteFrequentShip(sName)"
                   title="삭제"
-                >close</i>
+                >highlight_off</i>
               </div>
             </div>
           </div>
         </div>
 
-        <v-card-actions class="dialog-actions" style="justify-content: flex-end; margin-top: 1rem;">
-          <v-btn class="btn-confirm" @click="isShipManageModalOpen = false">닫기</v-btn>
+        <v-card-actions class="dialog-actions" style="justify-content: flex-end; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
+          <v-btn style="background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.12) !important; color: #ffffff !important; font-weight: 700; border-radius: 0.8rem; padding: 0.6rem 2rem !important; height: auto !important; font-size: 1.3rem;" @click="isShipManageModalOpen = false">닫기</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
