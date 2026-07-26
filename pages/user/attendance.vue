@@ -1080,16 +1080,16 @@ definePageMeta({
     <!-- Group Selector Tabs -->
     <div style="display: flex; gap: 0.8rem; margin-bottom: 1.6rem; background: rgba(255, 255, 255, 0.03); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; white-space: nowrap;">
       <button
-        v-for="g in [0, 1, 2, 3, 5, 6, 7, 8]"
+        v-for="g in [1, 2, 3, 5, 6, 7, 8]"
         :key="g"
-        style="flex: 1; min-width: 5.5rem; padding: 1rem 0.4rem; font-size: 1.3rem; font-weight: 700; border-radius: 0.8rem; border: none; cursor: pointer; transition: all 0.2s;"
+        style="flex: 1; min-width: 5rem; padding: 1rem 0; font-size: 1.3rem; font-weight: 700; border-radius: 0.8rem; border: none; cursor: pointer; transition: all 0.2s;"
         :style="{
           background: activeAdminGroupTab === g ? 'var(--primary-darken-color-1)' : 'transparent',
           color: activeAdminGroupTab === g ? '#ffffff' : 'var(--text-color-3)'
         }"
         @click="activeAdminGroupTab = g"
       >
-        {{ g === 0 ? '간부조' : `${g}조` }}
+        {{ g }}조
       </button>
     </div>
 
@@ -1099,14 +1099,14 @@ definePageMeta({
         style="width: 100%; height: 4.8rem !important; background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important; color: white !important; font-weight: 700; font-size: 1.4rem !important; border-radius: 1rem;"
         @click="openDeployGroup(activeAdminGroupTab)"
       >
-        {{ activeAdminGroupTab === 0 ? '간부조' : `${activeAdminGroupTab}조` }} 전체 현장 배치 지정
+        {{ activeAdminGroupTab }}조 전체 현장 배치 지정
       </v-btn>
     </div>
 
     <!-- Worker List Table/Card Form -->
     <div style="display: flex; flex-direction: column; gap: 1.2rem;">
       <div v-if="checkedInGroupWorkers.length === 0" style="text-align: center; padding: 4rem 0; font-size: 1.3rem; color: var(--text-color-3);">
-        금일 출근 등록한 {{ activeAdminGroupTab === 0 ? '간부조' : `${activeAdminGroupTab}조` }} 조합원이 없습니다.
+        금일 출근 등록한 {{ activeAdminGroupTab }}조 조합원이 없습니다.
       </div>
       
       <div
