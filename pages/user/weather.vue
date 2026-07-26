@@ -71,7 +71,10 @@ const fetchWeatherData = async () => {
   isLoading.value = true;
   try {
     // 기상청 초단기실황 단독 호출 (WAV 포함)
-    const kmaRes = await fetch('/.netlify/functions/weather').then(r => r.json()).catch(() => null);
+    // 로쫬: Nuxt 서버 라우트 / 배포(Netlify): Netlify Function 자동 감지
+    const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const weatherApiUrl = isLocal ? '/api/weather' : '/.netlify/functions/weather';
+    const kmaRes = await fetch(weatherApiUrl).then(r => r.json()).catch(() => null);
 
     // --- 기상청 실측 파싱 ---
     if (kmaRes?.success) {

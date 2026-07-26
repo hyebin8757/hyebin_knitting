@@ -428,7 +428,10 @@ const fetchTideData = async () => {
   let parsedItems: TideItem[] = [];
 
   try {
-    const res: any = await fetch('/.netlify/functions/tide').then(r => r.json());
+    // 로컬: Nuxt 서버 라우트 / 배포(Netlify): Netlify Function 자동 감지
+    const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const tideUrl = isLocal ? '/api/tide' : '/.netlify/functions/tide';
+    const res: any = await fetch(tideUrl).then(r => r.json());
 
     if (res?.success && res.data) {
       const rawList = res.data?.response?.body?.items?.item || res.data?.result || res.data?.items || [];
