@@ -422,15 +422,15 @@ const tideInfoSummary = ref({
   timeRemainingStr: ''
 });
 
-// 공공데이터 조석예보 API 데이터 호출 (Netlify 404 환경 100% 자율 계산 보장)
+// 국립해양조사원 조석예보 API (Netlify Function 프록시)
 const fetchTideData = async () => {
   const now = new Date();
   let parsedItems: TideItem[] = [];
 
   try {
-    const res: any = await $fetch('/api/tide');
+    const res: any = await fetch('/.netlify/functions/tide').then(r => r.json());
 
-    if (res && res.success && res.data) {
+    if (res?.success && res.data) {
       const rawList = res.data?.response?.body?.items?.item || res.data?.result || res.data?.items || [];
       if (Array.isArray(rawList) && rawList.length > 0) {
         parsedItems = rawList.map((it: any) => {
@@ -439,8 +439,8 @@ const fetchTideData = async () => {
           const hhmm = timeStr.length >= 5 ? timeStr.slice(-5) : timeStr;
           const [h, m] = hhmm.split(':').map(Number);
           const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h || 0, m || 0);
-          const height = parseInt(it.tideLvl || it.tphLvl || '800', 10);
-          const pct = Math.min(100, Math.max(10, Math.round((height / 950) * 100)));
+          const height = parseInt(it.tideLvl || it.tphLvl || '0', 10);
+          const pct = Math.min(100, Math.max(5, Math.round((height / 950) * 100)));
 
           return {
             tideType: type,
@@ -453,17 +453,7 @@ const fetchTideData = async () => {
       }
     }
   } catch (e: any) {
-    console.warn("Tide API server route notice (Netlify mode fallback):", e.message);
-  }
-
-  // API 404 응답 시에도 무조건 오늘 인천항 실제 조석 물때 예측 데이터 100% 표출
-  if (parsedItems.length === 0) {
-    parsedItems = [
-      { tideType: '저조', time: '01:08', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 1, 8), tideHeight: 124, percentage: 14 },
-      { tideType: '고조', time: '07:15', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 15), tideHeight: 876, percentage: 92 },
-      { tideType: '저조', time: '13:32', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 32), tideHeight: 145, percentage: 16 },
-      { tideType: '고조', time: '19:48', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 48), tideHeight: 908, percentage: 96 }
-    ];
+    console.warn('조석 API 호출 실패:', e.message);
   }
 
   tideList.value = parsedItems;
