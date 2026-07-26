@@ -71,7 +71,7 @@ const fetchWeatherData = async () => {
   isLoading.value = true;
   try {
     // 1. 현재 날씨 + 시간별 예보 (기온, 습도, 풍속, 풍향, 강수확률, 날씨코드)
-    const weatherUrl = 'https://api.open-meteo.com/v1/forecast?latitude=37.4736&longitude=126.6194&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,precipitation&hourly=temperature_2m,weather_code,wind_speed_10m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&forecast_days=2&timezone=Asia%2FSeoul';
+    const weatherUrl = 'https://api.open-meteo.com/v1/forecast?latitude=37.4736&longitude=126.6194&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,precipitation&hourly=temperature_2m,weather_code,wind_speed_10m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&forecast_days=2&timezone=Asia%2FSeoul&wind_speed_unit=ms';
 
     // 2. 해상 파고 데이터 (Open-Meteo Marine API)
     const marineUrl = 'https://marine-api.open-meteo.com/v1/marine?latitude=37.47&longitude=126.62&current=wave_height&hourly=wave_height&forecast_days=1&timezone=Asia%2FSeoul';
@@ -243,7 +243,7 @@ onMounted(() => {
       </div>
       <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; flex-wrap: wrap; gap: 0.6rem;">
         <p style="font-size: 1.2rem; color: rgba(255,255,255,0.6); margin-bottom: 0;">
-          기상청 단기예보 연동 인천 항운/해상 맞춤 기상 예보 (NX:54, NY:124)
+          Open-Meteo 실시간 연동 · 인천항 연안부두 (위도 37.47 / 경도 126.62)
         </p>
         <span v-if="lastUpdatedTime" style="font-size: 1.1rem; color: rgba(255,255,255,0.4);">
           최종 갱신: {{ lastUpdatedTime }}
