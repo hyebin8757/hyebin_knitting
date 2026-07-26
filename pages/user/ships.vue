@@ -980,7 +980,7 @@ onBeforeUnmount(() => {
                 <span>{{ getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status) }}</span>
               </div>
               <span style="font-size: 1.15rem; color: #88c5ff; font-weight: 700; background: rgba(136, 197, 255, 0.15); padding: 0.2rem 0.65rem; border-radius: 0.4rem; white-space: nowrap; flex-shrink: 0;" v-if="selectedShipForMap?.eta">
-                ETA {{ selectedShipForMap.eta.split(' ').slice(-1)[0] }}
+                ETA {{ selectedShipForMap.eta.includes(' ') ? selectedShipForMap.eta.split(' ').slice(1).join(' ') : selectedShipForMap.eta }}
               </span>
             </div>
           </div>
