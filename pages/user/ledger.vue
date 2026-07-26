@@ -202,17 +202,40 @@ const paymentSummary = computed(() => {
   return summary;
 });
 
-// 자주 쓰는 선명 칩 클릭 시 적용
+// 사용자가 현재 포커스/선택 중인 엑셀 시트 행 인덱스
+const activeFocusedRowIndex = ref<number | null>(null);
+
+// 자주 쓰는 선명 칩 클릭 시 적용 (현재 포커스 행 -> 빈 행 -> 신규 행 순으로 스마트 대입)
 const applyFrequentShipToForm = (shipName: string) => {
-  // 1) 연속 입력 중일 때 마지막 입력 행에 대입
-  const lastRow = batchRows.value[batchRows.value.length - 1];
-  if (lastRow) {
-    lastRow.shipName = shipName;
-  }
-  // 2) 단건 입력 모달 열려있을 때 모달 인풋에 대입
+  // 1) 단건 작성/수정 모달이 열려 있을 경우 모달 입력창에 대입
   if (isSingleModalOpen.value) {
     singleForm.value.shipName = shipName;
+    return;
   }
+
+  // 2) 현재 사용자가 클릭/포커스해 둔 행이 있을 경우 해당 행에 대입
+  if (activeFocusedRowIndex.value !== null && batchRows.value[activeFocusedRowIndex.value]) {
+    batchRows.value[activeFocusedRowIndex.value].shipName = shipName;
+    return;
+  }
+
+  // 3) 선명이 비어 있는 첫 번째 행을 찾아서 대입
+  const emptyRowIdx = batchRows.value.findIndex(r => !r.shipName || r.shipName.trim() === '');
+  if (emptyRowIdx !== -1) {
+    batchRows.value[emptyRowIdx].shipName = shipName;
+    activeFocusedRowIndex.value = emptyRowIdx;
+    return;
+  }
+
+  // 4) 기존 행이 모두 채워져 있다면 새로운 행을 1개 추가 후 입력
+  batchRows.value.push({
+    shipName,
+    itemDetails: '',
+    amount: null,
+    paymentType: '선불',
+    memo: ''
+  });
+  activeFocusedRowIndex.value = batchRows.value.length - 1;
 };
 
 // 단건 입력/수정 모달
@@ -602,7 +625,7 @@ onMounted(() => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(row, rIdx) in batchRows" :key="rIdx">
+              <tr v-for="(row, rIdx) in batchRows" :key="rIdx" :class="{ 'focused-row': activeFocusedRowIndex === rIdx }">
                 <td class="r-no">{{ rIdx + 1 }}</td>
                 <td>
                   <input 
@@ -610,6 +633,7 @@ onMounted(() => {
                     v-model="row.shipName" 
                     placeholder="예: 프라이드" 
                     class="sheet-input"
+                    @focus="activeFocusedRowIndex = rIdx"
                   />
                 </td>
                 <td>
@@ -618,6 +642,7 @@ onMounted(() => {
                     v-model="row.itemDetails" 
                     placeholder="예: 박스 외 10개 (상)" 
                     class="sheet-input"
+                    @focus="activeFocusedRowIndex = rIdx"
                   />
                 </td>
                 <td>
@@ -627,10 +652,11 @@ onMounted(() => {
                     v-model.number="row.amount" 
                     placeholder="0" 
                     class="sheet-input amount"
+                    @focus="activeFocusedRowIndex = rIdx"
                   />
                 </td>
                 <td>
-                  <select v-model="row.paymentType" class="sheet-select">
+                  <select v-model="row.paymentType" class="sheet-select" @focus="activeFocusedRowIndex = rIdx">
                     <option v-for="opt in paymentOptions" :key="opt" :value="opt">{{ opt }}</option>
                   </select>
                 </td>
@@ -640,6 +666,7 @@ onMounted(() => {
                     v-model="row.memo" 
                     placeholder="상세 비고" 
                     class="sheet-input"
+                    @focus="activeFocusedRowIndex = rIdx"
                   />
                 </td>
                 <td style="text-align: center;">
