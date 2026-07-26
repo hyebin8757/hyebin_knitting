@@ -358,7 +358,7 @@ onMounted(() => {
 
 <template>
   <div class="ledger-container">
-    <!-- 👑 스마트 대시보드 메인 헤더 카드 -->
+    <!-- 👑 스마트 대시보드 메인 헤더 카드 (슬림 콤팩트 수술) -->
     <div class="hero-header-card">
       <div class="hero-top">
         <div class="brand-group">
@@ -371,27 +371,27 @@ onMounted(() => {
           </div>
         </div>
 
-        <button class="btn-excel-export" @click="exportToExcel">
+        <!-- 슬림 다이어트 엑셀 다운로드 버튼 -->
+        <button class="btn-excel-export-slim" @click="exportToExcel">
           <i class="material-icons">file_download</i>
           <span>엑셀 (XLSX) 다운로드</span>
         </button>
       </div>
 
-      <!-- 날짜 선택기 & 총 금액 네온 대시보드 -->
+      <!-- 날짜 선택기 & 총 금액 슬림 바 -->
       <div class="hero-dashboard-bar">
         <div class="date-selector-pill">
-          <i class="material-icons">calendar_today</i>
-          <input type="date" v-model="selectedDate" class="date-input" />
+          <input type="date" v-model="selectedDate" class="date-input-clean" />
         </div>
 
         <div class="total-amount-display">
-          <span class="amount-label">일일 운송 총액</span>
+          <span class="amount-label">일일 운송 총액:</span>
           <span class="amount-value">₩ {{ currentTotalAmount.toLocaleString() }}</span>
         </div>
       </div>
     </div>
 
-    <!-- ⚡ 스마트 모드 스위처 (목록 조회 vs 빠른 연속 작성) -->
+    <!-- ⚡ 스마트 모드 스위처 & 슬림 단건 작성 버튼 -->
     <div class="mode-control-bar">
       <div class="mode-tabs">
         <button 
@@ -399,7 +399,7 @@ onMounted(() => {
           @click="currentMode = 'list'"
         >
           <i class="material-icons">view_list</i>
-          <span>일일 장부 대시보드 ({{ currentLedgerList.length }}건)</span>
+          <span>장부 대시보드 ({{ currentLedgerList.length }})</span>
         </button>
 
         <button 
@@ -407,26 +407,25 @@ onMounted(() => {
           @click="currentMode = 'quick_input'"
         >
           <i class="material-icons">post_add</i>
-          <span>⚡ 빠른 연속 입력 시트</span>
+          <span>연속 입력 시트</span>
         </button>
       </div>
 
-      <button class="btn-primary-add" @click="openSingleAddModal">
+      <button class="btn-primary-add-slim" @click="openSingleAddModal">
         <i class="material-icons">add</i>
-        <span>단건 장부 작성</span>
+        <span>단건 작성</span>
       </button>
     </div>
 
-    <!-- 🚀 자주 쓰는 선명 스피드 패널 (클릭 시 자동 입력) -->
+    <!-- 🚀 자주 쓰는 선명 슬림 패널 -->
     <div class="frequent-chips-card">
       <div class="chips-header">
-        <div class="left">
-          <i class="material-icons" style="color: #1ad1b1;">directions_boat</i>
-          <span>자주 쓰는 선명 Quick-Fill:</span>
-          <small class="tip">클릭하면 작성 칸에 자동 입력됩니다</small>
+        <div class="left-label">
+          <i class="material-icons">directions_boat</i>
+          <span class="lbl-txt">자주 쓰는 선명:</span>
         </div>
 
-        <button class="btn-settings-chip" @click="isShipManageModalOpen = true">
+        <button class="btn-settings-chip-slim" @click="isShipManageModalOpen = true">
           <i class="material-icons">settings</i>
           <span>선명 관리</span>
         </button>
@@ -438,6 +437,11 @@ onMounted(() => {
           :key="sName"
           class="quick-ship-chip"
           @click="applyFrequentShipToForm(sName)"
+        >
+          + {{ sName }}
+        </button>
+      </div>
+    </div>
         >
           + {{ sName }}
         </button>
@@ -849,26 +853,24 @@ onMounted(() => {
       }
     }
 
-    .btn-excel-export {
-      display: flex;
+    .btn-excel-export-slim {
+      display: inline-flex;
       align-items: center;
-      gap: 0.6rem;
-      background: linear-gradient(135deg, #1d6f42 0%, #10492a 100%);
-      border: 1px solid rgba(46, 204, 113, 0.4);
-      color: #ffffff;
+      gap: 0.4rem;
+      background: rgba(46, 204, 113, 0.15);
+      border: 1px solid rgba(46, 204, 113, 0.35);
+      color: #2ecc71;
       font-weight: 800;
-      font-size: 1.3rem;
-      padding: 0.8rem 1.4rem;
-      border-radius: 1rem;
+      font-size: 1.15rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 0.7rem;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(29, 111, 66, 0.35);
       transition: all 0.2s ease;
 
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 18px rgba(29, 111, 66, 0.5);
+        background: rgba(46, 204, 113, 0.25);
       }
-      i { font-size: 1.8rem; }
+      i { font-size: 1.5rem; }
     }
   }
 
@@ -880,45 +882,45 @@ onMounted(() => {
     gap: 1rem;
     background: rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 1.2rem 1.6rem;
-    border-radius: 1.4rem;
+    padding: 0.9rem 1.4rem;
+    border-radius: 1.2rem;
 
     .date-selector-pill {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 0.6rem 1.2rem;
-      border-radius: 1rem;
 
-      i { color: #88c5ff; font-size: 1.8rem; }
-      .date-input {
-        background: transparent;
-        border: none;
+      .date-input-clean {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(136, 197, 255, 0.25);
+        border-radius: 0.7rem;
+        padding: 0.35rem 0.75rem;
         color: #ffffff;
-        font-size: 1.45rem;
+        font-size: 1.25rem;
         font-weight: 800;
         outline: none;
+
+        &::-webkit-calendar-picker-indicator {
+          filter: invert(0.85);
+          cursor: pointer;
+        }
       }
     }
 
     .total-amount-display {
       display: flex;
       align-items: baseline;
-      gap: 0.8rem;
+      gap: 0.6rem;
 
       .amount-label {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         color: rgba(255, 255, 255, 0.6);
       }
 
       .amount-value {
-        font-size: 2.6rem;
+        font-size: 2.2rem;
         font-weight: 900;
         color: #1ad1b1;
-        letter-spacing: -0.05rem;
-        text-shadow: 0 0 12px rgba(26, 209, 177, 0.3);
+        letter-spacing: -0.04rem;
       }
     }
   }
@@ -930,32 +932,32 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.8rem;
   margin-bottom: 1.4rem;
 
   .mode-tabs {
     display: flex;
-    gap: 0.6rem;
+    gap: 0.4rem;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 0.4rem;
-    border-radius: 1.2rem;
+    padding: 0.3rem;
+    border-radius: 1rem;
 
     .mode-btn {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.8rem 1.4rem;
-      font-size: 1.3rem;
+      gap: 0.4rem;
+      padding: 0.6rem 1.1rem;
+      font-size: 1.2rem;
       font-weight: 800;
       color: rgba(255, 255, 255, 0.5);
       background: transparent;
       border: none;
-      border-radius: 0.9rem;
+      border-radius: 0.7rem;
       cursor: pointer;
       transition: all 0.2s;
 
-      i { font-size: 1.7rem; }
+      i { font-size: 1.5rem; }
 
       &.active {
         background: var(--primary-darken-color-1);
@@ -965,66 +967,67 @@ onMounted(() => {
     }
   }
 
-  .btn-primary-add {
-    display: flex;
+  .btn-primary-add-slim {
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    background: rgba(58, 134, 255, 0.2);
-    border: 1px solid rgba(58, 134, 255, 0.4);
+    gap: 0.3rem;
+    background: rgba(58, 134, 255, 0.18);
+    border: 1px solid rgba(58, 134, 255, 0.35);
     color: #88c5ff;
     font-weight: 800;
-    font-size: 1.3rem;
-    padding: 0.75rem 1.3rem;
-    border-radius: 1rem;
+    font-size: 1.15rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 0.7rem;
     cursor: pointer;
     transition: all 0.2s;
 
-    &:hover { background: rgba(58, 134, 255, 0.3); }
-    i { font-size: 1.8rem; }
+    &:hover { background: rgba(58, 134, 255, 0.28); }
+    i { font-size: 1.5rem; }
   }
 }
 
-/* 🚀 자주 쓰는 선명 스피드 패널 */
+/* 🚀 자주 쓰는 선명 슬림 패널 */
 .frequent-chips-card {
   background: rgba(13, 30, 51, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.4rem;
-  padding: 1.2rem 1.6rem;
+  border-radius: 1.2rem;
+  padding: 0.9rem 1.2rem;
   margin-bottom: 1.6rem;
 
   .chips-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.6rem;
 
-    .left {
+    .left-label {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 1.3rem;
+      gap: 0.4rem;
+      font-size: 1.15rem;
       font-weight: 800;
+      color: #ffffff;
+      white-space: nowrap;
 
-      .tip {
-        font-size: 1.1rem;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.4);
-        margin-left: 0.4rem;
-      }
+      i { color: #1ad1b1; font-size: 1.5rem; }
+      .lbl-txt { font-size: 1.15rem; }
     }
 
-    .btn-settings-chip {
-      display: flex;
+    .btn-settings-chip-slim {
+      display: inline-flex;
       align-items: center;
-      gap: 0.3rem;
+      gap: 0.2rem;
       background: rgba(26, 209, 177, 0.12);
       border: 1px solid rgba(26, 209, 177, 0.3);
       color: #1ad1b1;
-      padding: 0.3rem 0.8rem;
-      border-radius: 0.6rem;
-      font-size: 1.15rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 0.5rem;
+      font-size: 1.1rem;
       font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
+
+      i { font-size: 1.3rem; }
     }
   }
 
