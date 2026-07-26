@@ -493,14 +493,7 @@ const updateNextTideTimer = () => {
   tideInfoSummary.value.timeRemainingStr = `${hours > 0 ? `${hours}시간 ` : ''}${mins}분 남음`;
 };
 
-// 자동 새로고침 폴링 및 토스트 상태
-const startAutoPolling = () => {
-  if (timerId) clearInterval(timerId);
-  timerId = setInterval(() => {
-    fetchShipsData();
-    fetchTideData();
-  }, 60000);
-};
+// 수동 새로고침 및 토스트 알림 상태
 
 const isRefreshing = ref(false);
 const showRefreshToast = ref(false);
