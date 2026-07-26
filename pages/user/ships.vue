@@ -287,6 +287,9 @@ const filteredShipList = computed(() => {
     );
   }
 
+  return list;
+});
+
 // 🛰️ 선박 실시간 AIS 위치 팝업 모달 상태
 const isShipMapModalOpen = ref(false);
 const selectedShipForMap = ref<ShipItem | null>(null);
