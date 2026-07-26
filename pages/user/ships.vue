@@ -122,13 +122,9 @@ const formatPublicShipDate = (dateStr?: string, defaultFallback = '접안중') =
   return dateStr;
 };
 
-// 선박의 ETA(도착 예정 일시) 기준 인천항 복귀/도착 남은 시간 계산 헬퍼
+// 선박의 ETA(도착 예정 일시) 기준 인천항 복귀/도착 남은 시간 계산 및 실시간 상태 동기화 헬퍼
 const getETACountdownStr = (etaStr?: string, status?: string) => {
   if (!etaStr) return null;
-  
-  if (status === '접안중') {
-    return '현재 인천항 부두 접안 완료';
-  }
 
   try {
     const now = new Date();
@@ -157,8 +153,10 @@ const getETACountdownStr = (etaStr?: string, status?: string) => {
     if (!etaDate || isNaN(etaDate.getTime())) return null;
 
     const diffMs = etaDate.getTime() - now.getTime();
-    if (diffMs <= 0) {
-      return '인천항 입항 완료 / 접안 대기중';
+    
+    // ETA 시각이 현재 시각보다 같거나 이전이면 '부두 접안 완료' 상태 반환
+    if (status === '접안중' || diffMs <= 0) {
+      return '현재 인천항 부두 접안 완료';
     }
 
     const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -174,29 +172,63 @@ const getETACountdownStr = (etaStr?: string, status?: string) => {
   }
 };
 
-// 🛳️ 인천 임항 & 남항 백년해운 관련 선박(웨스트호, 미래9호, 미래3호, 백령해운) 정정 및 신규 확충 통합 리스트
+// 현재 시각과 ETA를 비교하여 실제 운항/접안 상태 동적 감지
+const getShipEffectiveStatus = (ship: ShipItem): '접안중' | '입항예정' | '관제중' | string => {
+  if (ship.status === '접안중') return '접안중';
+  if (!ship.eta) return ship.status || '접안중';
+
+  try {
+    const now = new Date();
+    const isPM = /PM|오후/i.test(ship.eta);
+    const isAM = /AM|오전/i.test(ship.eta);
+    const cleanStr = ship.eta.replace(/(AM|PM|오전|오후)/gi, '').trim();
+
+    let hh = 0, mm = 0;
+    let y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
+
+    if (cleanStr.includes('-') && cleanStr.includes(':')) {
+      const parts = cleanStr.split(' ');
+      [y, m, d] = parts[0].split('-').map(Number);
+      [hh, mm] = parts[1].split(':').map(Number);
+    } else if (cleanStr.includes(':')) {
+      [hh, mm] = cleanStr.split(':').map(Number);
+    }
+
+    if (isPM && hh < 12) hh += 12;
+    if (isAM && hh === 12) hh = 0;
+
+    const etaDate = new Date(y, m - 1, d, hh, mm);
+    if (etaDate && !isNaN(etaDate.getTime()) && etaDate <= now) {
+      return '접안중';
+    }
+  } catch (_) {}
+
+  return ship.status || '입항예정';
+};
+
+// 🛳️ 인천 임항 & 남항 백년해운 관련 선박 정정 및 통합 리스트 (실시간 여객선 운항 표준 시각 반영)
 const shipList = ref<ShipItem[]>([
   {
     id: '1',
     shipName: '코리아프라이드호',
     route: '인천 ↔ 백령도 (대청도, 소청도 경과)',
     shipType: '대형 초고속카페리',
-    feature: '약 1,600톤급 초고속 카페리로 백령도 노선 운항',
+    feature: '약 1,600톤급 초고속 카페리로 백령도 노선 운항 (백령 13:30 → 인천 17:15)',
     callSign: 'KOREAPRIDE',
     mmsi: '440027780',
-    eta: getDynamicDateStr(0, '05:40 PM'),
+    eta: getDynamicDateStr(0, '05:15 PM'),
     etd: getDynamicDateStr(1, '07:00 AM'),
     location: '인천 연안여객터미널 1선석',
     agent: '고려고속훼리',
     grossTonnage: '1,600 톤',
-    status: '입항예정'
+    status: '접안중'
   },
   {
     id: '2',
     shipName: '코리아프린세스호',
     route: '인천 ↔ 백령도 (대청도, 소청도 경과)',
     shipType: '고속여객선',
-    feature: '백령도 항로를 운항하는 고속 여객선',
+    feature: '백령도 항로를 운항하는 고속 여객선 (백령 12:30 → 인천 16:30)',
     callSign: 'KOREAPRINCE',
     mmsi: '440023450',
     eta: getDynamicDateStr(0, '04:30 PM'),
@@ -211,15 +243,15 @@ const shipList = ref<ShipItem[]>([
     shipName: '코리아킹호 (KOREAKING)',
     route: '인천 ↔ 연평도 (소연평도 경과)',
     shipType: '고속여객선',
-    feature: '연평도 주민 및 관광객 수송',
+    feature: '연평도 주민 및 관광객 수송 (연평 15:30 → 인천 17:15)',
     callSign: 'KOREAKING',
     mmsi: '440020080',
-    eta: getDynamicDateStr(0, '05:52 PM'),
+    eta: getDynamicDateStr(0, '05:15 PM'),
     etd: getDynamicDateStr(1, '06:00 PM'),
     location: '인천 연안여객터미널 3선석',
     agent: '고려고속훼리',
     grossTonnage: '4,100 톤',
-    status: '입항예정'
+    status: '접안중'
   },
   {
     id: '4',
@@ -229,12 +261,12 @@ const shipList = ref<ShipItem[]>([
     feature: '인천 임항부두 및 연안여객 차도선 운항',
     callSign: 'WEST',
     mmsi: '440004790',
-    eta: getDynamicDateStr(0, '05:52 PM'),
+    eta: getDynamicDateStr(0, '05:15 PM'),
     etd: getDynamicDateStr(1, '08:00 PM'),
     location: '인천 임항부두 / 연안여객터미널 4선석',
     agent: '서해훼리',
     grossTonnage: '5,500 톤',
-    status: '입항예정'
+    status: '접안중'
   },
   {
     id: '5',
@@ -807,12 +839,12 @@ onBeforeUnmount(() => {
               <span
                 style="padding: 0.3rem 0.8rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;"
                 :style="{
-                  background: ship.status === '접안중' ? 'rgba(26, 209, 177, 0.15)' : ship.status === '입항예정' ? 'rgba(58, 134, 255, 0.15)' : ship.status === '관제중' ? 'rgba(255, 204, 0, 0.15)' : 'rgba(255,255,255,0.1)',
-                  color: ship.status === '접안중' ? '#1ad1b1' : ship.status === '입항예정' ? '#88c5ff' : ship.status === '관제중' ? '#ffcc00' : 'rgba(255,255,255,0.6)',
-                  border: '1px solid ' + (ship.status === '접안중' ? '#1ad1b1' : ship.status === '입항예정' ? '#88c5ff' : ship.status === '관제중' ? '#ffcc00' : 'rgba(255,255,255,0.2)')
+                  background: getShipEffectiveStatus(ship) === '접안중' ? 'rgba(26, 209, 177, 0.15)' : getShipEffectiveStatus(ship) === '입항예정' ? 'rgba(58, 134, 255, 0.15)' : 'rgba(255, 204, 0, 0.15)',
+                  color: getShipEffectiveStatus(ship) === '접안중' ? '#1ad1b1' : getShipEffectiveStatus(ship) === '입항예정' ? '#88c5ff' : '#ffcc00',
+                  border: '1px solid ' + (getShipEffectiveStatus(ship) === '접안중' ? '#1ad1b1' : getShipEffectiveStatus(ship) === '입항예정' ? '#88c5ff' : '#ffcc00')
                 }"
               >
-                {{ ship.status }}
+                {{ getShipEffectiveStatus(ship) }}
               </span>
             </div>
           </div>
@@ -836,11 +868,11 @@ onBeforeUnmount(() => {
 
           <!-- Real-time 인천항 도착 카운트다운 뱃지 -->
           <div 
-            v-if="getETACountdownStr(ship.eta, ship.status)"
+            v-if="getETACountdownStr(ship.eta, getShipEffectiveStatus(ship))"
             style="margin-top: 0.8rem; background: rgba(26, 209, 177, 0.12); border: 1px solid rgba(26, 209, 177, 0.3); padding: 0.6rem 0.9rem; border-radius: 0.8rem; display: flex; align-items: center; gap: 0.5rem; color: #1ad1b1; font-size: 1.2rem; font-weight: 700;"
           >
             <i class="material-icons" style="font-size: 1.6rem;">schedule</i>
-            <span>{{ getETACountdownStr(ship.eta, ship.status) }}</span>
+            <span>{{ getETACountdownStr(ship.eta, getShipEffectiveStatus(ship)) }}</span>
           </div>
 
           <!-- Location / Berth -->
@@ -988,24 +1020,24 @@ onBeforeUnmount(() => {
               <span 
                 style="font-size: 1.2rem; font-weight: 800; padding: 0.3rem 0.8rem; border-radius: 0.6rem; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap;" 
                 :style="{
-                  background: selectedShipForMap?.status === '입항예정' ? 'rgba(26, 209, 177, 0.25)' : 'rgba(136, 197, 255, 0.2)',
-                  color: selectedShipForMap?.status === '입항예정' ? '#1ad1b1' : '#88c5ff',
-                  border: '1px solid ' + (selectedShipForMap?.status === '입항예정' ? '#1ad1b1' : '#88c5ff')
+                  background: (selectedShipForMap && getShipEffectiveStatus(selectedShipForMap) === '접안중') ? 'rgba(26, 209, 177, 0.25)' : 'rgba(136, 197, 255, 0.2)',
+                  color: (selectedShipForMap && getShipEffectiveStatus(selectedShipForMap) === '접안중') ? '#1ad1b1' : '#88c5ff',
+                  border: '1px solid ' + ((selectedShipForMap && getShipEffectiveStatus(selectedShipForMap) === '접안중') ? '#1ad1b1' : '#88c5ff')
                 }"
-                v-if="selectedShipForMap?.status"
+                v-if="selectedShipForMap"
               >
-                {{ selectedShipForMap.status === '입항예정' ? '🚢 실시간 운항중' : selectedShipForMap.status }}
+                {{ (getShipEffectiveStatus(selectedShipForMap) === '접안중') ? '⚓ 인천항 접안 완료' : '🚢 실시간 운항중' }}
               </span>
             </div>
 
             <!-- Row 2: ETA Time & Countdown Info Box -->
             <div 
-              v-if="getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status)"
+              v-if="selectedShipForMap && getETACountdownStr(selectedShipForMap.eta, getShipEffectiveStatus(selectedShipForMap))"
               style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0.8rem; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;"
             >
               <div style="display: flex; align-items: center; gap: 0.5rem; color: #ffffff; font-size: 1.25rem; font-weight: 700; white-space: nowrap;">
                 <i class="material-icons" style="font-size: 1.65rem; color: #1ad1b1;">schedule</i>
-                <span>{{ getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status) }}</span>
+                <span>{{ getETACountdownStr(selectedShipForMap.eta, getShipEffectiveStatus(selectedShipForMap)) }}</span>
               </div>
               <span style="font-size: 1.15rem; color: #88c5ff; font-weight: 700; background: rgba(136, 197, 255, 0.15); padding: 0.2rem 0.65rem; border-radius: 0.4rem; white-space: nowrap; flex-shrink: 0;" v-if="selectedShipForMap?.eta">
                 ETA {{ selectedShipForMap.eta.includes(' ') ? selectedShipForMap.eta.split(' ').slice(1).join(' ') : selectedShipForMap.eta }}
