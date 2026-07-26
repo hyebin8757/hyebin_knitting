@@ -382,7 +382,7 @@ const router = useRouter();
 
 onMounted(() => {
   // 객선 장부 전용 권한 체크 (관리자 또는 간부조 정택광 전용)
-  const isAuthorized = userRole.value === 'admin' || userStore.loggedInUser?.name === '정택광';
+  const isAuthorized = userStore.userRole === 'admin' || userStore.loggedInUser?.name === '정택광';
   if (!isAuthorized) {
     showAlert('객선 장부 메뉴는 담당자(정택광 조합원) 전용 메뉴입니다.', '접근 제한');
     setTimeout(() => {
