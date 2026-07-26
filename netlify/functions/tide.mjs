@@ -3,6 +3,8 @@
  * 국립해양조사원 조석예보 API 프록시 (인천항 DT_0001)
  * https://apis.data.go.kr/1192136/tideFcstHghLw/GetTideFcstHghLwApiService
  */
+import { XMLParser } from 'fast-xml-parser';
+
 export const handler = async () => {
   const SERVICE_KEY = process.env.KMA_API_KEY || '8522336155cd0abd16545a726f3220de9735adc9ababdfc24c2972fbe66febc7';
 
@@ -23,19 +25,21 @@ export const handler = async () => {
     serviceKey: SERVICE_KEY,
     pageNo: '1',
     numOfRows: '100',
-    dataType: 'JSON',
+    dataType: 'XML', // API returns XML
     obsCode: OBS_CODE,
     reqDate,
   });
 
   try {
-    const response = await fetch(`${baseUrl}?${params.toString()}`, {
-      headers: { Accept: 'application/json, text/plain, */*' },
-    });
+    const response = await fetch(`${baseUrl}?${params.toString()}`);
+    
+    if (!response.ok) {
+        throw new Error(`HTTP error status: ${response.status}`);
+    }
 
-    const text = await response.text();
-    let data = null;
-    try { data = JSON.parse(text); } catch (_) {}
+    const xmlData = await response.text();
+    const parser = new XMLParser();
+    const jsonObj = parser.parse(xmlData);
 
     return {
       statusCode: 200,
@@ -45,7 +49,7 @@ export const handler = async () => {
       },
       body: JSON.stringify({
         success: true,
-        data,
+        data: jsonObj,
         reqDate,
         obsCode: OBS_CODE,
       }),
