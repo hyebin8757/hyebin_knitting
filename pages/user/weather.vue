@@ -181,6 +181,10 @@ const fetchWeatherData = async () => {
           waveHeight: '- m'
         });
       });
+      // 현재 파고가 있으면 시간별 예보 기본 파고로 적용
+      if (currentWeather.value.waveHeight !== '- m') {
+        parsed.forEach(item => { item.waveHeight = currentWeather.value.waveHeight; });
+      }
       if (parsed.length > 0) hourlyForecasts.value = parsed;
 
       // 오늘 최고/최저 기온 (fcst TMP 중 오늘 값 범위)
@@ -194,21 +198,39 @@ const fetchWeatherData = async () => {
       }
     }
 
-    // KMA WAV 없으면 Open-Meteo Marine으로 파고 폴백
-    if (currentWeather.value.waveHeight === '- m') {
-      try {
-        const marineRes = await fetch('https://marine-api.open-meteo.com/v1/marine?latitude=37.47&longitude=126.62&current=wave_height&timezone=Asia%2FSeoul').then(r => r.json());
-        const waveM = marineRes?.current?.wave_height ?? null;
-        if (waveM != null) {
-          const wv = Math.round(waveM * 10) / 10;
-          currentWeather.value.waveHeight = `${wv.toFixed(1)} m`;
-          if (wv < 0.5) currentWeather.value.waveStatus = '잔잔함 (안전)';
-          else if (wv < 1.0) currentWeather.value.waveStatus = '약간 있음 (주의)';
-          else if (wv < 2.0) currentWeather.value.waveStatus = '보통 (주의)';
-          else currentWeather.value.waveStatus = '높음 ⚠️ (결항 위험)';
-        }
-      } catch (_) {}
-    }
+    // Open-Meteo Marine API로 현재 & 시간대별 해상 파고 완벽 연동
+    try {
+      const marineRes = await fetch('https://marine-api.open-meteo.com/v1/marine?latitude=37.47&longitude=126.62&current=wave_height&hourly=wave_height&forecast_days=2&timezone=Asia%2FSeoul').then(r => r.json());
+      const waveM = marineRes?.current?.wave_height ?? null;
+      
+      // 현재 파고 갱신
+      if (waveM != null) {
+        const wv = Math.round(waveM * 10) / 10;
+        currentWeather.value.waveHeight = `${wv.toFixed(1)} m`;
+        if (wv < 0.5) currentWeather.value.waveStatus = '잔잔함 (안전)';
+        else if (wv < 1.0) currentWeather.value.waveStatus = '약간 있음 (주의)';
+        else if (wv < 2.0) currentWeather.value.waveStatus = '보통 (주의)';
+        else currentWeather.value.waveStatus = '높음 ⚠️ (결항 위험)';
+      }
+
+      // 시간대별 예보에 실시간 파고(wave_height) 매핑
+      if (marineRes?.hourly?.wave_height && marineRes?.hourly?.time) {
+        const hTimes: string[] = marineRes.hourly.time;
+        const hWaves: number[] = marineRes.hourly.wave_height;
+        hourlyForecasts.value = hourlyForecasts.value.map(fc => {
+          const matchIdx = hTimes.findIndex(t => {
+            const d = new Date(t);
+            const fcHour = fc.time.split(' ').slice(-1)[0]; // "18:00"
+            return String(d.getHours()).padStart(2, '0') + ':00' === fcHour;
+          });
+          if (matchIdx >= 0 && hWaves[matchIdx] != null) {
+            const waveVal = (Math.round(hWaves[matchIdx] * 10) / 10).toFixed(1);
+            return { ...fc, waveHeight: `${waveVal} m` };
+          }
+          return { ...fc, waveHeight: currentWeather.value.waveHeight };
+        });
+      }
+    } catch (_) {}
 
 
   } catch (e: any) {
