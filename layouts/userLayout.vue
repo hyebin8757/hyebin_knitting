@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, provide } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref, provide } from "vue";
 import { cx } from "@emotion/css";
 import { UserLayoutStyle } from "~/layouts/style/UserLayoutStyle";
 import { useUserStore } from "~/stores/useUserStore";
@@ -44,11 +44,15 @@ const setWindowWidth = (data: UIEvent) => {
 };
 
 /************************************************************
- * Mounted
+ * Mounted & Unmounted
  ************************************************************/
 onMounted(() => {
   windowWidth.value = window.innerWidth;
   window.addEventListener("resize", setWindowWidth);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", setWindowWidth);
 });
 </script>
 

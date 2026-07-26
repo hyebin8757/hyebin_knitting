@@ -152,21 +152,27 @@ export const UserLayoutStyle = {
         }
       }
 
+      &:active {
+        transform: scale(0.92);
+      }
+
       &.router-link-active {
-        color: var(--primary-lighten-color-1);
+        color: #1ad1b1;
         
         i {
-          transform: translateY(-2px) scale(1.1);
-          color: var(--primary-lighten-color-1);
+          transform: translateY(-2px) scale(1.15);
+          color: #1ad1b1;
         }
 
         span {
           font-weight: 700;
-          color: var(--white-color);
+          color: #ffffff;
         }
 
         &::after {
-          width: 40px;
+          width: 32px;
+          background: #1ad1b1;
+          box-shadow: 0 0 8px rgba(26, 209, 177, 0.6);
         }
       }
     }
