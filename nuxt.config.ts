@@ -154,6 +154,27 @@ const nuxtConfig: any = {
     // },
   },
 
+  compatibilityDate: '2026-07-26',
+
+  vite: {
+    build: {
+      chunkSizeWarningLimit: 1000,
+      cssCodeSplit: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/vuetify')) {
+              return 'vuetify';
+            }
+            if (id.includes('node_modules/@supabase')) {
+              return 'supabase';
+            }
+          }
+        }
+      }
+    }
+  },
+
   postcss: {
     plugins: {
       tailwindcss: {},
