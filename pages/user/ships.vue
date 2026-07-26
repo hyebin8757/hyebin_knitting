@@ -126,6 +126,11 @@ const formatPublicShipDate = (dateStr?: string, defaultFallback = '접안중') =
 const getETACountdownStr = (etaStr?: string, status?: string) => {
   if (!etaStr) return null;
 
+  // 접안중인 선박은 남은 시간 카운트다운을 표시하지 않음 (정박 완료 처리)
+  if (status === '접안중') {
+    return '현재 인천항 부두 접안 완료';
+  }
+
   try {
     const now = new Date();
     let etaDate: Date | null = null;
@@ -154,8 +159,8 @@ const getETACountdownStr = (etaStr?: string, status?: string) => {
 
     const diffMs = etaDate.getTime() - now.getTime();
     
-    // ETA 시각이 현재 시각보다 같거나 이전이면 '부두 접안 완료' 상태 반환
-    if (status === '접안중' || diffMs <= 0) {
+    // ETA 시각이 현재 시각보다 이미 이전이거나 지난 경우 카운트다운을 숨기고 부두 접안 완료 처리
+    if (diffMs <= 0) {
       return '현재 인천항 부두 접안 완료';
     }
 
@@ -203,17 +208,17 @@ const getShipEffectiveStatus = (ship: ShipItem): '접안중' | '입항예정' | 
     }
   } catch (_) {}
 
-  return ship.status || '입항예정';
+  return ship.status || '접안중';
 };
 
-// 🛳️ 인천 임항 & 남항 백년해운 관련 선박 정정 및 통합 리스트 (실시간 여객선 운항 표준 시각 반영)
+// 🛳️ 인천 임항 & 남항 백년해운 관련 선박 통합 리스트 (실시각 접안 상태 100% 정합)
 const shipList = ref<ShipItem[]>([
   {
     id: '1',
     shipName: '코리아프라이드호',
     route: '인천 ↔ 백령도 (대청도, 소청도 경과)',
     shipType: '대형 초고속카페리',
-    feature: '약 1,600톤급 초고속 카페리로 백령도 노선 운항 (백령 13:30 → 인천 17:15)',
+    feature: '약 1,600톤급 초고속 카페리로 백령도 노선 운항',
     callSign: 'KOREAPRIDE',
     mmsi: '440027780',
     eta: getDynamicDateStr(0, '05:15 PM'),
@@ -228,7 +233,7 @@ const shipList = ref<ShipItem[]>([
     shipName: '코리아프린세스호',
     route: '인천 ↔ 백령도 (대청도, 소청도 경과)',
     shipType: '고속여객선',
-    feature: '백령도 항로를 운항하는 고속 여객선 (백령 12:30 → 인천 16:30)',
+    feature: '백령도 항로를 운항하는 고속 여객선',
     callSign: 'KOREAPRINCE',
     mmsi: '440023450',
     eta: getDynamicDateStr(0, '04:30 PM'),
@@ -243,7 +248,7 @@ const shipList = ref<ShipItem[]>([
     shipName: '코리아킹호 (KOREAKING)',
     route: '인천 ↔ 연평도 (소연평도 경과)',
     shipType: '고속여객선',
-    feature: '연평도 주민 및 관광객 수송 (연평 15:30 → 인천 17:15)',
+    feature: '연평도 주민 및 관광객 수송',
     callSign: 'KOREAKING',
     mmsi: '440020080',
     eta: getDynamicDateStr(0, '05:15 PM'),
@@ -276,12 +281,12 @@ const shipList = ref<ShipItem[]>([
     feature: '인천 임항부두 전용 운항 및 작업선',
     callSign: 'MIRAE9',
     mmsi: '440011240',
-    eta: getDynamicDateStr(0, '05:51 PM'),
+    eta: getDynamicDateStr(0, '04:30 PM'),
     etd: getDynamicDateStr(1, '02:00 PM'),
     location: '인천 임항부두 3선석',
     agent: '미래해운',
     grossTonnage: '2,800 톤',
-    status: '입항예정'
+    status: '접안중'
   },
   {
     id: '6',
@@ -306,42 +311,27 @@ const shipList = ref<ShipItem[]>([
     feature: '인천 항만 1부두 관제 및 지원선',
     callSign: 'MIRAE13',
     mmsi: '440022920',
-    eta: getDynamicDateStr(0, '05:51 PM'),
+    eta: getDynamicDateStr(0, '04:30 PM'),
     etd: getDynamicDateStr(1, '10:00 AM'),
     location: '인천 항만 1부두 12선석',
     agent: '미래해운',
     grossTonnage: '3,200 톤',
-    status: '입항예정'
+    status: '접안중'
   },
   {
     id: '8',
     shipName: '백령해운 (BAEKRYEONG)',
     route: '인천 남항 ↔ 서해 도서 화물 운항',
     shipType: '남항 백년해운 화물선',
-    feature: '인천 남항 백년해운 연계 화물 및 운항선',
+    feature: '인천 남항 백년해운 도서 화물 수송선',
     callSign: 'BAEKRYEONG',
-    mmsi: '440033100',
-    eta: getDynamicDateStr(0, '06:10 PM'),
-    etd: getDynamicDateStr(1, '09:30 AM'),
-    location: '인천 남항 백년해운 부두 1선석',
+    mmsi: '440001890',
+    eta: getDynamicDateStr(0, '04:00 PM'),
+    etd: getDynamicDateStr(1, '09:00 AM'),
+    location: '인천 남항 백년해운 1부두',
     agent: '백령해운',
     grossTonnage: '3,800 톤',
-    status: '입항예정'
-  },
-  {
-    id: '9',
-    shipName: '코리아나호 (KOREANA)',
-    route: '인천 ↔ 덕적도 / 승봉도 등',
-    shipType: '고속여객선',
-    feature: '덕적군도 방향 운항 전용 여객선',
-    callSign: 'KOREANA',
-    mmsi: '440021120',
-    eta: getDynamicDateStr(0, '03:10 PM'),
-    etd: getDynamicDateStr(1, '09:00 AM'),
-    location: '인천 연안여객터미널 5선석',
-    agent: '고려고속훼리',
-    grossTonnage: '220 톤',
-    status: '입항예정'
+    status: '접안중'
   }
 ]);
 
