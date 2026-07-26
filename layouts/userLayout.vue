@@ -58,7 +58,26 @@ onMounted(() => {
             <span v-else class="logo-badge">조합원용</span>
           </div>
           <div class="header-user">
-            <span><strong>{{ loggedInUserName }}</strong> 님</span>
+            <nuxt-link 
+              to="/user/mypage" 
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                color: #ffffff;
+                text-decoration: none;
+                background: rgba(255, 255, 255, 0.08);
+                padding: 0.4rem 0.9rem;
+                border-radius: 0.8rem;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                cursor: pointer;
+                transition: all 0.2s;
+              "
+              title="마이페이지 이동"
+            >
+              <i class="material-icons" style="font-size: 1.6rem; color: #88c5ff;">account_circle</i>
+              <span style="font-size: 1.3rem;"><strong>{{ loggedInUserName }}</strong> 님</span>
+            </nuxt-link>
           </div>
         </header>
 
@@ -70,7 +89,7 @@ onMounted(() => {
         <!-- Bottom Navigation Bar -->
         <nav 
           :class="cx('user-layout-nav', UserLayoutStyle.BottomNav)"
-          :style="{ gridTemplateColumns: isGroup7OrAdmin ? 'repeat(6, 1fr)' : 'repeat(5, 1fr)' }"
+          :style="{ gridTemplateColumns: isGroup7OrAdmin ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)' }"
         >
           <nuxt-link to="/user/attendance" class="nav-item">
             <i class="material-icons">event_available</i>
@@ -91,10 +110,6 @@ onMounted(() => {
           <nuxt-link to="/user/members" class="nav-item">
             <i class="material-icons">groups</i>
             <span>회원관리</span>
-          </nuxt-link>
-          <nuxt-link to="/user/mypage" class="nav-item">
-            <i class="material-icons">person</i>
-            <span>마이페이지</span>
           </nuxt-link>
         </nav>
       </div>
