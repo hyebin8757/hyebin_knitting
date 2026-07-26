@@ -239,10 +239,8 @@ const filteredShipList = computed(() => {
   if (selectedTerminalFilter.value !== 'all') {
     if (selectedTerminalFilter.value === '연안여객') {
       list = list.filter(s => s.location.includes('연안여객'));
-    } else if (selectedTerminalFilter.value === '국제여객') {
-      list = list.filter(s => s.location.includes('국제여객'));
     } else if (selectedTerminalFilter.value === '화물부두') {
-      list = list.filter(s => !s.location.includes('연안여객') && !s.location.includes('국제여객'));
+      list = list.filter(s => !s.location.includes('연안여객'));
     }
   }
 
@@ -485,17 +483,6 @@ onBeforeUnmount(() => {
           @click="selectedTerminalFilter = '연안여객'"
         >
           🚢 연안여객터미널
-        </button>
-        <button
-          style="padding: 0.6rem 1.2rem; border-radius: 0.8rem; font-size: 1.2rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; cursor: pointer;"
-          :style="{
-            background: selectedTerminalFilter === '국제여객' ? 'rgba(58, 134, 255, 0.2)' : 'rgba(255,255,255,0.05)',
-            color: selectedTerminalFilter === '국제여객' ? '#88c5ff' : 'rgba(255,255,255,0.6)',
-            border: '1px solid ' + (selectedTerminalFilter === '국제여객' ? '#88c5ff' : 'rgba(255,255,255,0.1)')
-          }"
-          @click="selectedTerminalFilter = '국제여객'"
-        >
-          🌐 국제여객터미널
         </button>
         <button
           style="padding: 0.6rem 1.2rem; border-radius: 0.8rem; font-size: 1.2rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; cursor: pointer;"
