@@ -81,7 +81,7 @@ const registeredMmsiList = computed(() => {
 
 // MarineTraffic Embed Dynamic URL
 const marineTrafficUrl = computed(() => {
-  let targetMmsi = '440020080,440011240,440022920,440004790,440027780,440023450,440021120';
+  let targetMmsi = '440020080,440011240,440022920,440004790,440027780,440023450,440021120,440011250,440033100';
   
   if (selectedMapMmsi.value !== 'all') {
     targetMmsi = selectedMapMmsi.value;
@@ -122,7 +122,7 @@ const formatPublicShipDate = (dateStr?: string, defaultFallback = '접안중') =
   return dateStr;
 };
 
-// 📸 이전 등록 선박(미래9호, 13미래호) + 이미지 5대 여객선 완전 통합 실시간 선박 리스트
+// 🛳️ 인천 임항 & 남항 백년해운 관련 선박(웨스트호, 미래9호, 미래3호, 백령해운) 정정 및 신규 확충 통합 리스트
 const shipList = ref<ShipItem[]>([
   {
     id: '1',
@@ -171,26 +171,56 @@ const shipList = ref<ShipItem[]>([
   },
   {
     id: '4',
-    shipName: 'MI RAE NO9 (미래 9호)',
-    route: '인천 연안 ↔ 서해 인근',
+    shipName: '웨스트호 (WEST)',
+    route: '인천 ↔ 덕적도 / 자월도 / 이작도 등',
+    shipType: '연안 차도선 / 통선',
+    feature: '인천 임항부두 및 연안여객 차도선 운항',
+    callSign: 'WEST',
+    mmsi: '440004790',
+    eta: getDynamicDateStr(0, '05:52 PM'),
+    etd: getDynamicDateStr(1, '08:00 PM'),
+    location: '인천 임항부두 / 연안여객터미널 4선석',
+    agent: '서해훼리',
+    grossTonnage: '5,500 톤',
+    status: '입항예정'
+  },
+  {
+    id: '5',
+    shipName: '미래9호 (MIRAE 9)',
+    route: '인천 임항 ↔ 서해 인근',
     shipType: '화물/작업선',
-    feature: '인천 남항 부두 전용 운항 및 작업선',
-    callSign: 'MI RAE NO9',
+    feature: '인천 임항부두 전용 운항 및 작업선',
+    callSign: 'MIRAE9',
     mmsi: '440011240',
     eta: getDynamicDateStr(0, '05:51 PM'),
     etd: getDynamicDateStr(1, '02:00 PM'),
-    location: '인천 남항 부두 3선석',
+    location: '인천 임항부두 3선석',
     agent: '미래해운',
     grossTonnage: '2,800 톤',
     status: '접안중'
   },
   {
-    id: '5',
-    shipName: 'NO13 MIRAE (13 미래호)',
+    id: '6',
+    shipName: '미래3호 (MIRAE 3)',
+    route: '인천 임항 ↔ 연안 화물 수송',
+    shipType: '화물/작업선',
+    feature: '인천 임항부두 전용 작업 수송선',
+    callSign: 'MIRAE3',
+    mmsi: '440011250',
+    eta: getDynamicDateStr(0, '03:20 PM'),
+    etd: getDynamicDateStr(1, '11:00 AM'),
+    location: '인천 임항부두 2선석',
+    agent: '미래해운',
+    grossTonnage: '2,500 톤',
+    status: '접안중'
+  },
+  {
+    id: '7',
+    shipName: '13미래호 (MIRAE 13)',
     route: '인천항 1부두 전용',
     shipType: '화물/작업선',
     feature: '인천 항만 1부두 관제 및 지원선',
-    callSign: 'NO13 MIRAE',
+    callSign: 'MIRAE13',
     mmsi: '440022920',
     eta: getDynamicDateStr(0, '05:51 PM'),
     etd: getDynamicDateStr(1, '10:00 AM'),
@@ -200,22 +230,22 @@ const shipList = ref<ShipItem[]>([
     status: '관제중'
   },
   {
-    id: '6',
-    shipName: '웨스트카훼리호 (WESTCARFERRY)',
-    route: '인천 ↔ 덕적도 / 자월도 / 이작도 등',
-    shipType: '연안 카페리',
-    feature: '차량 및 화물 적재가 가능한 차도선',
-    callSign: 'WESTCARFERRY',
-    mmsi: '440004790',
-    eta: getDynamicDateStr(0, '05:52 PM'),
-    etd: getDynamicDateStr(1, '08:00 PM'),
-    location: '인천 연안여객터미널 4선석',
-    agent: '서해훼리',
-    grossTonnage: '5,500 톤',
-    status: '입항예정'
+    id: '8',
+    shipName: '백령해운 (BAEKRYEONG)',
+    route: '인천 남항 ↔ 서해 도서 화물 운항',
+    shipType: '남항 백년해운 화물선',
+    feature: '인천 남항 백년해운 연계 화물 및 운항선',
+    callSign: 'BAEKRYEONG',
+    mmsi: '440033100',
+    eta: getDynamicDateStr(0, '06:10 PM'),
+    etd: getDynamicDateStr(1, '09:30 AM'),
+    location: '인천 남항 백년해운 부두 1선석',
+    agent: '백령해운',
+    grossTonnage: '3,800 톤',
+    status: '접안중'
   },
   {
-    id: '7',
+    id: '9',
     shipName: '코리아나호 (KOREANA)',
     route: '인천 ↔ 덕적도 / 승봉도 등',
     shipType: '고속여객선',
