@@ -20,21 +20,24 @@ definePageMeta({
 const isLoading = ref(false);
 const lastUpdatedTime = ref<string>('');
 
-// 인천항 연안부두 실시간 현재 날씨 데이터
+// 시간대별 예보 목록 (Open-Meteo 로딩 후 채워짐)
+const hourlyForecasts = ref<HourlyForecast[]>([]);
+
+// 인천항 연안부두 실시간 현재 날씨 데이터 (Open-Meteo 실시간 초기화)
 const currentWeather = ref({
-  temp: 29.3,
-  maxTemp: 30.0,
-  minTemp: 22.5,
+  temp: 0,
+  maxTemp: 0,
+  minTemp: 0,
   sky: '구름많음' as '맑음' | '구름많음' | '흐림' | '비' | '눈',
   icon: 'cloud',
-  rainPop: 10, // 강수확률 (%)
+  rainPop: 0, // 강수확률 (%)
   rainfall: '0.0 mm',
-  humidity: 83, // 습도 (%)
-  windSpeed: 3.1, // m/s
-  windKnots: 6.0, // Knots (3.1 * 1.94)
-  windDirection: '남서풍 (SW)',
-  waveHeight: '0.6 m', // 해상 파고 (m)
-  waveStatus: '잔잔함 (안전)'
+  humidity: 0,
+  windSpeed: 0,
+  windKnots: 0,
+  windDirection: '데이터 로딩중...',
+  waveHeight: '- m',
+  waveStatus: '데이터 로딩중...'
 });
 
 // 기상 특보 및 결항 위험 조건 감지 (풍속 27kts 이상 또는 파고 2m 이상)
@@ -43,113 +46,137 @@ const isWeatherWarning = computed(() => {
   return currentWeather.value.windKnots >= 27 || (!isNaN(wavNum) && wavNum >= 2.0);
 });
 
-// 현재 시각 기준 향후 24시간 3시간 간격 동적 예보 생성 헬퍼
-const generateDynamicHourlyForecasts = (): HourlyForecast[] => {
-  const list: HourlyForecast[] = [];
-  const now = new Date();
-  
-  for (let i = 0; i < 8; i++) {
-    const targetDate = new Date(now.getTime() + i * 3 * 60 * 60 * 1000);
-    const isTomorrow = targetDate.getDate() !== now.getDate();
-    const hourStr = String(targetDate.getHours()).padStart(2, '0') + ':00';
-    const dayLabel = isTomorrow ? '내일 ' : '오늘 ';
-    const displayTime = `${dayLabel}${hourStr}`;
-
-    const t = Math.round(29 - (i > 4 ? (i - 4) * 0.8 : i * 0.3));
-    const kts = parseFloat((6.0 + (i % 3) * 0.8).toFixed(1));
-    const wav = (0.6 + (i % 3) * 0.1).toFixed(1) + ' m';
-    const skyList: Array<'구름많음' | '구름많음' | '맑음' | '흐림'> = ['구름많음', '구름많음', '구름많음', '맑음', '맑음', '구름많음', '흐림', '구름많음'];
-    const iconList = ['cloud', 'cloud', 'cloud', 'wb_sunny', 'wb_sunny', 'cloud', 'cloud_queue', 'cloud'];
-
-    list.push({
-      time: displayTime,
-      temp: t,
-      sky: skyList[i % skyList.length],
-      icon: iconList[i % iconList.length],
-      pop: (i % 3) * 10 + 10,
-      windSpeed: parseFloat((kts / 1.94).toFixed(1)),
-      windKnots: kts,
-      waveHeight: wav
-    });
-  }
-
-  return list;
+// WMO weather code → 한글 날씨 + 아이콘 매핑
+const parseWmoCode = (code: number): { sky: '맑음' | '구름많음' | '흐림' | '비' | '눈'; icon: string } => {
+  if (code === 0) return { sky: '맑음', icon: 'wb_sunny' };
+  if (code <= 2) return { sky: '구름많음', icon: 'cloud' };
+  if (code === 3) return { sky: '흐림', icon: 'cloud_queue' };
+  if (code <= 49) return { sky: '구름많음', icon: 'cloud' }; // fog/mist
+  if (code <= 67) return { sky: '비', icon: 'umbrella' };
+  if (code <= 77) return { sky: '눈', icon: 'ac_unit' };
+  if (code <= 82) return { sky: '비', icon: 'umbrella' };
+  if (code <= 86) return { sky: '눈', icon: 'ac_unit' };
+  return { sky: '비', icon: 'thunderstorm' };
 };
 
-// 동적 시간대별 예보 목록 (현재 시각 기준 오늘/내일 HH:00)
-const hourlyForecasts = ref<HourlyForecast[]>(generateDynamicHourlyForecasts());
+// 풍향각도 → 한글 풍향 변환
+const degToWindDir = (deg: number): string => {
+  const dirs = ['북풍 (N)', '북동풍 (NE)', '동풍 (E)', '남동풍 (SE)', '남풍 (S)', '남서풍 (SW)', '서풍 (W)', '북서풍 (NW)'];
+  return dirs[Math.round(deg / 45) % 8];
+};
 
-// 기상청 API 데이터 호출
+// ✅ Open-Meteo 실시간 날씨 API (브라우저 직접 호출 - Netlify 완벽 호환)
+// 인천항 연안여객터미널 위도/경도: 37.4736, 126.6194
 const fetchWeatherData = async () => {
   isLoading.value = true;
   try {
-    const res: any = await $fetch('/api/weather');
-    
-    // 1. 초단기실황 파싱 (기온 T1H, 습도 REH, 풍속 WSD, 파고 WAV)
-    if (res && res.success && res.data) {
-      const items = res.data?.response?.body?.items?.item || [];
-      if (Array.isArray(items) && items.length > 0) {
-        items.forEach((it: any) => {
-          if (it.category === 'T1H') {
-            const val = parseFloat(it.obsrValue);
-            if (!isNaN(val) && val > 0) currentWeather.value.temp = val;
-          } else if (it.category === 'REH') {
-            const val = parseInt(it.obsrValue, 10);
-            if (!isNaN(val) && val > 0) currentWeather.value.humidity = val;
-          } else if (it.category === 'WSD') {
-            const ms = parseFloat(it.obsrValue);
-            if (!isNaN(ms)) {
-              currentWeather.value.windSpeed = ms;
-              currentWeather.value.windKnots = parseFloat((ms * 1.94).toFixed(1));
-            }
-          } else if (it.category === 'WAV') {
-            const wav = parseFloat(it.obsrValue);
-            if (!isNaN(wav) && wav > 0) {
-              currentWeather.value.waveHeight = `${wav.toFixed(1)} m`;
-            }
-          } else if (it.category === 'PTY') {
-            const pty = parseInt(it.obsrValue, 10);
-            if (pty === 1 || pty === 4) {
-              currentWeather.value.sky = '비';
-              currentWeather.value.icon = 'umbrella';
-            } else if (pty === 2 || pty === 3) {
-              currentWeather.value.sky = '눈';
-              currentWeather.value.icon = 'ac_unit';
-            }
+    // 1. 현재 날씨 + 시간별 예보 (기온, 습도, 풍속, 풍향, 강수확률, 날씨코드)
+    const weatherUrl = 'https://api.open-meteo.com/v1/forecast?latitude=37.4736&longitude=126.6194&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,precipitation&hourly=temperature_2m,weather_code,wind_speed_10m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&forecast_days=2&timezone=Asia%2FSeoul';
+
+    // 2. 해상 파고 데이터 (Open-Meteo Marine API)
+    const marineUrl = 'https://marine-api.open-meteo.com/v1/marine?latitude=37.47&longitude=126.62&current=wave_height&hourly=wave_height&forecast_days=1&timezone=Asia%2FSeoul';
+
+    const [weatherRes, marineRes] = await Promise.allSettled([
+      fetch(weatherUrl).then(r => r.json()),
+      fetch(marineUrl).then(r => r.json())
+    ]);
+
+    // --- 현재 날씨 파싱 ---
+    if (weatherRes.status === 'fulfilled') {
+      const w = weatherRes.value;
+      const cur = w.current;
+      const daily = w.daily;
+
+      const temp = cur.temperature_2m ?? 0;
+      const humidity = cur.relative_humidity_2m ?? 0;
+      const windMs = cur.wind_speed_10m ?? 0; // m/s
+      const windDeg = cur.wind_direction_10m ?? 0;
+      const wmoCode = cur.weather_code ?? 0;
+      const { sky, icon } = parseWmoCode(wmoCode);
+
+      currentWeather.value.temp = Math.round(temp * 10) / 10;
+      currentWeather.value.humidity = humidity;
+      currentWeather.value.windSpeed = Math.round(windMs * 10) / 10;
+      currentWeather.value.windKnots = Math.round(windMs * 1.94 * 10) / 10;
+      currentWeather.value.windDirection = degToWindDir(windDeg);
+      currentWeather.value.sky = sky;
+      currentWeather.value.icon = icon;
+
+      // 오늘 최고/최저 기온
+      if (daily?.temperature_2m_max?.[0] != null) {
+        currentWeather.value.maxTemp = Math.round(daily.temperature_2m_max[0]);
+      }
+      if (daily?.temperature_2m_min?.[0] != null) {
+        currentWeather.value.minTemp = Math.round(daily.temperature_2m_min[0]);
+      }
+      if (daily?.precipitation_probability_max?.[0] != null) {
+        currentWeather.value.rainPop = daily.precipitation_probability_max[0];
+      }
+
+      // 시간별 예보 동적 생성
+      if (w.hourly) {
+        const times: string[] = w.hourly.time ?? [];
+        const temps: number[] = w.hourly.temperature_2m ?? [];
+        const codes: number[] = w.hourly.weather_code ?? [];
+        const winds: number[] = w.hourly.wind_speed_10m ?? [];
+        const pops: number[] = w.hourly.precipitation_probability ?? [];
+        const now = new Date();
+        const nowHour = now.getFullYear() * 1000000 + (now.getMonth()+1) * 10000 + now.getDate() * 100 + now.getHours();
+
+        const parsed: HourlyForecast[] = [];
+        for (let i = 0; i < times.length && parsed.length < 8; i++) {
+          const t = new Date(times[i]);
+          const tKey = t.getFullYear() * 1000000 + (t.getMonth()+1) * 10000 + t.getDate() * 100 + t.getHours();
+          if (tKey < nowHour) continue;
+          const isTomorrow = t.getDate() !== now.getDate();
+          const { sky: fSky, icon: fIcon } = parseWmoCode(codes[i] ?? 0);
+          const fWindMs = winds[i] ?? 0;
+          parsed.push({
+            time: `${isTomorrow ? '내일 ' : '오늘 '}${String(t.getHours()).padStart(2, '0')}:00`,
+            temp: Math.round(temps[i] ?? 0),
+            sky: fSky,
+            icon: fIcon,
+            pop: pops[i] ?? 0,
+            windSpeed: Math.round(fWindMs * 10) / 10,
+            windKnots: Math.round(fWindMs * 1.94 * 10) / 10,
+            waveHeight: '- m'
+          });
+        }
+        if (parsed.length > 0) hourlyForecasts.value = parsed;
+      }
+    }
+
+    // --- 해상 파고 파싱 ---
+    if (marineRes.status === 'fulfilled') {
+      const m = marineRes.value;
+      const waveM = m.current?.wave_height ?? null;
+      if (waveM != null) {
+        const wv = Math.round(waveM * 10) / 10;
+        currentWeather.value.waveHeight = `${wv.toFixed(1)} m`;
+        if (wv < 0.5) currentWeather.value.waveStatus = '잔잔함 (안전)';
+        else if (wv < 1.0) currentWeather.value.waveStatus = '약간 있음 (주의)';
+        else if (wv < 2.0) currentWeather.value.waveStatus = '보통 (주의)';
+        else currentWeather.value.waveStatus = '높음 ⚠️ (결항 위험)';
+
+        // 시간별 예보에 파고 주입
+        const hTimes: string[] = m.hourly?.time ?? [];
+        const hWaves: number[] = m.hourly?.wave_height ?? [];
+        hourlyForecasts.value = hourlyForecasts.value.map(fc => {
+          const matchIdx = hTimes.findIndex(t => fc.time.includes(new Date(t).getHours().toString().padStart(2, '0') + ':00'));
+          if (matchIdx >= 0 && hWaves[matchIdx] != null) {
+            return { ...fc, waveHeight: `${(Math.round(hWaves[matchIdx] * 10) / 10).toFixed(1)} m` };
           }
+          return fc;
         });
       }
     }
 
-    // 2. 초단기예보/단기예보 파싱 (하늘상태 SKY 1=맑음, 3=구름많음, 4=흐림)
-    if (res && res.fcstData) {
-      const fcstItems = res.fcstData?.response?.body?.items?.item || [];
-      if (Array.isArray(fcstItems) && fcstItems.length > 0) {
-        const skyItem = fcstItems.find((it: any) => it.category === 'SKY');
-        if (skyItem) {
-          const skyVal = parseInt(skyItem.fcstValue, 10);
-          if (currentWeather.value.sky !== '비' && currentWeather.value.sky !== '눈') {
-            if (skyVal === 1) {
-              currentWeather.value.sky = '맑음';
-              currentWeather.value.icon = 'wb_sunny';
-            } else if (skyVal === 3) {
-              currentWeather.value.sky = '구름많음';
-              currentWeather.value.icon = 'cloud';
-            } else if (skyVal === 4) {
-              currentWeather.value.sky = '흐림';
-              currentWeather.value.icon = 'cloud_queue';
-            }
-          }
-        }
-      }
-    }
   } catch (e: any) {
-    console.warn("Public Weather API fetch error, using fallback weather:", e.message);
+    console.warn('Open-Meteo API 호출 실패:', e.message);
   } finally {
     isLoading.value = false;
-    hourlyForecasts.value = generateDynamicHourlyForecasts();
     const now = new Date();
-    lastUpdatedTime.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    lastUpdatedTime.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
   }
 };
 
@@ -165,7 +192,6 @@ const handleManualRefresh = async () => {
 
   showRefreshToast.value = true;
 
-  // 알림이 꺼진 후 (2.5초 뒤) 다시 클릭 가능하도록 차단 해제
   setTimeout(() => {
     showRefreshToast.value = false;
     isRefreshing.value = false;
@@ -175,6 +201,7 @@ const handleManualRefresh = async () => {
 onMounted(() => {
   fetchWeatherData();
 });
+
 </script>
 
 <template>
