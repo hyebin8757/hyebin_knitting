@@ -148,9 +148,14 @@ const selectedExpenseData = reactive({
   description: "",
 });
 
-// 필터링된 조합원 목록 (7조 고정)
+const selectedGroupFilter = ref<number | 'all'>(7);
+
+// 필터링된 조합원 목록 (조 선택 지원)
 const filteredWorkers = computed(() => {
-  return userStore.workers.filter((w) => w.group === 7 && w.name !== "admin");
+  if (selectedGroupFilter.value === 'all') {
+    return userStore.workers.filter((w) => w.name !== "admin");
+  }
+  return userStore.workers.filter((w) => w.group === selectedGroupFilter.value && w.name !== "admin");
 });
 
 // 특정 조합원의 월별 납부 내역들 목록 찾기
@@ -544,7 +549,18 @@ definePageMeta({
       >
         <div style="display: flex; align-items: center; gap: 0.8rem">
           <i class="material-icons" style="color: #1ad1b1">grid_on</i>
-          <span>월회비 납부 현황 (7조 전용)</span>
+          <span>월회비 납부 현황</span>
+          <select v-model="selectedGroupFilter" class="custom-dark-select group-select" style="margin-left: 0.4rem;">
+            <option :value="7">7조</option>
+            <option :value="0">간부조 (0조)</option>
+            <option :value="1">1조</option>
+            <option :value="2">2조</option>
+            <option :value="3">3조</option>
+            <option :value="5">5조</option>
+            <option :value="6">6조</option>
+            <option :value="8">8조</option>
+            <option value="all">전체 조</option>
+          </select>
           <select v-model="selectedYear" class="custom-dark-select year-select">
             <option v-for="y in yearsList" :key="y" :value="y">{{ y }}년</option>
           </select>

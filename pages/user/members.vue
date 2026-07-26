@@ -55,7 +55,18 @@ const { isEmpty } = useUtil.typeValidation;
 /************************************************************
  * Raw Data ( 원시 데이터 )
  ************************************************************/
-const groupNumbers = [1, 2, 3, 5, 6, 7, 8];
+const groupNumbers = [0, 1, 2, 3, 5, 6, 7, 8];
+
+const executiveOrder = [
+  "김응식",
+  "김홍수",
+  "윤정민",
+  "이수한",
+  "김태수",
+  "김태병",
+  "정택광",
+  "김태호"
+];
 
 const group7Order = [
   "최상열",
@@ -75,8 +86,14 @@ const groups = computed<GroupData[]>(() => {
   return groupNumbers.map(g => {
     let list = userStore.workers.filter(w => w.group === g);
 
-    // 7조인 경우 명패 사진 순서대로 지정 정렬
-    if (g === 7) {
+    if (g === 0) {
+      list = [...list].sort((a, b) => {
+        const idxA = executiveOrder.indexOf(a.name);
+        const idxB = executiveOrder.indexOf(b.name);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        return 0;
+      });
+    } else if (g === 7) {
       list = [...list].sort((a, b) => {
         const idxA = group7Order.indexOf(a.name);
         const idxB = group7Order.indexOf(b.name);
@@ -88,7 +105,7 @@ const groups = computed<GroupData[]>(() => {
     }
 
     return {
-      groupName: `${g}조`,
+      groupName: g === 0 ? '간부조' : `${g}조`,
       members: list.map(w => ({
         name: w.name,
         role: w.role as any,
@@ -409,7 +426,16 @@ definePageMeta({
             <label style="font-size: 1.2rem; color: var(--text-color-3);">소속 조</label>
             <v-select
               v-model="memberForm.group"
-              :items="[1, 2, 3, 5, 6, 7, 8]"
+              :items="[
+                { title: '간부조 (0조)', value: 0 },
+                { title: '1조', value: 1 },
+                { title: '2조', value: 2 },
+                { title: '3조', value: 3 },
+                { title: '5조', value: 5 },
+                { title: '6조', value: 6 },
+                { title: '7조', value: 7 },
+                { title: '8조', value: 8 }
+              ]"
               variant="solo"
               hide-details
               style="--v-input-control-background: rgba(255,255,255,0.04); color: white;"
@@ -490,7 +516,22 @@ definePageMeta({
           </div>
           <div style="display: flex; flex-direction: column; gap: 0.6rem;">
             <label style="font-size: 1.2rem; color: var(--text-color-3);">소속 조</label>
-            <v-select v-model="selectedMember.group" :items="[1, 2, 3, 5, 6, 7, 8]" variant="solo" hide-details style="--v-input-control-background: rgba(255,255,255,0.04); color: white;" />
+            <v-select
+              v-model="selectedMember.group"
+              :items="[
+                { title: '간부조 (0조)', value: 0 },
+                { title: '1조', value: 1 },
+                { title: '2조', value: 2 },
+                { title: '3조', value: 3 },
+                { title: '5조', value: 5 },
+                { title: '6조', value: 6 },
+                { title: '7조', value: 7 },
+                { title: '8조', value: 8 }
+              ]"
+              variant="solo"
+              hide-details
+              style="--v-input-control-background: rgba(255,255,255,0.04); color: white;"
+            />
           </div>
         </div>
 
