@@ -92,6 +92,36 @@ const marineTrafficUrl = computed(() => {
   return `https://www.marinetraffic.com/en/ais/embed/zoom:12/centerv:37.45/centerx:126.62/maptype:1/shownames:true/mmsi:${targetMmsi}/shipid:0/fleet:/fleet_id:/old_maptype:0`;
 });
 
+// 실시간 동적 날짜 생성 헬퍼 (오늘/내일 날짜 자동 바인딩)
+const getDynamicDateStr = (dayOffset = 0, timeStr = '08:00 AM') => {
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day} ${timeStr}`;
+};
+
+const formatPublicShipDate = (dateStr?: string, defaultFallback = '접안중') => {
+  if (!dateStr) return defaultFallback;
+  const clean = String(dateStr).replace(/[^0-9]/g, '');
+  if (clean.length >= 12) {
+    const y = clean.slice(0, 4);
+    const m = clean.slice(4, 6);
+    const d = clean.slice(6, 8);
+    const hh = clean.slice(8, 10);
+    const mm = clean.slice(10, 12);
+    return `${y}-${m}-${d} ${hh}:${mm}`;
+  }
+  if (clean.length >= 8) {
+    const y = clean.slice(0, 4);
+    const m = clean.slice(4, 6);
+    const d = clean.slice(6, 8);
+    return `${y}-${m}-${d}`;
+  }
+  return dateStr;
+};
+
 // 📸 이전 등록 선박(미래9호, 13미래호) + 이미지 5대 여객선 완전 통합 실시간 선박 리스트
 const shipList = ref<ShipItem[]>([
   {
@@ -102,8 +132,8 @@ const shipList = ref<ShipItem[]>([
     feature: '약 1,600톤급 초고속 카페리로 백령도 노선 운항',
     callSign: 'KOREAPRIDE',
     mmsi: '440027780',
-    eta: '2026-07-24 05:40 PM',
-    etd: '2026-07-25 07:00 AM',
+    eta: getDynamicDateStr(0, '05:40 PM'),
+    etd: getDynamicDateStr(1, '07:00 AM'),
     location: '인천 연안여객터미널 1선석',
     agent: '고려고속훼리',
     grossTonnage: '1,600 톤',
@@ -117,8 +147,8 @@ const shipList = ref<ShipItem[]>([
     feature: '백령도 항로를 운항하는 고속 여객선',
     callSign: 'KOREAPRINCE',
     mmsi: '440023450',
-    eta: '2026-07-24 04:30 PM',
-    etd: '2026-07-25 08:30 AM',
+    eta: getDynamicDateStr(0, '04:30 PM'),
+    etd: getDynamicDateStr(1, '08:30 AM'),
     location: '인천 연안여객터미널 2선석',
     agent: '고려고속훼리',
     grossTonnage: '530 톤',
@@ -132,8 +162,8 @@ const shipList = ref<ShipItem[]>([
     feature: '연평도 주민 및 관광객 수송',
     callSign: 'KOREAKING',
     mmsi: '440020080',
-    eta: '2026-07-24 05:52 PM',
-    etd: '2026-07-25 06:00 PM',
+    eta: getDynamicDateStr(0, '05:52 PM'),
+    etd: getDynamicDateStr(1, '06:00 PM'),
     location: '인천 연안여객터미널 3선석',
     agent: '고려고속훼리',
     grossTonnage: '4,100 톤',
@@ -147,8 +177,8 @@ const shipList = ref<ShipItem[]>([
     feature: '인천 남항 부두 전용 운항 및 작업선',
     callSign: 'MI RAE NO9',
     mmsi: '440011240',
-    eta: '2026-07-24 05:51 PM',
-    etd: '2026-07-25 02:00 PM',
+    eta: getDynamicDateStr(0, '05:51 PM'),
+    etd: getDynamicDateStr(1, '02:00 PM'),
     location: '인천 남항 부두 3선석',
     agent: '미래해운',
     grossTonnage: '2,800 톤',
@@ -162,8 +192,8 @@ const shipList = ref<ShipItem[]>([
     feature: '인천 항만 1부두 관제 및 지원선',
     callSign: 'NO13 MIRAE',
     mmsi: '440022920',
-    eta: '2026-07-24 05:51 PM',
-    etd: '2026-07-25 10:00 AM',
+    eta: getDynamicDateStr(0, '05:51 PM'),
+    etd: getDynamicDateStr(1, '10:00 AM'),
     location: '인천 항만 1부두 12선석',
     agent: '미래해운',
     grossTonnage: '3,200 톤',
@@ -177,8 +207,8 @@ const shipList = ref<ShipItem[]>([
     feature: '차량 및 화물 적재가 가능한 차도선',
     callSign: 'WESTCARFERRY',
     mmsi: '440004790',
-    eta: '2026-07-24 05:52 PM',
-    etd: '2026-07-25 08:00 PM',
+    eta: getDynamicDateStr(0, '05:52 PM'),
+    etd: getDynamicDateStr(1, '08:00 PM'),
     location: '인천 연안여객터미널 4선석',
     agent: '서해훼리',
     grossTonnage: '5,500 톤',
@@ -192,8 +222,8 @@ const shipList = ref<ShipItem[]>([
     feature: '덕적군도 방향 운항 전용 여객선',
     callSign: 'KOREANA',
     mmsi: '440021120',
-    eta: '2026-07-24 03:10 PM',
-    etd: '2026-07-25 09:00 AM',
+    eta: getDynamicDateStr(0, '03:10 PM'),
+    etd: getDynamicDateStr(1, '09:00 AM'),
     location: '인천 연안여객터미널 5선석',
     agent: '고려고속훼리',
     grossTonnage: '220 톤',
@@ -245,8 +275,8 @@ const fetchShipsData = async () => {
           shipName: it.vslNm ? `${it.vslNm}` : (it.clsgn || '선박명 미상'),
           callSign: it.clsgn || `CALL-${idx}`,
           mmsi: it.mmsiNo || it.mmsi || undefined,
-          eta: it.etryptDt || it.eta || '접안중',
-          etd: it.tkoffDt || it.etd || '출항예정',
+          eta: formatPublicShipDate(it.etryptDt || it.eta, '접안중'),
+          etd: formatPublicShipDate(it.tkoffDt || it.etd, '출항예정'),
           location: it.ibPrtNm || it.satntNm || it.ibPrtCd || '인천항 부두',
           agent: it.agntNm || '해운 대리점',
           grossTonnage: it.grt ? `${Number(it.grt).toLocaleString()} 톤` : undefined,
