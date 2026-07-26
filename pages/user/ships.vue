@@ -494,8 +494,6 @@ const updateNextTideTimer = () => {
 };
 
 // 자동 새로고침 폴링 및 토스트 상태
-let timerId: any = null;
-
 const startAutoPolling = () => {
   if (timerId) clearInterval(timerId);
   timerId = setInterval(() => {
