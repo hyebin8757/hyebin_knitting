@@ -442,11 +442,6 @@ onMounted(() => {
         </button>
       </div>
     </div>
-        >
-          + {{ sName }}
-        </button>
-      </div>
-    </div>
 
     <!-- 📌 MODE 1: 일일 장부 대시보드 리스트 (모바일 스마트 카드 + 데스크톱 표) -->
     <div v-if="currentMode === 'list'" class="list-view-section">
