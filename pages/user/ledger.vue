@@ -417,16 +417,67 @@ onMounted(() => {
         </button>
       </div>
 
-      <!-- Ledger Table List (2열 대시보드 / 모던 테이블) -->
-      <div class="table-card">
+      <!-- 모바일 가독성 최적화 카드 뷰 (Mobile View - 640px 이하 노출) -->
+      <div class="mobile-ledger-cards">
+        <div v-if="currentLedgerList.length === 0" class="empty-card">
+          <i class="material-icons">inbox</i>
+          <p>{{ selectedDate }} 등록된 객선 장부 내역이 없습니다.</p>
+          <button class="btn-empty-add" @click="activeViewTab = 'batch_input'">
+            + 엑셀식 빠른 연속 등록하기
+          </button>
+        </div>
+
+        <div 
+          v-for="(item, idx) in currentLedgerList" 
+          :key="item.id || idx" 
+          class="mobile-item-card"
+        >
+          <div class="card-top-row">
+            <div class="left-group">
+              <span class="card-no">#{{ idx + 1 }}</span>
+              <span class="ship-badge">{{ item.shipName }}</span>
+            </div>
+
+            <span :class="['type-badge', item.paymentType]">{{ item.paymentType }}</span>
+          </div>
+
+          <div class="card-item-details">
+            {{ item.itemDetails }}
+          </div>
+
+          <div class="card-bottom-row">
+            <div class="amount-group">
+              <span class="amount-label">운송 금액</span>
+              <span class="amount-val">₩ {{ (Number(item.amount) || 0).toLocaleString() }}</span>
+            </div>
+
+            <div class="card-actions">
+              <button class="btn-icon edit" @click="openSingleEditModal(item)">
+                <i class="material-icons">edit</i>
+              </button>
+              <button class="btn-icon delete" @click="deleteLedgerItem(item.id)">
+                <i class="material-icons">delete</i>
+              </button>
+            </div>
+          </div>
+
+          <div v-if="item.memo" class="card-memo-row">
+            <i class="material-icons">notes</i>
+            <span>{{ item.memo }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ledger Table List (데스크톱 전용 모던 테이블 - 640px 초과) -->
+      <div class="table-card desktop-table-view">
         <div class="table-responsive">
           <table class="ledger-table">
             <thead>
               <tr>
                 <th style="width: 50px;">NO</th>
-                <th style="width: 140px;">선명 및 상회</th>
+                <th style="width: 150px;">선명 및 상회</th>
                 <th>품목 및 수량</th>
-                <th style="width: 120px; text-align: right;">금액</th>
+                <th style="width: 130px; text-align: right;">금액</th>
                 <th style="width: 90px; text-align: center;">결제구분</th>
                 <th style="width: 160px;">비고/메모</th>
                 <th style="width: 80px; text-align: center;">관리</th>
@@ -1007,10 +1058,169 @@ onMounted(() => {
 
 .table-responsive {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+.desktop-table-view {
+  @media (max-width: 640px) {
+    display: none;
+  }
+}
+
+.mobile-ledger-cards {
+  display: none;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: 1.6rem;
+
+  @media (max-width: 640px) {
+    display: flex;
+  }
+
+  .empty-card {
+    text-align: center;
+    padding: 3.5rem 1rem;
+    background: rgba(13, 30, 51, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.4rem;
+    color: rgba(255, 255, 255, 0.4);
+
+    i { font-size: 3.6rem; display: block; margin-bottom: 0.8rem; }
+    p { font-size: 1.35rem; margin: 0 0 1.2rem 0; }
+    .btn-empty-add {
+      background: rgba(26, 209, 177, 0.15);
+      border: 1px solid rgba(26, 209, 177, 0.4);
+      color: #1ad1b1;
+      padding: 0.6rem 1.4rem;
+      border-radius: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  }
+
+  .mobile-item-card {
+    background: rgba(13, 30, 51, 0.95);
+    border: 1px solid rgba(136, 197, 255, 0.25);
+    border-radius: 1.4rem;
+    padding: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+
+    .card-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .left-group {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+
+        .card-no {
+          font-size: 1.2rem;
+          font-weight: 800;
+          color: rgba(255, 255, 255, 0.4);
+        }
+
+        .ship-badge {
+          background: rgba(136, 197, 255, 0.15);
+          border: 1px solid rgba(136, 197, 255, 0.3);
+          color: #88c5ff;
+          padding: 0.3rem 0.8rem;
+          border-radius: 0.6rem;
+          font-weight: 800;
+          font-size: 1.3rem;
+        }
+      }
+
+      .type-badge {
+        font-size: 1.15rem;
+        font-weight: 800;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.6rem;
+
+        &.선불 { background: rgba(58, 134, 255, 0.2); color: #88c5ff; border: 1px solid rgba(58, 134, 255, 0.3); }
+        &.입금 { background: rgba(26, 209, 177, 0.2); color: #1ad1b1; border: 1px solid rgba(26, 209, 177, 0.3); }
+        &.후불 { background: rgba(255, 183, 3, 0.2); color: #ffb703; border: 1px solid rgba(255, 183, 3, 0.3); }
+        &.현금 { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); }
+        &.미수 { background: rgba(255, 0, 110, 0.2); color: #ff5c8d; border: 1px solid rgba(255, 0, 110, 0.3); }
+      }
+    }
+
+    .card-item-details {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.4;
+      word-break: break-all;
+    }
+
+    .card-bottom-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 0.8rem;
+      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+
+      .amount-group {
+        display: flex;
+        flex-direction: column;
+
+        .amount-label {
+          font-size: 1rem;
+          color: rgba(255, 255, 255, 0.5);
+        }
+
+        .amount-val {
+          font-size: 1.85rem;
+          font-weight: 900;
+          color: #1ad1b1;
+          letter-spacing: -0.03rem;
+        }
+      }
+
+      .card-actions {
+        display: flex;
+        gap: 0.6rem;
+
+        .btn-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 0.8rem;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+
+          &.edit i { color: #88c5ff; font-size: 1.8rem; }
+          &.delete i { color: #ff5c8d; font-size: 1.8rem; }
+        }
+      }
+    }
+
+    .card-memo-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.6rem 0.8rem;
+      border-radius: 0.6rem;
+
+      i { font-size: 1.4rem; color: #ffb703; }
+    }
+  }
 }
 
 .ledger-table, .batch-input-table {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
   text-align: left;
 
@@ -1020,12 +1230,14 @@ onMounted(() => {
     font-weight: 800;
     color: rgba(255, 255, 255, 0.6);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
   }
 
   td {
     padding: 1.2rem 1rem;
     font-size: 1.35rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    white-space: nowrap;
 
     &.num-cell {
       color: rgba(255, 255, 255, 0.4);
