@@ -467,22 +467,15 @@ onBeforeUnmount(() => {
     >
       <!-- 물때 카드 헤더 (우측 상단 13물 뱃지 독립 고정) -->
       <div style="display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 1.4rem;">
-        <!-- Top Row: 제목 + 우측 13물 뱃지 -->
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: nowrap;">
-          <div style="display: flex; align-items: center; gap: 0.6rem; min-width: 0;">
-            <div style="width: 36px; height: 36px; border-radius: 0.8rem; background: rgba(58, 134, 255, 0.15); border: 1px solid rgba(58, 134, 255, 0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              <i class="material-icons" style="color: #88c5ff; font-size: 2rem;">waves</i>
-            </div>
-            <div style="min-width: 0;">
-              <span style="font-size: 1.42rem; font-weight: 900; color: #ffffff; letter-spacing: -0.04rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">인천항 실시간 물때 예보</span>
-              <span style="font-size: 1.05rem; color: rgba(255, 255, 255, 0.5); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">국립해양조사원 관측 (DT_0001)</span>
-            </div>
+        <!-- Top Row: 제목 -->
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <div style="width: 38px; height: 38px; border-radius: 0.9rem; background: rgba(58, 134, 255, 0.15); border: 1px solid rgba(58, 134, 255, 0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i class="material-icons" style="color: #88c5ff; font-size: 2.2rem;">waves</i>
           </div>
-
-          <!-- 우측 상단 물때 뱃지 (절대 찌그러짐/밀림 없음) -->
-          <span style="font-size: 1.1rem; color: #1ad1b1; background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.35); padding: 0.25rem 0.75rem; border-radius: 0.7rem; font-weight: 800; white-space: nowrap; flex-shrink: 0;">
-            {{ tideInfoSummary.lunarTideName }}
-          </span>
+          <div>
+            <span style="font-size: 1.6rem; font-weight: 900; color: #ffffff; letter-spacing: -0.03rem; display: block;">인천항 실시간 물때 예보</span>
+            <span style="font-size: 1.1rem; color: rgba(255, 255, 255, 0.5); display: block; margin-top: 0.1rem;">국립해양조사원 정시 조석 관측 데이터 (DT_0001)</span>
+          </div>
         </div>
 
         <!-- ⏳ 다음 물때 남은시간 알림 네온 카드 (Full-width) -->
