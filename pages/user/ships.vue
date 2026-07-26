@@ -465,29 +465,33 @@ onBeforeUnmount(() => {
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       "
     >
-      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.4rem;">
-        <div style="display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;">
-          <div style="width: 42px; height: 42px; border-radius: 1rem; background: rgba(58, 134, 255, 0.15); border: 1px solid rgba(58, 134, 255, 0.3); display: flex; align-items: center; justify-content: center;">
-            <i class="material-icons" style="color: #88c5ff; font-size: 2.4rem;">waves</i>
-          </div>
-          <div>
-            <div style="display: flex; align-items: center; gap: 0.6rem;">
-              <span style="font-size: 1.7rem; font-weight: 900; color: #ffffff; letter-spacing: -0.03rem;">인천항 실시간 조석 물때 예보</span>
-              <span style="font-size: 1.15rem; color: #1ad1b1; background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.35); padding: 0.25rem 0.9rem; border-radius: 0.8rem; font-weight: 800; white-space: nowrap; flex-shrink: 0;">
-                {{ tideInfoSummary.lunarTideName }}
-              </span>
+      <!-- 물때 카드 헤더 (우측 상단 13물 뱃지 독립 고정) -->
+      <div style="display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 1.4rem;">
+        <!-- Top Row: 제목 + 우측 13물 뱃지 -->
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem;">
+          <div style="display: flex; align-items: center; gap: 0.8rem;">
+            <div style="width: 40px; height: 40px; border-radius: 1rem; background: rgba(58, 134, 255, 0.15); border: 1px solid rgba(58, 134, 255, 0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <i class="material-icons" style="color: #88c5ff; font-size: 2.2rem;">waves</i>
             </div>
-            <span style="font-size: 1.15rem; color: rgba(255, 255, 255, 0.5); display: block; margin-top: 0.2rem;">국립해양조사원 정시 조석 관측 데이터 (DT_0001)</span>
+            <div>
+              <span style="font-size: 1.6rem; font-weight: 900; color: #ffffff; letter-spacing: -0.03rem; display: block; line-height: 1.25;">인천항 실시간 조석 물때</span>
+              <span style="font-size: 1.1rem; color: rgba(255, 255, 255, 0.5); display: block; margin-top: 0.2rem;">국립해양조사원 관측 데이터 (DT_0001)</span>
+            </div>
           </div>
+
+          <!-- 우측 상단 물때 뱃지 (밀림 방지) -->
+          <span style="font-size: 1.15rem; color: #1ad1b1; background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.35); padding: 0.3rem 0.9rem; border-radius: 0.8rem; font-weight: 800; white-space: nowrap; flex-shrink: 0; box-shadow: 0 2px 8px rgba(26, 209, 177, 0.15);">
+            {{ tideInfoSummary.lunarTideName }}
+          </span>
         </div>
 
-        <!-- ⏳ 다음 물때 남은시간 알림 네온 카드 -->
+        <!-- ⏳ 다음 물때 남은시간 알림 네온 카드 (Full-width) -->
         <div 
           v-if="tideInfoSummary.nextTide"
-          style="display: flex; align-items: center; gap: 0.8rem; background: linear-gradient(135deg, rgba(26, 209, 177, 0.18) 0%, rgba(21, 60, 108, 0.3) 100%); border: 1px solid rgba(26, 209, 177, 0.4); padding: 0.6rem 1.2rem; border-radius: 1.2rem; box-shadow: 0 4px 14px rgba(26, 209, 177, 0.15);"
+          style="display: flex; align-items: center; justify-content: center; gap: 0.8rem; background: linear-gradient(135deg, rgba(26, 209, 177, 0.18) 0%, rgba(21, 60, 108, 0.3) 100%); border: 1px solid rgba(26, 209, 177, 0.4); padding: 0.7rem 1.2rem; border-radius: 1.2rem; box-shadow: 0 4px 14px rgba(26, 209, 177, 0.15);"
         >
-          <span style="width: 10px; height: 10px; border-radius: 50%; background: #1ad1b1; box-shadow: 0 0 10px #1ad1b1; display: inline-block;"></span>
-          <span style="font-size: 1.3rem; font-weight: 800; color: #1ad1b1;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #1ad1b1; box-shadow: 0 0 10px #1ad1b1; display: inline-block; flex-shrink: 0;"></span>
+          <span style="font-size: 1.3rem; font-weight: 800; color: #1ad1b1; text-align: center;">
             다음 {{ tideInfoSummary.nextTide.tideType }}({{ tideInfoSummary.nextTide.time }})까지 <span style="color: #ffffff; text-decoration: underline;">{{ tideInfoSummary.timeRemainingStr }}</span>
           </span>
         </div>
