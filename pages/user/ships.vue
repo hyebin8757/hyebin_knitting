@@ -884,11 +884,11 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <button
-            style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; padding: 0.35rem 0.8rem; border-radius: 0.6rem; font-size: 1.2rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.2rem; white-space: nowrap; flex-shrink: 0;"
+            style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.8); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;"
             @click="isShipMapModalOpen = false"
+            title="닫기"
           >
-            <i class="material-icons" style="font-size: 1.6rem;">close</i>
-            <span>닫기</span>
+            <i class="material-icons" style="font-size: 2rem;">close</i>
           </button>
         </div>
 
@@ -917,7 +917,7 @@ onBeforeUnmount(() => {
             ></iframe>
           </div>
 
-          <!-- 외부 관제 전문 직행 링크 뱃지 + 하단 닫기 버튼 -->
+          <!-- 외부 관제 전문 직행 링크 뱃지 -->
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span style="font-size: 1.15rem; color: rgba(255,255,255,0.6); font-weight: 600;">외부 직행:</span>
@@ -938,14 +938,6 @@ onBeforeUnmount(() => {
                 <i class="material-icons" style="font-size: 1.4rem;">open_in_new</i> MarineTraffic
               </a>
             </div>
-
-            <!-- 하단 명확한 [닫기] 버튼 -->
-            <button
-              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.8); padding: 0.45rem 1.3rem; border-radius: 0.6rem; font-size: 1.25rem; font-weight: 700; cursor: pointer;"
-              @click="isShipMapModalOpen = false"
-            >
-              닫기
-            </button>
           </div>
         </div>
       </v-card>
