@@ -1412,51 +1412,57 @@ onMounted(() => {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 1.6rem;
-    padding-top: 1.4rem;
+    gap: 0.8rem;
+    margin-top: 1.2rem;
+    padding-top: 1rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 
     .left-actions {
       display: flex;
-      gap: 0.8rem;
+      gap: 0.6rem;
 
       .btn-add-line {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.3rem;
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.15);
         color: #ffffff;
-        padding: 0.75rem 1.4rem;
-        border-radius: 0.8rem;
+        padding: 0.45rem 0.95rem;
+        border-radius: 0.7rem;
         font-weight: 700;
+        font-size: 1.15rem;
         cursor: pointer;
+
+        i { font-size: 1.5rem; }
       }
 
       .btn-reset-lines {
         background: transparent;
         border: 1px solid rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.5);
-        padding: 0.75rem 1.2rem;
-        border-radius: 0.8rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 0.7rem;
+        font-size: 1.1rem;
         cursor: pointer;
       }
     }
 
     .btn-submit-batch {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.4rem;
       background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%);
       border: 1px solid rgba(136, 197, 255, 0.4);
       color: #ffffff;
       font-weight: 800;
-      font-size: 1.4rem;
-      padding: 0.8rem 2rem;
-      border-radius: 1rem;
+      font-size: 1.2rem;
+      padding: 0.5rem 1.3rem;
+      border-radius: 0.8rem;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(21, 60, 108, 0.4);
+      box-shadow: 0 4px 12px rgba(21, 60, 108, 0.35);
+
+      i { font-size: 1.6rem; }
     }
   }
 }
