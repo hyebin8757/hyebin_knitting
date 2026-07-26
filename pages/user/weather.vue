@@ -20,18 +20,18 @@ definePageMeta({
 const isLoading = ref(false);
 const lastUpdatedTime = ref<string>('');
 
-// 인천항 현재 날씨 데이터
+// 인천항 연안부두 실시간 현재 날씨 데이터
 const currentWeather = ref({
-  temp: 26.4,
-  maxTemp: 29.0,
+  temp: 29.3,
+  maxTemp: 30.0,
   minTemp: 22.5,
-  sky: '맑음' as '맑음' | '구름많음' | '흐림' | '비' | '눈',
-  icon: 'wb_sunny',
+  sky: '구름많음' as '맑음' | '구름많음' | '흐림' | '비' | '눈',
+  icon: 'cloud',
   rainPop: 10, // 강수확률 (%)
   rainfall: '0.0 mm',
-  humidity: 68, // 습도 (%)
-  windSpeed: 4.2, // m/s
-  windKnots: 8.1, // Knots (4.2 * 1.94)
+  humidity: 83, // 습도 (%)
+  windSpeed: 3.1, // m/s
+  windKnots: 6.0, // Knots (3.1 * 1.94)
   windDirection: '남서풍 (SW)',
   waveHeight: '0.6 m', // 해상 파고 (m)
   waveStatus: '잔잔함 (안전)'
@@ -55,11 +55,11 @@ const generateDynamicHourlyForecasts = (): HourlyForecast[] => {
     const dayLabel = isTomorrow ? '내일 ' : '오늘 ';
     const displayTime = `${dayLabel}${hourStr}`;
 
-    const t = Math.round(25 + Math.sin(i) * 3);
-    const kts = parseFloat((4.0 + (i % 3) * 1.2).toFixed(1));
-    const wav = (0.5 + (i % 4) * 0.2).toFixed(1) + ' m';
-    const skyList: Array<'맑음' | '구름많음' | '흐림' | '비'> = ['맑음', '맑음', '구름많음', '구름많음', '맑음', '맑음', '구름많음', '흐림'];
-    const iconList = ['wb_sunny', 'nights_stay', 'cloud', 'cloud', 'wb_sunny', 'wb_sunny', 'wb_cloudy', 'cloud_queue'];
+    const t = Math.round(29 - (i > 4 ? (i - 4) * 0.8 : i * 0.3));
+    const kts = parseFloat((6.0 + (i % 3) * 0.8).toFixed(1));
+    const wav = (0.6 + (i % 3) * 0.1).toFixed(1) + ' m';
+    const skyList: Array<'구름많음' | '구름많음' | '맑음' | '흐림'> = ['구름많음', '구름많음', '구름많음', '맑음', '맑음', '구름많음', '흐림', '구름많음'];
+    const iconList = ['cloud', 'cloud', 'cloud', 'wb_sunny', 'wb_sunny', 'cloud', 'cloud_queue', 'cloud'];
 
     list.push({
       time: displayTime,
@@ -84,19 +84,24 @@ const fetchWeatherData = async () => {
   isLoading.value = true;
   try {
     const res: any = await $fetch('/api/weather');
+    
+    // 1. 초단기실황 파싱 (기온 T1H, 습도 REH, 풍속 WSD, 파고 WAV)
     if (res && res.success && res.data) {
       const items = res.data?.response?.body?.items?.item || [];
       if (Array.isArray(items) && items.length > 0) {
         items.forEach((it: any) => {
-          // T1H: 기온, REH: 습도, WSD: 풍속, PTY: 강수형태, WAV: 파고
           if (it.category === 'T1H') {
-            currentWeather.value.temp = parseFloat(it.obsrValue);
+            const val = parseFloat(it.obsrValue);
+            if (!isNaN(val) && val > 0) currentWeather.value.temp = val;
           } else if (it.category === 'REH') {
-            currentWeather.value.humidity = parseInt(it.obsrValue, 10);
+            const val = parseInt(it.obsrValue, 10);
+            if (!isNaN(val) && val > 0) currentWeather.value.humidity = val;
           } else if (it.category === 'WSD') {
             const ms = parseFloat(it.obsrValue);
-            currentWeather.value.windSpeed = ms;
-            currentWeather.value.windKnots = parseFloat((ms * 1.94).toFixed(1));
+            if (!isNaN(ms)) {
+              currentWeather.value.windSpeed = ms;
+              currentWeather.value.windKnots = parseFloat((ms * 1.94).toFixed(1));
+            }
           } else if (it.category === 'WAV') {
             const wav = parseFloat(it.obsrValue);
             if (!isNaN(wav) && wav > 0) {
@@ -104,10 +109,7 @@ const fetchWeatherData = async () => {
             }
           } else if (it.category === 'PTY') {
             const pty = parseInt(it.obsrValue, 10);
-            if (pty === 0) {
-              currentWeather.value.sky = '맑음';
-              currentWeather.value.icon = 'wb_sunny';
-            } else if (pty === 1 || pty === 4) {
+            if (pty === 1 || pty === 4) {
               currentWeather.value.sky = '비';
               currentWeather.value.icon = 'umbrella';
             } else if (pty === 2 || pty === 3) {
@@ -116,6 +118,29 @@ const fetchWeatherData = async () => {
             }
           }
         });
+      }
+    }
+
+    // 2. 초단기예보/단기예보 파싱 (하늘상태 SKY 1=맑음, 3=구름많음, 4=흐림)
+    if (res && res.fcstData) {
+      const fcstItems = res.fcstData?.response?.body?.items?.item || [];
+      if (Array.isArray(fcstItems) && fcstItems.length > 0) {
+        const skyItem = fcstItems.find((it: any) => it.category === 'SKY');
+        if (skyItem) {
+          const skyVal = parseInt(skyItem.fcstValue, 10);
+          if (currentWeather.value.sky !== '비' && currentWeather.value.sky !== '눈') {
+            if (skyVal === 1) {
+              currentWeather.value.sky = '맑음';
+              currentWeather.value.icon = 'wb_sunny';
+            } else if (skyVal === 3) {
+              currentWeather.value.sky = '구름많음';
+              currentWeather.value.icon = 'cloud';
+            } else if (skyVal === 4) {
+              currentWeather.value.sky = '흐림';
+              currentWeather.value.icon = 'cloud_queue';
+            }
+          }
+        }
       }
     }
   } catch (e: any) {

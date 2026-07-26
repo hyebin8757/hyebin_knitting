@@ -4,16 +4,16 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const serviceKey = '8522336155cd0abd16545a726f3220de9735adc9ababdfc24c2972fbe66febc7';
   
-  // 인천항 기상청 격자 좌표 (NX=54, NY=124)
+  // 인천항 연안부두 기상청 격자 좌표 (NX=54, NY=124)
   const nx = '54';
   const ny = '124';
 
   const now = new Date();
   let calcDate = new Date(now);
 
-  // 초단기실황/단기예보 base_time & base_date 계산 (기상청 API 자정 버그 방지)
+  // base_time & base_date 계산 (기상청 초단기실황/예보 매시 30~45분 발표)
   let hour = now.getHours();
-  if (now.getMinutes() < 40) {
+  if (now.getMinutes() < 45) {
     hour = hour - 1;
     if (hour < 0) {
       hour = 23;
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   const baseTime = `${String(hour).padStart(2, '0')}00`;
 
   const baseUrlNcst = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst';
-  const baseUrlFcst = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst';
+  const baseUrlFcst = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst';
 
   try {
     const paramsNcst = new URLSearchParams({
@@ -45,10 +45,10 @@ export default defineEventHandler(async (event) => {
     const paramsFcst = new URLSearchParams({
       serviceKey: serviceKey,
       pageNo: '1',
-      numOfRows: '100',
+      numOfRows: '60',
       dataType: 'JSON',
       base_date: baseDate,
-      base_time: '0500', // 단기예보 05:00 발표 기준
+      base_time: baseTime,
       nx: nx,
       ny: ny
     });
