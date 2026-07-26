@@ -297,9 +297,26 @@ const fetchShipsData = async () => {
   }
 };
 
-const handleManualRefresh = () => {
-  fetchShipsData();
+// 새로고침 연속 클릭 방지 및 알림 토스트 상태
+const isRefreshing = ref(false);
+const showRefreshToast = ref(false);
+const toastMessage = ref('');
+
+const handleManualRefresh = async () => {
+  if (isRefreshing.value) return;
+  isRefreshing.value = true;
+
+  await fetchShipsData();
   startAutoPolling();
+
+  toastMessage.value = '인천항 실시간 운항 정보가 최신 데이터로 갱신되었습니다.';
+  showRefreshToast.value = true;
+
+  // 알림이 꺼진 후 (2.5초 뒤) 다시 클릭 가능하도록 차단 해제
+  setTimeout(() => {
+    showRefreshToast.value = false;
+    isRefreshing.value = false;
+  }, 2500);
 };
 
 onMounted(() => {
@@ -323,11 +340,16 @@ onBeforeUnmount(() => {
         </div>
         <button 
           class="refresh-btn"
+          :disabled="isRefreshing"
+          :style="{
+            opacity: isRefreshing ? 0.5 : 1,
+            cursor: isRefreshing ? 'not-allowed' : 'pointer'
+          }"
           @click="handleManualRefresh"
           title="새로고침"
         >
-          <i class="material-icons" style="font-size: 1.6rem;">refresh</i>
-          <span class="refresh-text">새로고침</span>
+          <i class="material-icons" :style="{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }" style="font-size: 1.6rem;">refresh</i>
+          <span class="refresh-text">{{ isRefreshing ? '갱신중...' : '새로고침' }}</span>
         </button>
       </div>
       <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; flex-wrap: wrap; gap: 0.6rem;">
@@ -660,6 +682,20 @@ onBeforeUnmount(() => {
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <!-- 🍞 새로고침 완료 토스트 알림 -->
+    <v-snackbar
+      v-model="showRefreshToast"
+      :timeout="2500"
+      location="top"
+      color="#1ad1b1"
+      style="font-size: 1.3rem; font-weight: 700;"
+      rounded="lg"
+    >
+      <div style="display: flex; align-items: center; gap: 0.8rem; color: #ffffff;">
+        <i class="material-icons" style="font-size: 2rem;">check_circle</i>
+        <span>{{ toastMessage }}</span>
+      </div>
+    </v-snackbar>
   </div>
 </template>
 
