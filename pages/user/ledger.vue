@@ -1378,7 +1378,7 @@ onMounted(() => {
         }
 
         &.amount {
-          text-align: right;
+          text-align: left;
           color: #1ad1b1;
           font-weight: 800;
         }
@@ -1507,7 +1507,13 @@ onMounted(() => {
         font-size: 1.35rem;
         outline: none;
 
-        &.amount { text-align: right; color: #1ad1b1; font-weight: 800; }
+        &::-webkit-calendar-picker-indicator {
+          filter: invert(0.6) sepia(1) saturate(5) hue-rotate(160deg);
+          cursor: pointer;
+          opacity: 0.9;
+        }
+
+        &.amount { text-align: left; color: #1ad1b1; font-weight: 800; }
         option { background: #0d1e33; color: #ffffff; }
       }
     }
