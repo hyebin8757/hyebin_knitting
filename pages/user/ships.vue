@@ -1035,15 +1035,16 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <!-- VesselFinder Iframe -->
+          <!-- VesselFinder Iframe (모달 닫힘 시 GPU/네트워크 메모리 즉시 해제 최적화) -->
           <div style="position: relative; width: 100%; height: 380px; border-radius: 1rem; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.12);">
             <iframe
-              v-if="selectedShipForMap"
+              v-if="isShipMapModalOpen && selectedShipForMap"
               :src="getVesselFinderEmbedUrl(selectedShipForMap)"
               width="100%"
               height="100%"
               frameborder="0"
               scrolling="no"
+              loading="lazy"
               style="border: 0;"
             ></iframe>
           </div>

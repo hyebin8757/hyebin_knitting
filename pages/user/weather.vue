@@ -65,13 +65,24 @@ const degToWindDir = (deg: number): string => {
   return dirs[Math.round(deg / 45) % 8];
 };
 
+// SWR 3분 메모리 캐시 상태 (탭 전환 시 0.01초 즉시 렌더링 최적화)
+let weatherCache: { data: any; hourly: HourlyForecast[]; timestamp: number } | null = null;
+
 // ✅ 기상청 실측 API (Netlify Function 프록시) + Open-Meteo 파고 병행
 // 인천항 연안부두 실시간 실측 데이터 (NX=55, NY=124)
-const fetchWeatherData = async () => {
+const fetchWeatherData = async (forceRefresh = false) => {
+  const now = Date.now();
+  // 3분 이내 캐시가 존재하면 즉시 캐시 데이터 반영하여 스피너 딜레이 제거
+  if (!forceRefresh && weatherCache && (now - weatherCache.timestamp < 3 * 60 * 1000)) {
+    currentWeather.value = { ...weatherCache.data };
+    hourlyForecasts.value = [...weatherCache.hourly];
+    return;
+  }
+
   isLoading.value = true;
   try {
     // 기상청 초단기실황 단독 호출 (WAV 포함)
-    // 로쫬: Nuxt 서버 라우트 / 배포(Netlify): Netlify Function 자동 감지
+    // 로컬: Nuxt 서버 라우트 / 배포(Netlify): Netlify Function 자동 감지
     const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     const weatherApiUrl = isLocal ? '/api/weather' : '/.netlify/functions/weather';
     const kmaRes = await fetch(weatherApiUrl).then(r => r.json()).catch(() => null);
@@ -239,6 +250,11 @@ const fetchWeatherData = async () => {
     isLoading.value = false;
     const now = new Date();
     lastUpdatedTime.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    weatherCache = {
+      data: { ...currentWeather.value },
+      hourly: [...hourlyForecasts.value],
+      timestamp: Date.now()
+    };
   }
 };
 
@@ -250,7 +266,7 @@ const handleManualRefresh = async () => {
   if (isRefreshing.value) return;
   isRefreshing.value = true;
 
-  await fetchWeatherData();
+  await fetchWeatherData(true);
 
   showRefreshToast.value = true;
 
