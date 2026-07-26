@@ -123,8 +123,8 @@ const deleteFrequentShip = (targetName: string) => {
   saveFrequentShips();
 };
 
-// 엑셀식 렌더링 모드 ('view' | 'edit_batch')
-const activeViewTab = ref<'view' | 'batch_input'>('view');
+// 장부 입력/조회 뷰 전환 ('list' | 'quick_input')
+const currentMode = ref<'list' | 'quick_input'>('list');
 
 // 엑셀식 연속 입력을 위한 임시 행 객체 구조
 interface LedgerRowInput {
@@ -137,8 +137,8 @@ interface LedgerRowInput {
 
 // 엑셀식 연속 입력 행 목록 (기본 3개 행으로 시작)
 const batchRows = ref<LedgerRowInput[]>([
-  { shipName: '프라이드 (백령)', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
-  { shipName: '코리아 (덕적)', itemDetails: '', amount: null, paymentType: '입금', memo: '' },
+  { shipName: '프라이드', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
+  { shipName: '코리아(덕적)', itemDetails: '', amount: null, paymentType: '입금', memo: '' },
   { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' }
 ]);
 
@@ -157,7 +157,7 @@ const removeRow = (index: number) => {
 // 입력행 전체 초기화
 const resetRows = () => {
   batchRows.value = [
-    { shipName: '프라이드 (백령)', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
+    { shipName: '프라이드', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
     { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' }
   ];
 };
@@ -197,7 +197,20 @@ const paymentSummary = computed(() => {
   return summary;
 });
 
-// 단건 입력 모달
+// 자주 쓰는 선명 칩 클릭 시 적용
+const applyFrequentShipToForm = (shipName: string) => {
+  // 1) 연속 입력 중일 때 마지막 입력 행에 대입
+  const lastRow = batchRows.value[batchRows.value.length - 1];
+  if (lastRow) {
+    lastRow.shipName = shipName;
+  }
+  // 2) 단건 입력 모달 열려있을 때 모달 인풋에 대입
+  if (isSingleModalOpen.value) {
+    singleForm.value.shipName = shipName;
+  }
+};
+
+// 단건 입력/수정 모달
 const isSingleModalOpen = ref(false);
 const isEditMode = ref(false);
 const singleForm = ref<ShipLedgerItem>({
@@ -215,9 +228,9 @@ const openSingleAddModal = () => {
   singleForm.value = {
     id: undefined,
     date: selectedDate.value,
-    shipName: '프라이드 (백령)',
+    shipName: '프라이드',
     itemDetails: '',
-    amount: 0,
+    amount: null as any,
     paymentType: '선불',
     memo: ''
   };
@@ -285,7 +298,7 @@ const submitBatchRows = async () => {
     await userStore.saveBatchShipLedgers(formattedList);
     showAlert(`${formattedList.length}건의 객선 장부 기록이 일괄 등록되었습니다.`, '등록 완료');
     resetRows();
-    activeViewTab.value = 'view';
+    currentMode.value = 'list';
   } catch (e) {
     console.error("Batch save failed", e);
     showAlert('저장 도중 오류가 발생했습니다.');
@@ -322,7 +335,7 @@ const exportToExcel = () => {
     { wch: 6 },  // 연번
     { wch: 12 }, // 날짜
     { wch: 18 }, // 선명 및 상회
-    { wch: 26 }, // 품목 및 수량
+    { wch: 28 }, // 품목 및 수량
     { wch: 14 }, // 금액
     { wch: 10 }, // 결제구분
     { wch: 22 }  // 비고
@@ -345,171 +358,199 @@ onMounted(() => {
 
 <template>
   <div class="ledger-container">
-    <!-- Header Section -->
-    <div class="ledger-header-card">
-      <div class="title-area">
-        <div class="icon-box">
-          <i class="material-icons">assignment</i>
-        </div>
-        <div>
-          <h1 class="main-title">객선 일일 수화물 · 화물 장부</h1>
-          <p class="sub-title">인천 항운 노조 객선 전용 운송 장부 관리 및 엑셀 추출</p>
-        </div>
-      </div>
-
-      <!-- 날짜 선택기 & 엑셀 다운로드 버튼 -->
-      <div class="header-action-row">
-        <div class="date-picker-box">
-          <i class="material-icons">event</i>
-          <input type="date" v-model="selectedDate" class="date-input" />
+    <!-- 👑 스마트 대시보드 메인 헤더 카드 -->
+    <div class="hero-header-card">
+      <div class="hero-top">
+        <div class="brand-group">
+          <div class="brand-icon">
+            <i class="material-icons">description</i>
+          </div>
+          <div>
+            <h1 class="brand-title">객선 일일 수화물 · 화물 장부</h1>
+            <p class="brand-sub">인천 항운 노조 실시간 운송 대시보드 & 엑셀 통합 관리</p>
+          </div>
         </div>
 
-        <button class="btn-excel" @click="exportToExcel">
+        <button class="btn-excel-export" @click="exportToExcel">
           <i class="material-icons">file_download</i>
           <span>엑셀 (XLSX) 다운로드</span>
         </button>
       </div>
-    </div>
 
-    <!-- Mode Switcher Tabs -->
-    <div class="tab-switcher">
-      <button 
-        :class="['tab-btn', { active: activeViewTab === 'view' }]"
-        @click="activeViewTab = 'view'"
-      >
-        <i class="material-icons">table_chart</i>
-        <span>장부 내역 조회 ({{ currentLedgerList.length }}건)</span>
-      </button>
-
-      <button 
-        :class="['tab-btn', { active: activeViewTab === 'batch_input' }]"
-        @click="activeViewTab = 'batch_input'"
-      >
-        <i class="material-icons">edit_note</i>
-        <span>엑셀식 빠른 연속 등록</span>
-      </button>
-    </div>
-
-    <!-- VIEW TAB: 장부 내역 대시보드 & 목록 -->
-    <div v-if="activeViewTab === 'view'" class="view-section">
-      <!-- Summary Dashboard Stats Bar -->
-      <div class="dashboard-summary">
-        <div class="summary-card total">
-          <span class="card-label">일일 총 운송 금액 (합계)</span>
-          <span class="card-value">₩ {{ currentTotalAmount.toLocaleString() }}</span>
+      <!-- 날짜 선택기 & 총 금액 네온 대시보드 -->
+      <div class="hero-dashboard-bar">
+        <div class="date-selector-pill">
+          <i class="material-icons">calendar_today</i>
+          <input type="date" v-model="selectedDate" class="date-input" />
         </div>
 
-        <div class="summary-chips-row">
-          <div 
-            v-for="(amount, type) in paymentSummary" 
-            :key="type" 
-            class="chip-item"
-            :class="type"
-          >
-            <span class="chip-label">{{ type }}</span>
-            <span class="chip-val">₩ {{ amount.toLocaleString() }}</span>
-          </div>
+        <div class="total-amount-display">
+          <span class="amount-label">일일 운송 총액</span>
+          <span class="amount-value">₩ {{ currentTotalAmount.toLocaleString() }}</span>
         </div>
+      </div>
+    </div>
 
-        <button class="btn-add-single" @click="openSingleAddModal">
-          <i class="material-icons">add_circle</i>
-          <span>단건 추가</span>
+    <!-- ⚡ 스마트 모드 스위처 (목록 조회 vs 빠른 연속 작성) -->
+    <div class="mode-control-bar">
+      <div class="mode-tabs">
+        <button 
+          :class="['mode-btn', { active: currentMode === 'list' }]" 
+          @click="currentMode = 'list'"
+        >
+          <i class="material-icons">view_list</i>
+          <span>일일 장부 대시보드 ({{ currentLedgerList.length }}건)</span>
+        </button>
+
+        <button 
+          :class="['mode-btn', { active: currentMode === 'quick_input' }]" 
+          @click="currentMode = 'quick_input'"
+        >
+          <i class="material-icons">post_add</i>
+          <span>⚡ 빠른 연속 입력 시트</span>
         </button>
       </div>
 
-      <!-- 모바일 가독성 최적화 카드 뷰 (Mobile View - 640px 이하 노출) -->
-      <div class="mobile-ledger-cards">
-        <div v-if="currentLedgerList.length === 0" class="empty-card">
+      <button class="btn-primary-add" @click="openSingleAddModal">
+        <i class="material-icons">add</i>
+        <span>단건 장부 작성</span>
+      </button>
+    </div>
+
+    <!-- 🚀 자주 쓰는 선명 스피드 패널 (클릭 시 자동 입력) -->
+    <div class="frequent-chips-card">
+      <div class="chips-header">
+        <div class="left">
+          <i class="material-icons" style="color: #1ad1b1;">directions_boat</i>
+          <span>자주 쓰는 선명 Quick-Fill:</span>
+          <small class="tip">클릭하면 작성 칸에 자동 입력됩니다</small>
+        </div>
+
+        <button class="btn-settings-chip" @click="isShipManageModalOpen = true">
+          <i class="material-icons">settings</i>
+          <span>선명 관리</span>
+        </button>
+      </div>
+
+      <div class="chips-scroll-container">
+        <button 
+          v-for="sName in frequentShips" 
+          :key="sName"
+          class="quick-ship-chip"
+          @click="applyFrequentShipToForm(sName)"
+        >
+          + {{ sName }}
+        </button>
+      </div>
+    </div>
+
+    <!-- 📌 MODE 1: 일일 장부 대시보드 리스트 (모바일 스마트 카드 + 데스크톱 표) -->
+    <div v-if="currentMode === 'list'" class="list-view-section">
+      <!-- 결제 상태 요약 미니 뱃지 통계 -->
+      <div class="payment-stats-bar">
+        <div 
+          v-for="(amount, type) in paymentSummary" 
+          :key="type" 
+          class="stat-chip"
+          :class="type"
+        >
+          <span class="type-name">{{ type }}</span>
+          <span class="type-val">₩ {{ amount.toLocaleString() }}</span>
+        </div>
+      </div>
+
+      <!-- 모바일 가독성 최적화 카드리스트 (640px 이하 모바일 전용) -->
+      <div class="mobile-ledger-list">
+        <div v-if="currentLedgerList.length === 0" class="empty-mobile-card">
           <i class="material-icons">inbox</i>
-          <p>{{ selectedDate }} 등록된 객선 장부 내역이 없습니다.</p>
-          <button class="btn-empty-add" @click="activeViewTab = 'batch_input'">
-            + 엑셀식 빠른 연속 등록하기
+          <p>{{ selectedDate }}에 등록된 장부가 없습니다.</p>
+          <button class="btn-go-input" @click="currentMode = 'quick_input'">
+            + 연속 입력 시트로 작성하기
           </button>
         </div>
 
         <div 
           v-for="(item, idx) in currentLedgerList" 
           :key="item.id || idx" 
-          class="mobile-item-card"
+          class="ledger-mobile-card"
         >
-          <div class="card-top-row">
-            <div class="left-group">
-              <span class="card-no">#{{ idx + 1 }}</span>
-              <span class="ship-badge">{{ item.shipName }}</span>
+          <div class="card-header-row">
+            <div class="ship-info">
+              <span class="idx-no">#{{ idx + 1 }}</span>
+              <span class="ship-title-badge">{{ item.shipName }}</span>
             </div>
-
-            <span :class="['type-badge', item.paymentType]">{{ item.paymentType }}</span>
+            <span :class="['pay-status-badge', item.paymentType]">{{ item.paymentType }}</span>
           </div>
 
-          <div class="card-item-details">
+          <div class="card-item-body">
             {{ item.itemDetails }}
           </div>
 
-          <div class="card-bottom-row">
-            <div class="amount-group">
-              <span class="amount-label">운송 금액</span>
-              <span class="amount-val">₩ {{ (Number(item.amount) || 0).toLocaleString() }}</span>
+          <div class="card-footer-row">
+            <div class="amount-box">
+              <span class="lbl">금액</span>
+              <span class="val">₩ {{ (Number(item.amount) || 0).toLocaleString() }}</span>
             </div>
 
-            <div class="card-actions">
-              <button class="btn-icon edit" @click="openSingleEditModal(item)">
+            <div class="card-btns">
+              <button class="icon-btn edit" @click="openSingleEditModal(item)">
                 <i class="material-icons">edit</i>
               </button>
-              <button class="btn-icon delete" @click="deleteLedgerItem(item.id)">
+              <button class="icon-btn del" @click="deleteLedgerItem(item.id)">
                 <i class="material-icons">delete</i>
               </button>
             </div>
           </div>
 
-          <div v-if="item.memo" class="card-memo-row">
-            <i class="material-icons">notes</i>
+          <div v-if="item.memo" class="card-memo-footer">
+            <i class="material-icons">sticky_note_2</i>
             <span>{{ item.memo }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Ledger Table List (데스크톱 전용 모던 테이블 - 640px 초과) -->
-      <div class="table-card desktop-table-view">
-        <div class="table-responsive">
-          <table class="ledger-table">
+      <!-- 데스크톱 전용 모던 리스트 테이블 (640px 초과) -->
+      <div class="desktop-table-card">
+        <div class="table-scroll-wrapper">
+          <table class="modern-table">
             <thead>
               <tr>
-                <th style="width: 50px;">NO</th>
-                <th style="width: 150px;">선명 및 상회</th>
-                <th>품목 및 수량</th>
-                <th style="width: 130px; text-align: right;">금액</th>
-                <th style="width: 90px; text-align: center;">결제구분</th>
-                <th style="width: 160px;">비고/메모</th>
-                <th style="width: 80px; text-align: center;">관리</th>
+                <th style="width: 60px; text-align: center;">NO</th>
+                <th style="width: 170px;">선명 및 상회</th>
+                <th>품목 및 수량 상세</th>
+                <th style="width: 140px; text-align: right;">금액</th>
+                <th style="width: 100px; text-align: center;">결제구분</th>
+                <th style="width: 180px;">비고/메모</th>
+                <th style="width: 90px; text-align: center;">관리</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="currentLedgerList.length === 0">
-                <td colspan="7" class="empty-cell">
-                  <i class="material-icons">inbox</i>
-                  <p>{{ selectedDate }} 등록된 객선 장부 내역이 없습니다.</p>
-                  <button class="btn-empty-add" @click="activeViewTab = 'batch_input'">
-                    + 엑셀식 빠른 연속 등록하기
+                <td colspan="7" class="empty-td">
+                  <i class="material-icons">receipt_long</i>
+                  <p>{{ selectedDate }} 일자에 등록된 객선 장부 데이터가 없습니다.</p>
+                  <button class="btn-inline-add" @click="currentMode = 'quick_input'">
+                    + 엑셀식 연속 입력 시트로 작성
                   </button>
                 </td>
               </tr>
 
               <tr v-for="(item, idx) in currentLedgerList" :key="item.id || idx">
-                <td class="num-cell">{{ idx + 1 }}</td>
-                <td class="ship-name-cell">
+                <td class="td-no">{{ idx + 1 }}</td>
+                <td class="td-ship">
                   <span class="ship-badge">{{ item.shipName }}</span>
                 </td>
-                <td class="item-detail-cell">{{ item.itemDetails }}</td>
-                <td class="amount-cell">₩ {{ (Number(item.amount) || 0).toLocaleString() }}</td>
-                <td class="type-cell">
-                  <span :class="['type-badge', item.paymentType]">{{ item.paymentType }}</span>
+                <td class="td-item">{{ item.itemDetails }}</td>
+                <td class="td-amount">₩ {{ (Number(item.amount) || 0).toLocaleString() }}</td>
+                <td class="td-pay">
+                  <span :class="['pay-badge', item.paymentType]">{{ item.paymentType }}</span>
                 </td>
-                <td class="memo-cell">{{ item.memo || '-' }}</td>
-                <td class="action-cell">
-                  <button class="btn-icon edit" @click="openSingleEditModal(item)" title="수정">
+                <td class="td-memo">{{ item.memo || '-' }}</td>
+                <td class="td-actions">
+                  <button class="act-btn edit" @click="openSingleEditModal(item)" title="수정">
                     <i class="material-icons">edit</i>
                   </button>
-                  <button class="btn-icon delete" @click="deleteLedgerItem(item.id)" title="삭제">
+                  <button class="act-btn del" @click="deleteLedgerItem(item.id)" title="삭제">
                     <i class="material-icons">delete</i>
                   </button>
                 </td>
@@ -520,59 +561,43 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- BATCH INPUT TAB: 엑셀식 빠른 연속 등록 폼 -->
-    <div v-if="activeViewTab === 'batch_input'" class="batch-section">
-      <div class="batch-card">
-        <div class="batch-header">
-          <div class="batch-title-group">
-            <h3>⚡ 엑셀식 연속 입력 폼 (작성 날짜: {{ selectedDate }})</h3>
-            <p>표 양식에서 탭키를 누르며 엑셀처럼 빠르게 연속 작성 후 [일괄 등록]을 누르세요.</p>
+    <!-- 📝 MODE 2: 엑셀식 빠른 연속 입력 스마트 시트 -->
+    <div v-if="currentMode === 'quick_input'" class="input-sheet-section">
+      <div class="sheet-card">
+        <div class="sheet-title-row">
+          <div>
+            <h2>⚡ 엑셀식 연속 입력 스마트 시트</h2>
+            <p>키보드 [Tab] 키를 누르며 엑셀처럼 빠르게 작성 후 [장부 일괄 등록]을 누르세요.</p>
           </div>
 
-          <!-- 자주 쓰는 선명 숏컷 칩 및 관리 버튼 -->
-          <div class="shortcut-chips-area">
-            <div class="shortcut-chips">
-              <span class="sc-label">자주 쓰는 선명:</span>
-              <span 
-                v-for="sName in frequentShips" 
-                :key="sName" 
-                class="sc-chip"
-                @click="batchRows[batchRows.length - 1].shipName = sName"
-                :title="`${sName} 클릭 시 마지막 입력 행에 지정`"
-              >
-                + {{ sName }}
-              </span>
-
-              <button class="btn-manage-ships" @click="isShipManageModalOpen = true">
-                <i class="material-icons">settings</i>
-                <span>선명 칩 추가 / 삭제 관리</span>
-              </button>
-            </div>
+          <div class="batch-sum-display">
+            <span>입력 예상 총액:</span>
+            <strong>₩ {{ batchTotalAmount.toLocaleString() }}</strong>
           </div>
         </div>
 
-        <div class="table-responsive">
-          <table class="batch-input-table">
+        <div class="table-scroll-wrapper">
+          <table class="grid-sheet-table">
             <thead>
               <tr>
-                <th style="width: 45px;">NO</th>
-                <th style="width: 180px;">선명 및 상회 *</th>
+                <th style="width: 50px; text-align: center;">NO</th>
+                <th style="width: 190px;">선명 및 상회 *</th>
                 <th>품목 및 수량 *</th>
-                <th style="width: 140px;">금액 (원) *</th>
-                <th style="width: 110px;">결제구분</th>
-                <th style="width: 180px;">비고/메모</th>
-                <th style="width: 50px;">삭제</th>
+                <th style="width: 150px;">금액 (원) *</th>
+                <th style="width: 120px;">결제구분</th>
+                <th style="width: 200px;">비고/메모</th>
+                <th style="width: 50px; text-align: center;">삭제</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(row, rIdx) in batchRows" :key="rIdx">
-                <td class="row-no">{{ rIdx + 1 }}</td>
+                <td class="r-no">{{ rIdx + 1 }}</td>
                 <td>
                   <input 
                     type="text" 
                     v-model="row.shipName" 
-                    placeholder="예: 프라이드 (백령)" 
-                    class="grid-input"
+                    placeholder="예: 프라이드" 
+                    class="sheet-input"
                   />
                 </td>
                 <td>
@@ -580,19 +605,20 @@ onMounted(() => {
                     type="text" 
                     v-model="row.itemDetails" 
                     placeholder="예: 박스 외 10개 (상)" 
-                    class="grid-input"
+                    class="sheet-input"
                   />
                 </td>
                 <td>
                   <input 
                     type="number" 
+                    inputmode="numeric"
                     v-model.number="row.amount" 
                     placeholder="0" 
-                    class="grid-input amount"
+                    class="sheet-input amount"
                   />
                 </td>
                 <td>
-                  <select v-model="row.paymentType" class="grid-select">
+                  <select v-model="row.paymentType" class="sheet-select">
                     <option v-for="opt in paymentOptions" :key="opt" :value="opt">{{ opt }}</option>
                   </select>
                 </td>
@@ -600,12 +626,12 @@ onMounted(() => {
                   <input 
                     type="text" 
                     v-model="row.memo" 
-                    placeholder="비고" 
-                    class="grid-input"
+                    placeholder="상세 비고" 
+                    class="sheet-input"
                   />
                 </td>
                 <td style="text-align: center;">
-                  <button class="btn-row-del" @click="removeRow(rIdx)">
+                  <button class="btn-del-row" @click="removeRow(rIdx)">
                     <i class="material-icons">close</i>
                   </button>
                 </td>
@@ -614,210 +640,151 @@ onMounted(() => {
           </table>
         </div>
 
-        <!-- 엑셀 하단 바: 총합계 및 행 추가 / 일괄 저장 -->
-        <div class="batch-footer-bar">
-          <div class="footer-left">
-            <button class="btn-add-row" @click="addRow">
+        <!-- 하단 액션 컨트롤 바 -->
+        <div class="sheet-footer">
+          <div class="left-actions">
+            <button class="btn-add-line" @click="addRow">
               <i class="material-icons">add</i>
               <span>+ 행 추가</span>
             </button>
-            <button class="btn-reset-row" @click="resetRows">초기화</button>
+            <button class="btn-reset-lines" @click="resetRows">초기화</button>
           </div>
 
-          <div class="footer-right">
-            <div class="batch-total-display">
-              <span>입력 총액:</span>
-              <strong>₩ {{ batchTotalAmount.toLocaleString() }}</strong>
-            </div>
-
-            <button 
-              class="btn-save-batch" 
-              :disabled="isSubmittingBatch" 
-              @click="submitBatchRows"
-            >
-              <i class="material-icons">task_alt</i>
-              <span>{{ isSubmittingBatch ? '저장 중...' : '장부 일괄 등록' }}</span>
-            </button>
-          </div>
+          <button 
+            class="btn-submit-batch" 
+            :disabled="isSubmittingBatch" 
+            @click="submitBatchRows"
+          >
+            <i class="material-icons">task_alt</i>
+            <span>{{ isSubmittingBatch ? '저장 처리 중...' : '일괄 장부 등록완료' }}</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- 단건 입력 / 수정 모달 Dialog -->
-    <v-dialog v-model="isSingleModalOpen" max-width="420">
+    <!-- ✏️ 단건 등록/수정 모달 다이얼로그 -->
+    <v-dialog v-model="isSingleModalOpen" max-width="440">
       <v-card class="pa-6 dialog-card">
         <v-card-title class="dialog-title">
-          <i class="material-icons">{{ isEditMode ? 'edit' : 'add_box' }}</i>
-          <span>{{ isEditMode ? '객선 장부 수정' : '객선 장부 단건 등록' }}</span>
+          <i class="material-icons" style="color: #1ad1b1;">{{ isEditMode ? 'edit_note' : 'post_add' }}</i>
+          <span>{{ isEditMode ? '객선 장부 내역 수정' : '객선 장부 단건 등록' }}</span>
         </v-card-title>
 
         <div class="dialog-body">
-          <div class="field-group">
-            <label>날짜</label>
-            <input type="date" v-model="singleForm.date" class="modal-input" />
+          <div class="form-group">
+            <label>작성 날짜</label>
+            <input type="date" v-model="singleForm.date" class="dialog-input" />
           </div>
 
-          <div class="field-group">
+          <div class="form-group">
             <label>선명 및 상회 *</label>
-            <input type="text" v-model="singleForm.shipName" placeholder="예: 코리아 (덕적)" class="modal-input" />
+            <input type="text" v-model="singleForm.shipName" placeholder="예: 코리아(덕적)" class="dialog-input" />
           </div>
 
-          <div class="field-group">
+          <div class="form-group">
             <label>품목 및 수량 *</label>
-            <input type="text" v-model="singleForm.itemDetails" placeholder="예: 부식 15 (덕적고)" class="modal-input" />
+            <input type="text" v-model="singleForm.itemDetails" placeholder="예: 부식 15 (덕적고)" class="dialog-input" />
           </div>
 
-          <div class="field-group">
+          <div class="form-group">
             <label>금액 (원) *</label>
-            <input type="number" v-model.number="singleForm.amount" placeholder="0" class="modal-input" />
+            <input type="number" inputmode="numeric" v-model.number="singleForm.amount" placeholder="0" class="dialog-input amount" />
           </div>
 
-          <div class="field-group">
+          <div class="form-group">
             <label>결제 구분</label>
-            <select v-model="singleForm.paymentType" class="modal-select">
+            <select v-model="singleForm.paymentType" class="dialog-select">
               <option v-for="opt in paymentOptions" :key="opt" :value="opt">{{ opt }}</option>
             </select>
           </div>
 
-          <div class="field-group">
+          <div class="form-group">
             <label>비고 / 작성자 메모</label>
-            <input type="text" v-model="singleForm.memo" placeholder="상세 비고" class="modal-input" />
+            <input type="text" v-model="singleForm.memo" placeholder="상세 비고" class="dialog-input" />
           </div>
         </div>
 
         <v-card-actions class="dialog-actions">
-          <v-btn variant="text" class="btn-cancel" @click="isSingleModalOpen = false">취소</v-btn>
-          <v-btn class="btn-confirm" @click="saveSingleLedger">저장</v-btn>
+          <v-btn class="btn-cancel" @click="isSingleModalOpen = false">취소</v-btn>
+          <v-btn class="btn-save" @click="saveSingleLedger">저장</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- ⚙️ 자주 쓰는 선명 / 상회 관리 팝업 모달 (UI 최적화 리디자인) -->
+    <!-- ⚙️ 자주 쓰는 선명 관리 모달 -->
     <v-dialog v-model="isShipManageModalOpen" max-width="480">
       <v-card class="pa-6 dialog-card">
-        <v-card-title class="dialog-title" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1.2rem !important;">
-          <div style="display: flex; align-items: center; gap: 0.8rem;">
-            <div style="width: 34px; height: 34px; border-radius: 0.8rem; background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.3); display: flex; align-items: center; justify-content: center;">
-              <i class="material-icons" style="color: #1ad1b1; font-size: 2rem;">directions_boat</i>
-            </div>
-            <span style="font-size: 1.65rem; font-weight: 800; color: #ffffff;">자주 쓰는 선명 / 상회 관리</span>
+        <v-card-title class="dialog-title justify-space-between">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <i class="material-icons" style="color: #1ad1b1;">directions_boat</i>
+            <span>자주 쓰는 선명 / 상회 관리</span>
           </div>
           <v-btn icon size="x-small" variant="text" style="color: rgba(255,255,255,0.5);" @click="isShipManageModalOpen = false">
-            <i class="material-icons" style="font-size: 2rem;">close</i>
+            <i class="material-icons">close</i>
           </v-btn>
         </v-card-title>
 
-        <div class="dialog-body" style="gap: 1.6rem; margin-top: 1.4rem;">
-          <!-- 신규 선명 추가 통합 폼 (높이 일관성 & 아쿠아 버튼) -->
-          <div style="display: flex; align-items: center; gap: 0.6rem; background: rgba(255,255,255,0.03); padding: 0.4rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.12);">
+        <div class="dialog-body">
+          <div class="chip-input-bar">
             <input 
               type="text" 
               v-model="newShipInput" 
-              placeholder="새로운 선명/상회 명칭 입력 (예: 연평(오전))" 
-              style="
-                flex: 1;
-                background: transparent;
-                border: none;
-                padding: 0.7rem 0.9rem;
-                color: #ffffff;
-                font-size: 1.3rem;
-                font-weight: 600;
-                outline: none;
-              "
+              placeholder="새 선명 입력 (예: 연평(오전))" 
+              class="chip-input"
               @keyup.enter="addFrequentShip"
             />
-            <button 
-              style="
-                background: linear-gradient(135deg, #1ad1b1 0%, #15a088 100%);
-                border: none;
-                color: #0b1a2c;
-                font-weight: 800;
-                font-size: 1.25rem;
-                padding: 0.75rem 1.4rem;
-                border-radius: 0.8rem;
-                cursor: pointer;
-                white-space: nowrap;
-                box-shadow: 0 2px 8px rgba(26, 209, 177, 0.25);
-                transition: all 0.2s;
-              "
-              @click="addFrequentShip"
-            >
-              + 추가
-            </button>
+            <button class="btn-chip-add" @click="addFrequentShip">+ 추가</button>
           </div>
 
-          <!-- 등록된 선명 칩 목록 & 삭제 버튼 (스크롤 & 미니 칩) -->
-          <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <span style="font-size: 1.2rem; font-weight: 700; color: rgba(255,255,255,0.6);">현재 등록된 선명 목록</span>
-              <span style="font-size: 1.15rem; font-weight: 800; color: #1ad1b1; background: rgba(26, 209, 177, 0.12); padding: 0.15rem 0.6rem; border-radius: 0.5rem;">총 {{ frequentShips.length }}개</span>
+          <div class="chip-list-box">
+            <div class="box-head">
+              <span>현재 선명 목록</span>
+              <span class="cnt">총 {{ frequentShips.length }}개</span>
             </div>
-            
-            <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; max-height: 220px; overflow-y: auto; padding: 1rem; background: rgba(0, 0, 0, 0.25); border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.08);">
-              <div 
-                v-for="sName in frequentShips" 
-                :key="sName"
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 0.4rem;
-                  background: rgba(136, 197, 255, 0.1);
-                  border: 1px solid rgba(136, 197, 255, 0.25);
-                  color: #88c5ff;
-                  padding: 0.35rem 0.8rem;
-                  border-radius: 0.7rem;
-                  font-size: 1.25rem;
-                  font-weight: 700;
-                  transition: all 0.2s;
-                "
-              >
+            <div class="chips-flex">
+              <div v-for="sName in frequentShips" :key="sName" class="chip-item">
                 <span>{{ sName }}</span>
-                <i 
-                  class="material-icons" 
-                  style="font-size: 1.5rem; color: #ff5c8d; cursor: pointer; opacity: 0.8;" 
-                  @click="deleteFrequentShip(sName)"
-                  title="삭제"
-                >highlight_off</i>
+                <i class="material-icons" @click="deleteFrequentShip(sName)">highlight_off</i>
               </div>
             </div>
           </div>
         </div>
 
-        <v-card-actions class="dialog-actions" style="justify-content: flex-end; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
-          <v-btn style="background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.12) !important; color: #ffffff !important; font-weight: 700; border-radius: 0.8rem; padding: 0.6rem 2rem !important; height: auto !important; font-size: 1.3rem;" @click="isShipManageModalOpen = false">닫기</v-btn>
+        <v-card-actions class="dialog-actions justify-end">
+          <v-btn class="btn-cancel" @click="isShipManageModalOpen = false">닫기</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- 🔔 공용 커스텀 알림 (Alert) 모달 -->
+    <!-- 🔔 커스텀 알림 (Alert) -->
     <v-dialog v-model="isCustomAlertOpen" max-width="360">
       <v-card class="pa-6 dialog-card">
         <v-card-title class="dialog-title" style="color: #1ad1b1;">
           <i class="material-icons">info</i>
           <span>{{ customAlertTitle }}</span>
         </v-card-title>
-        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.9);">
+        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; color: rgba(255,255,255,0.9);">
           {{ customAlertMessage }}
         </v-card-text>
         <v-card-actions class="dialog-actions">
-          <v-btn class="btn-confirm" style="width: 100%;" @click="isCustomAlertOpen = false">확인</v-btn>
+          <v-btn class="btn-save" style="width: 100%;" @click="isCustomAlertOpen = false">확인</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- ❓ 공용 커스텀 확인 (Confirm) 모달 -->
+    <!-- ❓ 커스텀 확인 (Confirm) -->
     <v-dialog v-model="isCustomConfirmOpen" max-width="360">
       <v-card class="pa-6 dialog-card">
         <v-card-title class="dialog-title" style="color: #ff5c8d;">
           <i class="material-icons">help_outline</i>
           <span>{{ customConfirmTitle }}</span>
         </v-card-title>
-        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.9);">
+        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; color: rgba(255,255,255,0.9);">
           {{ customConfirmMessage }}
         </v-card-text>
         <v-card-actions class="dialog-actions">
           <v-btn class="btn-cancel" @click="isCustomConfirmOpen = false">취소</v-btn>
-          <v-btn class="btn-confirm" style="background: linear-gradient(135deg, #ff006e 0%, #d60058 100%) !important;" @click="executeConfirm">확인</v-btn>
+          <v-btn class="btn-save" style="background: linear-gradient(135deg, #ff006e 0%, #d60058 100%) !important;" @click="executeConfirm">확인</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -832,87 +799,57 @@ onMounted(() => {
   color: #ffffff;
 }
 
-/* Header Card */
-.ledger-header-card {
-  background: linear-gradient(145deg, #0d223a 0%, #091728 100%);
+/* 👑 스마트 대시보드 메인 헤더 카드 */
+.hero-header-card {
+  background: linear-gradient(135deg, #0f2b48 0%, #0a1b2e 100%);
   border: 1px solid rgba(136, 197, 255, 0.25);
   border-radius: 1.8rem;
   padding: 1.8rem;
   margin-bottom: 1.6rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1.2rem;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
 
-  .title-area {
+  .hero-top {
     display: flex;
     align-items: center;
-    gap: 1rem;
-
-    .icon-box {
-      width: 46px;
-      height: 46px;
-      border-radius: 1.2rem;
-      background: rgba(26, 209, 177, 0.15);
-      border: 1px solid rgba(26, 209, 177, 0.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      
-      i {
-        color: #1ad1b1;
-        font-size: 2.6rem;
-      }
-    }
-
-    .main-title {
-      font-size: 1.9rem;
-      font-weight: 900;
-      color: #ffffff;
-      margin: 0;
-      letter-spacing: -0.04rem;
-    }
-
-    .sub-title {
-      font-size: 1.2rem;
-      color: rgba(255, 255, 255, 0.5);
-      margin: 0.2rem 0 0 0;
-    }
-  }
-
-  .header-action-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    justify-content: space-between;
     flex-wrap: wrap;
+    gap: 1.2rem;
+    margin-bottom: 1.6rem;
 
-    .date-picker-box {
+    .brand-group {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 0.6rem 1.2rem;
-      border-radius: 1rem;
+      gap: 1rem;
 
-      i {
-        color: #88c5ff;
-        font-size: 1.8rem;
+      .brand-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 1.2rem;
+        background: rgba(26, 209, 177, 0.15);
+        border: 1px solid rgba(26, 209, 177, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        i { color: #1ad1b1; font-size: 2.6rem; }
       }
 
-      .date-input {
-        background: transparent;
-        border: none;
+      .brand-title {
+        font-size: 2rem;
+        font-weight: 900;
         color: #ffffff;
-        font-size: 1.4rem;
-        font-weight: 700;
-        outline: none;
+        margin: 0;
+        letter-spacing: -0.04rem;
+      }
+
+      .brand-sub {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin: 0.2rem 0 0 0;
       }
     }
 
-    .btn-excel {
+    .btn-excel-export {
       display: flex;
       align-items: center;
       gap: 0.6rem;
@@ -921,119 +858,114 @@ onMounted(() => {
       color: #ffffff;
       font-weight: 800;
       font-size: 1.3rem;
-      padding: 0.75rem 1.4rem;
+      padding: 0.8rem 1.4rem;
       border-radius: 1rem;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(29, 111, 66, 0.3);
+      box-shadow: 0 4px 14px rgba(29, 111, 66, 0.35);
       transition: all 0.2s ease;
 
       &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(29, 111, 66, 0.45);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(29, 111, 66, 0.5);
       }
-
-      i {
-        font-size: 1.8rem;
-      }
+      i { font-size: 1.8rem; }
     }
   }
-}
 
-/* Tab Switcher */
-.tab-switcher {
-  display: flex;
-  gap: 0.8rem;
-  margin-bottom: 1.6rem;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 0.4rem;
-  border-radius: 1.2rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-
-  .tab-btn {
-    flex: 1;
+  .hero-dashboard-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
-    padding: 1rem 0;
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: rgba(255, 255, 255, 0.6);
-    background: transparent;
-    border: none;
-    border-radius: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.2rem 1.6rem;
+    border-radius: 1.4rem;
 
-    i {
-      font-size: 1.8rem;
+    .date-selector-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 0.6rem 1.2rem;
+      border-radius: 1rem;
+
+      i { color: #88c5ff; font-size: 1.8rem; }
+      .date-input {
+        background: transparent;
+        border: none;
+        color: #ffffff;
+        font-size: 1.45rem;
+        font-weight: 800;
+        outline: none;
+      }
     }
 
-    &.active {
-      background: var(--primary-darken-color-1);
-      color: #ffffff;
-      box-shadow: 0 4px 12px rgba(21, 60, 108, 0.4);
+    .total-amount-display {
+      display: flex;
+      align-items: baseline;
+      gap: 0.8rem;
+
+      .amount-label {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .amount-value {
+        font-size: 2.6rem;
+        font-weight: 900;
+        color: #1ad1b1;
+        letter-spacing: -0.05rem;
+        text-shadow: 0 0 12px rgba(26, 209, 177, 0.3);
+      }
     }
   }
 }
 
-/* Summary Dashboard Stats */
-.dashboard-summary {
+/* ⚡ 모드 제어 바 */
+.mode-control-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 1.2rem;
-  background: rgba(13, 30, 51, 0.8);
-  border: 1px solid rgba(136, 197, 255, 0.2);
-  border-radius: 1.6rem;
-  padding: 1.4rem 1.8rem;
-  margin-bottom: 1.6rem;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
 
-  .summary-card.total {
-    display: flex;
-    flex-direction: column;
-
-    .card-label {
-      font-size: 1.15rem;
-      color: rgba(255, 255, 255, 0.5);
-    }
-
-    .card-value {
-      font-size: 2.4rem;
-      font-weight: 900;
-      color: #1ad1b1;
-      letter-spacing: -0.04rem;
-    }
-  }
-
-  .summary-chips-row {
+  .mode-tabs {
     display: flex;
     gap: 0.6rem;
-    flex-wrap: wrap;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.4rem;
+    border-radius: 1.2rem;
 
-    .chip-item {
+    .mode-btn {
       display: flex;
-      flex-direction: column;
-      padding: 0.4rem 0.9rem;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 0.8rem;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.4rem;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.5);
+      background: transparent;
+      border: none;
+      border-radius: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
 
-      .chip-label {
-        font-size: 1rem;
-        color: rgba(255, 255, 255, 0.5);
-      }
+      i { font-size: 1.7rem; }
 
-      .chip-val {
-        font-size: 1.25rem;
-        font-weight: 800;
+      &.active {
+        background: var(--primary-darken-color-1);
         color: #ffffff;
+        box-shadow: 0 4px 12px rgba(21, 60, 108, 0.4);
       }
     }
   }
 
-  .btn-add-single {
+  .btn-primary-add {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -1042,33 +974,110 @@ onMounted(() => {
     color: #88c5ff;
     font-weight: 800;
     font-size: 1.3rem;
-    padding: 0.7rem 1.2rem;
+    padding: 0.75rem 1.3rem;
     border-radius: 1rem;
     cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover { background: rgba(58, 134, 255, 0.3); }
+    i { font-size: 1.8rem; }
   }
 }
 
-/* Table Card */
-.table-card, .batch-card {
-  background: rgba(13, 30, 51, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1.6rem;
-  padding: 1.6rem;
-}
+/* 🚀 자주 쓰는 선명 스피드 패널 */
+.frequent-chips-card {
+  background: rgba(13, 30, 51, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.4rem;
+  padding: 1.2rem 1.6rem;
+  margin-bottom: 1.6rem;
 
-.table-responsive {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  width: 100%;
-}
+  .chips-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
 
-.desktop-table-view {
-  @media (max-width: 640px) {
-    display: none;
+    .left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.3rem;
+      font-weight: 800;
+
+      .tip {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.4);
+        margin-left: 0.4rem;
+      }
+    }
+
+    .btn-settings-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: rgba(26, 209, 177, 0.12);
+      border: 1px solid rgba(26, 209, 177, 0.3);
+      color: #1ad1b1;
+      padding: 0.3rem 0.8rem;
+      border-radius: 0.6rem;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  }
+
+  .chips-scroll-container {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    overflow-x: auto;
+    padding-bottom: 0.4rem;
+    -webkit-overflow-scrolling: touch;
+
+    .quick-ship-chip {
+      background: rgba(136, 197, 255, 0.1);
+      border: 1px solid rgba(136, 197, 255, 0.25);
+      color: #88c5ff;
+      padding: 0.35rem 0.85rem;
+      border-radius: 0.7rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: rgba(136, 197, 255, 0.25);
+        transform: translateY(-1px);
+      }
+    }
   }
 }
 
-.mobile-ledger-cards {
+/* 📌 MODE 1: 일일 장부 대시보드 리스트 */
+.payment-stats-bar {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+
+  .stat-chip {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.8rem;
+
+    .type-name { font-size: 1rem; color: rgba(255, 255, 255, 0.5); }
+    .type-val { font-size: 1.3rem; font-weight: 800; color: #ffffff; }
+  }
+}
+
+/* 📱 모바일 카드리스트 (640px 이하 모바일 전용) */
+.mobile-ledger-list {
   display: none;
   flex-direction: column;
   gap: 1.2rem;
@@ -1078,7 +1087,7 @@ onMounted(() => {
     display: flex;
   }
 
-  .empty-card {
+  .empty-mobile-card {
     text-align: center;
     padding: 3.5rem 1rem;
     background: rgba(13, 30, 51, 0.85);
@@ -1088,7 +1097,7 @@ onMounted(() => {
 
     i { font-size: 3.6rem; display: block; margin-bottom: 0.8rem; }
     p { font-size: 1.35rem; margin: 0 0 1.2rem 0; }
-    .btn-empty-add {
+    .btn-go-input {
       background: rgba(26, 209, 177, 0.15);
       border: 1px solid rgba(26, 209, 177, 0.4);
       color: #1ad1b1;
@@ -1099,7 +1108,7 @@ onMounted(() => {
     }
   }
 
-  .mobile-item-card {
+  .ledger-mobile-card {
     background: rgba(13, 30, 51, 0.95);
     border: 1px solid rgba(136, 197, 255, 0.25);
     border-radius: 1.4rem;
@@ -1109,34 +1118,29 @@ onMounted(() => {
     gap: 1rem;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 
-    .card-top-row {
+    .card-header-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
 
-      .left-group {
+      .ship-info {
         display: flex;
         align-items: center;
         gap: 0.6rem;
 
-        .card-no {
-          font-size: 1.2rem;
-          font-weight: 800;
-          color: rgba(255, 255, 255, 0.4);
-        }
-
-        .ship-badge {
+        .idx-no { font-size: 1.2rem; font-weight: 800; color: rgba(255, 255, 255, 0.4); }
+        .ship-title-badge {
           background: rgba(136, 197, 255, 0.15);
           border: 1px solid rgba(136, 197, 255, 0.3);
           color: #88c5ff;
           padding: 0.3rem 0.8rem;
           border-radius: 0.6rem;
           font-weight: 800;
-          font-size: 1.3rem;
+          font-size: 1.35rem;
         }
       }
 
-      .type-badge {
+      .pay-status-badge {
         font-size: 1.15rem;
         font-weight: 800;
         padding: 0.25rem 0.75rem;
@@ -1150,43 +1154,34 @@ onMounted(() => {
       }
     }
 
-    .card-item-details {
-      font-size: 1.5rem;
+    .card-item-body {
+      font-size: 1.55rem;
       font-weight: 800;
       color: #ffffff;
       line-height: 1.4;
       word-break: break-all;
     }
 
-    .card-bottom-row {
+    .card-footer-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding-top: 0.8rem;
       border-top: 1px dashed rgba(255, 255, 255, 0.08);
 
-      .amount-group {
+      .amount-box {
         display: flex;
         flex-direction: column;
 
-        .amount-label {
-          font-size: 1rem;
-          color: rgba(255, 255, 255, 0.5);
-        }
-
-        .amount-val {
-          font-size: 1.85rem;
-          font-weight: 900;
-          color: #1ad1b1;
-          letter-spacing: -0.03rem;
-        }
+        .lbl { font-size: 1rem; color: rgba(255, 255, 255, 0.5); }
+        .val { font-size: 1.85rem; font-weight: 900; color: #1ad1b1; }
       }
 
-      .card-actions {
+      .card-btns {
         display: flex;
         gap: 0.6rem;
 
-        .btn-icon {
+        .icon-btn {
           width: 36px;
           height: 36px;
           border-radius: 0.8rem;
@@ -1198,12 +1193,12 @@ onMounted(() => {
           cursor: pointer;
 
           &.edit i { color: #88c5ff; font-size: 1.8rem; }
-          &.delete i { color: #ff5c8d; font-size: 1.8rem; }
+          &.del i { color: #ff5c8d; font-size: 1.8rem; }
         }
       }
     }
 
-    .card-memo-row {
+    .card-memo-footer {
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -1218,110 +1213,112 @@ onMounted(() => {
   }
 }
 
-.ledger-table, .batch-input-table {
-  width: 100%;
-  min-width: 720px;
-  border-collapse: collapse;
-  text-align: left;
+/* 💻 데스크톱 전용 모던 리스트 테이블 (640px 초과) */
+.desktop-table-card {
+  background: rgba(13, 30, 51, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.6rem;
+  padding: 1.6rem;
 
-  th {
-    padding: 1.2rem 1rem;
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: rgba(255, 255, 255, 0.6);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    white-space: nowrap;
+  @media (max-width: 640px) {
+    display: none;
   }
 
-  td {
-    padding: 1.2rem 1rem;
-    font-size: 1.35rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    white-space: nowrap;
+  .table-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
 
-    &.num-cell {
-      color: rgba(255, 255, 255, 0.4);
-      font-weight: 600;
-    }
+  .modern-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    text-align: left;
 
-    &.ship-name-cell .ship-badge {
-      background: rgba(136, 197, 255, 0.15);
-      border: 1px solid rgba(136, 197, 255, 0.3);
-      color: #88c5ff;
-      padding: 0.3rem 0.8rem;
-      border-radius: 0.6rem;
+    th {
+      padding: 1.2rem 1rem;
+      font-size: 1.25rem;
       font-weight: 800;
-      font-size: 1.3rem;
-    }
-
-    &.amount-cell {
-      font-weight: 900;
-      color: #1ad1b1;
-      text-align: right;
-    }
-
-    &.type-cell {
-      text-align: center;
-
-      .type-badge {
-        font-size: 1.15rem;
-        font-weight: 800;
-        padding: 0.2rem 0.7rem;
-        border-radius: 0.6rem;
-
-        &.선불 { background: rgba(58, 134, 255, 0.2); color: #88c5ff; }
-        &.입금 { background: rgba(26, 209, 177, 0.2); color: #1ad1b1; }
-        &.후불 { background: rgba(255, 183, 3, 0.2); color: #ffb703; }
-        &.현금 { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
-        &.미수 { background: rgba(255, 0, 110, 0.2); color: #ff5c8d; }
-      }
-    }
-
-    &.memo-cell {
       color: rgba(255, 255, 255, 0.6);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      white-space: nowrap;
     }
 
-    &.action-cell {
-      text-align: center;
-      display: flex;
-      gap: 0.4rem;
-      justify-content: center;
+    td {
+      padding: 1.2rem 1rem;
+      font-size: 1.35rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      white-space: nowrap;
 
-      .btn-icon {
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 0.4rem;
+      &.td-no { color: rgba(255, 255, 255, 0.4); text-align: center; }
+      &.td-ship .ship-badge {
+        background: rgba(136, 197, 255, 0.15);
+        border: 1px solid rgba(136, 197, 255, 0.3);
+        color: #88c5ff;
+        padding: 0.3rem 0.8rem;
+        border-radius: 0.6rem;
+        font-weight: 800;
+      }
+      &.td-item { font-weight: 700; color: #ffffff; }
+      &.td-amount { font-weight: 900; color: #1ad1b1; text-align: right; }
+      &.td-pay {
+        text-align: center;
+        .pay-badge {
+          font-size: 1.15rem;
+          font-weight: 800;
+          padding: 0.2rem 0.7rem;
+          border-radius: 0.6rem;
 
-        &.edit i { color: #88c5ff; }
-        &.delete i { color: #ff5c8d; }
+          &.선불 { background: rgba(58, 134, 255, 0.2); color: #88c5ff; }
+          &.입금 { background: rgba(26, 209, 177, 0.2); color: #1ad1b1; }
+          &.후불 { background: rgba(255, 183, 3, 0.2); color: #ffb703; }
+          &.현금 { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+          &.미수 { background: rgba(255, 0, 110, 0.2); color: #ff5c8d; }
+        }
+      }
+      &.td-memo { color: rgba(255, 255, 255, 0.6); }
+      &.td-actions {
+        text-align: center;
+        .act-btn {
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 0.4rem;
+          &.edit i { color: #88c5ff; }
+          &.del i { color: #ff5c8d; }
+        }
       }
     }
-  }
 
-  .empty-cell {
-    text-align: center;
-    padding: 4rem 0;
-    color: rgba(255, 255, 255, 0.4);
+    .empty-td {
+      text-align: center;
+      padding: 4rem 0;
+      color: rgba(255, 255, 255, 0.4);
 
-    i { font-size: 3.6rem; display: block; margin-bottom: 0.8rem; }
-    p { font-size: 1.4rem; margin: 0 0 1.2rem 0; }
-
-    .btn-empty-add {
-      background: rgba(26, 209, 177, 0.15);
-      border: 1px solid rgba(26, 209, 177, 0.4);
-      color: #1ad1b1;
-      padding: 0.6rem 1.4rem;
-      border-radius: 0.8rem;
-      font-weight: 700;
-      cursor: pointer;
+      i { font-size: 3.6rem; display: block; margin-bottom: 0.8rem; }
+      p { font-size: 1.4rem; margin: 0 0 1.2rem 0; }
+      .btn-inline-add {
+        background: rgba(26, 209, 177, 0.15);
+        border: 1px solid rgba(26, 209, 177, 0.4);
+        color: #1ad1b1;
+        padding: 0.6rem 1.4rem;
+        border-radius: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
     }
   }
 }
 
-/* Batch Section Input Styles */
-.batch-card {
-  .batch-header {
+/* 📝 MODE 2: 엑셀식 빠른 연속 입력 스마트 시트 */
+.sheet-card {
+  background: rgba(13, 30, 51, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.6rem;
+  padding: 1.6rem;
+
+  .sheet-title-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1329,165 +1326,144 @@ onMounted(() => {
     gap: 1rem;
     margin-bottom: 1.4rem;
 
-    .batch-title-group {
-      h3 { margin: 0; font-size: 1.6rem; color: #ffffff; }
-      p { margin: 0.3rem 0 0 0; font-size: 1.2rem; color: rgba(255, 255, 255, 0.5); }
-    }
+    h2 { margin: 0; font-size: 1.7rem; color: #ffffff; }
+    p { margin: 0.3rem 0 0 0; font-size: 1.2rem; color: rgba(255, 255, 255, 0.5); }
 
-    .shortcut-chips {
+    .batch-sum-display {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
+      gap: 0.6rem;
+      font-size: 1.3rem;
+      span { color: rgba(255, 255, 255, 0.6); }
+      strong { font-size: 2rem; color: #1ad1b1; font-weight: 900; }
+    }
+  }
 
-      .sc-label { font-size: 1.15rem; color: rgba(255, 255, 255, 0.5); }
-      .sc-chip {
-        background: rgba(136, 197, 255, 0.12);
-        border: 1px solid rgba(136, 197, 255, 0.25);
-        color: #88c5ff;
-        padding: 0.25rem 0.65rem;
+  .table-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .grid-sheet-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+
+    th {
+      padding: 1rem;
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.6);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+      &.r-no { text-align: center; color: rgba(255, 255, 255, 0.4); font-weight: 600; }
+
+      .sheet-input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 0.6rem;
-        font-size: 1.1rem;
-        cursor: pointer;
+        padding: 0.65rem 0.8rem;
+        color: #ffffff;
+        font-size: 1.3rem;
+        outline: none;
 
-        &:hover { background: rgba(136, 197, 255, 0.25); }
+        &:focus {
+          border-color: #88c5ff;
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        &.amount {
+          text-align: right;
+          color: #1ad1b1;
+          font-weight: 800;
+        }
       }
 
-      .btn-manage-ships {
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        background: rgba(26, 209, 177, 0.15);
-        border: 1px solid rgba(26, 209, 177, 0.35);
-        color: #1ad1b1;
-        padding: 0.25rem 0.75rem;
+      .sheet-select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 0.6rem;
-        font-size: 1.15rem;
-        font-weight: 700;
-        cursor: pointer;
+        padding: 0.65rem 0.6rem;
+        color: #ffffff;
+        font-size: 1.25rem;
+        outline: none;
 
-        &:hover { background: rgba(26, 209, 177, 0.25); }
-        i { font-size: 1.4rem; }
+        option { background: #0d1e33; color: #ffffff; }
+      }
+
+      .btn-del-row {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.4);
+        cursor: pointer;
+        &:hover { color: #ff5c8d; }
       }
     }
   }
 
-  .grid-input {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 0.6rem;
-    padding: 0.6rem 0.8rem;
-    color: #ffffff;
-    font-size: 1.3rem;
-    outline: none;
-
-    &:focus {
-      border-color: #88c5ff;
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    &.amount {
-      text-align: right;
-      color: #1ad1b1;
-      font-weight: 800;
-    }
-  }
-
-  .grid-select {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 0.6rem;
-    padding: 0.6rem 0.6rem;
-    color: #ffffff;
-    font-size: 1.25rem;
-    outline: none;
-
-    option { background: #0d1e33; color: #ffffff; }
-  }
-
-  .btn-row-del {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.4);
-    cursor: pointer;
-    padding: 0.4rem;
-
-    &:hover { color: #ff5c8d; }
-  }
-
-  .batch-footer-bar {
+  .sheet-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 1.2rem;
+    gap: 1rem;
     margin-top: 1.6rem;
     padding-top: 1.4rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 
-    .footer-left {
+    .left-actions {
       display: flex;
       gap: 0.8rem;
 
-      .btn-add-row {
+      .btn-add-line {
         display: flex;
         align-items: center;
         gap: 0.4rem;
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.15);
         color: #ffffff;
-        padding: 0.7rem 1.4rem;
+        padding: 0.75rem 1.4rem;
         border-radius: 0.8rem;
         font-weight: 700;
         cursor: pointer;
       }
 
-      .btn-reset-row {
+      .btn-reset-lines {
         background: transparent;
         border: 1px solid rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.5);
-        padding: 0.7rem 1.2rem;
+        padding: 0.75rem 1.2rem;
         border-radius: 0.8rem;
         cursor: pointer;
       }
     }
 
-    .footer-right {
+    .btn-submit-batch {
       display: flex;
       align-items: center;
-      gap: 1.6rem;
-
-      .batch-total-display {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        font-size: 1.4rem;
-
-        span { color: rgba(255, 255, 255, 0.6); }
-        strong { font-size: 1.9rem; color: #1ad1b1; font-weight: 900; }
-      }
-
-      .btn-save-batch {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%);
-        border: 1px solid rgba(136, 197, 255, 0.4);
-        color: #ffffff;
-        font-weight: 800;
-        font-size: 1.4rem;
-        padding: 0.8rem 2rem;
-        border-radius: 1rem;
-        cursor: pointer;
-        box-shadow: 0 4px 14px rgba(21, 60, 108, 0.4);
-      }
+      gap: 0.6rem;
+      background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%);
+      border: 1px solid rgba(136, 197, 255, 0.4);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 1.4rem;
+      padding: 0.8rem 2rem;
+      border-radius: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(21, 60, 108, 0.4);
     }
   }
 }
 
-/* Modal Dialog Styles */
+/* ✏️ 모달 공통 스타일 */
 .dialog-card {
   background: #0d1e33 !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
@@ -1498,9 +1474,9 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    font-size: 1.6rem;
+    font-size: 1.65rem;
     font-weight: 800;
-    color: var(--primary-lighten-color-1);
+    color: #ffffff;
     padding-bottom: 1rem !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
@@ -1511,14 +1487,14 @@ onMounted(() => {
     gap: 1.2rem;
     margin-top: 1.4rem;
 
-    .field-group {
+    .form-group {
       display: flex;
       flex-direction: column;
       gap: 0.4rem;
 
       label { font-size: 1.2rem; color: rgba(255, 255, 255, 0.6); }
 
-      .modal-input, .modal-select {
+      .dialog-input, .dialog-select {
         background: rgba(255, 255, 255, 0.04);
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 0.8rem;
@@ -1527,13 +1503,87 @@ onMounted(() => {
         font-size: 1.35rem;
         outline: none;
 
+        &.amount { text-align: right; color: #1ad1b1; font-weight: 800; }
         option { background: #0d1e33; color: #ffffff; }
+      }
+    }
+
+    .chip-input-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.4rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+
+      .chip-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: 0.7rem 0.9rem;
+        color: #ffffff;
+        font-size: 1.3rem;
+        outline: none;
+      }
+
+      .btn-chip-add {
+        background: linear-gradient(135deg, #1ad1b1 0%, #15a088 100%);
+        border: none;
+        color: #0b1a2c;
+        font-weight: 800;
+        font-size: 1.25rem;
+        padding: 0.75rem 1.4rem;
+        border-radius: 0.8rem;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+    }
+
+    .chip-list-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+
+      .box-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.6);
+        .cnt { color: #1ad1b1; font-weight: 800; }
+      }
+
+      .chips-flex {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+
+        .chip-item {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          background: rgba(136, 197, 255, 0.1);
+          border: 1px solid rgba(136, 197, 255, 0.25);
+          color: #88c5ff;
+          padding: 0.35rem 0.8rem;
+          border-radius: 0.7rem;
+          font-size: 1.25rem;
+          font-weight: 700;
+
+          i { font-size: 1.5rem; color: #ff5c8d; cursor: pointer; }
+        }
       }
     }
   }
 
   .dialog-actions {
-    justify-content: flex-end;
     gap: 0.8rem;
     padding-top: 1.4rem;
 
@@ -1544,7 +1594,7 @@ onMounted(() => {
       padding: 0.6rem 1.6rem;
     }
 
-    .btn-confirm {
+    .btn-save {
       background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%) !important;
       color: #ffffff !important;
       font-weight: 700;
