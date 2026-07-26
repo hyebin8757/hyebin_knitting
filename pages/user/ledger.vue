@@ -77,9 +77,14 @@ const DEFAULT_FREQUENT_SHIPS = [
 // 사용자가 직접 추가/삭제할 수 있는 반응형 선명 칩 목록
 const frequentShips = ref<string[]>([]);
 
-// 선명 칩 관리 모달
+// 선명 칩 관리 모달 & 열기/접기 토글 상태
 const isShipManageModalOpen = ref(false);
 const newShipInput = ref('');
+const isShipsPanelOpen = ref(true);
+
+const toggleShipsPanel = () => {
+  isShipsPanelOpen.value = !isShipsPanelOpen.value;
+};
 
 // localStorage에서 자주 쓰는 선명 불러오기
 const loadFrequentShips = () => {
@@ -417,21 +422,29 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- 🚀 자주 쓰는 선명 슬림 패널 -->
+    <!-- 🚀 자주 쓰는 선명 접이식 슬림 패널 (열고 닫기 토글 지원) -->
     <div class="frequent-chips-card">
-      <div class="chips-header">
+      <div class="chips-header" @click="toggleShipsPanel" style="cursor: pointer;">
         <div class="left-label">
           <i class="material-icons">directions_boat</i>
           <span class="lbl-txt">자주 쓰는 선명:</span>
+          <span class="cnt-badge">총 {{ frequentShips.length }}개</span>
         </div>
 
-        <button class="btn-settings-chip-slim" @click="isShipManageModalOpen = true">
-          <i class="material-icons">settings</i>
-          <span>선명 관리</span>
-        </button>
+        <div class="right-btns" style="display: flex; align-items: center; gap: 0.4rem;" @click.stop>
+          <button class="btn-toggle-chips-slim" @click="toggleShipsPanel">
+            <span>{{ isShipsPanelOpen ? '접기' : '펼치기' }}</span>
+            <i class="material-icons">{{ isShipsPanelOpen ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</i>
+          </button>
+
+          <button class="btn-settings-chip-slim" @click="isShipManageModalOpen = true">
+            <i class="material-icons">settings</i>
+            <span>선명 관리</span>
+          </button>
+        </div>
       </div>
 
-      <div class="chips-scroll-container">
+      <div v-show="isShipsPanelOpen" class="chips-scroll-container">
         <button 
           v-for="sName in frequentShips" 
           :key="sName"
@@ -1006,6 +1019,32 @@ onMounted(() => {
 
       i { color: #1ad1b1; font-size: 1.5rem; }
       .lbl-txt { font-size: 1.15rem; }
+      .cnt-badge {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1ad1b1;
+        background: rgba(26, 209, 177, 0.12);
+        padding: 0.15rem 0.5rem;
+        border-radius: 0.4rem;
+        margin-left: 0.3rem;
+      }
+    }
+
+    .btn-toggle-chips-slim {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #88c5ff;
+      padding: 0.2rem 0.6rem;
+      border-radius: 0.5rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+
+      i { font-size: 1.4rem; }
     }
 
     .btn-settings-chip-slim {
