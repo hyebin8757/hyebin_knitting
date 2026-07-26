@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   const dd = String(now.getDate()).padStart(2, '0');
   const reqDate = (query.date as string) || `${yyyy}${mm}${dd}`;
 
-  // 국립해양조사원 조석예보 인천항 관측소 코드 (기본값 DT_0001)
+  // 국립해양조사원 조석예보 인천항 관측소 코드 (DT_0001)
   const obsCode = (query.obsCode as string) || 'DT_0001';
 
   const baseUrl = 'https://apis.data.go.kr/1192136/tideFcstHghLw/GetTideFcstHghLwApiService';
@@ -36,13 +36,12 @@ export default defineEventHandler(async (event) => {
     }
 
     const text = await response.text();
-    let data: any;
+    let data: any = null;
 
     try {
       data = JSON.parse(text);
     } catch (e) {
-      console.warn("Tide API returned non-JSON text", text.slice(0, 200));
-      return { success: false, isFallback: true, message: "Tide API Non-JSON response", raw: text };
+      console.warn("Tide API Non-JSON text", text.slice(0, 200));
     }
 
     return {

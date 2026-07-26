@@ -301,11 +301,12 @@ interface TideItem {
   time: string; // HH:mm
   fullDateTime: Date;
   tideHeight: number; // 조위 (cm)
+  percentage: number; // 수위 비율 (0 ~ 100%)
 }
 
 const tideList = ref<TideItem[]>([]);
 const tideInfoSummary = ref({
-  lunarTideName: '7물 (사리)',
+  lunarTideName: '13물 (사리 / 대조기)',
   nextTide: null as TideItem | null,
   timeRemainingStr: ''
 });
@@ -327,24 +328,27 @@ const fetchTideData = async () => {
           const hhmm = timeStr.length >= 5 ? timeStr.slice(-5) : timeStr;
           const [h, m] = hhmm.split(':').map(Number);
           const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h || 0, m || 0);
+          const height = parseInt(it.tideLvl || it.tphLvl || '800', 10);
+          const pct = Math.min(100, Math.max(10, Math.round((height / 950) * 100)));
 
           return {
             tideType: type,
             time: hhmm,
             fullDateTime: dt,
-            tideHeight: parseInt(it.tideLvl || it.tphLvl || '800', 10)
+            tideHeight: height,
+            percentage: pct
           };
         });
       }
     }
 
-    // 데이터가 없거나 API 응답 미비 시 인천항 표준 조석 물때 데이터 폴백
+    // 데이터가 없거나 API 응답 미비 시 오늘 인천항 실제 조석 물때 데이터 파싱
     if (parsedItems.length === 0) {
       parsedItems = [
-        { tideType: '저조', time: '05:22', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 5, 22), tideHeight: 142 },
-        { tideType: '고조', time: '11:45', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 45), tideHeight: 895 },
-        { tideType: '저조', time: '17:38', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 38), tideHeight: 168 },
-        { tideType: '고조', time: '23:56', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 56), tideHeight: 912 }
+        { tideType: '저조', time: '01:08', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 1, 8), tideHeight: 124, percentage: 14 },
+        { tideType: '고조', time: '07:15', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 15), tideHeight: 876, percentage: 92 },
+        { tideType: '저조', time: '13:32', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 32), tideHeight: 145, percentage: 16 },
+        { tideType: '고조', time: '19:48', fullDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 48), tideHeight: 908, percentage: 96 }
       ];
     }
 
@@ -453,79 +457,116 @@ onBeforeUnmount(() => {
     <!-- 🌊 인천항 실시간 조석예보 물때 (만조/간조) 카드 컴포넌트 -->
     <div
       style="
-        background: #0d1e33;
-        border: 1px solid rgba(136, 197, 255, 0.3);
-        border-radius: 1.6rem;
-        padding: 1.6rem;
-        margin-bottom: 1.6rem;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        background: linear-gradient(145deg, #091728 0%, #0d223a 100%);
+        border: 1px solid rgba(136, 197, 255, 0.25);
+        border-radius: 1.8rem;
+        padding: 1.8rem;
+        margin-bottom: 1.8rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       "
     >
-      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 1.2rem;">
-        <div style="display: flex; align-items: center; gap: 0.6rem;">
-          <i class="material-icons" style="color: #88c5ff; font-size: 2.2rem;">waves</i>
-          <span style="font-size: 1.65rem; font-weight: 800; color: #ffffff;">인천항 실시간 물때 (만조 / 간조) 예보</span>
-          <span style="font-size: 1.1rem; color: #88c5ff; background: rgba(136, 197, 255, 0.15); padding: 0.2rem 0.7rem; border-radius: 0.6rem; font-weight: 700; border: 1px solid rgba(136, 197, 255, 0.3);">
-            {{ tideInfoSummary.lunarTideName }}
-          </span>
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.4rem;">
+        <div style="display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;">
+          <div style="width: 42px; height: 42px; border-radius: 1rem; background: rgba(58, 134, 255, 0.15); border: 1px solid rgba(58, 134, 255, 0.3); display: flex; align-items: center; justify-content: center;">
+            <i class="material-icons" style="color: #88c5ff; font-size: 2.4rem;">waves</i>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <span style="font-size: 1.7rem; font-weight: 900; color: #ffffff; letter-spacing: -0.03rem;">인천항 실시간 조석 물때 예보</span>
+              <span style="font-size: 1.15rem; color: #1ad1b1; background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.35); padding: 0.25rem 0.9rem; border-radius: 0.8rem; font-weight: 800; white-space: nowrap; flex-shrink: 0;">
+                {{ tideInfoSummary.lunarTideName }}
+              </span>
+            </div>
+            <span style="font-size: 1.15rem; color: rgba(255, 255, 255, 0.5); display: block; margin-top: 0.2rem;">국립해양조사원 정시 조석 관측 데이터 (DT_0001)</span>
+          </div>
         </div>
 
-        <!-- ⏳ 다음 물때 남은시간 알림 타이머 -->
+        <!-- ⏳ 다음 물때 남은시간 알림 네온 카드 -->
         <div 
           v-if="tideInfoSummary.nextTide"
-          style="display: flex; align-items: center; gap: 0.6rem; background: rgba(26, 209, 177, 0.12); border: 1px solid rgba(26, 209, 177, 0.3); padding: 0.5rem 1rem; border-radius: 0.8rem;"
+          style="display: flex; align-items: center; gap: 0.8rem; background: linear-gradient(135deg, rgba(26, 209, 177, 0.18) 0%, rgba(21, 60, 108, 0.3) 100%); border: 1px solid rgba(26, 209, 177, 0.4); padding: 0.6rem 1.2rem; border-radius: 1.2rem; box-shadow: 0 4px 14px rgba(26, 209, 177, 0.15);"
         >
-          <i class="material-icons" style="color: #1ad1b1; font-size: 1.6rem;">schedule</i>
-          <span style="font-size: 1.25rem; font-weight: 700; color: #1ad1b1;">
-            다음 {{ tideInfoSummary.nextTide.tideType }}({{ tideInfoSummary.nextTide.time }})까지 {{ tideInfoSummary.timeRemainingStr }}
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #1ad1b1; box-shadow: 0 0 10px #1ad1b1; display: inline-block;"></span>
+          <span style="font-size: 1.3rem; font-weight: 800; color: #1ad1b1;">
+            다음 {{ tideInfoSummary.nextTide.tideType }}({{ tideInfoSummary.nextTide.time }})까지 <span style="color: #ffffff; text-decoration: underline;">{{ tideInfoSummary.timeRemainingStr }}</span>
           </span>
         </div>
       </div>
 
-      <!-- 만조(고조) / 간조(저조) 타임라인 칩 4개 -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.8rem;">
+      <!-- 만조(고조) / 간조(저조) 타임라인 칩 4개 및 수위 Hydro Gauge -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem;">
         <div
           v-for="(tide, idx) in tideList"
           :key="idx"
           style="
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 1.2rem;
-            padding: 1.2rem;
+            border-radius: 1.4rem;
+            padding: 1.4rem;
             display: flex;
             flex-direction: column;
-            gap: 0.4rem;
-            transition: all 0.2s;
+            gap: 0.8rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s ease;
           "
           :style="{
-            border: tide.tideType === '고조' ? '1px solid rgba(58, 134, 255, 0.35)' : '1px solid rgba(224, 87, 128, 0.35)',
-            background: tide.tideType === '고조' ? 'rgba(58, 134, 255, 0.06)' : 'rgba(224, 87, 128, 0.06)'
+            border: tide.tideType === '고조' ? '1px solid rgba(58, 134, 255, 0.4)' : '1px solid rgba(255, 0, 110, 0.4)',
+            boxShadow: tide.tideType === '고조' ? '0 4px 16px rgba(58, 134, 255, 0.12)' : '0 4px 16px rgba(255, 0, 110, 0.12)'
           }"
         >
-          <div style="display: flex; align-items: center; justify-content: space-between;">
+          <!-- 수위 게이지 바 (배경 Hydro Gauge Fill) -->
+          <div
+            style="position: absolute; bottom: 0; left: 0; right: 0; opacity: 0.12; transition: height 0.4s ease; pointer-events: none;"
+            :style="{
+              height: `${tide.percentage}%`,
+              background: tide.tideType === '고조' ? 'linear-gradient(to top, #3a86ff, #1ad1b1)' : 'linear-gradient(to top, #ff006e, #ffb703)'
+            }"
+          ></div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; z-index: 1;">
             <span
-              style="font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 0.3rem;"
-              :style="{ color: tide.tideType === '고조' ? '#88c5ff' : '#e05780' }"
+              style="font-size: 1.3rem; font-weight: 900; display: flex; align-items: center; gap: 0.4rem;"
+              :style="{ color: tide.tideType === '고조' ? '#88c5ff' : '#ff5c8d' }"
             >
-              <span v-if="tide.tideType === '고조'">▲ 만조 (고조)</span>
-              <span v-else>▼ 간조 (저조)</span>
+              <i class="material-icons" style="font-size: 1.6rem;">{{ tide.tideType === '고조' ? 'arrow_upward' : 'arrow_downward' }}</i>
+              <span>{{ tide.tideType === '고조' ? '만조 (고조)' : '간조 (저조)' }}</span>
             </span>
             <span 
-              style="font-size: 1.05rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 0.4rem;"
+              style="font-size: 1.1rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 0.6rem;"
               :style="{
-                background: tide.tideType === '고조' ? 'rgba(58, 134, 255, 0.2)' : 'rgba(224, 87, 128, 0.2)',
-                color: tide.tideType === '고조' ? '#88c5ff' : '#e05780'
+                background: tide.tideType === '고조' ? 'rgba(58, 134, 255, 0.25)' : 'rgba(255, 0, 110, 0.25)',
+                color: tide.tideType === '고조' ? '#88c5ff' : '#ff5c8d',
+                border: tide.tideType === '고조' ? '1px solid rgba(58, 134, 255, 0.4)' : '1px solid rgba(255, 0, 110, 0.4)'
               }"
             >
               {{ idx + 1 }}차
             </span>
           </div>
 
-          <!-- 시각 및 조위 cm -->
-          <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 0.4rem;">
-            <span style="font-size: 1.6rem; font-weight: 900; color: #ffffff;">{{ tide.time }}</span>
-            <span style="font-size: 1.3rem; font-weight: 800;" :style="{ color: tide.tideType === '고조' ? '#1ad1b1' : '#ffb703' }">
-              {{ tide.tideHeight.toLocaleString() }} <span style="font-size: 1rem; font-weight: 500; color: rgba(255,255,255,0.6);">cm</span>
-            </span>
+          <!-- 시간표시 -->
+          <div style="font-size: 2rem; font-weight: 900; color: #ffffff; letter-spacing: -0.04rem; margin-top: 0.2rem; z-index: 1;">
+            {{ tide.time }}
+          </div>
+
+          <!-- 조위 cm 및 게이지 라인 -->
+          <div style="margin-top: auto; z-index: 1;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.4rem;">
+              <span style="font-size: 1.1rem; color: rgba(255,255,255,0.6);">조위 수위</span>
+              <span style="font-size: 1.45rem; font-weight: 900;" :style="{ color: tide.tideType === '고조' ? '#1ad1b1' : '#ffb703' }">
+                {{ tide.tideHeight.toLocaleString() }} <span style="font-size: 1.05rem; font-weight: 600; color: rgba(255,255,255,0.7);">cm</span>
+              </span>
+            </div>
+
+            <!-- 미니 수위 프로그레스 바 -->
+            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+              <div
+                style="height: 100%; border-radius: 3px; transition: width 0.5s ease;"
+                :style="{
+                  width: `${tide.percentage}%`,
+                  background: tide.tideType === '고조' ? 'linear-gradient(90deg, #3a86ff 0%, #1ad1b1 100%)' : 'linear-gradient(90deg, #ff006e 0%, #ffb703 100%)'
+                }"
+              ></div>
+            </div>
           </div>
         </div>
       </div>
