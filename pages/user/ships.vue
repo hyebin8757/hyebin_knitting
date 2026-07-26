@@ -119,7 +119,51 @@ const formatPublicShipDate = (dateStr?: string, defaultFallback = '접안중') =
     const d = clean.slice(6, 8);
     return `${y}-${m}-${d}`;
   }
-  return dateStr;
+// 선박의 ETA(도착 예정 일시) 기준 인천항 복귀/도착 남은 시간 계산 헬퍼
+const getETACountdownStr = (etaStr?: string, status?: string) => {
+  if (!etaStr) return null;
+  
+  if (status === '접안중') {
+    return '현재 인천항 부두 접안중';
+  }
+
+  try {
+    const now = new Date();
+    let etaDate: Date | null = null;
+
+    const cleanStr = etaStr.replace(/(AM|PM|오전|오후)/gi, '').trim();
+
+    if (cleanStr.includes('-') && cleanStr.includes(':')) {
+      const parts = cleanStr.split(' ');
+      const [y, m, d] = parts[0].split('-').map(Number);
+      const [hh, mm] = parts[1].split(':').map(Number);
+      etaDate = new Date(y, m - 1, d, hh || 0, mm || 0);
+    } else if (cleanStr.includes(':')) {
+      const [hh, mm] = cleanStr.split(':').map(Number);
+      etaDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh || 0, mm || 0);
+      if (etaDate < now) {
+        etaDate.setDate(etaDate.getDate() + 1);
+      }
+    }
+
+    if (!etaDate || isNaN(etaDate.getTime())) return null;
+
+    const diffMs = etaDate.getTime() - now.getTime();
+    if (diffMs <= 0) {
+      return '인천항 입항 완료 / 접안 진행중';
+    }
+
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(diffMins / 60);
+    const mins = diffMins % 60;
+
+    if (hours > 0) {
+      return `인천항 도착까지 약 ${hours}시간 ${mins}분 남음`;
+    }
+    return `인천항 도착까지 약 ${mins}분 남음`;
+  } catch (e) {
+    return null;
+  }
 };
 
 // 🛳️ 인천 임항 & 남항 백년해운 관련 선박(웨스트호, 미래9호, 미래3호, 백령해운) 정정 및 신규 확충 통합 리스트
@@ -759,6 +803,15 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
+          <!-- Real-time 인천항 도착 카운트다운 뱃지 -->
+          <div 
+            v-if="getETACountdownStr(ship.eta, ship.status)"
+            style="margin-top: 0.8rem; background: rgba(26, 209, 177, 0.12); border: 1px solid rgba(26, 209, 177, 0.3); padding: 0.6rem 0.9rem; border-radius: 0.8rem; display: flex; align-items: center; gap: 0.5rem; color: #1ad1b1; font-size: 1.2rem; font-weight: 700;"
+          >
+            <i class="material-icons" style="font-size: 1.6rem;">schedule</i>
+            <span>{{ getETACountdownStr(ship.eta, ship.status) }}</span>
+          </div>
+
           <!-- Location / Berth -->
           <div style="margin-top: 1rem; background: rgba(35, 102, 180, 0.15); border: 1px solid rgba(136, 197, 255, 0.2); padding: 0.8rem 1rem; border-radius: 0.8rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem;">
             <div style="display: flex; align-items: center; gap: 0.6rem;">
@@ -894,7 +947,7 @@ onBeforeUnmount(() => {
 
         <div style="padding-top: 1.2rem;">
           <!-- AIS 상태 미니 헤더 -->
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; background: rgba(26, 209, 177, 0.1); border: 1px solid rgba(26, 209, 177, 0.3); padding: 0.6rem 1rem; border-radius: 0.8rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; background: rgba(26, 209, 177, 0.1); border: 1px solid rgba(26, 209, 177, 0.3); padding: 0.6rem 1rem; border-radius: 0.8rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem; color: #1ad1b1; font-size: 1.2rem; font-weight: 700;">
               <i class="material-icons" style="font-size: 1.6rem;">radar</i>
               <span>VesselFinder 실시간 위성 AIS 연동중</span>
@@ -902,6 +955,15 @@ onBeforeUnmount(() => {
             <span style="font-size: 1.15rem; font-weight: 700; color: #88c5ff; background: rgba(136, 197, 255, 0.15); padding: 0.2rem 0.6rem; border-radius: 0.4rem;" v-if="selectedShipForMap?.status">
               {{ selectedShipForMap.status }}
             </span>
+          </div>
+
+          <!-- 인천항 도착 예상 카운트다운 스마트 뱃지 -->
+          <div 
+            v-if="getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status)"
+            style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; background: rgba(58, 134, 255, 0.15); border: 1px solid rgba(136, 197, 255, 0.35); padding: 0.7rem 1rem; border-radius: 0.8rem; color: #88c5ff; font-size: 1.25rem; font-weight: 800;"
+          >
+            <i class="material-icons" style="font-size: 1.8rem; color: #1ad1b1;">schedule</i>
+            <span>{{ getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status) }} (ETA: {{ selectedShipForMap?.eta }})</span>
           </div>
 
           <!-- VesselFinder Iframe -->
