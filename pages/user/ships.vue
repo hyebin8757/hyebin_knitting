@@ -161,9 +161,9 @@ const getETACountdownStr = (etaStr?: string, status?: string) => {
     const mins = diffMins % 60;
 
     if (hours > 0) {
-      return `인천항 도착까지 약 ${hours}시간 ${mins}분 남음`;
+      return `🚢 해상 실시간 운항중 · 인천항 도착까지 약 ${hours}시간 ${mins}분 남음`;
     }
-    return `인천항 도착까지 약 ${mins}분 남음`;
+    return `🚢 해상 실시간 운항중 · 인천항 도착까지 약 ${mins}분 남음`;
   } catch (e) {
     return null;
   }
@@ -184,7 +184,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 연안여객터미널 1선석',
     agent: '고려고속훼리',
     grossTonnage: '1,600 톤',
-    status: '접안중'
+    status: '입항예정'
   },
   {
     id: '2',
@@ -214,7 +214,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 연안여객터미널 3선석',
     agent: '고려고속훼리',
     grossTonnage: '4,100 톤',
-    status: '접안중'
+    status: '입항예정'
   },
   {
     id: '4',
@@ -244,7 +244,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 임항부두 3선석',
     agent: '미래해운',
     grossTonnage: '2,800 톤',
-    status: '접안중'
+    status: '입항예정'
   },
   {
     id: '6',
@@ -274,7 +274,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 항만 1부두 12선석',
     agent: '미래해운',
     grossTonnage: '3,200 톤',
-    status: '관제중'
+    status: '입항예정'
   },
   {
     id: '8',
@@ -289,7 +289,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 남항 백년해운 부두 1선석',
     agent: '백령해운',
     grossTonnage: '3,800 톤',
-    status: '접안중'
+    status: '입항예정'
   },
   {
     id: '9',
@@ -304,7 +304,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 연안여객터미널 5선석',
     agent: '고려고속훼리',
     grossTonnage: '220 톤',
-    status: '관제중'
+    status: '입항예정'
   }
 ]);
 
@@ -955,8 +955,16 @@ onBeforeUnmount(() => {
               <i class="material-icons" style="font-size: 1.6rem;">radar</i>
               <span>VesselFinder 실시간 위성 AIS 연동중</span>
             </div>
-            <span style="font-size: 1.15rem; font-weight: 700; color: #88c5ff; background: rgba(136, 197, 255, 0.15); padding: 0.2rem 0.6rem; border-radius: 0.4rem;" v-if="selectedShipForMap?.status">
-              {{ selectedShipForMap.status }}
+            <span 
+              style="font-size: 1.15rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 0.4rem;" 
+              :style="{
+                background: selectedShipForMap?.status === '입항예정' ? 'rgba(26, 209, 177, 0.2)' : 'rgba(136, 197, 255, 0.15)',
+                color: selectedShipForMap?.status === '입항예정' ? '#1ad1b1' : '#88c5ff',
+                border: '1px solid ' + (selectedShipForMap?.status === '입항예정' ? '#1ad1b1' : 'rgba(136, 197, 255, 0.3)')
+              }"
+              v-if="selectedShipForMap?.status"
+            >
+              {{ selectedShipForMap.status === '입항예정' ? '🚢 실시간 운항중' : selectedShipForMap.status }}
             </span>
           </div>
 
