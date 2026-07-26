@@ -119,6 +119,9 @@ const formatPublicShipDate = (dateStr?: string, defaultFallback = '접안중') =
     const d = clean.slice(6, 8);
     return `${y}-${m}-${d}`;
   }
+  return dateStr;
+};
+
 // 선박의 ETA(도착 예정 일시) 기준 인천항 복귀/도착 남은 시간 계산 헬퍼
 const getETACountdownStr = (etaStr?: string, status?: string) => {
   if (!etaStr) return null;
