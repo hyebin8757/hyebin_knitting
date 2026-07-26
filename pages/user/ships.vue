@@ -949,19 +949,20 @@ onBeforeUnmount(() => {
         </div>
 
         <div style="padding-top: 1.2rem;">
-          <!-- 🛰️ 통합 실시간 위성 관제 & 도착 상태 카드 -->
-          <div style="background: linear-gradient(135deg, rgba(26, 209, 177, 0.08) 0%, rgba(58, 134, 255, 0.08) 100%); border: 1px solid rgba(26, 209, 177, 0.25); border-radius: 1rem; padding: 0.85rem 1.1rem; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
-              <div style="display: flex; align-items: center; gap: 0.45rem; color: #1ad1b1; font-size: 1.25rem; font-weight: 700;">
-                <i class="material-icons" style="font-size: 1.65rem;">radar</i>
+          <!-- 🛰️ 통합 실시간 위성 관제 & 도착 상태 카드 (완벽 비주얼 리디자인) -->
+          <div style="background: linear-gradient(135deg, rgba(13, 30, 51, 0.95) 0%, rgba(26, 209, 177, 0.12) 100%); border: 1px solid rgba(26, 209, 177, 0.35); border-radius: 1.2rem; padding: 1rem 1.2rem; margin-bottom: 1.1rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);">
+            <!-- Row 1: AIS Status Tag & Navigation Status Badge -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; margin-bottom: 0.8rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; color: #1ad1b1; font-size: 1.3rem; font-weight: 800;">
+                <i class="material-icons" style="font-size: 1.8rem;">radar</i>
                 <span>위성 AIS 실시간 관제중</span>
               </div>
               <span 
-                style="font-size: 1.15rem; font-weight: 800; padding: 0.25rem 0.75rem; border-radius: 0.5rem; display: inline-flex; align-items: center; gap: 0.3rem;" 
+                style="font-size: 1.2rem; font-weight: 800; padding: 0.3rem 0.8rem; border-radius: 0.6rem; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap;" 
                 :style="{
-                  background: selectedShipForMap?.status === '입항예정' ? 'rgba(26, 209, 177, 0.2)' : 'rgba(136, 197, 255, 0.15)',
+                  background: selectedShipForMap?.status === '입항예정' ? 'rgba(26, 209, 177, 0.25)' : 'rgba(136, 197, 255, 0.2)',
                   color: selectedShipForMap?.status === '입항예정' ? '#1ad1b1' : '#88c5ff',
-                  border: '1px solid ' + (selectedShipForMap?.status === '입항예정' ? '#1ad1b1' : 'rgba(136, 197, 255, 0.3)')
+                  border: '1px solid ' + (selectedShipForMap?.status === '입항예정' ? '#1ad1b1' : '#88c5ff')
                 }"
                 v-if="selectedShipForMap?.status"
               >
@@ -969,14 +970,18 @@ onBeforeUnmount(() => {
               </span>
             </div>
 
-            <!-- 도착 카운트다운 텍스트 -->
+            <!-- Row 2: ETA Time & Countdown Info Box -->
             <div 
               v-if="getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status)"
-              style="display: flex; align-items: center; gap: 0.45rem; color: #88c5ff; font-size: 1.2rem; font-weight: 700; margin-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 0.5rem;"
+              style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0.8rem; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;"
             >
-              <i class="material-icons" style="font-size: 1.55rem; color: #1ad1b1;">schedule</i>
-              <span>{{ getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status) }}</span>
-              <span style="font-size: 1.1rem; color: rgba(255,255,255,0.45); font-weight: 500; margin-left: auto;" v-if="selectedShipForMap?.eta">ETA: {{ selectedShipForMap.eta }}</span>
+              <div style="display: flex; align-items: center; gap: 0.5rem; color: #ffffff; font-size: 1.25rem; font-weight: 700; white-space: nowrap;">
+                <i class="material-icons" style="font-size: 1.65rem; color: #1ad1b1;">schedule</i>
+                <span>{{ getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status) }}</span>
+              </div>
+              <span style="font-size: 1.15rem; color: #88c5ff; font-weight: 700; background: rgba(136, 197, 255, 0.15); padding: 0.2rem 0.65rem; border-radius: 0.4rem; white-space: nowrap; flex-shrink: 0;" v-if="selectedShipForMap?.eta">
+                ETA {{ selectedShipForMap.eta.split(' ').slice(-1)[0] }}
+              </span>
             </div>
           </div>
 
