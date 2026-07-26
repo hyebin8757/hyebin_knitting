@@ -437,17 +437,30 @@ const fetchTideData = async () => {
       const rawList = res.data?.response?.body?.items?.item || res.data?.result || res.data?.items || [];
       if (Array.isArray(rawList) && rawList.length > 0) {
         parsedItems = rawList.map((it: any) => {
-          const type: '고조' | '저조' = (it.tideHghLw === '고조' || it.hlCode === 'H' || String(it.tideHghLw).includes('고')) ? '고조' : '저조';
-          const timeStr = it.tideTime || it.tphTime || '00:00';
-          const hhmm = timeStr.length >= 5 ? timeStr.slice(-5) : timeStr;
-          const [h, m] = hhmm.split(':').map(Number);
-          const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h || 0, m || 0);
+          // hlCode: 'H' = 고조, 'L' = 저조
+          const type: '고조' | '저조' = (it.hlCode === 'H' || it.tideHghLw === '고조' || String(it.tideHghLw || '').includes('고')) ? '고조' : '저조';
+
+          // tphTime 형식: 'HHMM'(4자리), 'HH:MM'(5자리), 'YYYYMMDDHHmm'(12자리) 모두 처리
+          const rawTime: string = String(it.tideTime || it.tphTime || '0000');
+          let h = 0, m = 0;
+          if (rawTime.includes(':')) {
+            // HH:MM 또는 ...HH:MM 형식
+            const timePart = rawTime.slice(-5);
+            [h, m] = timePart.split(':').map(Number);
+          } else {
+            // HHMM 또는 YYYYMMDDHHmm → 마지막 4자리가 HHMM
+            const hhmm = rawTime.slice(-4);
+            h = parseInt(hhmm.slice(0, 2), 10);
+            m = parseInt(hhmm.slice(2, 4), 10);
+          }
+          const displayTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+          const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
           const height = parseInt(it.tideLvl || it.tphLvl || '0', 10);
           const pct = Math.min(100, Math.max(5, Math.round((height / 950) * 100)));
 
           return {
             tideType: type,
-            time: hhmm,
+            time: displayTime,
             fullDateTime: dt,
             tideHeight: height,
             percentage: pct

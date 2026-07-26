@@ -37,7 +37,7 @@ const currentWeather = ref({
   windKnots: 0,
   windDirection: '데이터 로딩중...',
   waveHeight: '- m',
-  waveStatus: '데이터 로딩중...'
+  waveStatus: '확인중...'
 });
 
 // 기상 특보 및 결항 위험 조건 감지 (풍속 27kts 이상 또는 파고 2m 이상)
@@ -192,6 +192,22 @@ const fetchWeatherData = async () => {
         currentWeather.value.maxTemp = Math.round(Math.max(...todayTemps));
         currentWeather.value.minTemp = Math.round(Math.min(...todayTemps));
       }
+    }
+
+    // KMA WAV 없으면 Open-Meteo Marine으로 파고 폴백
+    if (currentWeather.value.waveHeight === '- m') {
+      try {
+        const marineRes = await fetch('https://marine-api.open-meteo.com/v1/marine?latitude=37.47&longitude=126.62&current=wave_height&timezone=Asia%2FSeoul').then(r => r.json());
+        const waveM = marineRes?.current?.wave_height ?? null;
+        if (waveM != null) {
+          const wv = Math.round(waveM * 10) / 10;
+          currentWeather.value.waveHeight = `${wv.toFixed(1)} m`;
+          if (wv < 0.5) currentWeather.value.waveStatus = '잔잔함 (안전)';
+          else if (wv < 1.0) currentWeather.value.waveStatus = '약간 있음 (주의)';
+          else if (wv < 2.0) currentWeather.value.waveStatus = '보통 (주의)';
+          else currentWeather.value.waveStatus = '높음 ⚠️ (결항 위험)';
+        }
+      } catch (_) {}
     }
 
 
