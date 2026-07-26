@@ -533,42 +533,43 @@ definePageMeta({
 
     <!-- Dues Spreadsheet Card -->
     <div class="spreadsheet-card">
-      <div
-        class="card-title"
-        style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          width: 100%;
-        "
-      >
-        <div style="display: flex; align-items: center; gap: 0.8rem">
-          <i class="material-icons" style="color: #1ad1b1">grid_on</i>
-          <span>월회비 납부 현황 (7조 전용)</span>
-          <select v-model="selectedYear" class="custom-dark-select year-select">
-            <option v-for="y in yearsList" :key="y" :value="y">{{ y }}년</option>
-          </select>
+      <!-- 🌟 상단 컨트롤 / 하단 제목 수직 2행 반응형 레이아웃 -->
+      <div style="display: flex; flex-direction: column; gap: 1rem; width: 100%; margin-bottom: 1.2rem;">
+        <!-- Top Row: 컨트롤 영역 (연도 선택 + 일괄 납부 관리 버튼) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <select v-model="selectedYear" class="custom-dark-select year-select" style="min-width: 9rem;">
+              <option v-for="y in yearsList" :key="y" :value="y">{{ y }}년</option>
+            </select>
+          </div>
 
-        </div>
-        <v-btn
-          v-if="isDuesEditor"
-          size="small"
-          style="
-            background: rgba(26, 209, 177, 0.15) !important;
-            border: 1px solid rgba(26, 209, 177, 0.3) !important;
-            color: #1ad1b1 !important;
-            font-weight: 600;
-            border-radius: 0.8rem;
-          "
-          @click="openBatchEditor"
-        >
-          <i
-            class="material-icons"
-            style="font-size: 1.4rem; margin-right: 0.4rem"
-            >assignment_turned_in</i
+          <v-btn
+            v-if="isDuesEditor"
+            size="small"
+            style="
+              background: rgba(26, 209, 177, 0.15) !important;
+              border: 1px solid rgba(26, 209, 177, 0.3) !important;
+              color: #1ad1b1 !important;
+              font-weight: 700;
+              border-radius: 0.8rem;
+              padding: 0.6rem 1.2rem !important;
+              height: auto !important;
+              font-size: 1.25rem !important;
+            "
+            @click="openBatchEditor"
           >
-          일괄 납부 관리
-        </v-btn>
+            <i class="material-icons" style="font-size: 1.5rem; margin-right: 0.4rem;">assignment_turned_in</i>
+            <span>일괄 납부 관리</span>
+          </v-btn>
+        </div>
+
+        <!-- Bottom Row: 제목 (월회비 납부 현황 7조 전용) -->
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <i class="material-icons" style="color: #1ad1b1; font-size: 2.2rem;">grid_on</i>
+          <span style="font-size: 1.6rem; font-weight: 800; color: #ffffff; letter-spacing: -0.03rem; white-space: nowrap;">
+            월회비 납부 현황 (7조 전용)
+          </span>
+        </div>
       </div>
 
       <div class="table-scroll-wrapper">
