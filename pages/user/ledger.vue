@@ -644,7 +644,7 @@ onMounted(() => {
           <div class="left-actions">
             <button class="btn-add-line" @click="addRow">
               <i class="material-icons">add</i>
-              <span>+ 행 추가</span>
+              <span>행 추가</span>
             </button>
             <button class="btn-reset-lines" @click="resetRows">초기화</button>
           </div>
@@ -1029,18 +1029,17 @@ onMounted(() => {
   .chips-scroll-container {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    overflow-x: auto;
-    padding-bottom: 0.4rem;
-    -webkit-overflow-scrolling: touch;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.2rem;
 
     .quick-ship-chip {
-      background: rgba(136, 197, 255, 0.1);
+      background: rgba(136, 197, 255, 0.12);
       border: 1px solid rgba(136, 197, 255, 0.25);
       color: #88c5ff;
-      padding: 0.35rem 0.85rem;
-      border-radius: 0.7rem;
-      font-size: 1.25rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 0.6rem;
+      font-size: 1.2rem;
       font-weight: 700;
       white-space: nowrap;
       cursor: pointer;
