@@ -545,20 +545,20 @@ definePageMeta({
 
           <v-btn
             v-if="isDuesEditor"
-            size="small"
+            size="x-small"
             style="
               background: rgba(26, 209, 177, 0.15) !important;
               border: 1px solid rgba(26, 209, 177, 0.3) !important;
               color: #1ad1b1 !important;
               font-weight: 700;
-              border-radius: 0.8rem;
-              padding: 0.6rem 1.2rem !important;
-              height: auto !important;
-              font-size: 1.25rem !important;
+              border-radius: 0.7rem;
+              padding: 0.35rem 0.8rem !important;
+              height: 2.8rem !important;
+              font-size: 1.15rem !important;
             "
             @click="openBatchEditor"
           >
-            <i class="material-icons" style="font-size: 1.5rem; margin-right: 0.4rem;">assignment_turned_in</i>
+            <i class="material-icons" style="font-size: 1.3rem; margin-right: 0.3rem;">assignment_turned_in</i>
             <span>일괄 납부 관리</span>
           </v-btn>
         </div>
