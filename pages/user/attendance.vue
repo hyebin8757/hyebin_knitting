@@ -70,24 +70,48 @@ const selectedWorkerName = ref("");
 const selectedGroupId = ref<number | null>(null);
 const selectedDeployLocation = ref('');
 
+// YYYY-MM-DD 날짜 포맷팅 헬퍼
+const getFormattedDate = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
 // 커스텀 알림용 상태
 const isCustomCancelConfirmOpen = ref(false);
 const cancelTargetType = ref<"self" | "admin_worker">("self");
 const cancelTargetName = ref("");
 
-// 로그인된 사용자의 출근 여부 동적 감지
+// 로그인된 사용자의 출근 여부 동적 감지 (야간 근무 복구/해제 완벽 대응)
 const isCheckedIn = computed(() => {
   const currentName = userStore.loggedInUser?.name;
   if (!currentName) return false;
   const worker = userStore.workers.find(w => w.name === currentName);
   if (!worker || !worker.checkedIn) return false;
 
-  // 당일 출결 상태가 결근이면 출근하지 않은 것으로 처리 (버튼 = 출근 등록)
-  const today = new Date().toISOString().split("T")[0];
+  const today = getFormattedDate(new Date());
   const todayRecord = userStore.attendanceRecords.find(
     r => r.worker_name === currentName && r.date === today
   );
-  if (todayRecord?.status === "absent") return false;
+
+  // 1. 당일 출결 상태가 결근(absent)이거나 none이면 출근하지 않은 상태 (버튼 = 출근 등록)
+  if (todayRecord?.status === "absent" || todayRecord?.status === "none") return false;
+
+  // 2. 오늘 날짜에 직접적인 기록이 없는 경우
+  if (!todayRecord) {
+    // 어제가 야간 근무(night)였는지 확인
+    const yesterdayObj = new Date();
+    yesterdayObj.setDate(yesterdayObj.getDate() - 1);
+    const yesterdayStr = getFormattedDate(yesterdayObj);
+    const yesterdayRecord = userStore.attendanceRecords.find(
+      r => r.worker_name === currentName && r.date === yesterdayStr
+    );
+    // 어제가 야간 근무가 아니었다면 오늘 출근 안 한 상태
+    if (yesterdayRecord?.status !== "night") {
+      return false;
+    }
+  }
 
   return true;
 });
@@ -197,13 +221,6 @@ const confirmLeave = async () => {
   if (!currentName) return;
   await userStore.checkInWorker(currentName, "leave");
   isLeaveConfirmOpen.value = false;
-};
-
-const getFormattedDate = (date: Date): string => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
 };
 
 // 관리자 액션
@@ -554,7 +571,16 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
       // 이전이 야간이었고 이번에 야간이 아닌 다른 상태로 변경되면 → 다음 날 야간 기록 삭제
       if (wasPreviouslyNight && status !== "night") {
         await supabase.from("attendance").delete().eq("worker_name", name).eq("date", nextDayStr);
-        nextDayStr = ""; // 다음 날 처리 초기화
+        
+        // 만약 삭제 대상인 다음 날(nextDayStr)이 바로 오늘(todayStr)이라면 workers 테이블도 즉시 출근 해제(checked_in: false)
+        const todayStr = getFormattedDate(new Date());
+        if (nextDayStr === todayStr) {
+          await supabase.from("workers").update({
+            checked_in: false,
+            status: "none",
+            location: ""
+          }).eq("name", name);
+        }
       }
 
       // 야간 근무를 설정한 경우, 다음 날도 자동으로 야간 근무(night)로 등록합니다.
@@ -573,30 +599,27 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
     
     // 오늘 날짜의 출결 상태 동기화 처리
     const todayStr = getFormattedDate(new Date());
-    let activeStatus = status;
     
     if (selectedCalendarDate.value === todayStr) {
-      activeStatus = status;
-    } else if (nextDayStr === todayStr) {
-      activeStatus = "night";
-    }
-    
-    if (selectedCalendarDate.value === todayStr || nextDayStr === todayStr) {
-      if (activeStatus === "none") {
-        const { error } = await supabase.from("workers").update({
+      if (status === "none" || status === "absent" || status === "leave") {
+        await supabase.from("workers").update({
           checked_in: false,
           status: "none",
           location: ""
         }).eq("name", name);
-        if (error) console.error("Worker update failed:", error);
       } else {
-        const { error } = await supabase.from("workers").update({
+        await supabase.from("workers").update({
           checked_in: true,
-          status: activeStatus,
-          location: activeStatus === "field" ? "외근" : ""
+          status: status,
+          location: status === "field" ? "외근" : ""
         }).eq("name", name);
-        if (error) console.error("Worker update failed:", error);
       }
+    } else if (nextDayStr === todayStr && status === "night") {
+      await supabase.from("workers").update({
+        checked_in: true,
+        status: "night",
+        location: ""
+      }).eq("name", name);
     }
     
     await userStore.fetchAllData();
