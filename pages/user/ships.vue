@@ -287,8 +287,39 @@ const filteredShipList = computed(() => {
     );
   }
 
-  return list;
-});
+// 🛰️ 선박 실시간 AIS 위치 팝업 모달 상태
+const isShipMapModalOpen = ref(false);
+const selectedShipForMap = ref<ShipItem | null>(null);
+
+const openShipLocationModal = (ship: ShipItem) => {
+  selectedShipForMap.value = ship;
+  isShipMapModalOpen.value = true;
+};
+
+// VesselFinder 임베드 맵 URL 생성
+const getVesselFinderEmbedUrl = (ship: ShipItem | null) => {
+  if (!ship) return '';
+  const mmsi = ship.mmsi || '440027780';
+  return `https://www.vesselfinder.com/aismap?mmsi=${mmsi}&zoom=10&lat=37.45&lon=126.60&show_track=true&names=true`;
+};
+
+// VesselFinder 직행 웹 링크 URL
+const getVesselFinderWebUrl = (ship: ShipItem | null) => {
+  if (!ship) return 'https://www.vesselfinder.com';
+  if (ship.mmsi) {
+    return `https://www.vesselfinder.com/vessels/details/${ship.mmsi}`;
+  }
+  return `https://www.vesselfinder.com/vessels?name=${encodeURIComponent(ship.shipName)}`;
+};
+
+// MarineTraffic 직행 웹 링크 URL
+const getMarineTrafficWebUrl = (ship: ShipItem | null) => {
+  if (!ship) return 'https://www.marinetraffic.com';
+  if (ship.mmsi) {
+    return `https://www.marinetraffic.com/en/ais/details/ships/mmsi:${ship.mmsi}`;
+  }
+  return `https://www.marinetraffic.com/en/ais/index/ships/all/keyword:${encodeURIComponent(ship.shipName)}`;
+};
 
 // 공공데이터 API 데이터 가져오기 (인천항 전체 입출항 100건 로드, Netlify 환경 안전 보장)
 const fetchShipsData = async () => {
@@ -824,12 +855,22 @@ onBeforeUnmount(() => {
               <span style="font-size: 1.2rem; color: rgba(255,255,255,0.7);">선석/부두 위치:</span>
               <strong style="font-size: 1.3rem; color: #ffffff;">{{ ship.location }}</strong>
             </div>
-            <button
-              style="background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.4); color: #1ad1b1; padding: 0.4rem 0.9rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;"
-              @click="openKoreanShipDetail(ship)"
-            >
-              <span>상세 정보</span>
-            </button>
+            <div style="display: flex; gap: 0.5rem;">
+              <button
+                style="background: rgba(136, 197, 255, 0.15); border: 1px solid rgba(136, 197, 255, 0.4); color: #88c5ff; padding: 0.4rem 0.85rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"
+                @click.stop="openShipLocationModal(ship)"
+              >
+                <i class="material-icons" style="font-size: 1.4rem;">my_location</i>
+                <span>실시간 위치 지도</span>
+              </button>
+
+              <button
+                style="background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.4); color: #1ad1b1; padding: 0.4rem 0.85rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"
+                @click.stop="openKoreanShipDetail(ship)"
+              >
+                <span>상세 정보</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -916,6 +957,75 @@ onBeforeUnmount(() => {
         <span>{{ toastMessage }}</span>
       </div>
     </v-snackbar>
+
+    <!-- 🛰️ 선박 실시간 AIS 해상 위치 추적 모달 다이얼로그 -->
+    <v-dialog v-model="isShipMapModalOpen" max-width="640">
+      <v-card class="pa-5 dialog-card">
+        <v-card-title class="d-flex align-center justify-space-between pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <i class="material-icons" style="color: #1ad1b1; font-size: 2.2rem;">my_location</i>
+            <div>
+              <div style="font-size: 1.6rem; font-weight: 800; color: #ffffff;">{{ selectedShipForMap?.shipName }}</div>
+              <div style="font-size: 1.15rem; color: #88c5ff; margin-top: 0.1rem;" v-if="selectedShipForMap?.mmsi">
+                MMSI: {{ selectedShipForMap.mmsi }} <span v-if="selectedShipForMap?.route">· {{ selectedShipForMap.route }}</span>
+              </div>
+            </div>
+          </div>
+          <v-btn icon variant="text" @click="isShipMapModalOpen = false">
+            <i class="material-icons" style="color: rgba(255,255,255,0.7); font-size: 2rem;">close</i>
+          </v-btn>
+        </v-card-title>
+
+        <div style="padding-top: 1.2rem;">
+          <!-- AIS 상태 미니 헤더 -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; background: rgba(26, 209, 177, 0.1); border: 1px solid rgba(26, 209, 177, 0.3); padding: 0.6rem 1rem; border-radius: 0.8rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; color: #1ad1b1; font-size: 1.2rem; font-weight: 700;">
+              <i class="material-icons" style="font-size: 1.6rem;">radar</i>
+              <span>VesselFinder 실시간 위성 AIS 연동중</span>
+            </div>
+            <span style="font-size: 1.15rem; font-weight: 700; color: #88c5ff; background: rgba(136, 197, 255, 0.15); padding: 0.2rem 0.6rem; border-radius: 0.4rem;" v-if="selectedShipForMap?.status">
+              {{ selectedShipForMap.status }}
+            </span>
+          </div>
+
+          <!-- VesselFinder Iframe -->
+          <div style="position: relative; width: 100%; height: 380px; border-radius: 1rem; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.12);">
+            <iframe
+              v-if="selectedShipForMap"
+              :src="getVesselFinderEmbedUrl(selectedShipForMap)"
+              width="100%"
+              height="100%"
+              frameborder="0"
+              scrolling="no"
+              style="border: 0;"
+            ></iframe>
+          </div>
+
+          <!-- 외부 관제 전문 직행 링크 뱃지 -->
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
+            <span style="font-size: 1.15rem; color: rgba(255,255,255,0.6); font-weight: 600;">전문 AIS 항적 직행:</span>
+            <div style="display: flex; gap: 0.5rem;">
+              <a
+                :href="getVesselFinderWebUrl(selectedShipForMap)"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="background: rgba(58, 134, 255, 0.15); border: 1px solid rgba(58, 134, 255, 0.35); color: #88c5ff; padding: 0.4rem 0.8rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 0.3rem;"
+              >
+                <i class="material-icons" style="font-size: 1.4rem;">open_in_new</i> VesselFinder
+              </a>
+              <a
+                :href="getMarineTrafficWebUrl(selectedShipForMap)"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.35); color: #1ad1b1; padding: 0.4rem 0.8rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 0.3rem;"
+              >
+                <i class="material-icons" style="font-size: 1.4rem;">open_in_new</i> MarineTraffic
+              </a>
+            </div>
+          </div>
+        </div>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
