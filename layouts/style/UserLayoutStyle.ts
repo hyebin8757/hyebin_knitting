@@ -45,6 +45,10 @@ export const UserLayoutStyle = {
     z-index: 10;
     height: 6rem;
 
+    @media (max-width: 360px) {
+      padding: 1.2rem 1.2rem;
+    }
+
     .header-logo {
       font-size: 1.8rem;
       font-weight: 800;
@@ -54,6 +58,11 @@ export const UserLayoutStyle = {
       align-items: center;
       gap: 0.8rem;
 
+      @media (max-width: 360px) {
+        font-size: 1.5rem;
+        gap: 0.4rem;
+      }
+
       .logo-badge {
         font-size: 1rem;
         background: var(--primary-darken-color-1);
@@ -61,6 +70,11 @@ export const UserLayoutStyle = {
         border-radius: 0.4rem;
         font-weight: 600;
         color: var(--white-color);
+
+        @media (max-width: 360px) {
+          font-size: 0.9rem;
+          padding: 0.15rem 0.4rem;
+        }
       }
     }
 
@@ -69,6 +83,10 @@ export const UserLayoutStyle = {
       gap: 0.6rem;
       font-size: 1.3rem;
       color: var(--text-color-3);
+
+      @media (max-width: 360px) {
+        font-size: 1.15rem;
+      }
 
       strong {
         color: var(--white-color);
@@ -124,12 +142,21 @@ export const UserLayoutStyle = {
       i {
         font-size: 1.7rem;
         transition: transform 0.3s ease;
+
+        @media (max-width: 360px) {
+          font-size: 1.45rem;
+        }
       }
 
       span {
         font-size: 0.95rem;
         font-weight: 600;
         white-space: nowrap;
+
+        @media (max-width: 360px) {
+          font-size: 0.82rem;
+          letter-spacing: -0.04rem;
+        }
       }
 
       &::after {
@@ -173,6 +200,10 @@ export const UserLayoutStyle = {
           width: 32px;
           background: #1ad1b1;
           box-shadow: 0 0 8px rgba(26, 209, 177, 0.6);
+
+          @media (max-width: 360px) {
+            width: 24px;
+          }
         }
       }
     }

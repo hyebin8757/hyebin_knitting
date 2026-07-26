@@ -96,6 +96,10 @@ export const AttendanceStyle = {
     padding: 2rem;
     margin-bottom: 2.4rem;
 
+    @media (max-width: 360px) {
+      padding: 1.2rem 0.8rem;
+    }
+
     .cal-header {
       ${StyleUtils.FlexUtils("center", "space-between")};
       margin-bottom: 2rem;
@@ -103,6 +107,10 @@ export const AttendanceStyle = {
       .cal-title {
         font-size: 1.8rem;
         font-weight: 700;
+
+        @media (max-width: 360px) {
+          font-size: 1.5rem;
+        }
       }
 
       .cal-nav {
@@ -118,6 +126,11 @@ export const AttendanceStyle = {
           cursor: pointer;
           color: var(--white-color);
           border: none;
+
+          @media (max-width: 360px) {
+            width: 3rem;
+            height: 3rem;
+          }
           
           &:hover {
             background: rgba(255, 255, 255, 0.1);
@@ -134,6 +147,10 @@ export const AttendanceStyle = {
       font-weight: 600;
       color: var(--text-color-3);
       margin-bottom: 1.2rem;
+
+      @media (max-width: 360px) {
+        font-size: 1.05rem;
+      }
     }
 
     .cal-days {
@@ -141,6 +158,10 @@ export const AttendanceStyle = {
       grid-template-columns: repeat(7, 1fr);
       gap: 0.8rem;
       text-align: center;
+
+      @media (max-width: 360px) {
+        gap: 0.3rem;
+      }
 
       .day {
         aspect-ratio: 1;
@@ -150,6 +171,10 @@ export const AttendanceStyle = {
         border-radius: 50%;
         position: relative;
         cursor: pointer;
+
+        @media (max-width: 360px) {
+          font-size: 1.2rem;
+        }
 
         &.other-month {
           color: rgba(255, 255, 255, 0.15);

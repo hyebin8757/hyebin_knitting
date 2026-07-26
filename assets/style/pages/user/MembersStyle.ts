@@ -5,6 +5,10 @@ export const MembersStyle = {
   Default : css`
     padding: 2rem;
     color: var(--white-color);
+
+    @media (max-width: 360px) {
+      padding: 1.2rem;
+    }
   `,
 
   Tabs : css`
@@ -33,6 +37,11 @@ export const MembersStyle = {
       cursor: pointer;
       color: var(--text-color-3);
       transition: all 0.2s ease;
+
+      @media (max-width: 360px) {
+        padding: 0.6rem 1.1rem;
+        font-size: 1.15rem;
+      }
 
       &:hover {
         background: rgba(255, 255, 255, 0.08);
@@ -76,10 +85,18 @@ export const MembersStyle = {
       justify-content: space-between;
       align-items: center;
 
+      @media (max-width: 360px) {
+        padding: 1.1rem;
+      }
+
       .details {
         display: flex;
         align-items: center;
         gap: 1.2rem;
+
+        @media (max-width: 360px) {
+          gap: 0.8rem;
+        }
 
         .role-badge {
           width: 4rem;
@@ -88,6 +105,12 @@ export const MembersStyle = {
           ${StyleUtils.FlexUtils("center", "center")};
           font-size: 1.2rem;
           font-weight: 700;
+
+          @media (max-width: 360px) {
+            width: 3.4rem;
+            height: 3.4rem;
+            font-size: 1.05rem;
+          }
 
           &.role-banjang {
             background: rgba(249, 149, 0, 0.15);

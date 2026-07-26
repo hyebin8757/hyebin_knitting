@@ -355,28 +355,28 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Maritime Specific Metrics Grid (모바일 360px 깨짐 방지 레이아웃) -->
-      <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.6rem;">
+      <!-- Maritime Specific Metrics Grid (모바일 340px 대응 픽셀 퍼펙트 레이아웃) -->
+      <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1.4rem;">
         <!-- Top Row: Wind Speed & Wave Height (2열) -->
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem;">
           <!-- Wind Speed & Knots -->
-          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 1.2rem;">
-            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 1.2rem; color: rgba(255,255,255,0.7); white-space: nowrap;">
-              <i class="material-icons" style="color: #88c5ff; font-size: 1.8rem;">air</i>
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 0.9rem 1rem; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 0.3rem; font-size: 1.15rem; color: rgba(255,255,255,0.7); white-space: nowrap;">
+              <i class="material-icons" style="color: #88c5ff; font-size: 1.6rem;">air</i>
               <span>해상 풍속</span>
             </div>
-            <div style="font-size: 1.8rem; font-weight: 800; color: #88c5ff; margin-top: 0.6rem; white-space: nowrap;">
+            <div style="font-size: 1.65rem; font-weight: 800; color: #88c5ff; margin-top: 0.4rem; white-space: nowrap;">
               {{ currentWeather.windSpeed }} m/s
             </div>
-            <div style="font-size: 1.25rem; font-weight: 700; color: #1ad1b1; margin-top: 0.2rem; white-space: nowrap;">
+            <div style="font-size: 1.15rem; font-weight: 700; color: #1ad1b1; margin-top: 0.2rem; white-space: nowrap;">
               ⚡ {{ currentWeather.windKnots }} kts
             </div>
           </div>
 
           <!-- Wave Height (파고 m) -->
-          <div style="background: rgba(35, 102, 180, 0.25); border: 1px solid rgba(136, 197, 255, 0.35); border-radius: 1.2rem; padding: 1.2rem;">
-            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 1.2rem; color: #88c5ff; white-space: nowrap;">
-              <i class="material-icons" style="color: #1ad1b1; font-size: 1.8rem;">waves</i>
+          <div style="background: rgba(35, 102, 180, 0.25); border: 1px solid rgba(136, 197, 255, 0.35); border-radius: 1.2rem; padding: 0.9rem 1rem; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 0.3rem; font-size: 1.15rem; color: #88c5ff; white-space: nowrap;">
+              <i class="material-icons" style="color: #1ad1b1; font-size: 1.6rem;">waves</i>
               <span>해상 파고</span>
             </div>
             <div style="font-size: 2.1rem; font-weight: 900; color: #1ad1b1; margin-top: 0.4rem; white-space: nowrap;">
@@ -389,22 +389,22 @@ onMounted(() => {
         </div>
 
         <!-- Bottom Row: Humidity & Rain POP -->
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 1.2rem;">
-            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 1.2rem; color: rgba(255,255,255,0.7); white-space: nowrap;">
-              <i class="material-icons" style="color: #3a86ff; font-size: 1.8rem;">water_drop</i>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem;">
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 0.9rem 1rem; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 0.3rem; font-size: 1.15rem; color: rgba(255,255,255,0.7); white-space: nowrap;">
+              <i class="material-icons" style="color: #3a86ff; font-size: 1.6rem;">water_drop</i>
               <span>습도</span>
             </div>
-            <div style="font-size: 1.8rem; font-weight: 800; color: #ffffff; margin-top: 0.4rem; white-space: nowrap;">
+            <div style="font-size: 1.65rem; font-weight: 800; color: #ffffff; margin-top: 0.4rem; white-space: nowrap;">
               {{ currentWeather.humidity }}%
             </div>
           </div>
-          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 1.2rem;">
-            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 1.2rem; color: rgba(255,255,255,0.7); white-space: nowrap;">
-              <i class="material-icons" style="color: #e05780; font-size: 1.8rem;">umbrella</i>
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 0.9rem 1rem; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 0.3rem; font-size: 1.15rem; color: rgba(255,255,255,0.7); white-space: nowrap;">
+              <i class="material-icons" style="color: #e05780; font-size: 1.6rem;">umbrella</i>
               <span>강수확률</span>
             </div>
-            <div style="font-size: 1.8rem; font-weight: 800; color: #e05780; margin-top: 0.4rem; white-space: nowrap;">
+            <div style="font-size: 1.65rem; font-weight: 800; color: #e05780; margin-top: 0.4rem; white-space: nowrap;">
               {{ currentWeather.rainPop }}%
             </div>
           </div>

@@ -652,7 +652,7 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- 만조(고조) / 간조(저조) 타임라인 칩 4개 및 수위 Hydro Gauge -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.8rem;">
         <div
           v-for="(tide, idx) in tideList"
           :key="idx"
@@ -845,14 +845,14 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- Details Info Grid -->
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.2rem;">
-            <div style="background: rgba(255,255,255,0.03); padding: 0.8rem 1rem; border-radius: 0.8rem;">
-              <div style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">입항일시 (ETA)</div>
-              <div style="font-size: 1.3rem; font-weight: 700; color: #1ad1b1; margin-top: 0.2rem;">{{ ship.eta }}</div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-top: 1.2rem;">
+            <div style="background: rgba(255,255,255,0.03); padding: 0.7rem 0.8rem; border-radius: 0.8rem; min-width: 0;">
+              <div style="font-size: 1.05rem; color: rgba(255,255,255,0.5);">입항일시 (ETA)</div>
+              <div style="font-size: 1.2rem; font-weight: 700; color: #1ad1b1; margin-top: 0.2rem; word-break: break-all;">{{ ship.eta }}</div>
             </div>
-            <div style="background: rgba(255,255,255,0.03); padding: 0.8rem 1rem; border-radius: 0.8rem;">
-              <div style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">출항일시 (ETD)</div>
-              <div style="font-size: 1.3rem; font-weight: 700; color: #e05780; margin-top: 0.2rem;">{{ ship.etd }}</div>
+            <div style="background: rgba(255,255,255,0.03); padding: 0.7rem 0.8rem; border-radius: 0.8rem; min-width: 0;">
+              <div style="font-size: 1.05rem; color: rgba(255,255,255,0.5);">출항일시 (ETD)</div>
+              <div style="font-size: 1.2rem; font-weight: 700; color: #e05780; margin-top: 0.2rem; word-break: break-all;">{{ ship.etd }}</div>
             </div>
           </div>
 
