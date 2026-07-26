@@ -24,8 +24,81 @@ const selectedDate = ref(getTodayStr());
 // 결제 종류 옵션
 const paymentOptions = ['선불', '후불', '입금', '현금', '미수'];
 
-// 자주 쓰는 선명/상회 숏컷 칩
-const frequentShips = ['프라이드 (백령)', '코리아 (덕적)', '프린세스 (연평)', '웨스트호', '미래9호', '백령해운', '코리아나호'];
+// 종이 수기 장부 원본 사진 기준 기본 선명/상회 숏컷 칩 목록
+const DEFAULT_FREQUENT_SHIPS = [
+  '프라이드',
+  '연평(오전)',
+  '코리아(덕적)',
+  '하누리(백아)',
+  '프린세스',
+  '연평(오후)',
+  '미래9호(덕적)',
+  '프라이드(하)',
+  '미래(자.이.승)',
+  '9호',
+  '하누리(문갑외)',
+  '우체국',
+  '프라이드(백령)',
+  '프린세스(백령)',
+  '웨스트호'
+];
+
+// 사용자가 직접 추가/삭제할 수 있는 반응형 선명 칩 목록
+const frequentShips = ref<string[]>([]);
+
+// 선명 칩 관리 모달
+const isShipManageModalOpen = ref(false);
+const newShipInput = ref('');
+
+// localStorage에서 자주 쓰는 선명 불러오기
+const loadFrequentShips = () => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('frequent_ships_custom');
+    if (saved) {
+      try {
+        frequentShips.value = JSON.parse(saved);
+        return;
+      } catch (e) {
+        console.warn("Failed to parse frequent_ships_custom", e);
+      }
+    }
+  }
+  frequentShips.value = [...DEFAULT_FREQUENT_SHIPS];
+};
+
+// localStorage에 선명 칩 저장
+const saveFrequentShips = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('frequent_ships_custom', JSON.stringify(frequentShips.value));
+  }
+};
+
+// 선명 칩 신규 추가
+const addFrequentShip = () => {
+  const name = newShipInput.value.trim();
+  if (!name) return;
+  if (frequentShips.value.includes(name)) {
+    alert('이미 존재해 있는 선명/상회 명칭입니다.');
+    return;
+  }
+  frequentShips.value.push(name);
+  saveFrequentShips();
+  newShipInput.value = '';
+};
+
+// 선명 칩 삭제
+const deleteFrequentShip = (targetName: string) => {
+  frequentShips.value = frequentShips.value.filter(s => s !== targetName);
+  saveFrequentShips();
+};
+
+// 기본 수기 장부 선명으로 초기화
+const resetFrequentShipsToDefault = () => {
+  if (confirm('기본 종이 장부 선명 목록으로 초기화하시겠습니까?')) {
+    frequentShips.value = [...DEFAULT_FREQUENT_SHIPS];
+    saveFrequentShips();
+  }
+};
 
 // 엑셀식 렌더링 모드 ('view' | 'edit_batch')
 const activeViewTab = ref<'view' | 'batch_input'>('view');
@@ -242,6 +315,7 @@ const exportToExcel = () => {
 };
 
 onMounted(() => {
+  loadFrequentShips();
   userStore.fetchAllData();
 });
 </script>
@@ -381,17 +455,25 @@ onMounted(() => {
             <p>표 양식에서 탭키를 누르며 엑셀처럼 빠르게 연속 작성 후 [일괄 등록]을 누르세요.</p>
           </div>
 
-          <!-- 자주 쓰는 선명 숏컷 칩 -->
-          <div class="shortcut-chips">
-            <span class="sc-label">자주 쓰는 선명:</span>
-            <span 
-              v-for="sName in frequentShips" 
-              :key="sName" 
-              class="sc-chip"
-              @click="batchRows[batchRows.length - 1].shipName = sName"
-            >
-              + {{ sName }}
-            </span>
+          <!-- 자주 쓰는 선명 숏컷 칩 및 관리 버튼 -->
+          <div class="shortcut-chips-area">
+            <div class="shortcut-chips">
+              <span class="sc-label">자주 쓰는 선명:</span>
+              <span 
+                v-for="sName in frequentShips" 
+                :key="sName" 
+                class="sc-chip"
+                @click="batchRows[batchRows.length - 1].shipName = sName"
+                :title="`${sName} 클릭 시 마지막 입력 행에 지정`"
+              >
+                + {{ sName }}
+              </span>
+
+              <button class="btn-manage-ships" @click="isShipManageModalOpen = true">
+                <i class="material-icons">settings</i>
+                <span>선명 칩 추가 / 삭제 관리</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -532,6 +614,69 @@ onMounted(() => {
         <v-card-actions class="dialog-actions">
           <v-btn variant="text" class="btn-cancel" @click="isSingleModalOpen = false">취소</v-btn>
           <v-btn class="btn-confirm" @click="saveSingleLedger">저장</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- ⚙️ 자주 쓰는 선명 / 상회 관리 팝업 모달 -->
+    <v-dialog v-model="isShipManageModalOpen" max-width="500">
+      <v-card class="pa-6 dialog-card">
+        <v-card-title class="dialog-title" style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <i class="material-icons" style="color: #1ad1b1;">directions_boat</i>
+            <span>자주 쓰는 선명 / 상회 관리</span>
+          </div>
+          <v-btn icon size="x-small" variant="text" style="color: rgba(255,255,255,0.6);" @click="isShipManageModalOpen = false">
+            <i class="material-icons">close</i>
+          </v-btn>
+        </v-card-title>
+
+        <div class="dialog-body" style="gap: 1.4rem;">
+          <!-- 신규 선명 추가 폼 -->
+          <div style="display: flex; gap: 0.6rem;">
+            <input 
+              type="text" 
+              v-model="newShipInput" 
+              placeholder="새로운 선명/상회 명칭 입력 (예: 연평(오전))" 
+              class="modal-input" 
+              style="flex: 1;"
+              @keyup.enter="addFrequentShip"
+            />
+            <button 
+              class="btn-confirm" 
+              style="padding: 0.6rem 1.4rem; white-space: nowrap; height: auto;" 
+              @click="addFrequentShip"
+            >
+              + 추가
+            </button>
+          </div>
+
+          <!-- 등록된 선명 칩 목록 & 삭제 버튼 -->
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <span style="font-size: 1.2rem; color: rgba(255,255,255,0.6);">현재 등록된 선명 목록 (총 {{ frequentShips.length }}개):</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; max-height: 240px; overflow-y: auto; padding: 0.8rem; background: rgba(0,0,0,0.2); border-radius: 0.8rem; border: 1px solid rgba(255,255,255,0.1);">
+              <div 
+                v-for="sName in frequentShips" 
+                :key="sName"
+                style="display: flex; align-items: center; gap: 0.4rem; background: rgba(136, 197, 255, 0.15); border: 1px solid rgba(136, 197, 255, 0.3); color: #88c5ff; padding: 0.3rem 0.7rem; border-radius: 0.6rem; font-size: 1.25rem; font-weight: 700;"
+              >
+                <span>{{ sName }}</span>
+                <i 
+                  class="material-icons" 
+                  style="font-size: 1.4rem; color: #ff5c8d; cursor: pointer;" 
+                  @click="deleteFrequentShip(sName)"
+                  title="삭제"
+                >close</i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <v-card-actions class="dialog-actions" style="justify-content: space-between; margin-top: 1rem;">
+          <v-btn variant="text" style="color: #ffb703; font-size: 1.2rem;" @click="resetFrequentShipsToDefault">
+            🔄 기본 수기장부 목록으로 초기화
+          </v-btn>
+          <v-btn class="btn-confirm" @click="isShipManageModalOpen = false">닫기</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -904,6 +1049,23 @@ onMounted(() => {
         cursor: pointer;
 
         &:hover { background: rgba(136, 197, 255, 0.25); }
+      }
+
+      .btn-manage-ships {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: rgba(26, 209, 177, 0.15);
+        border: 1px solid rgba(26, 209, 177, 0.35);
+        color: #1ad1b1;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.6rem;
+        font-size: 1.15rem;
+        font-weight: 700;
+        cursor: pointer;
+
+        &:hover { background: rgba(26, 209, 177, 0.25); }
+        i { font-size: 1.4rem; }
       }
     }
   }
