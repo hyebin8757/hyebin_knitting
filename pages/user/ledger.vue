@@ -890,6 +890,12 @@ onMounted(() => {
         color: #ffffff;
         margin: 0;
         letter-spacing: -0.04rem;
+        word-break: keep-all;
+
+        @media (max-width: 380px) {
+          font-size: 1.55rem;
+          letter-spacing: -0.05rem;
+        }
       }
 
       .brand-sub {

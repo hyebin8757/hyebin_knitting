@@ -977,38 +977,38 @@ onBeforeUnmount(() => {
 
     <!-- 🛰️ 선박 실시간 AIS 해상 위치 추적 모달 다이얼로그 (닫기 버튼 명확 탑재) -->
     <v-dialog v-model="isShipMapModalOpen" max-width="640">
-      <v-card class="pa-5 dialog-card" style="background: #0d1e33; border: 1px solid rgba(255,255,255,0.15); border-radius: 1.4rem;">
+      <v-card class="pa-3 dialog-card" style="background: #0d1e33; border: 1px solid rgba(255,255,255,0.15); border-radius: 1.4rem;">
         <!-- Header Row -->
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1); gap: 1rem;">
-          <div style="display: flex; align-items: center; gap: 0.6rem;">
-            <i class="material-icons" style="color: #1ad1b1; font-size: 2.4rem;">my_location</i>
-            <div>
-              <div style="font-size: 1.65rem; font-weight: 800; color: #ffffff;">{{ selectedShipForMap?.shipName }}</div>
-              <div style="font-size: 1.15rem; color: #88c5ff; margin-top: 0.1rem;" v-if="selectedShipForMap?.mmsi">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1); gap: 0.6rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; min-width: 0;">
+            <i class="material-icons" style="color: #1ad1b1; font-size: 2.2rem; flex-shrink: 0;">my_location</i>
+            <div style="min-width: 0;">
+              <div style="font-size: 1.45rem; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ selectedShipForMap?.shipName }}</div>
+              <div style="font-size: 1.1rem; color: #88c5ff; margin-top: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" v-if="selectedShipForMap?.mmsi">
                 MMSI: {{ selectedShipForMap.mmsi }} <span v-if="selectedShipForMap?.route">· {{ selectedShipForMap.route }}</span>
               </div>
             </div>
           </div>
           <button
-            style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.8); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;"
+            style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.8); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;"
             @click="isShipMapModalOpen = false"
             title="닫기"
           >
-            <i class="material-icons" style="font-size: 2rem;">close</i>
+            <i class="material-icons" style="font-size: 1.8rem;">close</i>
           </button>
         </div>
 
-        <div style="padding-top: 1.2rem;">
-          <!-- 🛰️ 통합 실시간 위성 관제 & 도착 상태 카드 (완벽 비주얼 리디자인) -->
-          <div style="background: linear-gradient(135deg, rgba(13, 30, 51, 0.95) 0%, rgba(26, 209, 177, 0.12) 100%); border: 1px solid rgba(26, 209, 177, 0.35); border-radius: 1.2rem; padding: 1rem 1.2rem; margin-bottom: 1.1rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);">
+        <div style="padding-top: 1rem;">
+          <!-- 🛰️ 통합 실시간 위성 관제 & 도착 상태 카드 (모바일 340px 대응) -->
+          <div style="background: linear-gradient(135deg, rgba(13, 30, 51, 0.95) 0%, rgba(26, 209, 177, 0.12) 100%); border: 1px solid rgba(26, 209, 177, 0.35); border-radius: 1.2rem; padding: 0.8rem 1rem; margin-bottom: 1rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);">
             <!-- Row 1: AIS Status Tag & Navigation Status Badge -->
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; margin-bottom: 0.8rem;">
-              <div style="display: flex; align-items: center; gap: 0.5rem; color: #1ad1b1; font-size: 1.3rem; font-weight: 800;">
-                <i class="material-icons" style="font-size: 1.8rem;">radar</i>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem;">
+              <div style="display: flex; align-items: center; gap: 0.4rem; color: #1ad1b1; font-size: 1.2rem; font-weight: 800; white-space: nowrap;">
+                <i class="material-icons" style="font-size: 1.6rem;">radar</i>
                 <span>위성 AIS 실시간 관제중</span>
               </div>
               <span 
-                style="font-size: 1.2rem; font-weight: 800; padding: 0.3rem 0.8rem; border-radius: 0.6rem; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap;" 
+                style="font-size: 1.1rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 0.6rem; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; flex-shrink: 0;" 
                 :style="{
                   background: (selectedShipForMap && getShipEffectiveStatus(selectedShipForMap) === '접안중') ? 'rgba(26, 209, 177, 0.25)' : 'rgba(136, 197, 255, 0.2)',
                   color: (selectedShipForMap && getShipEffectiveStatus(selectedShipForMap) === '접안중') ? '#1ad1b1' : '#88c5ff',
@@ -1023,13 +1023,13 @@ onBeforeUnmount(() => {
             <!-- Row 2: ETA Time & Countdown Info Box -->
             <div 
               v-if="selectedShipForMap && getETACountdownStr(selectedShipForMap.eta, getShipEffectiveStatus(selectedShipForMap))"
-              style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0.8rem; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;"
+              style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0.8rem; padding: 0.6rem 0.8rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem;"
             >
-              <div style="display: flex; align-items: center; gap: 0.5rem; color: #ffffff; font-size: 1.25rem; font-weight: 700; white-space: nowrap;">
-                <i class="material-icons" style="font-size: 1.65rem; color: #1ad1b1;">schedule</i>
-                <span>{{ getETACountdownStr(selectedShipForMap.eta, getShipEffectiveStatus(selectedShipForMap)) }}</span>
+              <div style="display: flex; align-items: center; gap: 0.4rem; color: #ffffff; font-size: 1.15rem; font-weight: 700; white-space: nowrap; min-width: 0;">
+                <i class="material-icons" style="font-size: 1.5rem; color: #1ad1b1; flex-shrink: 0;">schedule</i>
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ getETACountdownStr(selectedShipForMap.eta, getShipEffectiveStatus(selectedShipForMap)) }}</span>
               </div>
-              <span style="font-size: 1.15rem; color: #88c5ff; font-weight: 700; background: rgba(136, 197, 255, 0.15); padding: 0.2rem 0.65rem; border-radius: 0.4rem; white-space: nowrap; flex-shrink: 0;" v-if="selectedShipForMap?.eta">
+              <span style="font-size: 1.05rem; color: #88c5ff; font-weight: 700; background: rgba(136, 197, 255, 0.15); padding: 0.15rem 0.5rem; border-radius: 0.4rem; white-space: nowrap; flex-shrink: 0;" v-if="selectedShipForMap?.eta">
                 ETA {{ selectedShipForMap.eta.includes(' ') ? selectedShipForMap.eta.split(' ').slice(1).join(' ') : selectedShipForMap.eta }}
               </span>
             </div>
