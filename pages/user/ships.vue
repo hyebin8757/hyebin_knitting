@@ -490,7 +490,17 @@ const updateNextTideTimer = () => {
   tideInfoSummary.value.timeRemainingStr = `${hours > 0 ? `${hours}시간 ` : ''}${mins}분 남음`;
 };
 
-// 새로고침 연속 클릭 방지 및 알림 토스트 상태
+// 자동 새로고침 폴링 및 토스트 상태
+let timerId: any = null;
+
+const startAutoPolling = () => {
+  if (timerId) clearInterval(timerId);
+  timerId = setInterval(() => {
+    fetchShipsData();
+    fetchTideData();
+  }, 60000);
+};
+
 const isRefreshing = ref(false);
 const showRefreshToast = ref(false);
 const toastMessage = ref('');
@@ -505,7 +515,6 @@ const handleManualRefresh = async () => {
   toastMessage.value = '인천항 실시간 운항 정보 및 물때 정보가 갱신되었습니다.';
   showRefreshToast.value = true;
 
-  // 알림이 꺼진 후 (2.5초 뒤) 다시 클릭 가능하도록 차단 해제
   setTimeout(() => {
     showRefreshToast.value = false;
     isRefreshing.value = false;
