@@ -24,6 +24,37 @@ const selectedDate = ref(getTodayStr());
 // 결제 종류 옵션
 const paymentOptions = ['선불', '후불', '입금', '현금', '미수'];
 
+// 공용 커스텀 알림 & 확인 모달 상태
+const isCustomAlertOpen = ref(false);
+const customAlertTitle = ref('알림');
+const customAlertMessage = ref('');
+
+const isCustomConfirmOpen = ref(false);
+const customConfirmTitle = ref('확인');
+const customConfirmMessage = ref('');
+let onConfirmCallback: (() => void) | null = null;
+
+const showAlert = (msg: string, title = '알림') => {
+  customAlertTitle.value = title;
+  customAlertMessage.value = msg;
+  isCustomAlertOpen.value = true;
+};
+
+const showConfirm = (msg: string, onConfirm: () => void, title = '확인') => {
+  customConfirmTitle.value = title;
+  customConfirmMessage.value = msg;
+  onConfirmCallback = onConfirm;
+  isCustomConfirmOpen.value = true;
+};
+
+const executeConfirm = () => {
+  if (onConfirmCallback) {
+    onConfirmCallback();
+    onConfirmCallback = null;
+  }
+  isCustomConfirmOpen.value = false;
+};
+
 // 종이 수기 장부 원본 사진 기준 기본 선명/상회 숏컷 칩 목록
 const DEFAULT_FREQUENT_SHIPS = [
   '프라이드',
@@ -78,7 +109,7 @@ const addFrequentShip = () => {
   const name = newShipInput.value.trim();
   if (!name) return;
   if (frequentShips.value.includes(name)) {
-    alert('이미 존재해 있는 선명/상회 명칭입니다.');
+    showAlert('이미 존재해 있는 선명/상회 명칭입니다.');
     return;
   }
   frequentShips.value.push(name);
@@ -90,14 +121,6 @@ const addFrequentShip = () => {
 const deleteFrequentShip = (targetName: string) => {
   frequentShips.value = frequentShips.value.filter(s => s !== targetName);
   saveFrequentShips();
-};
-
-// 기본 수기 장부 선명으로 초기화
-const resetFrequentShipsToDefault = () => {
-  if (confirm('기본 종이 장부 선명 목록으로 초기화하시겠습니까?')) {
-    frequentShips.value = [...DEFAULT_FREQUENT_SHIPS];
-    saveFrequentShips();
-  }
 };
 
 // 엑셀식 렌더링 모드 ('view' | 'edit_batch')
@@ -210,7 +233,7 @@ const openSingleEditModal = (item: ShipLedgerItem) => {
 // 단건 저장
 const saveSingleLedger = async () => {
   if (!singleForm.value.shipName.trim() || !singleForm.value.itemDetails.trim()) {
-    alert('선명 및 품목 상세 내용을 입력해주세요.');
+    showAlert('선명 및 품목 상세 내용을 입력해주세요.');
     return;
   }
   if (isEditMode.value && singleForm.value.id) {
@@ -231,9 +254,9 @@ const saveSingleLedger = async () => {
 // 단건 삭제
 const deleteLedgerItem = async (id?: number) => {
   if (!id) return;
-  if (confirm('해당 장부 기록을 삭제하시겠습니까?')) {
+  showConfirm('해당 장부 기록을 삭제하시겠습니까?', async () => {
     await userStore.deleteShipLedger(id);
-  }
+  });
 };
 
 // 엑셀식 일괄 연속 저장
@@ -244,7 +267,7 @@ const submitBatchRows = async () => {
   );
 
   if (validItems.length === 0) {
-    alert('최소 1개 이상의 유효한 장부 데이터(선명 및 품목 상세)를 입력해주세요.');
+    showAlert('최소 1개 이상의 유효한 장부 데이터(선명 및 품목 상세)를 입력해주세요.');
     return;
   }
 
@@ -260,12 +283,12 @@ const submitBatchRows = async () => {
     }));
 
     await userStore.saveBatchShipLedgers(formattedList);
-    alert(`${formattedList.length}건의 객선 장부 기록이 일괄 등록되었습니다.`);
+    showAlert(`${formattedList.length}건의 객선 장부 기록이 일괄 등록되었습니다.`, '등록 완료');
     resetRows();
     activeViewTab.value = 'view';
   } catch (e) {
     console.error("Batch save failed", e);
-    alert('저장 도중 오류가 발생했습니다.');
+    showAlert('저장 도중 오류가 발생했습니다.');
   } finally {
     isSubmittingBatch.value = false;
   }
@@ -276,7 +299,7 @@ const exportToExcel = () => {
   const listToExport = currentLedgerList.value;
 
   if (listToExport.length === 0) {
-    alert(`${selectedDate.value} 날짜에 등록된 장부 데이터가 없습니다.`);
+    showAlert(`${selectedDate.value} 날짜에 등록된 장부 데이터가 없습니다.`);
     return;
   }
 
@@ -672,11 +695,41 @@ onMounted(() => {
           </div>
         </div>
 
-        <v-card-actions class="dialog-actions" style="justify-content: space-between; margin-top: 1rem;">
-          <v-btn variant="text" style="color: #ffb703; font-size: 1.2rem;" @click="resetFrequentShipsToDefault">
-            🔄 기본 수기장부 목록으로 초기화
-          </v-btn>
+        <v-card-actions class="dialog-actions" style="justify-content: flex-end; margin-top: 1rem;">
           <v-btn class="btn-confirm" @click="isShipManageModalOpen = false">닫기</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 🔔 공용 커스텀 알림 (Alert) 모달 -->
+    <v-dialog v-model="isCustomAlertOpen" max-width="360">
+      <v-card class="pa-6 dialog-card">
+        <v-card-title class="dialog-title" style="color: #1ad1b1;">
+          <i class="material-icons">info</i>
+          <span>{{ customAlertTitle }}</span>
+        </v-card-title>
+        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.9);">
+          {{ customAlertMessage }}
+        </v-card-text>
+        <v-card-actions class="dialog-actions">
+          <v-btn class="btn-confirm" style="width: 100%;" @click="isCustomAlertOpen = false">확인</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- ❓ 공용 커스텀 확인 (Confirm) 모달 -->
+    <v-dialog v-model="isCustomConfirmOpen" max-width="360">
+      <v-card class="pa-6 dialog-card">
+        <v-card-title class="dialog-title" style="color: #ff5c8d;">
+          <i class="material-icons">help_outline</i>
+          <span>{{ customConfirmTitle }}</span>
+        </v-card-title>
+        <v-card-text class="py-4 px-0" style="font-size: 1.4rem; line-height: 1.6; color: rgba(255, 255, 255, 0.9);">
+          {{ customConfirmMessage }}
+        </v-card-text>
+        <v-card-actions class="dialog-actions">
+          <v-btn class="btn-cancel" @click="isCustomConfirmOpen = false">취소</v-btn>
+          <v-btn class="btn-confirm" style="background: linear-gradient(135deg, #ff006e 0%, #d60058 100%) !important;" @click="executeConfirm">확인</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
