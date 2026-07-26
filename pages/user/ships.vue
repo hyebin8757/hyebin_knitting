@@ -961,23 +961,28 @@ onBeforeUnmount(() => {
       </div>
     </v-snackbar>
 
-    <!-- 🛰️ 선박 실시간 AIS 해상 위치 추적 모달 다이얼로그 -->
+    <!-- 🛰️ 선박 실시간 AIS 해상 위치 추적 모달 다이얼로그 (닫기 버튼 명확 탑재) -->
     <v-dialog v-model="isShipMapModalOpen" max-width="640">
-      <v-card class="pa-5 dialog-card">
-        <v-card-title class="d-flex align-center justify-space-between pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <v-card class="pa-5 dialog-card" style="background: #0d1e33; border: 1px solid rgba(255,255,255,0.15); border-radius: 1.4rem;">
+        <!-- Header Row -->
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1); gap: 1rem;">
           <div style="display: flex; align-items: center; gap: 0.6rem;">
-            <i class="material-icons" style="color: #1ad1b1; font-size: 2.2rem;">my_location</i>
+            <i class="material-icons" style="color: #1ad1b1; font-size: 2.4rem;">my_location</i>
             <div>
-              <div style="font-size: 1.6rem; font-weight: 800; color: #ffffff;">{{ selectedShipForMap?.shipName }}</div>
+              <div style="font-size: 1.65rem; font-weight: 800; color: #ffffff;">{{ selectedShipForMap?.shipName }}</div>
               <div style="font-size: 1.15rem; color: #88c5ff; margin-top: 0.1rem;" v-if="selectedShipForMap?.mmsi">
                 MMSI: {{ selectedShipForMap.mmsi }} <span v-if="selectedShipForMap?.route">· {{ selectedShipForMap.route }}</span>
               </div>
             </div>
           </div>
-          <v-btn icon variant="text" @click="isShipMapModalOpen = false">
-            <i class="material-icons" style="color: rgba(255,255,255,0.7); font-size: 2rem;">close</i>
-          </v-btn>
-        </v-card-title>
+          <button
+            style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #ffffff; padding: 0.35rem 0.8rem; border-radius: 0.6rem; font-size: 1.2rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.2rem; white-space: nowrap; flex-shrink: 0;"
+            @click="isShipMapModalOpen = false"
+          >
+            <i class="material-icons" style="font-size: 1.6rem;">close</i>
+            <span>닫기</span>
+          </button>
+        </div>
 
         <div style="padding-top: 1.2rem;">
           <!-- AIS 상태 미니 헤더 -->
@@ -1004,15 +1009,15 @@ onBeforeUnmount(() => {
             ></iframe>
           </div>
 
-          <!-- 외부 관제 전문 직행 링크 뱃지 -->
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
-            <span style="font-size: 1.15rem; color: rgba(255,255,255,0.6); font-weight: 600;">전문 AIS 항적 직행:</span>
-            <div style="display: flex; gap: 0.5rem;">
+          <!-- 외부 관제 전문 직행 링크 뱃지 + 하단 닫기 버튼 -->
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 1.15rem; color: rgba(255,255,255,0.6); font-weight: 600;">외부 직행:</span>
               <a
                 :href="getVesselFinderWebUrl(selectedShipForMap)"
                 target="_blank"
                 rel="noopener noreferrer"
-                style="background: rgba(58, 134, 255, 0.15); border: 1px solid rgba(58, 134, 255, 0.35); color: #88c5ff; padding: 0.4rem 0.8rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 0.3rem;"
+                style="background: rgba(58, 134, 255, 0.15); border: 1px solid rgba(58, 134, 255, 0.35); color: #88c5ff; padding: 0.35rem 0.75rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 0.3rem;"
               >
                 <i class="material-icons" style="font-size: 1.4rem;">open_in_new</i> VesselFinder
               </a>
@@ -1020,11 +1025,19 @@ onBeforeUnmount(() => {
                 :href="getMarineTrafficWebUrl(selectedShipForMap)"
                 target="_blank"
                 rel="noopener noreferrer"
-                style="background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.35); color: #1ad1b1; padding: 0.4rem 0.8rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 0.3rem;"
+                style="background: rgba(26, 209, 177, 0.15); border: 1px solid rgba(26, 209, 177, 0.35); color: #1ad1b1; padding: 0.35rem 0.75rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 0.3rem;"
               >
                 <i class="material-icons" style="font-size: 1.4rem;">open_in_new</i> MarineTraffic
               </a>
             </div>
+
+            <!-- 하단 명확한 [닫기] 버튼 -->
+            <button
+              style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.8); padding: 0.45rem 1.3rem; border-radius: 0.6rem; font-size: 1.25rem; font-weight: 700; cursor: pointer;"
+              @click="isShipMapModalOpen = false"
+            >
+              닫기
+            </button>
           </div>
         </div>
       </v-card>
