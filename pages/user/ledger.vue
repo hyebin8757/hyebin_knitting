@@ -140,10 +140,10 @@ interface LedgerRowInput {
   memo: string;
 }
 
-// 엑셀식 연속 입력 행 목록 (기본 3개 행으로 시작)
+// 엑셀식 연속 입력 행 목록 (기본 3개 빈 행으로 시작)
 const batchRows = ref<LedgerRowInput[]>([
-  { shipName: '프라이드', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
-  { shipName: '코리아(덕적)', itemDetails: '', amount: null, paymentType: '입금', memo: '' },
+  { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
+  { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
   { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' }
 ]);
 
@@ -162,7 +162,7 @@ const removeRow = (index: number) => {
 // 입력행 전체 초기화
 const resetRows = () => {
   batchRows.value = [
-    { shipName: '프라이드', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
+    { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
     { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' }
   ];
 };
@@ -233,7 +233,7 @@ const openSingleAddModal = () => {
   singleForm.value = {
     id: undefined,
     date: selectedDate.value,
-    shipName: '프라이드',
+    shipName: '',
     itemDetails: '',
     amount: null as any,
     paymentType: '선불',

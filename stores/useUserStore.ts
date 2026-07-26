@@ -79,36 +79,8 @@ export const useUserStore = defineStore( "user", () => {
   // 회비 관련 비고/지출 내역
   const duesExpenses = ref<any[]>([]);
 
-  // 객선 수화물/화물 운송장부 데이터
-  const shipLedgers = ref<ShipLedgerItem[]>([
-    {
-      id: 1,
-      date: '2026-07-26',
-      shipName: '프라이드 (백령)',
-      itemDetails: '박스 외 12개 (상)',
-      amount: 145000,
-      paymentType: '선불',
-      memo: '김작업 승인 건'
-    },
-    {
-      id: 2,
-      date: '2026-07-26',
-      shipName: '코리아 (덕적)',
-      itemDetails: '부식 15 (덕적고)',
-      amount: 220000,
-      paymentType: '입금',
-      memo: '계좌이체 완료'
-    },
-    {
-      id: 3,
-      date: '2026-07-26',
-      shipName: '프린세스 (연평)',
-      itemDetails: '어구 팔레트 3통',
-      amount: 350000,
-      paymentType: '후불',
-      memo: '월말 일괄 청구'
-    }
-  ]);
+  // 객선 수화물/화물 운송장부 데이터 (Supabase DB 동기화)
+  const shipLedgers = ref<ShipLedgerItem[]>([]);
 
   // 현재 로그인한 사용자 정보
   const loggedInUser = ref<any>(null);
