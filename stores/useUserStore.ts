@@ -38,6 +38,17 @@ export interface WorkerModel {
   loginPassword?: string;
 }
 
+export interface ShipLedgerItem {
+  id?: number;
+  date: string;
+  shipName: string;
+  itemDetails: string;
+  amount: number;
+  paymentType: string;
+  memo?: string;
+  createdAt?: string;
+}
+
 export interface NoticeModel {
   id: number;
   title: string;
@@ -67,6 +78,37 @@ export const useUserStore = defineStore( "user", () => {
 
   // 회비 관련 비고/지출 내역
   const duesExpenses = ref<any[]>([]);
+
+  // 객선 수화물/화물 운송장부 데이터
+  const shipLedgers = ref<ShipLedgerItem[]>([
+    {
+      id: 1,
+      date: '2026-07-26',
+      shipName: '프라이드 (백령)',
+      itemDetails: '박스 외 12개 (상)',
+      amount: 145000,
+      paymentType: '선불',
+      memo: '김작업 승인 건'
+    },
+    {
+      id: 2,
+      date: '2026-07-26',
+      shipName: '코리아 (덕적)',
+      itemDetails: '부식 15 (덕적고)',
+      amount: 220000,
+      paymentType: '입금',
+      memo: '계좌이체 완료'
+    },
+    {
+      id: 3,
+      date: '2026-07-26',
+      shipName: '프린세스 (연평)',
+      itemDetails: '어구 팔레트 3통',
+      amount: 350000,
+      paymentType: '후불',
+      memo: '월말 일괄 청구'
+    }
+  ]);
 
   // 현재 로그인한 사용자 정보
   const loggedInUser = ref<any>(null);
@@ -176,6 +218,25 @@ export const useUserStore = defineStore( "user", () => {
       const { data: dbDuesExp, error: errDuesExp } = await supabase.from("dues_expenses").select("*").order("id", { ascending: true });
       if (dbDuesExp) {
         duesExpenses.value = dbDuesExp;
+      }
+
+      // 7. 객선 장부 데이터 조회
+      try {
+        const { data: dbLedgers } = await supabase.from("ship_ledgers").select("*").order("id", { ascending: false });
+        if (dbLedgers && dbLedgers.length > 0) {
+          shipLedgers.value = dbLedgers.map(l => ({
+            id: l.id,
+            date: l.date,
+            shipName: l.ship_name,
+            itemDetails: l.item_details,
+            amount: l.amount,
+            paymentType: l.payment_type,
+            memo: l.memo || "",
+            createdAt: l.created_at
+          }));
+        }
+      } catch (e) {
+        console.warn("ship_ledgers load warning", e);
       }
 
       // 로그인 세션 정보 복구 매핑
@@ -718,6 +779,76 @@ export const useUserStore = defineStore( "user", () => {
     return res;
   };
 
+  // 객선 장부 단건 추가
+  const addShipLedger = async (ledger: Omit<ShipLedgerItem, "id">) => {
+    const supabase = getSupabase();
+    const newId = Date.now();
+    const newItem: ShipLedgerItem = { ...ledger, id: newId };
+    shipLedgers.value.unshift(newItem);
+
+    if (supabase) {
+      try {
+        const { data } = await supabase.from("ship_ledgers").insert([{
+          date: ledger.date,
+          ship_name: ledger.shipName,
+          item_details: ledger.itemDetails,
+          amount: ledger.amount,
+          payment_type: ledger.paymentType,
+          memo: ledger.memo || ""
+        }]).select();
+        if (data && data[0]) {
+          newItem.id = data[0].id;
+        }
+      } catch (e) {
+        console.error("addShipLedger failed", e);
+      }
+    }
+  };
+
+  // 객선 장부 단건 수정
+  const updateShipLedger = async (ledger: ShipLedgerItem) => {
+    const supabase = getSupabase();
+    const idx = shipLedgers.value.findIndex(l => l.id === ledger.id);
+    if (idx !== -1) {
+      shipLedgers.value[idx] = { ...ledger };
+      if (supabase && ledger.id) {
+        try {
+          await supabase.from("ship_ledgers").update({
+            date: ledger.date,
+            ship_name: ledger.shipName,
+            item_details: ledger.itemDetails,
+            amount: ledger.amount,
+            payment_type: ledger.paymentType,
+            memo: ledger.memo || ""
+          }).eq("id", ledger.id);
+        } catch (e) {
+          console.error("updateShipLedger failed", e);
+        }
+      }
+    }
+  };
+
+  // 객선 장부 단건 삭제
+  const deleteShipLedger = async (id: number) => {
+    const supabase = getSupabase();
+    shipLedgers.value = shipLedgers.value.filter(l => l.id !== id);
+    if (supabase) {
+      try {
+        await supabase.from("ship_ledgers").delete().eq("id", id);
+      } catch (e) {
+        console.error("deleteShipLedger failed", e);
+      }
+    }
+  };
+
+  // 객선 장부 다건 일괄 저장 (연속 엑셀식 입력용)
+  const saveBatchShipLedgers = async (items: Omit<ShipLedgerItem, "id">[]) => {
+    if (items.length === 0) return;
+    for (const item of items) {
+      await addShipLedger(item);
+    }
+  };
+
   const getSupabaseInstance = () => {
     return getSupabase();
   };
@@ -746,6 +877,11 @@ export const useUserStore = defineStore( "user", () => {
     notices,
     dues,
     duesExpenses,
+    shipLedgers,
+    addShipLedger,
+    updateShipLedger,
+    deleteShipLedger,
+    saveBatchShipLedgers,
     saveDueAction,
     deleteDueAction,
     saveExpenseAction,
