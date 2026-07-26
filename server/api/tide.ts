@@ -1,4 +1,5 @@
 import { defineEventHandler, getQuery } from 'h3';
+import { XMLParser } from 'fast-xml-parser';
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -20,33 +21,24 @@ export default defineEventHandler(async (event) => {
       serviceKey: serviceKey,
       pageNo: '1',
       numOfRows: '100',
-      dataType: 'JSON',
+      dataType: 'XML', // API returns XML
       obsCode: obsCode,
       reqDate: reqDate
     });
 
-    const response = await fetch(`${baseUrl}?${params.toString()}`, {
-      headers: {
-        'Accept': 'application/json, text/plain, */*'
-      }
-    });
+    const response = await fetch(`${baseUrl}?${params.toString()}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error status: ${response.status}`);
     }
 
-    const text = await response.text();
-    let data: any = null;
-
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.warn("Tide API Non-JSON text", text.slice(0, 200));
-    }
+    const xmlData = await response.text();
+    const parser = new XMLParser();
+    const jsonObj = parser.parse(xmlData);
 
     return {
       success: true,
-      data: data,
+      data: jsonObj, // Return parsed JSON object
       reqDate,
       obsCode
     };
