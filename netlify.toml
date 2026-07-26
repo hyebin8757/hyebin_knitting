@@ -1,6 +1,6 @@
 [build]
 command = "yarn install && yarn generate"
-publish = ".output/public"
+publish = "dist"
 functions = "netlify/functions"
 
 [context.production.environment]
