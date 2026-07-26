@@ -70,17 +70,14 @@ const degToWindDir = (deg: number): string => {
 const fetchWeatherData = async () => {
   isLoading.value = true;
   try {
-    // 1. 기상청 초단기실황 (Netlify Function 프록시)
-    const [kmaRes, marineRes] = await Promise.allSettled([
-      fetch('/.netlify/functions/weather').then(r => r.json()),
-      fetch('https://marine-api.open-meteo.com/v1/marine?latitude=37.47&longitude=126.62&current=wave_height&hourly=wave_height&forecast_days=1&timezone=Asia%2FSeoul').then(r => r.json()),
-    ]);
+    // 기상청 초단기실황 단독 호출 (WAV 포함)
+    const kmaRes = await fetch('/.netlify/functions/weather').then(r => r.json()).catch(() => null);
 
     // --- 기상청 실측 파싱 ---
-    if (kmaRes.status === 'fulfilled' && kmaRes.value?.success) {
-      const data = kmaRes.value;
+    if (kmaRes?.success) {
+      const data = kmaRes;
 
-      // 초단기실황 (ncst): 기온 T1H, 습도 REH, 풍속 WSD, 풍향 VEC, 강수량 RN1, 강수형태 PTY
+      // 초단기실황 (ncst): T1H 기온, REH 습도, WSD 풍속, VEC 풍향, WAV 파고, PTY 강수형태
       const ncstItems: any[] = data.ncst?.response?.body?.items?.item ?? [];
       ncstItems.forEach((it: any) => {
         const val = parseFloat(it.obsrValue);
@@ -99,6 +96,15 @@ const fetchWeatherData = async () => {
             break;
           case 'VEC': // 풍향 (°)
             if (!isNaN(val)) currentWeather.value.windDirection = degToWindDir(val);
+            break;
+          case 'WAV': // 해면파고 (m) - 기상청 실측
+            if (!isNaN(val) && val >= 0) {
+              currentWeather.value.waveHeight = `${val.toFixed(1)} m`;
+              if (val < 0.5) currentWeather.value.waveStatus = '잔잔함 (안전)';
+              else if (val < 1.0) currentWeather.value.waveStatus = '약간 있음 (주의)';
+              else if (val < 2.0) currentWeather.value.waveStatus = '보통 (주의)';
+              else currentWeather.value.waveStatus = '높음 ⚠️ (결항 위험)';
+            }
             break;
           case 'PTY': // 강수형태 (0=없음, 1=비, 2=비/눈, 3=눈, 4=소나기)
             if (val === 1 || val === 4) {
@@ -185,33 +191,6 @@ const fetchWeatherData = async () => {
       }
     }
 
-    // --- 해상 파고 파싱 (Open-Meteo Marine) ---
-    if (marineRes.status === 'fulfilled') {
-      const m = marineRes.value;
-      const waveM = m.current?.wave_height ?? null;
-      if (waveM != null) {
-        const wv = Math.round(waveM * 10) / 10;
-        currentWeather.value.waveHeight = `${wv.toFixed(1)} m`;
-        if (wv < 0.5) currentWeather.value.waveStatus = '잔잔함 (안전)';
-        else if (wv < 1.0) currentWeather.value.waveStatus = '약간 있음 (주의)';
-        else if (wv < 2.0) currentWeather.value.waveStatus = '보통 (주의)';
-        else currentWeather.value.waveStatus = '높음 ⚠️ (결항 위험)';
-
-        // 시간별 예보에 파고 주입
-        const hTimes: string[] = m.hourly?.time ?? [];
-        const hWaves: number[] = m.hourly?.wave_height ?? [];
-        hourlyForecasts.value = hourlyForecasts.value.map(fc => {
-          const matchIdx = hTimes.findIndex(t => {
-            const d = new Date(t);
-            return fc.time.includes(String(d.getHours()).padStart(2,'0') + ':00');
-          });
-          if (matchIdx >= 0 && hWaves[matchIdx] != null) {
-            return { ...fc, waveHeight: `${(Math.round(hWaves[matchIdx] * 10) / 10).toFixed(1)} m` };
-          }
-          return fc;
-        });
-      }
-    }
 
   } catch (e: any) {
     console.warn('날씨 API 호출 실패:', e.message);
@@ -285,7 +264,7 @@ onMounted(() => {
       </div>
       <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; flex-wrap: wrap; gap: 0.6rem;">
         <p style="font-size: 1.2rem; color: rgba(255,255,255,0.6); margin-bottom: 0;">
-          기상청 초단기실황 실측 연동 · 인천항 연안부두 (NX:55, NY:124) · 파고: Open-Meteo Marine
+          기상청 초단기실황 실측 연동 · 인천항 연안부두 (NX:55, NY:124) · 기온/풍속/파고 전체 실측
         </p>
         <span v-if="lastUpdatedTime" style="font-size: 1.1rem; color: rgba(255,255,255,0.4);">
           최종 갱신: {{ lastUpdatedTime }}
