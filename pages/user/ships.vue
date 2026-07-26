@@ -127,7 +127,7 @@ const getETACountdownStr = (etaStr?: string, status?: string) => {
   if (!etaStr) return null;
   
   if (status === '접안중') {
-    return '현재 인천항 부두 접안중';
+    return '현재 인천항 부두 접안 완료';
   }
 
   try {
@@ -153,7 +153,7 @@ const getETACountdownStr = (etaStr?: string, status?: string) => {
 
     const diffMs = etaDate.getTime() - now.getTime();
     if (diffMs <= 0) {
-      return '인천항 입항 완료 / 접안 진행중';
+      return '인천항 입항 완료 / 접안 대기중';
     }
 
     const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -161,9 +161,9 @@ const getETACountdownStr = (etaStr?: string, status?: string) => {
     const mins = diffMins % 60;
 
     if (hours > 0) {
-      return `🚢 해상 실시간 운항중 · 인천항 도착까지 약 ${hours}시간 ${mins}분 남음`;
+      return `약 ${hours}시간 ${mins}분 후 인천항 도착 예정`;
     }
-    return `🚢 해상 실시간 운항중 · 인천항 도착까지 약 ${mins}분 남음`;
+    return `약 ${mins}분 후 인천항 도착 예정`;
   } catch (e) {
     return null;
   }
@@ -949,32 +949,35 @@ onBeforeUnmount(() => {
         </div>
 
         <div style="padding-top: 1.2rem;">
-          <!-- AIS 상태 미니 헤더 -->
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; background: rgba(26, 209, 177, 0.1); border: 1px solid rgba(26, 209, 177, 0.3); padding: 0.6rem 1rem; border-radius: 0.8rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; color: #1ad1b1; font-size: 1.2rem; font-weight: 700;">
-              <i class="material-icons" style="font-size: 1.6rem;">radar</i>
-              <span>VesselFinder 실시간 위성 AIS 연동중</span>
+          <!-- 🛰️ 통합 실시간 위성 관제 & 도착 상태 카드 -->
+          <div style="background: linear-gradient(135deg, rgba(26, 209, 177, 0.08) 0%, rgba(58, 134, 255, 0.08) 100%); border: 1px solid rgba(26, 209, 177, 0.25); border-radius: 1rem; padding: 0.85rem 1.1rem; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 0.45rem; color: #1ad1b1; font-size: 1.25rem; font-weight: 700;">
+                <i class="material-icons" style="font-size: 1.65rem;">radar</i>
+                <span>위성 AIS 실시간 관제중</span>
+              </div>
+              <span 
+                style="font-size: 1.15rem; font-weight: 800; padding: 0.25rem 0.75rem; border-radius: 0.5rem; display: inline-flex; align-items: center; gap: 0.3rem;" 
+                :style="{
+                  background: selectedShipForMap?.status === '입항예정' ? 'rgba(26, 209, 177, 0.2)' : 'rgba(136, 197, 255, 0.15)',
+                  color: selectedShipForMap?.status === '입항예정' ? '#1ad1b1' : '#88c5ff',
+                  border: '1px solid ' + (selectedShipForMap?.status === '입항예정' ? '#1ad1b1' : 'rgba(136, 197, 255, 0.3)')
+                }"
+                v-if="selectedShipForMap?.status"
+              >
+                {{ selectedShipForMap.status === '입항예정' ? '🚢 실시간 운항중' : selectedShipForMap.status }}
+              </span>
             </div>
-            <span 
-              style="font-size: 1.15rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 0.4rem;" 
-              :style="{
-                background: selectedShipForMap?.status === '입항예정' ? 'rgba(26, 209, 177, 0.2)' : 'rgba(136, 197, 255, 0.15)',
-                color: selectedShipForMap?.status === '입항예정' ? '#1ad1b1' : '#88c5ff',
-                border: '1px solid ' + (selectedShipForMap?.status === '입항예정' ? '#1ad1b1' : 'rgba(136, 197, 255, 0.3)')
-              }"
-              v-if="selectedShipForMap?.status"
-            >
-              {{ selectedShipForMap.status === '입항예정' ? '🚢 실시간 운항중' : selectedShipForMap.status }}
-            </span>
-          </div>
 
-          <!-- 인천항 도착 예상 카운트다운 스마트 뱃지 -->
-          <div 
-            v-if="getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status)"
-            style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; background: rgba(58, 134, 255, 0.15); border: 1px solid rgba(136, 197, 255, 0.35); padding: 0.7rem 1rem; border-radius: 0.8rem; color: #88c5ff; font-size: 1.25rem; font-weight: 800;"
-          >
-            <i class="material-icons" style="font-size: 1.8rem; color: #1ad1b1;">schedule</i>
-            <span>{{ getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status) }} (ETA: {{ selectedShipForMap?.eta }})</span>
+            <!-- 도착 카운트다운 텍스트 -->
+            <div 
+              v-if="getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status)"
+              style="display: flex; align-items: center; gap: 0.45rem; color: #88c5ff; font-size: 1.2rem; font-weight: 700; margin-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 0.5rem;"
+            >
+              <i class="material-icons" style="font-size: 1.55rem; color: #1ad1b1;">schedule</i>
+              <span>{{ getETACountdownStr(selectedShipForMap?.eta, selectedShipForMap?.status) }}</span>
+              <span style="font-size: 1.1rem; color: rgba(255,255,255,0.45); font-weight: 500; margin-left: auto;" v-if="selectedShipForMap?.eta">ETA: {{ selectedShipForMap.eta }}</span>
+            </div>
           </div>
 
           <!-- VesselFinder Iframe -->
