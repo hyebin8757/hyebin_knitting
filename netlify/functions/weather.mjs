@@ -10,16 +10,15 @@ export const handler = async () => {
   const NX = '55';
   const NY = '124';
 
-  // base_date / base_time 계산 (기상청 초단기실황 매시 30분 이후 발표)
+  // base_date / base_time 계산 (기상청 초단기실황/예보 매시 45분 발표)
   const now = new Date();
-  // UTC+9 보정
   const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
   let hour = kst.getUTCHours();
   const minute = kst.getUTCMinutes();
-  const calcDate = new Date(kst);
+  const calcDate = new Date(kst.getTime());
 
-  // 정시 기준 30분 이전이면 이전 시각 데이터 사용
-  if (minute < 30) {
+  // 정시 기준 45분 이전이면 이전 시각 데이터 사용
+  if (minute < 45) {
     hour = hour - 1;
     if (hour < 0) {
       hour = 23;

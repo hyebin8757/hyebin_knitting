@@ -46,7 +46,7 @@ export const UserLayoutStyle = {
     height: 6rem;
 
     @media (max-width: 360px) {
-      padding: 1.2rem 1.2rem;
+      padding: 1rem 0.8rem;
     }
 
     .header-logo {
@@ -59,8 +59,9 @@ export const UserLayoutStyle = {
       gap: 0.8rem;
 
       @media (max-width: 360px) {
-        font-size: 1.5rem;
-        gap: 0.4rem;
+        font-size: 1.35rem;
+        gap: 0.3rem;
+        white-space: nowrap;
       }
 
       .logo-badge {
@@ -72,8 +73,8 @@ export const UserLayoutStyle = {
         color: var(--white-color);
 
         @media (max-width: 360px) {
-          font-size: 0.9rem;
-          padding: 0.15rem 0.4rem;
+          font-size: 0.85rem;
+          padding: 0.15rem 0.35rem;
         }
       }
     }
@@ -85,12 +86,21 @@ export const UserLayoutStyle = {
       color: var(--text-color-3);
 
       @media (max-width: 360px) {
-        font-size: 1.15rem;
+        font-size: 1.1rem;
+        gap: 0.3rem;
       }
 
       strong {
         color: var(--white-color);
         font-weight: 600;
+      }
+
+      .header-user-btn {
+        @media (max-width: 360px) {
+          padding: 0.35rem 0.6rem !important;
+          gap: 0.3rem !important;
+          border-radius: 0.6rem !important;
+        }
       }
     }
   `,
@@ -138,13 +148,14 @@ export const UserLayoutStyle = {
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       cursor: pointer;
+      padding: 0.2rem 0;
 
       i {
         font-size: 1.7rem;
         transition: transform 0.3s ease;
 
         @media (max-width: 360px) {
-          font-size: 1.45rem;
+          font-size: 1.35rem;
         }
       }
 
@@ -154,8 +165,8 @@ export const UserLayoutStyle = {
         white-space: nowrap;
 
         @media (max-width: 360px) {
-          font-size: 0.82rem;
-          letter-spacing: -0.04rem;
+          font-size: 0.78rem;
+          letter-spacing: -0.05rem;
         }
       }
 
@@ -202,7 +213,7 @@ export const UserLayoutStyle = {
           box-shadow: 0 0 8px rgba(26, 209, 177, 0.6);
 
           @media (max-width: 360px) {
-            width: 24px;
+            width: 20px;
           }
         }
       }

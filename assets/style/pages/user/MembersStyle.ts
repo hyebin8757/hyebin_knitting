@@ -7,7 +7,7 @@ export const MembersStyle = {
     color: var(--white-color);
 
     @media (max-width: 360px) {
-      padding: 1.2rem;
+      padding: 1rem 0.8rem;
     }
   `,
 

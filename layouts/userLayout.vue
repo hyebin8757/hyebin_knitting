@@ -70,6 +70,7 @@ onBeforeUnmount(() => {
           <div class="header-user">
             <nuxt-link 
               to="/user/mypage" 
+              class="header-user-btn"
               style="
                 display: flex;
                 align-items: center;

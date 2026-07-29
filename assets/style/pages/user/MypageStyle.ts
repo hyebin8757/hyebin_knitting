@@ -8,6 +8,11 @@ export const MypageStyle = {
     display: flex;
     flex-direction: column;
     gap: 2.4rem;
+
+    @media (max-width: 360px) {
+      padding: 1rem 0.8rem;
+      gap: 1.6rem;
+    }
   `,
 
   ProfileHeaderCard : css`

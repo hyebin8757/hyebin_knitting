@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { definePageMeta } from '~/.nuxt/imports';
 
 interface ShipItem {
@@ -27,10 +27,8 @@ const selectedTerminalFilter = ref<string>('all'); // 터미널/부두 필터
 const viewMode = ref<'list_only' | 'map_only'>('list_only');
 const isLoading = ref(false);
 
-// 실시간 자동 갱신 타이머 상태
+// 실시간 갱신 시각 상태
 const lastUpdatedTime = ref<string>('');
-const countdownSeconds = ref<number>(60);
-let timerId: any = null;
 
 const updateLastTime = () => {
   const now = new Date();
@@ -38,19 +36,6 @@ const updateLastTime = () => {
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
   lastUpdatedTime.value = `${hours}:${minutes}:${seconds}`;
-};
-
-const startAutoPolling = () => {
-  if (timerId) clearInterval(timerId);
-  countdownSeconds.value = 60;
-
-  timerId = setInterval(() => {
-    countdownSeconds.value -= 1;
-    if (countdownSeconds.value <= 0) {
-      fetchShipsData();
-      countdownSeconds.value = 60;
-    }
-  }, 1000);
 };
 
 // 한글 선박 상세 팝업 모달 상태
@@ -565,7 +550,6 @@ const handleManualRefresh = async () => {
   isRefreshing.value = true;
 
   await Promise.allSettled([fetchShipsData(), fetchTideData()]);
-  startAutoPolling();
 
   toastMessage.value = '인천항 실시간 운항 정보 및 물때 정보가 갱신되었습니다.';
   showRefreshToast.value = true;
@@ -579,22 +563,17 @@ const handleManualRefresh = async () => {
 onMounted(() => {
   fetchShipsData();
   fetchTideData();
-  startAutoPolling();
-});
-
-onBeforeUnmount(() => {
-  if (timerId) clearInterval(timerId);
 });
 </script>
 
 <template>
   <div class="ships-page" style="padding: 1.6rem; color: #ffffff;">
     <!-- Page Header Title Card -->
-    <div style="background: rgba(13, 30, 51, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; padding: 1.8rem; margin-bottom: 1.6rem; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 0.8rem;">
-          <i class="material-icons" style="font-size: 2.4rem; color: #88c5ff;">directions_boat</i>
-          <span style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.05rem;">인천항 전체 선박 운항 정보</span>
+    <div class="page-title-card" style="background: rgba(13, 30, 51, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.6rem; padding: 1.8rem; margin-bottom: 1.6rem; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;">
+        <div style="display: flex; align-items: center; gap: 0.6rem; min-width: 0;">
+          <i class="material-icons" style="font-size: 2.2rem; color: #88c5ff; flex-shrink: 0;">directions_boat</i>
+          <span class="page-title-text" style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">인천항 전체 선박 운항 정보</span>
         </div>
         <button 
           class="refresh-btn"
@@ -612,22 +591,17 @@ onBeforeUnmount(() => {
       </div>
       <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; flex-wrap: wrap; gap: 0.6rem;">
         <p style="font-size: 1.2rem; color: rgba(255,255,255,0.6); margin-bottom: 0; line-height: 1.5;">
-          공공데이터포털 연동 인천항 전체 선박(연안여객/국제/화물) 실시간 입출항 정보입니다.
+          공공데이터포털 연동 인천항 전체 선박(연안여객/국제/화물) 입출항 정보입니다.
         </p>
-        <div style="display: flex; align-items: center; gap: 0.8rem;">
-          <span style="font-size: 1.15rem; color: #1ad1b1; background: rgba(26, 209, 177, 0.12); border: 1px solid rgba(26, 209, 177, 0.3); border-radius: 0.6rem; padding: 0.2rem 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">
-            <span style="width: 8px; height: 8px; border-radius: 50%; background: #1ad1b1; display: inline-block;"></span>
-            자동 갱신 중 ({{ countdownSeconds }}초 후)
-          </span>
-          <span v-if="lastUpdatedTime" style="font-size: 1.1rem; color: rgba(255,255,255,0.4);">
-            최종 갱신: {{ lastUpdatedTime }}
-          </span>
-        </div>
+        <span v-if="lastUpdatedTime" style="font-size: 1.1rem; color: rgba(255,255,255,0.4);">
+          최종 갱신: {{ lastUpdatedTime }}
+        </span>
       </div>
     </div>
 
     <!-- 🌊 인천항 실시간 조석예보 물때 (만조/간조) 카드 컴포넌트 -->
     <div
+      class="tide-card-container"
       style="
         background: linear-gradient(145deg, #091728 0%, #0d223a 100%);
         border: 1px solid rgba(136, 197, 255, 0.25);
@@ -653,9 +627,10 @@ onBeforeUnmount(() => {
         <!-- ⏳ 다음 물때 남은시간 알림 네온 카드 (Full-width) -->
         <div 
           v-if="tideInfoSummary.nextTide"
-          style="display: flex; align-items: center; justify-content: center; gap: 0.8rem; background: linear-gradient(135deg, rgba(26, 209, 177, 0.18) 0%, rgba(21, 60, 108, 0.3) 100%); border: 1px solid rgba(26, 209, 177, 0.4); padding: 0.7rem 1.2rem; border-radius: 1.2rem; box-shadow: 0 4px 14px rgba(26, 209, 177, 0.15);"
+          class="next-tide-banner"
+          style="display: flex; align-items: center; justify-content: center; gap: 0.6rem; background: linear-gradient(135deg, rgba(26, 209, 177, 0.18) 0%, rgba(21, 60, 108, 0.3) 100%); border: 1px solid rgba(26, 209, 177, 0.4); padding: 0.7rem 1.2rem; border-radius: 1.2rem; box-shadow: 0 4px 14px rgba(26, 209, 177, 0.15);"
         >
-          <span style="width: 10px; height: 10px; border-radius: 50%; background: #1ad1b1; box-shadow: 0 0 10px #1ad1b1; display: inline-block; flex-shrink: 0;"></span>
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #1ad1b1; box-shadow: 0 0 10px #1ad1b1; display: inline-block; flex-shrink: 0;"></span>
           <span style="font-size: 1.3rem; font-weight: 800; color: #1ad1b1; text-align: center;">
             다음 {{ tideInfoSummary.nextTide.tideType }}({{ tideInfoSummary.nextTide.time }})까지 <span style="color: #ffffff; text-decoration: underline;">{{ tideInfoSummary.timeRemainingStr }}</span>
           </span>
@@ -663,17 +638,18 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- 만조(고조) / 간조(저조) 타임라인 칩 4개 및 수위 Hydro Gauge -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.8rem;">
+      <div class="tide-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.8rem;">
         <div
           v-for="(tide, idx) in tideList"
           :key="idx"
+          class="tide-card-item"
           style="
             background: rgba(255, 255, 255, 0.03);
             border-radius: 1.4rem;
-            padding: 1.4rem;
+            padding: 1.2rem 1.1rem;
             display: flex;
             flex-direction: column;
-            gap: 0.8rem;
+            gap: 0.6rem;
             position: relative;
             overflow: hidden;
             transition: all 0.25s ease;
@@ -692,16 +668,18 @@ onBeforeUnmount(() => {
             }"
           ></div>
 
-          <div style="display: flex; align-items: center; justify-content: space-between; z-index: 1;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.2rem; z-index: 1;">
             <span
-              style="font-size: 1.3rem; font-weight: 900; display: flex; align-items: center; gap: 0.4rem;"
+              class="tide-label-text"
+              style="font-size: 1.25rem; font-weight: 900; display: flex; align-items: center; gap: 0.3rem; white-space: nowrap;"
               :style="{ color: tide.tideType === '고조' ? '#88c5ff' : '#ff5c8d' }"
             >
-              <i class="material-icons" style="font-size: 1.6rem;">{{ tide.tideType === '고조' ? 'arrow_upward' : 'arrow_downward' }}</i>
+              <i class="material-icons tide-icon" style="font-size: 1.5rem;">{{ tide.tideType === '고조' ? 'arrow_upward' : 'arrow_downward' }}</i>
               <span>{{ tide.tideType === '고조' ? '만조 (고조)' : '간조 (저조)' }}</span>
             </span>
             <span 
-              style="font-size: 1.1rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 0.6rem;"
+              class="tide-step-badge"
+              style="font-size: 1.05rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 0.5rem; flex-shrink: 0; white-space: nowrap;"
               :style="{
                 background: tide.tideType === '고조' ? 'rgba(58, 134, 255, 0.25)' : 'rgba(255, 0, 110, 0.25)',
                 color: tide.tideType === '고조' ? '#88c5ff' : '#ff5c8d',
@@ -713,16 +691,16 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- 시간표시 -->
-          <div style="font-size: 2rem; font-weight: 900; color: #ffffff; letter-spacing: -0.04rem; margin-top: 0.2rem; z-index: 1;">
+          <div style="font-size: 1.85rem; font-weight: 900; color: #ffffff; letter-spacing: -0.04rem; margin-top: 0.1rem; z-index: 1;">
             {{ tide.time }}
           </div>
 
           <!-- 조위 cm 및 게이지 라인 -->
           <div style="margin-top: auto; z-index: 1;">
             <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.4rem;">
-              <span style="font-size: 1.1rem; color: rgba(255,255,255,0.6);">조위 수위</span>
-              <span style="font-size: 1.45rem; font-weight: 900;" :style="{ color: tide.tideType === '고조' ? '#1ad1b1' : '#ffb703' }">
-                {{ tide.tideHeight.toLocaleString() }} <span style="font-size: 1.05rem; font-weight: 600; color: rgba(255,255,255,0.7);">cm</span>
+              <span style="font-size: 1.05rem; color: rgba(255,255,255,0.6);">조위 수위</span>
+              <span style="font-size: 1.35rem; font-weight: 900;" :style="{ color: tide.tideType === '고조' ? '#1ad1b1' : '#ffb703' }">
+                {{ tide.tideHeight.toLocaleString() }} <span style="font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.7);">cm</span>
               </span>
             </div>
 
@@ -952,45 +930,9 @@ onBeforeUnmount(() => {
             <i class="material-icons" style="font-size: 1.8rem;">close</i>
           </button>
         </div>
-
         <div style="padding-top: 1rem;">
-          <!-- 🛰️ 통합 실시간 위성 관제 & 도착 상태 카드 (모바일 340px 대응) -->
-          <div style="background: linear-gradient(135deg, rgba(13, 30, 51, 0.95) 0%, rgba(26, 209, 177, 0.12) 100%); border: 1px solid rgba(26, 209, 177, 0.35); border-radius: 1.2rem; padding: 0.8rem 1rem; margin-bottom: 1rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);">
-            <!-- Row 1: AIS Status Tag & Navigation Status Badge -->
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem;">
-              <div style="display: flex; align-items: center; gap: 0.4rem; color: #1ad1b1; font-size: 1.2rem; font-weight: 800; white-space: nowrap;">
-                <i class="material-icons" style="font-size: 1.6rem;">radar</i>
-                <span>위성 AIS 실시간 관제중</span>
-              </div>
-              <span 
-                style="font-size: 1.1rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 0.6rem; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; flex-shrink: 0;" 
-                :style="{
-                  background: (selectedShipForMap && getShipEffectiveStatus(selectedShipForMap) === '접안중') ? 'rgba(26, 209, 177, 0.25)' : 'rgba(136, 197, 255, 0.2)',
-                  color: (selectedShipForMap && getShipEffectiveStatus(selectedShipForMap) === '접안중') ? '#1ad1b1' : '#88c5ff',
-                  border: '1px solid ' + ((selectedShipForMap && getShipEffectiveStatus(selectedShipForMap) === '접안중') ? '#1ad1b1' : '#88c5ff')
-                }"
-                v-if="selectedShipForMap"
-              >
-                {{ (getShipEffectiveStatus(selectedShipForMap) === '접안중') ? '⚓ 인천항 접안 완료' : '🚢 실시간 운항중' }}
-              </span>
-            </div>
+          <!-- VesselFinder Iframe -->
 
-            <!-- Row 2: ETA Time & Countdown Info Box -->
-            <div 
-              v-if="selectedShipForMap && getETACountdownStr(selectedShipForMap.eta, getShipEffectiveStatus(selectedShipForMap))"
-              style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0.8rem; padding: 0.6rem 0.8rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem;"
-            >
-              <div style="display: flex; align-items: center; gap: 0.4rem; color: #ffffff; font-size: 1.15rem; font-weight: 700; white-space: nowrap; min-width: 0;">
-                <i class="material-icons" style="font-size: 1.5rem; color: #1ad1b1; flex-shrink: 0;">schedule</i>
-                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ getETACountdownStr(selectedShipForMap.eta, getShipEffectiveStatus(selectedShipForMap)) }}</span>
-              </div>
-              <span style="font-size: 1.05rem; color: #88c5ff; font-weight: 700; background: rgba(136, 197, 255, 0.15); padding: 0.15rem 0.5rem; border-radius: 0.4rem; white-space: nowrap; flex-shrink: 0;" v-if="selectedShipForMap?.eta">
-                ETA {{ selectedShipForMap.eta.includes(' ') ? selectedShipForMap.eta.split(' ').slice(1).join(' ') : selectedShipForMap.eta }}
-              </span>
-            </div>
-          </div>
-
-          <!-- VesselFinder Iframe (모달 닫힘 시 GPU/네트워크 메모리 즉시 해제 최적화) -->
           <div style="position: relative; width: 100%; height: 380px; border-radius: 1rem; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.12);">
             <iframe
               v-if="isShipMapModalOpen && selectedShipForMap"
@@ -1062,6 +1004,47 @@ onBeforeUnmount(() => {
   .refresh-btn {
     padding: 0.6rem 0.6rem !important;
     border-radius: 50% !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .ships-page {
+    padding: 0.8rem !important;
+  }
+  .page-title-card {
+    padding: 1.2rem !important;
+    margin-bottom: 1.2rem !important;
+  }
+  .page-title-text {
+    font-size: 1.45rem !important;
+  }
+  .tide-card-container {
+    padding: 1.2rem 0.9rem !important;
+    border-radius: 1.4rem !important;
+  }
+  .tide-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  .tide-card-item {
+    padding: 0.9rem 0.65rem !important;
+    gap: 0.4rem !important;
+    border-radius: 1rem !important;
+  }
+  .tide-label-text {
+    font-size: 1.05rem !important;
+    gap: 0.15rem !important;
+  }
+  .tide-icon {
+    font-size: 1.25rem !important;
+  }
+  .tide-step-badge {
+    font-size: 0.9rem !important;
+    padding: 0.1rem 0.35rem !important;
+  }
+  .next-tide-banner {
+    font-size: 1.15rem !important;
+    padding: 0.5rem 0.8rem !important;
   }
 }
 </style>

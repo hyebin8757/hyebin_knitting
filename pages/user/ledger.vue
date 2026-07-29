@@ -335,7 +335,7 @@ const submitBatchRows = async () => {
   }
 };
 
-// 📊 엑셀(XLSX) 다운로드 기능 구현
+// 📊 엑셀(XLSX) 다운로드 기능 구현 (선명별 가나다순 모아서 출력)
 const exportToExcel = () => {
   const listToExport = currentLedgerList.value;
 
@@ -344,8 +344,13 @@ const exportToExcel = () => {
     return;
   }
 
+  // 선명(shipName) 기준 한글 가나다순으로 정렬하여 엑셀에 모아서 출력
+  const sortedList = [...listToExport].sort((a, b) => {
+    return (a.shipName || '').localeCompare(b.shipName || '', 'ko-KR', { sensitivity: 'base' });
+  });
+
   // 엑셀 변환용 JSON 데이터 가공
-  const excelData = listToExport.map((item, idx) => ({
+  const excelData = sortedList.map((item, idx) => ({
     '연번': idx + 1,
     '날짜': item.date,
     '선명 및 상회': item.shipName,
@@ -847,12 +852,21 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   color: #ffffff;
+
+  @media (max-width: 360px) {
+    padding: 0.8rem !important;
+  }
 }
 
 /* 👑 스마트 대시보드 메인 헤더 카드 */
 .hero-header-card {
   background: linear-gradient(135deg, #0f2b48 0%, #0a1b2e 100%);
   border: 1px solid rgba(136, 197, 255, 0.25);
+
+  @media (max-width: 360px) {
+    padding: 1.1rem 0.9rem !important;
+    border-radius: 1.2rem !important;
+  }
   border-radius: 1.8rem;
   padding: 1.8rem;
   margin-bottom: 1.6rem;

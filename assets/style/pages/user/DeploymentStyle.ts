@@ -6,6 +6,10 @@ export const DeploymentStyle = {
   Default : css`
     padding: 2rem;
     color: var(--white-color);
+
+    @media (max-width: 360px) {
+      padding: 1rem 0.8rem;
+    }
   `,
 
   DashboardSummary : css`

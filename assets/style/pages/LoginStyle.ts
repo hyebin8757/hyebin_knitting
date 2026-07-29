@@ -25,6 +25,10 @@ export const LoginStyle = {
     position: relative;
     overflow: hidden;
     padding: 4rem 2rem;
+
+    @media (max-width: 360px) {
+      padding: 2rem 1.2rem;
+    }
   `,
 
   FormBg: css`
@@ -38,6 +42,10 @@ export const LoginStyle = {
     flex: 1;
     width: 100%;
     padding: 2rem;
+
+    @media (max-width: 360px) {
+      padding: 0.8rem;
+    }
   `,
 
   Title: css`
@@ -48,12 +56,21 @@ export const LoginStyle = {
     color: var(--white-color);
     letter-spacing: -0.05rem;
 
+    @media (max-width: 360px) {
+      font-size: 2.1rem;
+      margin-bottom: 2.4rem;
+    }
+
     span {
       display: block;
       margin-top: 0.8rem;
       font-size: 1.4rem;
       color: var(--primary-lighten-color-1);
       font-weight: 500;
+
+      @media (max-width: 360px) {
+        font-size: 1.2rem;
+      }
     }
   `,
 

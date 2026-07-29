@@ -4,8 +4,8 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const serviceKey = '8522336155cd0abd16545a726f3220de9735adc9ababdfc24c2972fbe66febc7';
   
-  // 인천항 연안부두 기상청 격자 좌표 (NX=54, NY=124)
-  const nx = '54';
+  // 인천항 연안부두 기상청 격자 좌표 (NX=55, NY=124)
+  const nx = '55';
   const ny = '124';
 
   const now = new Date();

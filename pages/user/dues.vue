@@ -1810,4 +1810,14 @@ definePageMeta({
     color: #1ad1b1;
   }
 }
+
+@media (max-width: 360px) {
+  .dues-page {
+    padding: 0.8rem !important;
+  }
+  .page-info-card, .summary-widget, .spreadsheet-card {
+    padding: 1rem 0.8rem !important;
+    border-radius: 1.2rem !important;
+  }
+}
 </style>

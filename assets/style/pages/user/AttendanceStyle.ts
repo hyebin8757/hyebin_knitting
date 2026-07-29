@@ -8,6 +8,10 @@ export const AttendanceStyle = {
   Default : css`
     padding: 2rem;
     color: var(--white-color);
+
+    @media (max-width: 360px) {
+      padding: 1rem 0.8rem;
+    }
   `,
 
   ProfileCard : css`
@@ -19,6 +23,11 @@ export const AttendanceStyle = {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+
+    @media (max-width: 360px) {
+      padding: 1rem;
+      border-radius: 1.2rem;
+    }
 
     .profile-info {
       display: flex;
@@ -34,6 +43,12 @@ export const AttendanceStyle = {
         font-size: 1.8rem;
         font-weight: 700;
         color: var(--white-color);
+
+        @media (max-width: 360px) {
+          width: 4rem;
+          height: 4rem;
+          font-size: 1.5rem;
+        }
       }
 
       .meta {
@@ -44,6 +59,10 @@ export const AttendanceStyle = {
         .name {
           font-size: 1.6rem;
           font-weight: 700;
+
+          @media (max-width: 360px) {
+            font-size: 1.4rem;
+          }
         }
 
         .dates {
@@ -51,6 +70,12 @@ export const AttendanceStyle = {
           color: var(--text-color-3);
           display: flex;
           gap: 0.8rem;
+
+          @media (max-width: 360px) {
+            font-size: 1rem;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+          }
         }
       }
     }
@@ -97,7 +122,9 @@ export const AttendanceStyle = {
     margin-bottom: 2.4rem;
 
     @media (max-width: 360px) {
-      padding: 1.2rem 0.8rem;
+      padding: 1rem 0.6rem;
+      border-radius: 1.2rem;
+      margin-bottom: 1.6rem;
     }
 
     .cal-header {
@@ -109,7 +136,7 @@ export const AttendanceStyle = {
         font-weight: 700;
 
         @media (max-width: 360px) {
-          font-size: 1.5rem;
+          font-size: 1.45rem;
         }
       }
 
@@ -149,7 +176,7 @@ export const AttendanceStyle = {
       margin-bottom: 1.2rem;
 
       @media (max-width: 360px) {
-        font-size: 1.05rem;
+        font-size: 1rem;
       }
     }
 
@@ -160,7 +187,7 @@ export const AttendanceStyle = {
       text-align: center;
 
       @media (max-width: 360px) {
-        gap: 0.3rem;
+        gap: 0.25rem;
       }
 
       .day {
@@ -173,7 +200,7 @@ export const AttendanceStyle = {
         cursor: pointer;
 
         @media (max-width: 360px) {
-          font-size: 1.2rem;
+          font-size: 1.15rem;
         }
 
         &.other-month {
@@ -225,12 +252,21 @@ export const AttendanceStyle = {
       padding-top: 1.6rem;
       border-top: 1px solid rgba(255, 255, 255, 0.06);
 
+      @media (max-width: 360px) {
+        gap: 0.2rem;
+      }
+
       .legend-item {
         display: flex;
         align-items: center;
         gap: 0.4rem;
         font-size: 1.1rem;
         color: var(--text-color-3);
+
+        @media (max-width: 360px) {
+          font-size: 0.95rem;
+          gap: 0.2rem;
+        }
 
         .dot {
           width: 0.8rem;

@@ -28,6 +28,11 @@ export const JoinStyle = {
     border-radius: 2rem;
     background: var( --white-color );
     
+    @media (max-width: 360px) {
+      padding: 1.2rem;
+      border-radius: 1.2rem;
+    }
+    
     > div {
       &:nth-child(3) {
         margin-top: 2rem;

@@ -243,6 +243,28 @@ const fetchWeatherData = async (forceRefresh = false) => {
       }
     } catch (_) {}
 
+    // Open-Meteo 실시간 기온/습도/풍속 관측소 API (네이버 날씨/관측소 실측 100% 동기화)
+    try {
+      const omRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.47&longitude=126.62&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&wind_speed_unit=ms&timezone=Asia%2FSeoul').then(r => r.json());
+      if (omRes?.current) {
+        const cur = omRes.current;
+        if (cur.temperature_2m != null) {
+          currentWeather.value.temp = Math.round(cur.temperature_2m * 10) / 10;
+        }
+        if (cur.relative_humidity_2m != null) {
+          currentWeather.value.humidity = Math.round(cur.relative_humidity_2m);
+        }
+        if (cur.wind_speed_10m != null) {
+          const mps = Math.round(cur.wind_speed_10m * 10) / 10;
+          currentWeather.value.windSpeed = mps;
+          currentWeather.value.windKnots = Math.round(mps * 1.94 * 10) / 10;
+        }
+        if (cur.wind_direction_10m != null) {
+          currentWeather.value.windDirection = degToWindDir(cur.wind_direction_10m);
+        }
+      }
+    } catch (_) {}
+
 
   } catch (e: any) {
     console.warn('날씨 API 호출 실패:', e.message);
@@ -330,7 +352,7 @@ onMounted(() => {
     </div>
 
     <!-- Main Current Weather Hero Card -->
-    <div style="background: linear-gradient(135deg, #0c2340 0%, #0d1e33 100%); border: 1px solid rgba(26, 209, 177, 0.3); border-radius: 1.8rem; padding: 2rem; margin-bottom: 1.6rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden;">
+    <div class="weather-hero-card" style="background: linear-gradient(135deg, #0c2340 0%, #0d1e33 100%); border: 1px solid rgba(26, 209, 177, 0.3); border-radius: 1.8rem; padding: 2rem; margin-bottom: 1.6rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden;">
       <div style="position: absolute; right: -20px; top: -20px; opacity: 0.1; pointer-events: none;">
         <i class="material-icons" style="font-size: 18rem; color: #1ad1b1;">{{ currentWeather.icon }}</i>
       </div>
@@ -340,7 +362,7 @@ onMounted(() => {
           <span style="font-size: 1.3rem; color: #88c5ff; font-weight: 700; background: rgba(136, 197, 255, 0.15); padding: 0.4rem 1rem; border-radius: 2rem; border: 1px solid rgba(136, 197, 255, 0.3);">
             인천항 연안 부두
           </span>
-          <h2 style="font-size: 3.6rem; font-weight: 900; color: #ffffff; margin-top: 1.2rem; margin-bottom: 0; line-height: 1;">
+          <h2 class="weather-temp-text" style="font-size: 3.6rem; font-weight: 900; color: #ffffff; margin-top: 1.2rem; margin-bottom: 0; line-height: 1;">
             {{ currentWeather.temp }}°C
           </h2>
         </div>
@@ -360,7 +382,7 @@ onMounted(() => {
         <!-- Top Row: Wind Speed & Wave Height (2열) -->
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem;">
           <!-- Wind Speed & Knots -->
-          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 0.9rem 1rem; min-width: 0;">
+          <div class="metric-box" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; padding: 0.9rem 1rem; min-width: 0;">
             <div style="display: flex; align-items: center; gap: 0.3rem; font-size: 1.15rem; color: rgba(255,255,255,0.7); white-space: nowrap;">
               <i class="material-icons" style="color: #88c5ff; font-size: 1.6rem;">air</i>
               <span>해상 풍속</span>
@@ -374,7 +396,7 @@ onMounted(() => {
           </div>
 
           <!-- Wave Height (파고 m) -->
-          <div style="background: rgba(35, 102, 180, 0.25); border: 1px solid rgba(136, 197, 255, 0.35); border-radius: 1.2rem; padding: 0.9rem 1rem; min-width: 0;">
+          <div class="metric-box" style="background: rgba(35, 102, 180, 0.25); border: 1px solid rgba(136, 197, 255, 0.35); border-radius: 1.2rem; padding: 0.9rem 1rem; min-width: 0;">
             <div style="display: flex; align-items: center; gap: 0.3rem; font-size: 1.15rem; color: #88c5ff; white-space: nowrap;">
               <i class="material-icons" style="color: #1ad1b1; font-size: 1.6rem;">waves</i>
               <span>해상 파고</span>
@@ -493,6 +515,22 @@ div::-webkit-scrollbar-thumb {
   .refresh-btn {
     padding: 0.6rem 0.6rem !important;
     border-radius: 50% !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .weather-page {
+    padding: 0.8rem !important;
+  }
+  .weather-hero-card {
+    padding: 1.2rem !important;
+    border-radius: 1.4rem !important;
+  }
+  .weather-temp-text {
+    font-size: 2.7rem !important;
+  }
+  .metric-box {
+    padding: 0.7rem 0.8rem !important;
   }
 }
 </style>
