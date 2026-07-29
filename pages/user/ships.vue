@@ -178,9 +178,9 @@ const getETACountdownStr = (etaStr?: string, status?: string) => {
 };
 
 // 현재 시각과 ETA를 비교하여 실제 운항/접안 상태 동적 감지
+// ⚠️ ship.status === '접안중'이어도 ETA 계산을 우선 적용 (하드코딩 오류 방지)
 const getShipEffectiveStatus = (ship: ShipItem): '접안중' | '입항예정' | '관제중' | string => {
-  if (ship.status === '접안중') return '접안중';
-  if (!ship.eta) return ship.status || '접안중';
+  if (!ship.eta) return '접안중';
 
   try {
     const now = new Date();
@@ -203,15 +203,22 @@ const getShipEffectiveStatus = (ship: ShipItem): '접안중' | '입항예정' | 
     if (isAM && hh === 12) hh = 0;
 
     const etaDate = new Date(y, m - 1, d, hh, mm);
-    if (etaDate && !isNaN(etaDate.getTime()) && etaDate <= now) {
-      return '접안중';
+    if (etaDate && !isNaN(etaDate.getTime())) {
+      // ETA가 지났으면 → 접안중
+      if (etaDate <= now) return '접안중';
+      // ETA까지 남은 시간이 2시간 이내 → 입항예정 (곧 도착)
+      const diffMs = etaDate.getTime() - now.getTime();
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      if (diffMins <= 120) return '입항예정';
     }
   } catch (_) {}
 
-  return ship.status || '접안중';
+  // ETA가 2시간 넘게 남은 경우 → 관제중 (운항 중)
+  return '관제중';
 };
 
-// 🛳️ 인천 임항 & 남항 백년해운 관련 선박 통합 리스트 (실시각 접안 상태 100% 정합)
+// 🛳️ 인천 임항 & 남항 백년해운 관련 선박 통합 리스트
+// status는 기본 '관제중'으로 설정 → getShipEffectiveStatus()가 ETA 기준으로 실시간 계산
 const shipList = ref<ShipItem[]>([
   {
     id: '1',
@@ -226,7 +233,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 연안여객터미널 1선석',
     agent: '고려고속훼리',
     grossTonnage: '1,600 톤',
-    status: '접안중'
+    status: '관제중'
   },
   {
     id: '2',
@@ -241,7 +248,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 연안여객터미널 2선석',
     agent: '고려고속훼리',
     grossTonnage: '530 톤',
-    status: '접안중'
+    status: '관제중'
   },
   {
     id: '3',
@@ -256,7 +263,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 연안여객터미널 3선석',
     agent: '고려고속훼리',
     grossTonnage: '4,100 톤',
-    status: '접안중'
+    status: '관제중'
   },
   {
     id: '4',
@@ -271,7 +278,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 임항부두 / 연안여객터미널 4선석',
     agent: '서해훼리',
     grossTonnage: '5,500 톤',
-    status: '접안중'
+    status: '관제중'
   },
   {
     id: '5',
@@ -286,7 +293,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 임항부두 3선석',
     agent: '미래해운',
     grossTonnage: '2,800 톤',
-    status: '접안중'
+    status: '관제중'
   },
   {
     id: '6',
@@ -301,7 +308,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 임항부두 2선석',
     agent: '미래해운',
     grossTonnage: '2,500 톤',
-    status: '접안중'
+    status: '관제중'
   },
   {
     id: '7',
@@ -316,7 +323,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 항만 1부두 12선석',
     agent: '미래해운',
     grossTonnage: '3,200 톤',
-    status: '접안중'
+    status: '관제중'
   },
   {
     id: '8',
@@ -331,7 +338,7 @@ const shipList = ref<ShipItem[]>([
     location: '인천 남항 백년해운 1부두',
     agent: '백령해운',
     grossTonnage: '3,800 톤',
-    status: '접안중'
+    status: '관제중'
   }
 ]);
 
@@ -825,16 +832,16 @@ onBeforeUnmount(() => {
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0;">
-              <!-- Status Badge -->
+              <!-- Status Badge: 접안중=녹색, 입항예정=파란색, 관제중(운항중)=주황색 -->
               <span
                 style="padding: 0.3rem 0.8rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;"
                 :style="{
-                  background: getShipEffectiveStatus(ship) === '접안중' ? 'rgba(26, 209, 177, 0.15)' : getShipEffectiveStatus(ship) === '입항예정' ? 'rgba(58, 134, 255, 0.15)' : 'rgba(255, 204, 0, 0.15)',
-                  color: getShipEffectiveStatus(ship) === '접안중' ? '#1ad1b1' : getShipEffectiveStatus(ship) === '입항예정' ? '#88c5ff' : '#ffcc00',
-                  border: '1px solid ' + (getShipEffectiveStatus(ship) === '접안중' ? '#1ad1b1' : getShipEffectiveStatus(ship) === '입항예정' ? '#88c5ff' : '#ffcc00')
+                  background: getShipEffectiveStatus(ship) === '접안중' ? 'rgba(26, 209, 177, 0.15)' : getShipEffectiveStatus(ship) === '입항예정' ? 'rgba(58, 134, 255, 0.15)' : 'rgba(255, 145, 0, 0.15)',
+                  color: getShipEffectiveStatus(ship) === '접안중' ? '#1ad1b1' : getShipEffectiveStatus(ship) === '입항예정' ? '#88c5ff' : '#ff9100',
+                  border: '1px solid ' + (getShipEffectiveStatus(ship) === '접안중' ? '#1ad1b1' : getShipEffectiveStatus(ship) === '입항예정' ? '#88c5ff' : '#ff9100')
                 }"
               >
-                {{ getShipEffectiveStatus(ship) }}
+                {{ getShipEffectiveStatus(ship) === '관제중' ? '🚢 운항중' : getShipEffectiveStatus(ship) === '접안중' ? '⚓ 접안중' : '🔵 입항예정' }}
               </span>
             </div>
           </div>
