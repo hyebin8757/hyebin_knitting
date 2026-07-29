@@ -83,37 +83,34 @@ const isCustomCancelConfirmOpen = ref(false);
 const cancelTargetType = ref<"self" | "admin_worker">("self");
 const cancelTargetName = ref("");
 
-// 로그인된 사용자의 출근 여부 동적 감지 (야간 근무 복구/해제 완벽 대응)
+// 로그인된 사용자의 실시간 오늘 출근 여부 동적 감지 (야간 근무 복구/해제 완벽 대응)
 const isCheckedIn = computed(() => {
   const currentName = userStore.loggedInUser?.name;
   if (!currentName) return false;
-  const worker = userStore.workers.find(w => w.name === currentName);
-  if (!worker || !worker.checkedIn) return false;
 
   const today = getFormattedDate(new Date());
   const todayRecord = userStore.attendanceRecords.find(
     r => r.worker_name === currentName && r.date === today
   );
 
-  // 1. 당일 출결 상태가 결근(absent)이거나 none이면 출근하지 않은 상태 (버튼 = 출근 등록)
-  if (todayRecord?.status === "absent" || todayRecord?.status === "none") return false;
-
-  // 2. 오늘 날짜에 직접적인 기록이 없는 경우
-  if (!todayRecord) {
-    // 어제가 야간 근무(night)였는지 확인
-    const yesterdayObj = new Date();
-    yesterdayObj.setDate(yesterdayObj.getDate() - 1);
-    const yesterdayStr = getFormattedDate(yesterdayObj);
-    const yesterdayRecord = userStore.attendanceRecords.find(
-      r => r.worker_name === currentName && r.date === yesterdayStr
-    );
-    // 어제가 야간 근무가 아니었다면 오늘 출근 안 한 상태
-    if (yesterdayRecord?.status !== "night") {
-      return false;
-    }
+  // 1. 오늘 직접 등록된 출결 기록이 있는 경우
+  if (todayRecord) {
+    return todayRecord.status === "day" || todayRecord.status === "night" || todayRecord.status === "field";
   }
 
-  return true;
+  // 2. 오늘 직접 기록이 없는 경우 -> 어제 야간 근무(night) 연결 여부 확인
+  const yesterdayObj = new Date();
+  yesterdayObj.setDate(yesterdayObj.getDate() - 1);
+  const yesterdayStr = getFormattedDate(yesterdayObj);
+  const yesterdayRecord = userStore.attendanceRecords.find(
+    r => r.worker_name === currentName && r.date === yesterdayStr
+  );
+
+  if (yesterdayRecord?.status === "night") {
+    return true;
+  }
+
+  return false;
 });
 
 // 로그인된 사용자의 출퇴근 기록 매핑
@@ -597,31 +594,22 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
       }
     }
     
-    // 오늘 날짜의 출결 상태 동기화 처리
+    await userStore.fetchAllData();
+
+    // 오늘 날짜의 DB 출결 상태 재동기화 처리 (과거/다른 날 야간 해제 시 오늘 상태 자동 복구)
     const todayStr = getFormattedDate(new Date());
-    
-    if (selectedCalendarDate.value === todayStr) {
-      if (status === "none" || status === "absent" || status === "leave") {
-        await supabase.from("workers").update({
-          checked_in: false,
-          status: "none",
-          location: ""
-        }).eq("name", name);
-      } else {
-        await supabase.from("workers").update({
-          checked_in: true,
-          status: status,
-          location: status === "field" ? "외근" : ""
-        }).eq("name", name);
-      }
-    } else if (nextDayStr === todayStr && status === "night") {
-      await supabase.from("workers").update({
-        checked_in: true,
-        status: "night",
-        location: ""
-      }).eq("name", name);
-    }
-    
+    const todayEffectiveCheckedIn = isCheckedIn.value;
+    const todayRecord = userStore.attendanceRecords.find(
+      r => r.worker_name === name && r.date === todayStr
+    );
+    const effectiveStatus = todayRecord ? todayRecord.status : (todayEffectiveCheckedIn ? "night" : "none");
+
+    await supabase.from("workers").update({
+      checked_in: todayEffectiveCheckedIn,
+      status: todayEffectiveCheckedIn ? (effectiveStatus === "none" ? "day" : effectiveStatus) : "none",
+      location: effectiveStatus === "field" ? "외근" : ""
+    }).eq("name", name);
+
     await userStore.fetchAllData();
     isDateStatusDialogOpen.value = false;
   } catch (e) {
