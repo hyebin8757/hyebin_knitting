@@ -819,61 +819,25 @@ onBeforeUnmount(() => {
           :key="ship.callSign"
           style="background: #0d1e33; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.4rem; padding: 1.6rem; transition: all 0.2s;"
         >
-          <!-- Header: Ship Name + Status -->
-          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
-            <div>
-              <div style="font-size: 1.55rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-                <span>{{ ship.shipName }}</span>
-                <span v-if="ship.shipType" style="font-size: 1.1rem; color: #88c5ff; background: rgba(136, 197, 255, 0.12); padding: 0.2rem 0.6rem; border-radius: 0.4rem; font-weight: 600;">
-                  {{ ship.shipType }}
-                </span>
-              </div>
-              <div v-if="ship.route" style="font-size: 1.25rem; color: #1ad1b1; margin-top: 0.4rem; font-weight: 700;">
-                🛣️ {{ ship.route }}
-              </div>
-              <div style="font-size: 1.2rem; color: rgba(255,255,255,0.6); margin-top: 0.2rem; font-weight: 600;">
-                <span v-if="ship.mmsi">MMSI: {{ ship.mmsi }} | </span>호출부호: {{ ship.callSign }} | 대리점: {{ ship.agent }}
-              </div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0;">
-              <!-- Status Badge: 접안중=녹색, 입항예정=파란색, 관제중(운항중)=주황색 -->
-              <span
-                style="padding: 0.3rem 0.8rem; border-radius: 0.6rem; font-size: 1.15rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;"
-                :style="{
-                  background: getShipEffectiveStatus(ship) === '접안중' ? 'rgba(26, 209, 177, 0.15)' : getShipEffectiveStatus(ship) === '입항예정' ? 'rgba(58, 134, 255, 0.15)' : 'rgba(255, 145, 0, 0.15)',
-                  color: getShipEffectiveStatus(ship) === '접안중' ? '#1ad1b1' : getShipEffectiveStatus(ship) === '입항예정' ? '#88c5ff' : '#ff9100',
-                  border: '1px solid ' + (getShipEffectiveStatus(ship) === '접안중' ? '#1ad1b1' : getShipEffectiveStatus(ship) === '입항예정' ? '#88c5ff' : '#ff9100')
-                }"
-              >
-                {{ getShipEffectiveStatus(ship) === '관제중' ? '🚢 운항중' : getShipEffectiveStatus(ship) === '접안중' ? '⚓ 접안중' : '🔵 입항예정' }}
+          <!-- Header: Ship Name -->
+          <div style="padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="font-size: 1.55rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+              <span>{{ ship.shipName }}</span>
+              <span v-if="ship.shipType" style="font-size: 1.1rem; color: #88c5ff; background: rgba(136, 197, 255, 0.12); padding: 0.2rem 0.6rem; border-radius: 0.4rem; font-weight: 600;">
+                {{ ship.shipType }}
               </span>
+            </div>
+            <div v-if="ship.route" style="font-size: 1.25rem; color: #1ad1b1; margin-top: 0.4rem; font-weight: 700;">
+              🛣️ {{ ship.route }}
+            </div>
+            <div style="font-size: 1.2rem; color: rgba(255,255,255,0.6); margin-top: 0.2rem; font-weight: 600;">
+              <span v-if="ship.mmsi">MMSI: {{ ship.mmsi }} | </span>호출부호: {{ ship.callSign }} | 대리점: {{ ship.agent }}
             </div>
           </div>
 
           <!-- Feature Description (특징) -->
           <div v-if="ship.feature" style="margin-top: 1rem; background: rgba(255,255,255,0.03); padding: 0.8rem 1rem; border-radius: 0.8rem; font-size: 1.2rem; color: rgba(255,255,255,0.8); line-height: 1.4;">
             💡 <strong>특징:</strong> {{ ship.feature }}
-          </div>
-
-          <!-- Details Info Grid -->
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-top: 1.2rem;">
-            <div style="background: rgba(255,255,255,0.03); padding: 0.7rem 0.8rem; border-radius: 0.8rem; min-width: 0;">
-              <div style="font-size: 1.05rem; color: rgba(255,255,255,0.5);">입항일시 (ETA)</div>
-              <div style="font-size: 1.2rem; font-weight: 700; color: #1ad1b1; margin-top: 0.2rem; word-break: break-all;">{{ ship.eta }}</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.03); padding: 0.7rem 0.8rem; border-radius: 0.8rem; min-width: 0;">
-              <div style="font-size: 1.05rem; color: rgba(255,255,255,0.5);">출항일시 (ETD)</div>
-              <div style="font-size: 1.2rem; font-weight: 700; color: #e05780; margin-top: 0.2rem; word-break: break-all;">{{ ship.etd }}</div>
-            </div>
-          </div>
-
-          <!-- Real-time 인천항 도착 카운트다운 뱃지 -->
-          <div 
-            v-if="getETACountdownStr(ship.eta, getShipEffectiveStatus(ship))"
-            style="margin-top: 0.8rem; background: rgba(26, 209, 177, 0.12); border: 1px solid rgba(26, 209, 177, 0.3); padding: 0.6rem 0.9rem; border-radius: 0.8rem; display: flex; align-items: center; gap: 0.5rem; color: #1ad1b1; font-size: 1.2rem; font-weight: 700;"
-          >
-            <i class="material-icons" style="font-size: 1.6rem;">schedule</i>
-            <span>{{ getETACountdownStr(ship.eta, getShipEffectiveStatus(ship)) }}</span>
           </div>
 
           <!-- Location / Berth -->
@@ -928,27 +892,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div style="background: rgba(26, 209, 177, 0.1); border: 1px solid rgba(26, 209, 177, 0.25); border-radius: 1rem; padding: 1.2rem;">
-            <div style="font-size: 1.15rem; color: #1ad1b1; font-weight: 700;">🚢 항해/운항 상태 (Navigational Status)</div>
-            <div style="font-size: 1.4rem; font-weight: 800; color: #ffffff; margin-top: 0.4rem;">
-              {{ translateNavStatus() }}
-            </div>
-          </div>
 
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-            <div style="background: rgba(255,255,255,0.04); border-radius: 0.8rem; padding: 1rem;">
-              <div style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">⚡ 속력 및 침로 (Speed)</div>
-              <div style="font-size: 1.35rem; font-weight: 700; color: #88c5ff; margin-top: 0.2rem;">
-                9.3 노트 (kts) / 271°
-              </div>
-            </div>
-            <div style="background: rgba(255,255,255,0.04); border-radius: 0.8rem; padding: 1rem;">
-              <div style="font-size: 1.1rem; color: rgba(255,255,255,0.5);">📏 흘수 (수심 깊이)</div>
-              <div style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-top: 0.2rem;">
-                3.5 m (Draught)
-              </div>
-            </div>
-          </div>
 
           <div style="background: rgba(255,255,255,0.03); border-radius: 0.8rem; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 1.2rem; color: rgba(255,255,255,0.6);">호출부호 (CallSign)</span>
