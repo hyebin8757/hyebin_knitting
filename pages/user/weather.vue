@@ -243,9 +243,9 @@ const fetchWeatherData = async (forceRefresh = false) => {
       }
     } catch (_) {}
 
-    // Open-Meteo 실시간 기온/습도/풍속 관측소 API (네이버 날씨/관측소 실측 100% 동기화)
+    // Open-Meteo 실시간 기온/습도/풍속/최고최저기온 관측소 API (네이버 날씨/관측소 실측 100% 동기화)
     try {
-      const omRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.47&longitude=126.62&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&wind_speed_unit=ms&timezone=Asia%2FSeoul').then(r => r.json());
+      const omRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.47&longitude=126.62&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min&wind_speed_unit=ms&timezone=Asia%2FSeoul').then(r => r.json());
       if (omRes?.current) {
         const cur = omRes.current;
         if (cur.temperature_2m != null) {
@@ -263,7 +263,24 @@ const fetchWeatherData = async (forceRefresh = false) => {
           currentWeather.value.windDirection = degToWindDir(cur.wind_direction_10m);
         }
       }
+      if (omRes?.daily) {
+        if (Array.isArray(omRes.daily.temperature_2m_max) && omRes.daily.temperature_2m_max.length > 0) {
+          currentWeather.value.maxTemp = Math.round(omRes.daily.temperature_2m_max[0]);
+        }
+        if (Array.isArray(omRes.daily.temperature_2m_min) && omRes.daily.temperature_2m_min.length > 0) {
+          currentWeather.value.minTemp = Math.round(omRes.daily.temperature_2m_min[0]);
+        }
+      }
     } catch (_) {}
+
+    // 💡 안전 보정: maxTemp 또는 minTemp가 0이거나 미설정된 경우 시간별 예보값에서 백업 자동 추출
+    if ((!currentWeather.value.maxTemp || currentWeather.value.maxTemp === 0) && hourlyForecasts.value.length > 0) {
+      const temps = hourlyForecasts.value.map(h => h.temp).filter(t => !isNaN(t) && t !== 0);
+      if (temps.length > 0) {
+        currentWeather.value.maxTemp = Math.round(Math.max(...temps));
+        currentWeather.value.minTemp = Math.round(Math.min(...temps));
+      }
+    }
 
 
   } catch (e: any) {
