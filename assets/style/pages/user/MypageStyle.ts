@@ -77,6 +77,37 @@ export const MypageStyle = {
         font-size: 1.4rem;
         font-weight: 600;
       }
+
+      &.editable {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 0.6rem 0.8rem;
+        margin: -0.2rem -0.8rem;
+        border-radius: 0.8rem;
+
+        &:hover {
+          background: rgba(136, 197, 255, 0.08);
+        }
+
+        .value-group {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+
+          .edit-badge {
+            font-size: 1.1rem;
+            color: #88c5ff;
+            background: rgba(136, 197, 255, 0.15);
+            border: 1px solid rgba(136, 197, 255, 0.3);
+            border-radius: 0.5rem;
+            padding: 0.15rem 0.6rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+          }
+        }
+      }
     }
   `,
 

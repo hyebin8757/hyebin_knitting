@@ -75,6 +75,43 @@ const isErrorOpen = ref(false);
 const isLogoutConfirmOpen = ref(false);
 const errorText = ref("");
 
+const isPersonalInfoEditOpen = ref(false);
+const isPersonalInfoSuccessOpen = ref(false);
+const editPersonalInfo = reactive({
+  phone: "",
+  joinDate: "",
+  birthDate: "",
+});
+
+const openPersonalInfoEdit = () => {
+  editPersonalInfo.phone = formatPhoneStr(phone.value || "");
+  editPersonalInfo.joinDate = formatDateStr(hireDate.value || "");
+  editPersonalInfo.birthDate = formatDateStr(birthDate.value || "");
+  isPersonalInfoEditOpen.value = true;
+};
+
+const onEditPhoneInput = () => {
+  editPersonalInfo.phone = formatPhoneStr(editPersonalInfo.phone);
+};
+
+const onEditJoinDateInput = () => {
+  editPersonalInfo.joinDate = formatDateStr(editPersonalInfo.joinDate);
+};
+
+const onEditBirthDateInput = () => {
+  editPersonalInfo.birthDate = formatDateStr(editPersonalInfo.birthDate);
+};
+
+const savePersonalInfoChange = async () => {
+  await userStore.updatePersonalInfo(
+    editPersonalInfo.phone,
+    editPersonalInfo.joinDate,
+    editPersonalInfo.birthDate
+  );
+  isPersonalInfoEditOpen.value = false;
+  isPersonalInfoSuccessOpen.value = true;
+};
+
 const loginUser = ref(userStore.getLoginUser());
 
 const hasChangedCredentials = computed(() => {
@@ -242,17 +279,26 @@ definePageMeta({
         <span class="label">현재 로그인 ID</span>
         <span class="value">{{ loginUser?.id }}</span>
       </div>
-      <div class="info-row">
+      <div class="info-row editable" @click="openPersonalInfoEdit" title="클릭하여 개인정보 수정">
         <span class="label">휴대전화</span>
-        <span class="value">{{ phone }}</span>
+        <div class="value-group">
+          <span class="value">{{ phone }}</span>
+          <span class="edit-badge"><i class="material-icons" style="font-size: 1.2rem;">edit</i> 수정</span>
+        </div>
       </div>
-      <div class="info-row">
+      <div class="info-row editable" @click="openPersonalInfoEdit" title="클릭하여 개인정보 수정">
         <span class="label">입사일자</span>
-        <span class="value">{{ hireDate }}</span>
+        <div class="value-group">
+          <span class="value">{{ hireDate }}</span>
+          <span class="edit-badge"><i class="material-icons" style="font-size: 1.2rem;">edit</i> 수정</span>
+        </div>
       </div>
-      <div class="info-row">
+      <div class="info-row editable" @click="openPersonalInfoEdit" title="클릭하여 개인정보 수정">
         <span class="label">생년월일</span>
-        <span class="value">{{ birthDate }}</span>
+        <div class="value-group">
+          <span class="value">{{ birthDate }}</span>
+          <span class="edit-badge"><i class="material-icons" style="font-size: 1.2rem;">edit</i> 수정</span>
+        </div>
       </div>
     </div>
 
@@ -589,7 +635,185 @@ definePageMeta({
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Personal Info Re-edit Modal Dialog (휴대전화/입사일자/생년월일 언제든 수정 가능) -->
+    <v-dialog v-model="isPersonalInfoEditOpen" max-width="360">
+      <v-card
+        class="pa-6"
+        style="
+          background: #0d1e33;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 1.6rem;
+          color: #ffffff;
+        "
+      >
+        <v-card-title
+          class="text-h6 font-weight-bold px-0"
+          style="
+            color: #88c5ff;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+          "
+        >
+          <i class="material-icons">edit_note</i>
+          <span>개인정보 수정</span>
+        </v-card-title>
+
+        <v-card-text class="py-4 px-0" style="display: flex; flex-direction: column; gap: 1.4rem;">
+          <div style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.7); line-height: 1.5; background: rgba(136, 197, 255, 0.08); padding: 1rem; border-radius: 0.8rem;">
+            휴대전화, 입사일자, 생년월일 정보는 언제든지 재수정하실 수 있습니다.
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3); font-weight: 600;">휴대전화</label>
+            <input
+              type="text"
+              v-model="editPersonalInfo.phone"
+              placeholder="예: 010-1234-5678"
+              class="modal-dark-input"
+              @input="onEditPhoneInput"
+            />
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3); font-weight: 600;">입사일자</label>
+            <input
+              type="text"
+              v-model="editPersonalInfo.joinDate"
+              placeholder="예: 2024-03-02"
+              class="modal-dark-input"
+              @input="onEditJoinDateInput"
+            />
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="font-size: 1.2rem; color: var(--text-color-3); font-weight: 600;">생년월일</label>
+            <input
+              type="text"
+              v-model="editPersonalInfo.birthDate"
+              placeholder="예: 1992-07-28"
+              class="modal-dark-input"
+              @input="onEditBirthDateInput"
+            />
+          </div>
+        </v-card-text>
+
+        <v-card-actions class="justify-end gap-2 px-0 pt-4">
+          <v-btn
+            variant="text"
+            style="
+              color: rgba(255, 255, 255, 0.6);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              border-radius: 0.8rem;
+              padding: 0.8rem 2rem !important;
+              min-width: 8rem !important;
+              height: auto !important;
+              font-size: 1.4rem;
+            "
+            @click="isPersonalInfoEditOpen = false"
+          >취소</v-btn>
+
+          <v-btn
+            style="
+              background: linear-gradient(
+                135deg,
+                var(--primary-darken-color-1) 0%,
+                #153c6c 100%
+              ) !important;
+              color: white !important;
+              border-radius: 0.8rem;
+              font-weight: 600;
+              padding: 0.8rem 2rem !important;
+              min-width: 8rem !important;
+              height: auto !important;
+              font-size: 1.4rem;
+            "
+            @click="savePersonalInfoChange"
+          >수정 완료</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Personal Info Success Alert Dialog -->
+    <v-dialog v-model="isPersonalInfoSuccessOpen" max-width="320">
+      <v-card
+        class="pa-6"
+        style="
+          background: #0d1e33;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 1.6rem;
+          color: #ffffff;
+        "
+      >
+        <v-card-title
+          class="text-h6 font-weight-bold px-0"
+          style="
+            color: var(--system-green-color);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+          "
+        >
+          <i class="material-icons">check_circle_outline</i>
+          <span>수정 완료</span>
+        </v-card-title>
+        <v-card-text
+          class="py-4 px-0"
+          style="
+            font-size: 1.4rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+          "
+        >
+          개인정보(휴대전화, 입사일자, 생년월일)가 성공적으로 수정되었습니다.
+        </v-card-text>
+        <v-card-actions class="justify-end px-0 pt-4">
+          <v-btn
+            style="
+              background: linear-gradient(
+                135deg,
+                var(--primary-darken-color-1) 0%,
+                #153c6c 100%
+              ) !important;
+              color: white !important;
+              border-radius: 0.8rem;
+              font-weight: 600;
+              padding: 0.8rem 2rem !important;
+              min-width: 8rem !important;
+              height: auto !important;
+              font-size: 1.4rem;
+            "
+            @click="isPersonalInfoSuccessOpen = false"
+          >확인</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.modal-dark-input {
+  width: 100%;
+  height: 4.6rem;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 0.8rem !important;
+  padding: 0 1.2rem !important;
+  color: #ffffff !important;
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.3) !important;
+  }
+
+  &:focus {
+    border-color: #88c5ff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 0 10px rgba(136, 197, 255, 0.2) !important;
+  }
+}
+</style>

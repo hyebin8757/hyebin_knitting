@@ -42,9 +42,11 @@ export interface ShipLedgerItem {
   id?: number;
   date: string;
   shipName: string;
+  customerName?: string;
   itemDetails: string;
   amount: number;
   paymentType: string;
+  weight?: string;
   memo?: string;
   createdAt?: string;
 }
@@ -178,6 +180,36 @@ export const useUserStore = defineStore( "user", () => {
       const { data: dbAttendance, error: errAttendance } = await supabase.from("attendance").select("*");
       if (dbAttendance) {
         attendanceRecords.value = dbAttendance;
+
+        // 오늘자 및 야간근무 연결 상태 동적 보정
+        const todayStr = getTodayStr();
+        const yDate = new Date();
+        yDate.setDate(yDate.getDate() - 1);
+        const yesterdayStr = `${yDate.getFullYear()}-${String(yDate.getMonth() + 1).padStart(2, "0")}-${String(yDate.getDate()).padStart(2, "0")}`;
+        
+        const dbyDate = new Date();
+        dbyDate.setDate(dbyDate.getDate() - 2);
+        const dayBeforeYesterdayStr = `${dbyDate.getFullYear()}-${String(dbyDate.getMonth() + 1).padStart(2, "0")}-${String(dbyDate.getDate()).padStart(2, "0")}`;
+
+        workers.value.forEach(w => {
+          const tRec = dbAttendance.find((r: any) => r.worker_name === w.name && r.date === todayStr);
+          const yRec = dbAttendance.find((r: any) => r.worker_name === w.name && r.date === yesterdayStr);
+          const dbyRec = dbAttendance.find((r: any) => r.worker_name === w.name && r.date === dayBeforeYesterdayStr);
+
+          if (tRec) {
+            w.checkedIn = tRec.status === "day" || tRec.status === "night" || tRec.status === "field";
+            w.status = tRec.status;
+            if (tRec.location) w.location = tRec.location;
+          } else if (yRec?.status === "night" && dbyRec?.status !== "night") {
+            // 어제가 '신규 야간 근무 시작일'인 경우에만 오늘 오전까지 야간 연결 인정
+            w.checkedIn = true;
+            w.status = "night";
+          } else {
+            // 2일 지난 경우 포함하여 출근 해제 처리
+            w.checkedIn = false;
+            w.status = "none";
+          }
+        });
       }
 
       // 5. 회비 납부 내역 조회
@@ -199,12 +231,14 @@ export const useUserStore = defineStore( "user", () => {
           shipLedgers.value = dbLedgers.map(l => ({
             id: l.id,
             date: l.date,
-            shipName: l.ship_name,
-            itemDetails: l.item_details,
+            shipName: l.ship_name || l.shipName,
+            customerName: l.customer_name || l.customerName || "",
+            itemDetails: l.item_details || l.itemDetails,
             amount: l.amount,
-            paymentType: l.payment_type,
+            paymentType: l.payment_type || l.paymentType,
+            weight: l.weight || "",
             memo: l.memo || "",
-            createdAt: l.created_at
+            createdAt: l.created_at || l.createdAt
           }));
         }
       } catch (e) {
@@ -327,6 +361,41 @@ export const useUserStore = defineStore( "user", () => {
       }
     }
   }
+
+  // 개인정보(휴대전화, 입사일자, 생년월일) 재수정 액션 (언제든 수정 가능)
+  const updatePersonalInfo = async (phone: string, joinDate: string, birthDate: string) => {
+    const formattedPhone = formatPhoneStr(phone);
+    const formattedJoinDate = formatDateStr(joinDate);
+    const formattedBirthDate = formatDateStr(birthDate);
+
+    const supabase = getSupabase();
+    const currentName = loggedInUser.value?.name;
+    if (currentName) {
+      const idx = workers.value.findIndex(w => w.name === currentName);
+      if (idx !== -1) {
+        workers.value[idx].phone = formattedPhone;
+        workers.value[idx].joinDate = formattedJoinDate;
+        workers.value[idx].birthDate = formattedBirthDate;
+        
+        if (supabase) {
+          try {
+            await supabase.from('workers').update({
+              phone: formattedPhone,
+              join_date: formattedJoinDate,
+              birth_date: formattedBirthDate
+            }).eq('name', currentName);
+          } catch (e) {
+            console.error("Update personal info failed", e);
+          }
+        }
+        if (loggedInUser.value) {
+          loggedInUser.value.phone = formattedPhone;
+          loggedInUser.value.joinDate = formattedJoinDate;
+          loggedInUser.value.birthDate = formattedBirthDate;
+        }
+      }
+    }
+  };
 
   // 조합원 개별 배치 지정
   const deployWorker = async (name: string, location: string) => {
@@ -525,11 +594,21 @@ export const useUserStore = defineStore( "user", () => {
     }
 
     const todayStr = getTodayStr();
-    attendanceRecords.value = attendanceRecords.value.filter(r => !(r.worker_name === name && r.date === todayStr));
+    const yDate = new Date();
+    yDate.setDate(yDate.getDate() - 1);
+    const yesterdayStr = `${yDate.getFullYear()}-${String(yDate.getMonth() + 1).padStart(2, "0")}-${String(yDate.getDate()).padStart(2, "0")}`;
+
+    attendanceRecords.value = attendanceRecords.value.filter(
+      r => !(r.worker_name === name && (r.date === todayStr || (r.date === yesterdayStr && r.status === 'night' && !r.location)))
+    );
     if (supabase) {
       try {
-        const { error } = await supabase.from('attendance').delete().eq('worker_name', name).eq('date', todayStr);
-        if (error) console.error('Attendance cancel delete failed:', error);
+        await supabase.from('attendance').delete().eq('worker_name', name).eq('date', todayStr);
+        // 혹시 오늘이 어제 야간의 2일차로 잡혀있던 경우 어제 기록도 함께 삭제
+        const yRec = attendanceRecords.value.find(r => r.worker_name === name && r.date === yesterdayStr);
+        if (yRec && yRec.status === 'night' && !yRec.location) {
+          await supabase.from('attendance').delete().eq('worker_name', name).eq('date', yesterdayStr);
+        }
       } catch (e) { console.error('Attendance delete failed', e); }
     }
     
@@ -755,7 +834,8 @@ export const useUserStore = defineStore( "user", () => {
   const addShipLedger = async (ledger: Omit<ShipLedgerItem, "id">) => {
     const supabase = getSupabase();
     const newId = Date.now();
-    const newItem: ShipLedgerItem = { ...ledger, id: newId };
+    const nowIso = new Date().toISOString();
+    const newItem: ShipLedgerItem = { ...ledger, id: newId, createdAt: nowIso };
     shipLedgers.value.unshift(newItem);
 
     if (supabase) {
@@ -763,13 +843,18 @@ export const useUserStore = defineStore( "user", () => {
         const { data } = await supabase.from("ship_ledgers").insert([{
           date: ledger.date,
           ship_name: ledger.shipName,
+          customer_name: ledger.customerName || "",
           item_details: ledger.itemDetails,
           amount: ledger.amount,
           payment_type: ledger.paymentType,
+          weight: ledger.weight || "",
           memo: ledger.memo || ""
         }]).select();
         if (data && data[0]) {
           newItem.id = data[0].id;
+          if (data[0].created_at) {
+            newItem.createdAt = data[0].created_at;
+          }
         }
       } catch (e) {
         console.error("addShipLedger failed", e);
@@ -788,9 +873,11 @@ export const useUserStore = defineStore( "user", () => {
           await supabase.from("ship_ledgers").update({
             date: ledger.date,
             ship_name: ledger.shipName,
+            customer_name: ledger.customerName || "",
             item_details: ledger.itemDetails,
             amount: ledger.amount,
             payment_type: ledger.paymentType,
+            weight: ledger.weight || "",
             memo: ledger.memo || ""
           }).eq("id", ledger.id);
         } catch (e) {
@@ -863,6 +950,7 @@ export const useUserStore = defineStore( "user", () => {
     setUserInfo,
     setLogin,
     changeCredentials,
+    updatePersonalInfo,
     deployWorker,
     deployGroup,
     saveNoticeAction,

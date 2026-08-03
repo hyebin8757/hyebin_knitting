@@ -83,14 +83,24 @@ const isCustomCancelConfirmOpen = ref(false);
 const cancelTargetType = ref<"self" | "admin_worker">("self");
 const cancelTargetName = ref("");
 
-// 로그인된 사용자의 실시간 오늘 출근 여부 동적 감지 (야간 근무 복구/해제 완벽 대응)
+// YYYY-MM-DD 날짜 포맷 정규화 헬퍼 (예: 2026-8-1 -> 2026-08-01)
+const getNormalizedDate = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+  }
+  return dateStr;
+};
+
+// 로그인된 사용자의 실시간 오늘 출근 여부 동적 감지 (야간 근무 2일 경과 버그 차단 완벽 대응)
 const isCheckedIn = computed(() => {
   const currentName = userStore.loggedInUser?.name;
   if (!currentName) return false;
 
   const today = getFormattedDate(new Date());
   const todayRecord = userStore.attendanceRecords.find(
-    r => r.worker_name === currentName && r.date === today
+    r => r.worker_name === currentName && getNormalizedDate(r.date) === today
   );
 
   // 1. 오늘 직접 등록된 출결 기록이 있는 경우
@@ -98,32 +108,67 @@ const isCheckedIn = computed(() => {
     return todayRecord.status === "day" || todayRecord.status === "night" || todayRecord.status === "field";
   }
 
-  // 2. 오늘 직접 기록이 없는 경우 -> 어제 야간 근무(night) 연결 여부 확인
+  // 2. 오늘 직접 기록이 없는 경우 -> 어제가 '신규 야간 근무 시작일'인 경우에만 오늘 오전까지 출근 연결 상태로 인정
   const yesterdayObj = new Date();
   yesterdayObj.setDate(yesterdayObj.getDate() - 1);
   const yesterdayStr = getFormattedDate(yesterdayObj);
+
+  const dayBeforeYesterdayObj = new Date();
+  dayBeforeYesterdayObj.setDate(dayBeforeYesterdayObj.getDate() - 2);
+  const dayBeforeYesterdayStr = getFormattedDate(dayBeforeYesterdayObj);
+
   const yesterdayRecord = userStore.attendanceRecords.find(
-    r => r.worker_name === currentName && r.date === yesterdayStr
+    r => r.worker_name === currentName && getNormalizedDate(r.date) === yesterdayStr
+  );
+  const dayBeforeYesterdayRecord = userStore.attendanceRecords.find(
+    r => r.worker_name === currentName && getNormalizedDate(r.date) === dayBeforeYesterdayStr
   );
 
-  if (yesterdayRecord?.status === "night") {
+  // 어제가 '신규 야간 시작일'인 경우에만 오늘 2일차 출근 연결 인정
+  if (yesterdayRecord?.status === "night" && dayBeforeYesterdayRecord?.status !== "night") {
     return true;
   }
 
   return false;
 });
 
-// 로그인된 사용자의 출퇴근 기록 매핑
+// 로그인된 사용자의 출퇴근 기록 매핑 (날짜 정규화 + 야간 근무 2일차 달력 연장 자동 반영)
 const attendanceHistory = computed(() => {
   const history: Record<string, "day" | "night" | "field" | "absent" | "leave"> = {};
   const currentName = userStore.loggedInUser?.name;
   if (!currentName) return history;
   
+  // 1. DB에 저장된 직접 기록 매핑
   userStore.attendanceRecords.forEach(r => {
-    if (r.worker_name === currentName) {
-      history[r.date] = r.status as any;
+    if (r.worker_name === currentName && r.date) {
+      const normDate = getNormalizedDate(r.date);
+      history[normDate] = r.status as any;
     }
   });
+
+  // 2. 야간 근무(night) 2일차 연장 자동 반영
+  // 어제가 신규 야간 근무 시작일(night)인 경우 오늘(2일차)이 'none' 이거나 'absent'이면 'night'로 연장 반영
+  const directDates = Object.keys(history);
+  directDates.forEach(dateStr => {
+    if (history[dateStr] === "night") {
+      const parts = dateStr.split('-').map(Number);
+      if (parts.length === 3) {
+        // 그저께 확인: 그저께가 야간이 아니었던 경우에만 '신규 야간 시작일'로 인정
+        const prevD = new Date(parts[0], parts[1] - 1, parts[2] - 1);
+        const prevStr = getFormattedDate(prevD);
+
+        if (history[prevStr] !== "night") {
+          const nextD = new Date(parts[0], parts[1] - 1, parts[2] + 1);
+          const nextStr = getFormattedDate(nextD);
+          // 2일차에 명시적 근무(day, field, leave, night)가 없거나 absent인 경우 'night'로 강제 연장
+          if (!history[nextStr] || history[nextStr] === "absent" || history[nextStr] === "none") {
+            history[nextStr] = "night";
+          }
+        }
+      }
+    }
+  });
+
   return history;
 });
 
@@ -330,7 +375,7 @@ const calendarDays = computed<AttendanceDay[]>(() => {
   for (let i = 1; i <= totalDays; i++) {
     const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
     let status = attendanceHistory.value[dateKey] || "none";
-    
+
     // 타입 설정이 안되어 있고 오늘 또는 과거 일자이면 결근(absent)으로 자동 매핑
     const dateObj = new Date(year, month, i);
     if (status === "none" && dateObj <= todayObj) {
@@ -525,25 +570,10 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
       localStorage.setItem(`calendar_memos_${name}`, JSON.stringify(memoMap));
     } catch (e) {}
 
-    // YYYY-MM-DD를 로컬 시간 기준으로 파싱 (iOS Safari UTC 버그 방지)
-    const [yr, mo, dy] = selectedCalendarDate.value.split("-").map(Number);
-    const currentDateObj = new Date(yr, mo - 1, dy + 1); // +1일 = 다음 날
-    let nextDayStr = getFormattedDate(currentDateObj);
-
-    // 이전에 야간 근무였는지 확인 (다음 날 야간 기록 자동 제거 여부 결정)
-    const prevRecord = userStore.attendanceRecords.find(
-      r => r.worker_name === name && r.date === selectedCalendarDate.value
-    );
-    const wasPreviouslyNight = prevRecord?.status === "night";
-
     if (status === "none" && !memoText) {
       const { error } = await supabase.from("attendance").delete().eq("worker_name", name).eq("date", selectedCalendarDate.value);
       if (error) {
         console.error("Delete failed:", error);
-      }
-      // 이전이 야간이었다면 다음 날 야간 기록도 함께 삭제
-      if (wasPreviouslyNight) {
-        await supabase.from("attendance").delete().eq("worker_name", name).eq("date", nextDayStr);
       }
     } else {
       const targetStatus = status === "none" ? "day" : status;
@@ -565,51 +595,17 @@ const updateDateStatus = async (status: "day" | "night" | "field" | "absent" | "
         }, { onConflict: "worker_name,date" });
       }
 
-      // 이전이 야간이었고 이번에 야간이 아닌 다른 상태로 변경되면 → 다음 날 야간 기록 삭제
-      if (wasPreviouslyNight && status !== "night") {
-        await supabase.from("attendance").delete().eq("worker_name", name).eq("date", nextDayStr);
-        
-        // 만약 삭제 대상인 다음 날(nextDayStr)이 바로 오늘(todayStr)이라면 workers 테이블도 즉시 출근 해제(checked_in: false)
-        const todayStr = getFormattedDate(new Date());
-        if (nextDayStr === todayStr) {
-          await supabase.from("workers").update({
-            checked_in: false,
-            status: "none",
-            location: ""
-          }).eq("name", name);
-        }
-      }
-
-      // 야간 근무를 설정한 경우, 다음 날도 자동으로 야간 근무(night)로 등록합니다.
-      if (status === "night") {
-        const { error: nextError } = await supabase.from("attendance").upsert({
-          worker_name: name,
-          date: nextDayStr,
-          status: "night",
-          location: ""
-        }, { onConflict: "worker_name,date" });
-        if (nextError) {
-          console.error("Failed to auto-set night shift for the next day:", nextError);
+      // 야간 근무 지정 시 다음 날(2일차)에 남아있던 결근(absent) DB 기록 삭제하여 2일차 연장 표시 100% 보장
+      if (targetStatus === "night") {
+        const parts = selectedCalendarDate.value.split('-').map(Number);
+        if (parts.length === 3) {
+          const nextD = new Date(parts[0], parts[1] - 1, parts[2] + 1);
+          const nextStr = getFormattedDate(nextD);
+          await supabase.from("attendance").delete().eq("worker_name", name).eq("date", nextStr).eq("status", "absent");
         }
       }
     }
     
-    await userStore.fetchAllData();
-
-    // 오늘 날짜의 DB 출결 상태 재동기화 처리 (과거/다른 날 야간 해제 시 오늘 상태 자동 복구)
-    const todayStr = getFormattedDate(new Date());
-    const todayEffectiveCheckedIn = isCheckedIn.value;
-    const todayRecord = userStore.attendanceRecords.find(
-      r => r.worker_name === name && r.date === todayStr
-    );
-    const effectiveStatus = todayRecord ? todayRecord.status : (todayEffectiveCheckedIn ? "night" : "none");
-
-    await supabase.from("workers").update({
-      checked_in: todayEffectiveCheckedIn,
-      status: todayEffectiveCheckedIn ? (effectiveStatus === "none" ? "day" : effectiveStatus) : "none",
-      location: effectiveStatus === "field" ? "외근" : ""
-    }).eq("name", name);
-
     await userStore.fetchAllData();
     isDateStatusDialogOpen.value = false;
   } catch (e) {

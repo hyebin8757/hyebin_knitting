@@ -22,7 +22,7 @@ const getTodayStr = () => {
 const selectedDate = ref(getTodayStr());
 
 // 결제 종류 옵션
-const paymentOptions = ['선불', '후불', '입금', '현금', '미수'];
+const paymentOptions = ['현금', '입금', '미수'];
 
 // 공용 커스텀 알림 & 확인 모달 상태
 const isCustomAlertOpen = ref(false);
@@ -142,14 +142,14 @@ interface LedgerRowInput {
 
 // 엑셀식 연속 입력 행 목록 (기본 3개 빈 행으로 시작)
 const batchRows = ref<LedgerRowInput[]>([
-  { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
-  { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
-  { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' }
+  { shipName: '', itemDetails: '', amount: null, paymentType: '현금', memo: '' },
+  { shipName: '', itemDetails: '', amount: null, paymentType: '현금', memo: '' },
+  { shipName: '', itemDetails: '', amount: null, paymentType: '현금', memo: '' }
 ]);
 
 // 입력행 추가
 const addRow = () => {
-  batchRows.value.push({ shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' });
+  batchRows.value.push({ shipName: '', itemDetails: '', amount: null, paymentType: '현금', memo: '' });
 };
 
 // 입력행 삭제
@@ -162,8 +162,8 @@ const removeRow = (index: number) => {
 // 입력행 전체 초기화
 const resetRows = () => {
   batchRows.value = [
-    { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' },
-    { shipName: '', itemDetails: '', amount: null, paymentType: '선불', memo: '' }
+    { shipName: '', itemDetails: '', amount: null, paymentType: '현금', memo: '' },
+    { shipName: '', itemDetails: '', amount: null, paymentType: '현금', memo: '' }
   ];
 };
 
@@ -172,9 +172,80 @@ const currentLedgerList = computed(() => {
   return userStore.shipLedgers.filter(l => l.date === selectedDate.value);
 });
 
+// 🚢 선명별 필터 탭 관련 상태 및 계산
+const selectedShipFilter = ref<string>('전체');
+
+// 현재 선택된 날짜에 등록된 선명 탭 옵션 목록 ('전체' + 가나다순 선명)
+const availableShipTabs = computed(() => {
+  const set = new Set<string>();
+  currentLedgerList.value.forEach(item => {
+    if (item.shipName && item.shipName.trim()) {
+      set.add(item.shipName.trim());
+    }
+  });
+  const sortedShips = Array.from(set).sort((a, b) => a.localeCompare(b, 'ko-KR'));
+  return ['전체', ...sortedShips];
+});
+
+// 정렬 방식 상태 ('desc': 최신등록순 내림차순 | 'asc': 오래된순 오름차순 | 'ship': 선명가나다순)
+const sortOrder = ref<'desc' | 'asc' | 'ship'>('desc');
+
+// 선명 필터링 및 정렬된 장부 목록 (기본값: 최신등록순 내림차순)
+const filteredLedgerList = computed(() => {
+  let list = currentLedgerList.value;
+
+  // 1) 선명 필터링
+  if (selectedShipFilter.value !== '전체') {
+    list = list.filter(item => (item.shipName || '').trim() === selectedShipFilter.value);
+  }
+
+  // 2) 정렬 순서 적용 (기본: 최신등록순 내림차순)
+  return [...list].sort((a, b) => {
+    if (sortOrder.value === 'desc') {
+      return (Number(b.id) || 0) - (Number(a.id) || 0);
+    } else if (sortOrder.value === 'asc') {
+      return (Number(a.id) || 0) - (Number(b.id) || 0);
+    } else if (sortOrder.value === 'ship') {
+      return (a.shipName || '').localeCompare(b.shipName || '', 'ko-KR');
+    }
+    return 0;
+  });
+});
+
+// 선택된 날짜가 변경되었을 때 등록되어 있지 않은 선명 필터는 '전체'로 자동 리셋
+watch(availableShipTabs, (tabs) => {
+  if (!tabs.includes(selectedShipFilter.value)) {
+    selectedShipFilter.value = '전체';
+  }
+});
+
 // 선택된 날짜의 총 수화물/화물 운송 금액 합계
 const currentTotalAmount = computed(() => {
   return currentLedgerList.value.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+});
+
+// 총액의 25% (조합 수수료) 계산
+const quarterTotalAmount = computed(() => {
+  return Math.round(currentTotalAmount.value * 0.25);
+});
+
+// 선택된 월 레이블 (예: '8월')
+const currentMonthLabel = computed(() => {
+  const parts = selectedDate.value.split('-');
+  return parts[1] ? `${Number(parts[1])}월` : '';
+});
+
+// 선택된 월의 월간 총액 계산
+const monthTotalAmount = computed(() => {
+  const monthPrefix = selectedDate.value.slice(0, 7);
+  return userStore.shipLedgers
+    .filter(l => l.date && l.date.startsWith(monthPrefix))
+    .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+});
+
+// 선택된 월의 25% (조합 수수료) 계산
+const monthQuarterAmount = computed(() => {
+  return Math.round(monthTotalAmount.value * 0.25);
 });
 
 // 연속 입력 폼 내의 입력 금액 합계
@@ -182,17 +253,15 @@ const batchTotalAmount = computed(() => {
   return batchRows.value.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 });
 
-// 결제 종류별 수수료/금액 통계
+// 결제 종류별 수수료/금액 통계 (현금, 입금, 미수 세 가지)
 const paymentSummary = computed(() => {
   const summary: Record<string, number> = {
-    '선불': 0,
-    '후불': 0,
-    '입금': 0,
     '현금': 0,
+    '입금': 0,
     '미수': 0
   };
   currentLedgerList.value.forEach(item => {
-    const type = item.paymentType || '선불';
+    const type = item.paymentType || '현금';
     if (summary[type] !== undefined) {
       summary[type] += Number(item.amount) || 0;
     } else {
@@ -232,7 +301,7 @@ const applyFrequentShipToForm = (shipName: string) => {
     shipName,
     itemDetails: '',
     amount: null,
-    paymentType: '선불',
+    paymentType: '현금',
     memo: ''
   });
   activeFocusedRowIndex.value = batchRows.value.length - 1;
@@ -247,7 +316,7 @@ const singleForm = ref<ShipLedgerItem>({
   shipName: '',
   itemDetails: '',
   amount: 0,
-  paymentType: '선불',
+  paymentType: '현금',
   memo: ''
 });
 
@@ -259,7 +328,7 @@ const openSingleAddModal = () => {
     shipName: '',
     itemDetails: '',
     amount: null as any,
-    paymentType: '선불',
+    paymentType: '현금',
     memo: ''
   };
   isSingleModalOpen.value = true;
@@ -271,22 +340,61 @@ const openSingleEditModal = (item: ShipLedgerItem) => {
   isSingleModalOpen.value = true;
 };
 
+// 금액/무게 숫자 전용 입력 핸들러 (한글/문자/기호 즉시 제거)
+const onRowAmountInput = (row: LedgerRowInput, e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const cleaned = target.value.replace(/[^0-9]/g, '');
+  row.amount = cleaned !== '' ? Number(cleaned) : null;
+  target.value = cleaned;
+};
+
+const onRowWeightInput = (row: LedgerRowInput, e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const cleaned = target.value.replace(/[^0-9.]/g, '');
+  row.weight = cleaned;
+  target.value = cleaned;
+};
+
+const onSingleAmountInput = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const cleaned = target.value.replace(/[^0-9]/g, '');
+  singleForm.value.amount = cleaned !== '' ? Number(cleaned) : (null as any);
+  target.value = cleaned;
+};
+
+const onSingleWeightInput = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const cleaned = target.value.replace(/[^0-9.]/g, '');
+  singleForm.value.weight = cleaned;
+  target.value = cleaned;
+};
+
 // 단건 저장
 const saveSingleLedger = async () => {
   if (!singleForm.value.shipName.trim() || !singleForm.value.itemDetails.trim()) {
     showAlert('선명 및 품목 상세 내용을 입력해주세요.');
     return;
   }
+  const formattedWeight = singleForm.value.weight
+    ? (singleForm.value.weight.trim().includes('kg') ? singleForm.value.weight.trim() : `${singleForm.value.weight.trim()}kg`)
+    : '';
+
   if (isEditMode.value && singleForm.value.id) {
-    await userStore.updateShipLedger(singleForm.value);
+    await userStore.updateShipLedger({
+      ...singleForm.value,
+      customerName: (singleForm.value.customerName || '').trim(),
+      weight: formattedWeight
+    });
   } else {
     await userStore.addShipLedger({
       date: singleForm.value.date,
-      shipName: singleForm.value.shipName,
-      itemDetails: singleForm.value.itemDetails,
+      shipName: singleForm.value.shipName.trim(),
+      customerName: (singleForm.value.customerName || '').trim(),
+      itemDetails: singleForm.value.itemDetails.trim(),
       amount: Number(singleForm.value.amount) || 0,
       paymentType: singleForm.value.paymentType,
-      memo: singleForm.value.memo
+      weight: formattedWeight,
+      memo: (singleForm.value.memo || '').trim()
     });
   }
   isSingleModalOpen.value = false;
@@ -317,9 +425,11 @@ const submitBatchRows = async () => {
     const formattedList = validItems.map(r => ({
       date: selectedDate.value,
       shipName: r.shipName.trim(),
+      customerName: (r.customerName || '').trim(),
       itemDetails: r.itemDetails.trim(),
       amount: Number(r.amount) || 0,
       paymentType: r.paymentType,
+      weight: r.weight ? (r.weight.trim().includes('kg') ? r.weight.trim() : `${r.weight.trim()}kg`) : '',
       memo: r.memo.trim()
     }));
 
@@ -335,48 +445,79 @@ const submitBatchRows = async () => {
   }
 };
 
-// 📊 엑셀(XLSX) 다운로드 기능 구현 (선명별 가나다순 모아서 출력)
+// 📊 엑셀(XLSX) 다운로드 기능 구현 (3가지 정렬 탭 시트 동시 생성: 최신등록순, 오래된순, 선명가나다순)
 const exportToExcel = () => {
-  const listToExport = currentLedgerList.value;
+  const baseList = currentLedgerList.value;
 
-  if (listToExport.length === 0) {
+  if (baseList.length === 0) {
     showAlert(`${selectedDate.value} 날짜에 등록된 장부 데이터가 없습니다.`);
     return;
   }
 
-  // 선명(shipName) 기준 한글 가나다순으로 정렬하여 엑셀에 모아서 출력
-  const sortedList = [...listToExport].sort((a, b) => {
-    return (a.shipName || '').localeCompare(b.shipName || '', 'ko-KR', { sensitivity: 'base' });
-  });
+  // 날짜 + 시간 포맷터 함수
+  const formatDateTime = (dateStr: string, createdAt?: string) => {
+    if (createdAt) {
+      const d = new Date(createdAt);
+      if (!isNaN(d.getTime())) {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+      }
+    }
+    return dateStr;
+  };
 
-  // 엑셀 변환용 JSON 데이터 가공
-  const excelData = sortedList.map((item, idx) => ({
-    '연번': idx + 1,
-    '날짜': item.date,
-    '선명 및 상회': item.shipName,
-    '품목 및 수량': item.itemDetails,
-    '금액 (원)': Number(item.amount) || 0,
-    '결제구분': item.paymentType,
-    '비고/메모': item.memo || ''
-  }));
+  // 엑셀 시트 생성용 헬퍼 함수
+  const createSheetData = (items: typeof baseList) => {
+    return items.map((item, idx) => ({
+      '연번': idx + 1,
+      '날짜 (등록시간)': formatDateTime(item.date, item.createdAt),
+      '선명 및 상회': item.shipName,
+      '이름': item.customerName || '-',
+      '품목 및 수량': item.itemDetails,
+      '금액 (원)': Number(item.amount) || 0,
+      '결제구분': item.paymentType,
+      '무게 (kg)': item.weight ? (item.weight.includes('kg') ? item.weight : `${item.weight}kg`) : '-',
+      '비고/메모': item.memo || ''
+    }));
+  };
 
-  // 워크시트 생성
-  const worksheet = XLSX.utils.json_to_sheet(excelData);
-
-  // 컬럼 너비 설정
-  worksheet['!cols'] = [
+  // 컬럼 너비 설정 (모든 시트 공통 최신화)
+  const colWidths = [
     { wch: 6 },  // 연번
-    { wch: 12 }, // 날짜
+    { wch: 18 }, // 날짜 (등록시간)
     { wch: 18 }, // 선명 및 상회
+    { wch: 12 }, // 이름
     { wch: 28 }, // 품목 및 수량
-    { wch: 14 }, // 금액
+    { wch: 14 }, // 금액 (원)
     { wch: 10 }, // 결제구분
-    { wch: 22 }  // 비고
+    { wch: 12 }, // 무게 (kg)
+    { wch: 22 }  // 비고/메모
   ];
 
-  // 워크북 생성 및 통합
+  // 워크북 생성
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, '객선일일장부');
+
+  // 1) 시트 1: 최신등록순 (내림차순)
+  const descList = [...baseList].sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+  const sheetDesc = XLSX.utils.json_to_sheet(createSheetData(descList));
+  sheetDesc['!cols'] = colWidths;
+  XLSX.utils.book_append_sheet(workbook, sheetDesc, '최신등록순');
+
+  // 2) 시트 2: 오래된순 (오름차순)
+  const ascList = [...baseList].sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+  const sheetAsc = XLSX.utils.json_to_sheet(createSheetData(ascList));
+  sheetAsc['!cols'] = colWidths;
+  XLSX.utils.book_append_sheet(workbook, sheetAsc, '오래된순');
+
+  // 3) 시트 3: 선명 가나다순
+  const shipList = [...baseList].sort((a, b) => (a.shipName || '').localeCompare(b.shipName || '', 'ko-KR'));
+  const sheetShip = XLSX.utils.json_to_sheet(createSheetData(shipList));
+  sheetShip['!cols'] = colWidths;
+  XLSX.utils.book_append_sheet(workbook, sheetShip, '선명가나다순');
 
   // XLSX 파일 다운로드 실행
   const fileName = `객선_수화물운송장부_${selectedDate.value}.xlsx`;
@@ -423,15 +564,27 @@ onMounted(() => {
         </button>
       </div>
 
-      <!-- 날짜 선택기 & 총 금액 슬림 바 -->
+      <!-- 날짜 선택기 & 월간/일간 총액 및 25% 수수료 통합 바 -->
       <div class="hero-dashboard-bar">
         <div class="date-selector-pill">
           <input type="date" v-model="selectedDate" class="date-input-clean" />
         </div>
 
-        <div class="total-amount-display">
-          <span class="amount-label">일일 운송 총액:</span>
-          <span class="amount-value">₩ {{ currentTotalAmount.toLocaleString() }}</span>
+        <div class="summary-amount-group">
+          <div class="amount-badge daily">
+            <span class="amount-label">일일 총액:</span>
+            <span class="amount-value">₩ {{ currentTotalAmount.toLocaleString() }}</span>
+          </div>
+
+          <div class="amount-badge monthly">
+            <span class="amount-label">{{ currentMonthLabel }} 총액:</span>
+            <span class="amount-value">₩ {{ monthTotalAmount.toLocaleString() }}</span>
+          </div>
+
+          <div class="amount-badge fee">
+            <span class="amount-label">{{ currentMonthLabel }} 25%:</span>
+            <span class="amount-value">₩ {{ monthQuarterAmount.toLocaleString() }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -498,7 +651,39 @@ onMounted(() => {
 
     <!-- 📌 MODE 1: 일일 장부 대시보드 리스트 (모바일 스마트 카드 + 데스크톱 표) -->
     <div v-if="currentMode === 'list'" class="list-view-section">
-      <!-- 결제 상태 요약 미니 뱃지 통계 -->
+      <!-- 🚢 선명별 필터 탭 & 정렬 컨트롤 바 -->
+      <div class="ship-filter-tabs-wrapper">
+        <div v-if="availableShipTabs.length > 1" class="tabs-left">
+          <div class="tabs-label">
+            <i class="material-icons">directions_boat</i>
+            <span>선명별:</span>
+          </div>
+          <div class="ship-tabs-scroll">
+            <button 
+              v-for="shipTab in availableShipTabs" 
+              :key="shipTab" 
+              :class="['ship-tab-pill', { active: selectedShipFilter === shipTab }]"
+              @click="selectedShipFilter = shipTab"
+            >
+              <span class="tab-name">{{ shipTab }}</span>
+              <span class="tab-count">
+                {{ shipTab === '전체' ? currentLedgerList.length : currentLedgerList.filter(l => l.shipName === shipTab).length }}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 🔽 리스트 정렬 컨트롤 선택 박스 -->
+        <div class="sort-select-box">
+          <select v-model="sortOrder" class="sort-select-pill">
+            <option value="desc">🔽 최신등록순 (내림차순)</option>
+            <option value="asc">🔼 오래된순 (오름차순)</option>
+            <option value="ship">🔤 선명 가나다순</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 결제 상태 요약 미니 뱃지 통계 (현금, 입금, 미수) -->
       <div class="payment-stats-bar">
         <div 
           v-for="(amount, type) in paymentSummary" 
@@ -513,16 +698,17 @@ onMounted(() => {
 
       <!-- 모바일 가독성 최적화 카드리스트 (640px 이하 모바일 전용) -->
       <div class="mobile-ledger-list">
-        <div v-if="currentLedgerList.length === 0" class="empty-mobile-card">
+        <div v-if="filteredLedgerList.length === 0" class="empty-mobile-card">
           <i class="material-icons">inbox</i>
-          <p>{{ selectedDate }}에 등록된 장부가 없습니다.</p>
+          <p v-if="selectedShipFilter === '전체'">{{ selectedDate }}에 등록된 장부가 없습니다.</p>
+          <p v-else>'{{ selectedShipFilter }}' 선명으로 등록된 내역이 없습니다.</p>
           <button class="btn-go-input" @click="currentMode = 'quick_input'">
             + 연속 입력 시트로 작성하기
           </button>
         </div>
 
         <div 
-          v-for="(item, idx) in currentLedgerList" 
+          v-for="(item, idx) in filteredLedgerList" 
           :key="item.id || idx" 
           class="ledger-mobile-card"
         >
@@ -530,18 +716,20 @@ onMounted(() => {
             <div class="ship-info">
               <span class="idx-no">#{{ idx + 1 }}</span>
               <span class="ship-title-badge">{{ item.shipName }}</span>
+              <span v-if="item.customerName" class="customer-name-badge" style="font-size: 1.2rem; color: #88c5ff; background: rgba(136, 197, 255, 0.12); padding: 0.2rem 0.6rem; border-radius: 0.5rem; font-weight: 700;">{{ item.customerName }}</span>
             </div>
             <span :class="['pay-status-badge', item.paymentType]">{{ item.paymentType }}</span>
           </div>
 
           <div class="card-item-body">
             {{ item.itemDetails }}
+            <span v-if="item.weight" style="font-size: 1.25rem; color: #1ad1b1; font-weight: 700; margin-left: 0.6rem;">({{ item.weight.includes('kg') ? item.weight : `${item.weight}kg` }})</span>
           </div>
 
           <div class="card-footer-row">
             <div class="amount-box">
               <span class="lbl">금액</span>
-              <span class="val">₩ {{ (Number(item.amount) || 0).toLocaleString() }}</span>
+              <span :class="['val', { 'is-misu': item.paymentType === '미수' }]">₩ {{ (Number(item.amount) || 0).toLocaleString() }}</span>
             </div>
 
             <div class="card-btns">
@@ -567,35 +755,42 @@ onMounted(() => {
           <table class="modern-table">
             <thead>
               <tr>
-                <th style="width: 60px; text-align: center;">NO</th>
-                <th style="width: 170px;">선명 및 상회</th>
+                <th style="width: 50px; text-align: center;">NO</th>
+                <th style="width: 150px;">선명 및 상회</th>
+                <th style="width: 110px;">이름</th>
                 <th>품목 및 수량 상세</th>
-                <th style="width: 140px; text-align: right;">금액</th>
-                <th style="width: 100px; text-align: center;">결제구분</th>
-                <th style="width: 180px;">비고/메모</th>
-                <th style="width: 90px; text-align: center;">관리</th>
+                <th style="width: 130px; text-align: right;">금액</th>
+                <th style="width: 90px; text-align: center;">결제구분</th>
+                <th style="width: 100px; text-align: center;">무게 (kg)</th>
+                <th style="width: 160px;">비고/메모</th>
+                <th style="width: 80px; text-align: center;">관리</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-if="currentLedgerList.length === 0">
-                <td colspan="7" class="empty-td">
+              <tr v-if="filteredLedgerList.length === 0">
+                <td colspan="9" class="empty-td">
                   <i class="material-icons">receipt_long</i>
-                  <p>{{ selectedDate }} 일자에 등록된 객선 장부 데이터가 없습니다.</p>
+                  <p v-if="selectedShipFilter === '전체'">{{ selectedDate }} 일자에 등록된 객선 장부 데이터가 없습니다.</p>
+                  <p v-else>'{{ selectedShipFilter }}' 선명으로 등록된 내역이 없습니다.</p>
                   <button class="btn-inline-add" @click="currentMode = 'quick_input'">
                     + 엑셀식 연속 입력 시트로 작성
                   </button>
                 </td>
               </tr>
 
-              <tr v-for="(item, idx) in currentLedgerList" :key="item.id || idx">
+              <tr v-for="(item, idx) in filteredLedgerList" :key="item.id || idx">
                 <td class="td-no">{{ idx + 1 }}</td>
                 <td class="td-ship">
                   <span class="ship-badge">{{ item.shipName }}</span>
                 </td>
+                <td class="td-customer" style="font-weight: 700; color: #88c5ff;">{{ item.customerName || '-' }}</td>
                 <td class="td-item">{{ item.itemDetails }}</td>
-                <td class="td-amount">₩ {{ (Number(item.amount) || 0).toLocaleString() }}</td>
+                <td :class="['td-amount', { 'is-misu': item.paymentType === '미수' }]">₩ {{ (Number(item.amount) || 0).toLocaleString() }}</td>
                 <td class="td-pay">
                   <span :class="['pay-badge', item.paymentType]">{{ item.paymentType }}</span>
+                </td>
+                <td class="td-weight" style="text-align: center; font-weight: 700; color: #1ad1b1;">
+                  {{ item.weight ? (item.weight.includes('kg') ? item.weight : `${item.weight}kg`) : '-' }}
                 </td>
                 <td class="td-memo">{{ item.memo || '-' }}</td>
                 <td class="td-actions">
@@ -631,13 +826,15 @@ onMounted(() => {
           <table class="grid-sheet-table">
             <thead>
               <tr>
-                <th style="width: 50px; text-align: center;">NO</th>
-                <th style="width: 190px;">선명 및 상회 *</th>
-                <th>품목 및 수량 *</th>
-                <th style="width: 150px;">금액 (원) *</th>
-                <th style="width: 120px;">결제구분</th>
-                <th style="width: 200px;">비고/메모</th>
-                <th style="width: 50px; text-align: center;">삭제</th>
+                <th style="width: 45px; text-align: center;">NO</th>
+                <th style="width: 150px;">선명 및 상회 *</th>
+                <th style="width: 110px;">이름</th>
+                <th style="width: 160px;">품목 및 수량 *</th>
+                <th style="width: 120px;">금액 (원) *</th>
+                <th style="width: 95px;">결제구분</th>
+                <th style="width: 110px;">무게 (kg)</th>
+                <th style="width: 150px;">비고/메모</th>
+                <th style="width: 45px; text-align: center;">삭제</th>
               </tr>
             </thead>
             <tbody>
@@ -655,6 +852,15 @@ onMounted(() => {
                 <td>
                   <input 
                     type="text" 
+                    v-model="row.customerName" 
+                    placeholder="예: 홍길동" 
+                    class="sheet-input"
+                    @focus="activeFocusedRowIndex = rIdx"
+                  />
+                </td>
+                <td>
+                  <input 
+                    type="text" 
                     v-model="row.itemDetails" 
                     placeholder="예: 박스 외 10개 (상)" 
                     class="sheet-input"
@@ -663,11 +869,12 @@ onMounted(() => {
                 </td>
                 <td>
                   <input 
-                    type="number" 
+                    type="text" 
                     inputmode="numeric"
-                    v-model.number="row.amount" 
+                    :value="row.amount !== null ? row.amount : ''" 
                     placeholder="0" 
                     class="sheet-input amount"
+                    @input="onRowAmountInput(row, $event)"
                     @focus="activeFocusedRowIndex = rIdx"
                   />
                 </td>
@@ -675,6 +882,20 @@ onMounted(() => {
                   <select v-model="row.paymentType" class="sheet-select" @focus="activeFocusedRowIndex = rIdx">
                     <option v-for="opt in paymentOptions" :key="opt" :value="opt">{{ opt }}</option>
                   </select>
+                </td>
+                <td>
+                  <div class="weight-input-container">
+                    <input 
+                      type="text" 
+                      inputmode="numeric"
+                      :value="row.weight" 
+                      placeholder="0" 
+                      class="sheet-input weight-input"
+                      @input="onRowWeightInput(row, $event)"
+                      @focus="activeFocusedRowIndex = rIdx"
+                    />
+                    <span class="unit-badge">kg</span>
+                  </div>
                 </td>
                 <td>
                   <input 
@@ -737,13 +958,25 @@ onMounted(() => {
           </div>
 
           <div class="form-group">
+            <label>이름</label>
+            <input type="text" v-model="singleForm.customerName" placeholder="예: 홍길동" class="dialog-input" />
+          </div>
+
+          <div class="form-group">
             <label>품목 및 수량 *</label>
             <input type="text" v-model="singleForm.itemDetails" placeholder="예: 부식 15 (덕적고)" class="dialog-input" />
           </div>
 
           <div class="form-group">
             <label>금액 (원) *</label>
-            <input type="number" inputmode="numeric" v-model.number="singleForm.amount" placeholder="0" class="dialog-input amount" />
+            <input 
+              type="text" 
+              inputmode="numeric"
+              :value="singleForm.amount !== null ? singleForm.amount : ''" 
+              placeholder="0" 
+              class="dialog-input amount" 
+              @input="onSingleAmountInput($event)"
+            />
           </div>
 
           <div class="form-group">
@@ -751,6 +984,21 @@ onMounted(() => {
             <select v-model="singleForm.paymentType" class="dialog-select">
               <option v-for="opt in paymentOptions" :key="opt" :value="opt">{{ opt }}</option>
             </select>
+          </div>
+
+          <div class="form-group">
+            <label>무게</label>
+            <div class="weight-input-container">
+              <input 
+                type="text" 
+                inputmode="numeric"
+                :value="singleForm.weight" 
+                placeholder="0" 
+                class="dialog-input weight-input" 
+                @input="onSingleWeightInput($event)"
+              />
+              <span class="unit-badge">kg</span>
+            </div>
           </div>
 
           <div class="form-group">
@@ -972,21 +1220,49 @@ onMounted(() => {
       }
     }
 
-    .total-amount-display {
+    .summary-amount-group {
       display: flex;
-      align-items: baseline;
+      align-items: center;
+      flex-wrap: wrap;
       gap: 0.6rem;
 
-      .amount-label {
-        font-size: 1.15rem;
-        color: rgba(255, 255, 255, 0.6);
-      }
+      .amount-badge {
+        display: flex;
+        align-items: baseline;
+        gap: 0.4rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.7rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
 
-      .amount-value {
-        font-size: 2.2rem;
-        font-weight: 900;
-        color: #1ad1b1;
-        letter-spacing: -0.04rem;
+        .amount-label {
+          font-size: 1.1rem;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .amount-value {
+          font-size: 1.5rem;
+          font-weight: 900;
+          letter-spacing: -0.02rem;
+        }
+
+        &.daily {
+          .amount-value { color: #1ad1b1; }
+        }
+
+        &.monthly {
+          background: rgba(136, 197, 255, 0.1);
+          border-color: rgba(136, 197, 255, 0.25);
+          .amount-label { color: rgba(136, 197, 255, 0.85); }
+          .amount-value { color: #88c5ff; }
+        }
+
+        &.fee {
+          background: rgba(255, 183, 3, 0.12);
+          border-color: rgba(255, 183, 3, 0.3);
+          .amount-label { color: #ffb703; font-weight: 700; }
+          .amount-value { color: #ffd166; }
+        }
       }
     }
   }
@@ -1151,6 +1427,132 @@ onMounted(() => {
 }
 
 /* 📌 MODE 1: 일일 장부 대시보드 리스트 */
+.ship-filter-tabs-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  background: rgba(13, 30, 51, 0.75);
+  border: 1px solid rgba(136, 197, 255, 0.18);
+  border-radius: 1.2rem;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1.2rem;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+  }
+
+  .tabs-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1;
+    overflow: hidden;
+
+    .tabs-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #88c5ff;
+      white-space: nowrap;
+
+      i { font-size: 1.5rem; }
+    }
+
+    .ship-tabs-scroll {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      overflow-x: auto;
+      width: 100%;
+      padding-bottom: 0.2rem;
+      -webkit-overflow-scrolling: touch;
+
+      &::-webkit-scrollbar {
+        height: 4px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: rgba(136, 197, 255, 0.25);
+        border-radius: 4px;
+      }
+
+      .ship-tab-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0.4rem 0.9rem;
+        border-radius: 0.75rem;
+        font-size: 1.2rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+
+        .tab-count {
+          font-size: 1.05rem;
+          padding: 0.1rem 0.45rem;
+          border-radius: 0.4rem;
+          background: rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(136, 197, 255, 0.3);
+        }
+
+        &.active {
+          background: linear-gradient(135deg, var(--primary-darken-color-1) 0%, #153c6c 100%);
+          border-color: #88c5ff;
+          color: #ffffff;
+          box-shadow: 0 4px 12px rgba(21, 60, 108, 0.4);
+
+          .tab-count {
+            background: rgba(136, 197, 255, 0.25);
+            color: #88c5ff;
+            font-weight: 800;
+          }
+        }
+      }
+    }
+  }
+
+  .sort-select-box {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+
+    @media (max-width: 640px) {
+      width: 100%;
+    }
+
+    .sort-select-pill {
+      width: 100%;
+      background: rgba(136, 197, 255, 0.08);
+      border: 1px solid rgba(136, 197, 255, 0.25);
+      border-radius: 0.8rem;
+      padding: 0.4rem 0.8rem;
+      color: #88c5ff;
+      font-size: 1.2rem;
+      font-weight: 800;
+      outline: none;
+      cursor: pointer;
+
+      option {
+        background: #0d1e33;
+        color: #ffffff;
+      }
+    }
+  }
+}
+
 .payment-stats-bar {
   display: flex;
   gap: 0.6rem;
@@ -1158,15 +1560,37 @@ onMounted(() => {
   margin-bottom: 1.4rem;
 
   .stat-chip {
+    flex: 1;
+    min-width: 9rem;
     display: flex;
     flex-direction: column;
-    padding: 0.5rem 1rem;
+    padding: 0.65rem 1.1rem;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 0.8rem;
+    border-radius: 0.9rem;
+    transition: all 0.2s ease;
 
-    .type-name { font-size: 1rem; color: rgba(255, 255, 255, 0.5); }
-    .type-val { font-size: 1.3rem; font-weight: 800; color: #ffffff; }
+    .type-name { font-size: 1.1rem; font-weight: 700; color: rgba(255, 255, 255, 0.5); }
+    .type-val { font-size: 1.4rem; font-weight: 900; color: #ffffff; margin-top: 0.2rem; }
+
+    &.현금 {
+      background: rgba(46, 204, 113, 0.08);
+      border-color: rgba(46, 204, 113, 0.2);
+      .type-name { color: rgba(46, 204, 113, 0.85); }
+      .type-val { color: #2ecc71; }
+    }
+    &.입금 {
+      background: rgba(26, 209, 177, 0.08);
+      border-color: rgba(26, 209, 177, 0.2);
+      .type-name { color: rgba(26, 209, 177, 0.85); }
+      .type-val { color: #1ad1b1; }
+    }
+    &.미수 {
+      background: rgba(255, 92, 141, 0.08);
+      border-color: rgba(255, 92, 141, 0.2);
+      .type-name { color: rgba(255, 92, 141, 0.85); }
+      .type-val { color: #ff5c8d; }
+    }
   }
 }
 
@@ -1268,7 +1692,12 @@ onMounted(() => {
         flex-direction: column;
 
         .lbl { font-size: 1rem; color: rgba(255, 255, 255, 0.5); }
-        .val { font-size: 1.85rem; font-weight: 900; color: #1ad1b1; }
+        .val {
+          font-size: 1.85rem;
+          font-weight: 900;
+          color: #1ad1b1;
+          &.is-misu { color: #ff5c8d !important; }
+        }
       }
 
       .card-btns {
@@ -1355,7 +1784,12 @@ onMounted(() => {
         font-weight: 800;
       }
       &.td-item { font-weight: 700; color: #ffffff; }
-      &.td-amount { font-weight: 900; color: #1ad1b1; text-align: right; }
+      &.td-amount {
+        font-weight: 900;
+        color: #1ad1b1;
+        text-align: right;
+        &.is-misu { color: #ff5c8d !important; }
+      }
       &.td-pay {
         text-align: center;
         .pay-badge {
@@ -1457,6 +1891,26 @@ onMounted(() => {
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
       &.r-no { text-align: center; color: rgba(255, 255, 255, 0.4); font-weight: 600; }
+
+      .weight-input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+
+        .weight-input {
+          padding-right: 2.8rem !important;
+        }
+
+        .unit-badge {
+          position: absolute;
+          right: 0.8rem;
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.5);
+          pointer-events: none;
+        }
+      }
 
       .sheet-input {
         width: 100%;
