@@ -132,44 +132,58 @@ const isCheckedIn = computed(() => {
   return false;
 });
 
-// 로그인된 사용자의 출퇴근 기록 매핑 (날짜 정규화 + 야간 근무 2일차 달력 연장 자동 반영)
+// 로그인된 사용자의 출퇴근 기록 매핑 (날짜 정규화 + 야간 근무 2일차 달력 연장 자동 반영 + 중복 무한 연장 방지)
 const attendanceHistory = computed(() => {
   const history: Record<string, "day" | "night" | "field" | "absent" | "leave"> = {};
   const currentName = userStore.loggedInUser?.name;
   if (!currentName) return history;
   
-  // 1. DB에 저장된 직접 기록 매핑
-  userStore.attendanceRecords.forEach(r => {
-    if (r.worker_name === currentName && r.date) {
-      const normDate = getNormalizedDate(r.date);
-      history[normDate] = r.status as any;
+  // 1. DB에서 해당 조합원의 직접 기록 추출 및 날짜순 정렬
+  const userRecords = userStore.attendanceRecords
+    .filter(r => r.worker_name === currentName && r.date)
+    .map(r => ({
+      ...r,
+      normDate: getNormalizedDate(r.date)
+    }))
+    .sort((a, b) => a.normDate.localeCompare(b.normDate));
+
+  // 2. 과거 버그로 DB에 연속 중복 저장되었던 야간 레코드(2일차, 3일차 등)를 걸러내고 주 야간 시작일만 매핑
+  const primaryHistory: Record<string, "day" | "night" | "field" | "absent" | "leave"> = {};
+
+  userRecords.forEach(r => {
+    if (r.status === "night") {
+      const parts = r.normDate.split('-').map(Number);
+      if (parts.length === 3) {
+        const prev1 = getFormattedDate(new Date(parts[0], parts[1] - 1, parts[2] - 1));
+        const prev2 = getFormattedDate(new Date(parts[0], parts[1] - 1, parts[2] - 2));
+
+        // 전날이나 전전날 이미 야간 근무 시작 기록이 존재하는 경우 연장용 중복 레코드이므로 신규 시작일에서 제외
+        if (primaryHistory[prev1] === "night" || primaryHistory[prev2] === "night") {
+          return;
+        }
+      }
     }
+    primaryHistory[r.normDate] = r.status as any;
   });
 
-  // 2. 야간 근무(night) 2일차 연장 자동 반영
-  // 어제가 신규 야간 근무 시작일(night)인 경우 오늘(2일차)이 'none' 이거나 'absent'이면 'night'로 연장 반영
-  const directDates = Object.keys(history);
-  directDates.forEach(dateStr => {
-    if (history[dateStr] === "night") {
+  // 3. 주 야간 시작일(1일차)로부터 2일차 야간 연장만 정확히 1일 자동 반영
+  const primaryDates = Object.keys(primaryHistory);
+  primaryDates.forEach(dateStr => {
+    if (primaryHistory[dateStr] === "night") {
       const parts = dateStr.split('-').map(Number);
       if (parts.length === 3) {
-        // 그저께 확인: 그저께가 야간이 아니었던 경우에만 '신규 야간 시작일'로 인정
-        const prevD = new Date(parts[0], parts[1] - 1, parts[2] - 1);
-        const prevStr = getFormattedDate(prevD);
-
-        if (history[prevStr] !== "night") {
-          const nextD = new Date(parts[0], parts[1] - 1, parts[2] + 1);
-          const nextStr = getFormattedDate(nextD);
-          // 2일차에 명시적 근무(day, field, leave, night)가 없거나 absent인 경우 'night'로 강제 연장
-          if (!history[nextStr] || history[nextStr] === "absent" || history[nextStr] === "none") {
-            history[nextStr] = "night";
-          }
+        const nextD = new Date(parts[0], parts[1] - 1, parts[2] + 1);
+        const nextStr = getFormattedDate(nextD);
+        
+        // 2일차에 주간, 외근, 조퇴 등 다른 명시적 근무가 없다면 2일차를 'night'로 연장 표기
+        if (!primaryHistory[nextStr] || primaryHistory[nextStr] === "absent" || primaryHistory[nextStr] === "none") {
+          primaryHistory[nextStr] = "night";
         }
       }
     }
   });
 
-  return history;
+  return primaryHistory;
 });
 
 // 일자별 출근 기록 그룹화 (관리자용)
