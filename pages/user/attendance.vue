@@ -93,97 +93,75 @@ const getNormalizedDate = (dateStr: string): string => {
   return dateStr;
 };
 
-// 로그인된 사용자의 실시간 오늘 출근 여부 동적 감지 (야간 근무 2일 경과 버그 차단 완벽 대응)
+// 1. DB에 등록된 조합원의 명시적 기록 매핑 (원형 100% 보전 - 사용자 변경 시 원본 보장)
+const rawAttendanceMap = computed(() => {
+  const map: Record<string, "day" | "night" | "field" | "absent" | "leave"> = {};
+  const currentName = userStore.loggedInUser?.name;
+  if (!currentName) return map;
+
+  userStore.attendanceRecords.forEach(r => {
+    if (r.worker_name === currentName && r.date) {
+      const normDate = getNormalizedDate(r.date);
+      map[normDate] = r.status as any;
+    }
+  });
+
+  return map;
+});
+
+// 2. 특정 일자의 상태를 계산하는 단일 헬퍼 함수
+const getDayStatus = (dateStr: string): "day" | "night" | "field" | "absent" | "leave" | "none" => {
+  // A. DB에 해당 날짜의 명시적 기록이 존재할 경우 -> 100% 최우선 적용 (1일차 야간 절대 안 풀림)
+  if (rawAttendanceMap.value[dateStr]) {
+    return rawAttendanceMap.value[dateStr];
+  }
+
+  // B. 해당 날짜에 직접 기록이 없는 경우 -> 전날(yesterday)이 DB에 명시적 'night'로 등록되어 있고, 전전날은 'night'가 아니었는지 확인
+  const parts = dateStr.split('-').map(Number);
+  if (parts.length === 3) {
+    const prevDateObj = new Date(parts[0], parts[1] - 1, parts[2] - 1);
+    const prevDateStr = getFormattedDate(prevDateObj);
+
+    if (rawAttendanceMap.value[prevDateStr] === "night") {
+      const prevPrevDateObj = new Date(parts[0], parts[1] - 1, parts[2] - 2);
+      const prevPrevDateStr = getFormattedDate(prevPrevDateObj);
+
+      // 전전날이 night가 아닌 신규 야간 시작일의 2일차 오전에만 야간 연장 자동 적용
+      if (rawAttendanceMap.value[prevPrevDateStr] !== "night") {
+        return "night";
+      }
+    }
+  }
+
+  return "none";
+};
+
+// 3. 오늘 출근 여부 동적 감지 (상단 출근 등록 / 출근 취소 버튼)
 const isCheckedIn = computed(() => {
   const currentName = userStore.loggedInUser?.name;
   if (!currentName) return false;
 
-  const today = getFormattedDate(new Date());
-  const todayRecord = userStore.attendanceRecords.find(
-    r => r.worker_name === currentName && getNormalizedDate(r.date) === today
-  );
+  const todayStr = getFormattedDate(new Date());
+  const status = getDayStatus(todayStr);
 
-  // 1. 오늘 직접 등록된 출결 기록이 있는 경우
-  if (todayRecord) {
-    return todayRecord.status === "day" || todayRecord.status === "night" || todayRecord.status === "field";
-  }
-
-  // 2. 오늘 직접 기록이 없는 경우 -> 어제가 '신규 야간 근무 시작일'인 경우에만 오늘 오전까지 출근 연결 상태로 인정
-  const yesterdayObj = new Date();
-  yesterdayObj.setDate(yesterdayObj.getDate() - 1);
-  const yesterdayStr = getFormattedDate(yesterdayObj);
-
-  const dayBeforeYesterdayObj = new Date();
-  dayBeforeYesterdayObj.setDate(dayBeforeYesterdayObj.getDate() - 2);
-  const dayBeforeYesterdayStr = getFormattedDate(dayBeforeYesterdayObj);
-
-  const yesterdayRecord = userStore.attendanceRecords.find(
-    r => r.worker_name === currentName && getNormalizedDate(r.date) === yesterdayStr
-  );
-  const dayBeforeYesterdayRecord = userStore.attendanceRecords.find(
-    r => r.worker_name === currentName && getNormalizedDate(r.date) === dayBeforeYesterdayStr
-  );
-
-  // 어제가 '신규 야간 시작일'인 경우에만 오늘 2일차 출근 연결 인정
-  if (yesterdayRecord?.status === "night" && dayBeforeYesterdayRecord?.status !== "night") {
-    return true;
-  }
-
-  return false;
+  return status === "day" || status === "night" || status === "field";
 });
 
-// 로그인된 사용자의 출퇴근 기록 매핑 (날짜 정규화 + 야간 근무 2일차 달력 연장 자동 반영 + 중복 무한 연장 방지)
+// 4. 기존 구조 호환용 매핑
 const attendanceHistory = computed(() => {
   const history: Record<string, "day" | "night" | "field" | "absent" | "leave"> = {};
-  const currentName = userStore.loggedInUser?.name;
-  if (!currentName) return history;
-  
-  // 1. DB에서 해당 조합원의 직접 기록 추출 및 날짜순 정렬
-  const userRecords = userStore.attendanceRecords
-    .filter(r => r.worker_name === currentName && r.date)
-    .map(r => ({
-      ...r,
-      normDate: getNormalizedDate(r.date)
-    }))
-    .sort((a, b) => a.normDate.localeCompare(b.normDate));
+  const year = currentDate.value.getFullYear();
+  const month = currentDate.value.getMonth();
+  const totalDays = new Date(year, month + 1, 0).getDate();
 
-  // 2. 과거 버그로 DB에 연속 중복 저장되었던 야간 레코드(2일차, 3일차 등)를 걸러내고 주 야간 시작일만 매핑
-  const primaryHistory: Record<string, "day" | "night" | "field" | "absent" | "leave"> = {};
-
-  userRecords.forEach(r => {
-    if (r.status === "night") {
-      const parts = r.normDate.split('-').map(Number);
-      if (parts.length === 3) {
-        const prev1 = getFormattedDate(new Date(parts[0], parts[1] - 1, parts[2] - 1));
-        const prev2 = getFormattedDate(new Date(parts[0], parts[1] - 1, parts[2] - 2));
-
-        // 전날이나 전전날 이미 야간 근무 시작 기록이 존재하는 경우 연장용 중복 레코드이므로 신규 시작일에서 제외
-        if (primaryHistory[prev1] === "night" || primaryHistory[prev2] === "night") {
-          return;
-        }
-      }
+  for (let i = 1; i <= totalDays; i++) {
+    const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+    const st = getDayStatus(dateKey);
+    if (st !== "none") {
+      history[dateKey] = st;
     }
-    primaryHistory[r.normDate] = r.status as any;
-  });
-
-  // 3. 주 야간 시작일(1일차)로부터 2일차 야간 연장만 정확히 1일 자동 반영
-  const primaryDates = Object.keys(primaryHistory);
-  primaryDates.forEach(dateStr => {
-    if (primaryHistory[dateStr] === "night") {
-      const parts = dateStr.split('-').map(Number);
-      if (parts.length === 3) {
-        const nextD = new Date(parts[0], parts[1] - 1, parts[2] + 1);
-        const nextStr = getFormattedDate(nextD);
-        
-        // 2일차에 주간, 외근, 조퇴 등 다른 명시적 근무가 없다면 2일차를 'night'로 연장 표기
-        if (!primaryHistory[nextStr] || primaryHistory[nextStr] === "absent" || primaryHistory[nextStr] === "none") {
-          primaryHistory[nextStr] = "night";
-        }
-      }
-    }
-  });
-
-  return primaryHistory;
+  }
+  return history;
 });
 
 // 일자별 출근 기록 그룹화 (관리자용)
@@ -374,7 +352,7 @@ const calendarDays = computed<AttendanceDay[]>(() => {
   for (let i = firstDayIndex - 1; i >= 0; i--) {
     const dayNum = prevMonthTotalDays - i;
     const dateKey = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
-    let status = attendanceHistory.value[dateKey] || "none";
+    let status = getDayStatus(dateKey);
     if (status === "none") {
       status = "absent";
     }
@@ -388,7 +366,7 @@ const calendarDays = computed<AttendanceDay[]>(() => {
   // Current month days
   for (let i = 1; i <= totalDays; i++) {
     const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
-    let status = attendanceHistory.value[dateKey] || "none";
+    let status = getDayStatus(dateKey);
 
     // 타입 설정이 안되어 있고 오늘 또는 과거 일자이면 결근(absent)으로 자동 매핑
     const dateObj = new Date(year, month, i);
