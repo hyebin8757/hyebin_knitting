@@ -172,6 +172,9 @@ const currentLedgerList = computed(() => {
   return userStore.shipLedgers.filter(l => l.date === selectedDate.value);
 });
 
+// 한국어 문자열 정렬 고성능 Collator 재사용 인스턴스
+const koreanCollator = new Intl.Collator('ko-KR');
+
 // 🚢 선명별 필터 탭 관련 상태 및 계산
 const selectedShipFilter = ref<string>('전체');
 
@@ -183,7 +186,7 @@ const availableShipTabs = computed(() => {
       set.add(item.shipName.trim());
     }
   });
-  const sortedShips = Array.from(set).sort((a, b) => a.localeCompare(b, 'ko-KR'));
+  const sortedShips = Array.from(set).sort((a, b) => koreanCollator.compare(a, b));
   return ['전체', ...sortedShips];
 });
 
@@ -206,7 +209,7 @@ const filteredLedgerList = computed(() => {
     } else if (sortOrder.value === 'asc') {
       return (Number(a.id) || 0) - (Number(b.id) || 0);
     } else if (sortOrder.value === 'ship') {
-      return (a.shipName || '').localeCompare(b.shipName || '', 'ko-KR');
+      return koreanCollator.compare(a.shipName || '', b.shipName || '');
     }
     return 0;
   });
@@ -514,7 +517,7 @@ const exportToExcel = () => {
   XLSX.utils.book_append_sheet(workbook, sheetAsc, '오래된순');
 
   // 3) 시트 3: 선명 가나다순
-  const shipList = [...baseList].sort((a, b) => (a.shipName || '').localeCompare(b.shipName || '', 'ko-KR'));
+  const shipList = [...baseList].sort((a, b) => koreanCollator.compare(a.shipName || '', b.shipName || ''));
   const sheetShip = XLSX.utils.json_to_sheet(createSheetData(shipList));
   sheetShip['!cols'] = colWidths;
   XLSX.utils.book_append_sheet(workbook, sheetShip, '선명가나다순');
