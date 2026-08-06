@@ -476,8 +476,8 @@ const exportToExcel = () => {
       '연번': idx + 1,
       '날짜 (등록시간)': formatDateTime(item.date, item.createdAt),
       '선명 및 상회': item.shipName,
-      '이름': item.customerName || '-',
       '품목 및 수량': item.itemDetails,
+      '이름': item.customerName || '-',
       '금액 (원)': Number(item.amount) || 0,
       '결제구분': item.paymentType,
       '무게 (kg)': item.weight ? (item.weight.includes('kg') ? item.weight : `${item.weight}kg`) : '-',
@@ -490,8 +490,8 @@ const exportToExcel = () => {
     { wch: 6 },  // 연번
     { wch: 18 }, // 날짜 (등록시간)
     { wch: 18 }, // 선명 및 상회
-    { wch: 12 }, // 이름
     { wch: 28 }, // 품목 및 수량
+    { wch: 12 }, // 이름
     { wch: 14 }, // 금액 (원)
     { wch: 10 }, // 결제구분
     { wch: 12 }, // 무게 (kg)
@@ -757,8 +757,8 @@ onMounted(() => {
               <tr>
                 <th style="width: 50px; text-align: center;">NO</th>
                 <th style="width: 150px;">선명 및 상회</th>
-                <th style="width: 110px;">이름</th>
                 <th>품목 및 수량 상세</th>
+                <th style="width: 110px;">이름</th>
                 <th style="width: 130px; text-align: right;">금액</th>
                 <th style="width: 90px; text-align: center;">결제구분</th>
                 <th style="width: 100px; text-align: center;">무게 (kg)</th>
@@ -783,8 +783,8 @@ onMounted(() => {
                 <td class="td-ship">
                   <span class="ship-badge">{{ item.shipName }}</span>
                 </td>
-                <td class="td-customer" style="font-weight: 700; color: #88c5ff;">{{ item.customerName || '-' }}</td>
                 <td class="td-item">{{ item.itemDetails }}</td>
+                <td class="td-customer" style="font-weight: 700; color: #88c5ff;">{{ item.customerName || '-' }}</td>
                 <td :class="['td-amount', { 'is-misu': item.paymentType === '미수' }]">₩ {{ (Number(item.amount) || 0).toLocaleString() }}</td>
                 <td class="td-pay">
                   <span :class="['pay-badge', item.paymentType]">{{ item.paymentType }}</span>
@@ -828,8 +828,8 @@ onMounted(() => {
               <tr>
                 <th style="width: 45px; text-align: center;">NO</th>
                 <th style="width: 150px;">선명 및 상회 *</th>
-                <th style="width: 110px;">이름</th>
                 <th style="width: 160px;">품목 및 수량 *</th>
+                <th style="width: 110px;">이름</th>
                 <th style="width: 120px;">금액 (원) *</th>
                 <th style="width: 95px;">결제구분</th>
                 <th style="width: 110px;">무게 (kg)</th>
@@ -852,8 +852,8 @@ onMounted(() => {
                 <td>
                   <input 
                     type="text" 
-                    v-model="row.customerName" 
-                    placeholder="예: 홍길동" 
+                    v-model="row.itemDetails" 
+                    placeholder="예: 박스 외 10개 (상)" 
                     class="sheet-input"
                     @focus="activeFocusedRowIndex = rIdx"
                   />
@@ -861,8 +861,8 @@ onMounted(() => {
                 <td>
                   <input 
                     type="text" 
-                    v-model="row.itemDetails" 
-                    placeholder="예: 박스 외 10개 (상)" 
+                    v-model="row.customerName" 
+                    placeholder="예: 홍길동" 
                     class="sheet-input"
                     @focus="activeFocusedRowIndex = rIdx"
                   />
@@ -958,13 +958,13 @@ onMounted(() => {
           </div>
 
           <div class="form-group">
-            <label>이름</label>
-            <input type="text" v-model="singleForm.customerName" placeholder="예: 홍길동" class="dialog-input" />
+            <label>품목 및 수량 *</label>
+            <input type="text" v-model="singleForm.itemDetails" placeholder="예: 부식 15 (덕적고)" class="dialog-input" />
           </div>
 
           <div class="form-group">
-            <label>품목 및 수량 *</label>
-            <input type="text" v-model="singleForm.itemDetails" placeholder="예: 부식 15 (덕적고)" class="dialog-input" />
+            <label>이름</label>
+            <input type="text" v-model="singleForm.customerName" placeholder="예: 홍길동" class="dialog-input" />
           </div>
 
           <div class="form-group">
