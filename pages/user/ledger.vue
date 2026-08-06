@@ -758,7 +758,7 @@ onMounted(() => {
                 <th style="width: 50px; text-align: center;">NO</th>
                 <th style="width: 150px;">선명 및 상회</th>
                 <th>품목 및 수량 상세</th>
-                <th style="width: 110px;">이름</th>
+                <th style="width: 110px; text-align: center;">이름</th>
                 <th style="width: 130px; text-align: right;">금액</th>
                 <th style="width: 90px; text-align: center;">결제구분</th>
                 <th style="width: 100px; text-align: center;">무게 (kg)</th>
@@ -784,7 +784,7 @@ onMounted(() => {
                   <span class="ship-badge">{{ item.shipName }}</span>
                 </td>
                 <td class="td-item">{{ item.itemDetails }}</td>
-                <td class="td-customer" style="font-weight: 700; color: #88c5ff;">{{ item.customerName || '-' }}</td>
+                <td class="td-customer" style="font-weight: 700; color: #88c5ff; text-align: center;">{{ item.customerName || '-' }}</td>
                 <td :class="['td-amount', { 'is-misu': item.paymentType === '미수' }]">₩ {{ (Number(item.amount) || 0).toLocaleString() }}</td>
                 <td class="td-pay">
                   <span :class="['pay-badge', item.paymentType]">{{ item.paymentType }}</span>
@@ -829,7 +829,7 @@ onMounted(() => {
                 <th style="width: 45px; text-align: center;">NO</th>
                 <th style="width: 150px;">선명 및 상회 *</th>
                 <th style="width: 160px;">품목 및 수량 *</th>
-                <th style="width: 110px;">이름</th>
+                <th style="width: 110px; text-align: center;">이름</th>
                 <th style="width: 120px;">금액 (원) *</th>
                 <th style="width: 95px;">결제구분</th>
                 <th style="width: 110px;">무게 (kg)</th>
@@ -864,6 +864,7 @@ onMounted(() => {
                     v-model="row.customerName" 
                     placeholder="예: 홍길동" 
                     class="sheet-input"
+                    style="text-align: center;"
                     @focus="activeFocusedRowIndex = rIdx"
                   />
                 </td>
