@@ -356,8 +356,21 @@ export const useCoupleStore = defineStore("couple", () => {
             if (typeof window !== "undefined") localStorage.setItem("couple_ddays", JSON.stringify(row.content));
           }
           if (row.id === "utilityRecords" && row.content) {
-            utilityRecords.value = row.content;
-            if (typeof window !== "undefined") localStorage.setItem("couple_utilityRecords", JSON.stringify(row.content));
+            // 매 로드 시 도시가스 0원 항목 자동 제거 후 변경사항있으면 Supabase에 다시 저장
+            const rawRecords: any[] = row.content;
+            const cleanedRecords = rawRecords.map((rec: any) => ({
+              ...rec,
+              items: (rec.items || []).filter(
+                (item: any) => !(item.name === "도시가스" && (Number(item.amount) || 0) === 0)
+              ),
+            }));
+            const hadChanges = JSON.stringify(rawRecords) !== JSON.stringify(cleanedRecords);
+            utilityRecords.value = cleanedRecords;
+            if (typeof window !== "undefined") localStorage.setItem("couple_utilityRecords", JSON.stringify(cleanedRecords));
+            if (hadChanges) {
+              // 백그라운드로 Supabase에 클린 데이터 저장
+              syncToSupabase("utilityRecords", cleanedRecords);
+            }
           }
           if (row.id === "livingRecords" && row.content) {
             livingRecords.value = row.content;
@@ -394,6 +407,7 @@ export const useCoupleStore = defineStore("couple", () => {
           schedules.value = [];
           if (typeof window !== "undefined") localStorage.removeItem("couple_schedules");
         }
+
       } else if (error) {
         // Supabase failed - fall back to localStorage as last resort
         if (typeof window !== "undefined") {

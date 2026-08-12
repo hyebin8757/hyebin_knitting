@@ -38,10 +38,9 @@ const editingMemo = ref("");
 const showAddCatSubModal = ref(false);
 const newCatNameInput = ref("");
 
-// Standard default categories
+// Standard default categories (도시가스 제거)
 const defaultCategoryNames = [
   "전기세",
-  "도시가스",
   "관리비",
   "수도세",
   "인터넷",
@@ -52,7 +51,7 @@ const defaultCategoryNames = [
 const openEditModalForMonth = (month: number) => {
   editingMonth.value = month;
   const rec = coupleStore.getUtilityRecord(selectedYear.value, month);
-  
+
   if (rec && rec.items && rec.items.length > 0) {
     editingItems.value = rec.items.map((i) => ({ ...i }));
   } else {
@@ -116,6 +115,25 @@ const modalTotalSum = computed(() => {
 const modalPerPerson = computed(() => {
   return Math.round(modalTotalSum.value / 2);
 });
+
+// Unsaved changes guard: true if any amount > 0 or memo filled
+const hasUnsavedChanges = computed(() => {
+  const anyAmount = editingItems.value.some((item) => Number(item.amount) > 0);
+  return anyAmount || editingMemo.value.trim().length > 0;
+});
+
+const handleCloseModal = () => {
+  if (hasUnsavedChanges.value) {
+    dialogStore.showConfirm(
+      "작성 중인 내용이 있습니다. 저장하지 않고 닫으시겠습니까?",
+      () => { showEditModal.value = false; },
+      "닫기 확인",
+      "warning"
+    );
+  } else {
+    showEditModal.value = false;
+  }
+};
 
 const handleSaveUtility = () => {
   coupleStore.saveUtilityRecord(
@@ -306,11 +324,11 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
     </div>
 
     <!-- Edit/Register Utility Modal -->
-    <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
+    <div v-if="showEditModal" class="modal-overlay" @click.self="handleCloseModal">
       <div class="modal-card edit-utility-modal">
         <div class="modal-header">
           <h3>💡 {{ selectedYear }}년 공과금 등록</h3>
-          <button class="close-btn" @click="showEditModal = false">×</button>
+          <button class="close-btn" @click="handleCloseModal">×</button>
         </div>
 
         <!-- Month Switcher inside Modal -->
@@ -345,6 +363,16 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
                 <span class="unit">원</span>
               </div>
               <button
+                v-if="item.amount > 0"
+                type="button"
+                class="reset-amount-btn"
+                @click="item.amount = 0"
+                title="금액 초기화"
+              >
+                <i class="material-icons">restart_alt</i>
+              </button>
+              <button
+                v-else
                 type="button"
                 class="del-cat-btn"
                 @click="removeItemRow(idx)"
@@ -929,6 +957,26 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
   color: #ef5350;
   font-size: 1.2rem;
   cursor: pointer;
+  flex-shrink: 0;
+}
+
+.reset-amount-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-radius: 8px;
+  color: #e65100;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.reset-amount-btn .material-icons {
+  font-size: 1rem;
 }
 
 .add-custom-cat-btn {
