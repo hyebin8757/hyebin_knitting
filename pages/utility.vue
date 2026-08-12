@@ -145,6 +145,22 @@ const handleSaveUtility = () => {
   showEditModal.value = false;
 };
 
+// 도시가스 0원 일괄 삭제
+const isCleaningUp = ref(false);
+const handleCleanupDosiGas = async () => {
+  isCleaningUp.value = true;
+  try {
+    const removed = await coupleStore.cleanupDosiGas();
+    if (removed > 0) {
+      dialogStore.showAlert(`도시가스 항목 ${removed}개를 DB에서 완전히 제거했습니다. ✅`, "삭제 완료", "success");
+    } else {
+      dialogStore.showAlert("도시가스 항목이 이미 모두 제거되어 있습니다.", "확인", "info");
+    }
+  } finally {
+    isCleaningUp.value = false;
+  }
+};
+
 // Yearly stats calculation
 const yearlyTotal = computed(() => {
   let total = 0;
@@ -228,6 +244,16 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
           <i class="material-icons">table_chart</i> 연간 매트릭스 표
         </button>
       </div>
+      <!-- 도시가스 0원 일괄 삭제 버튼 -->
+      <button
+        class="cleanup-btn"
+        :disabled="isCleaningUp"
+        @click="handleCleanupDosiGas"
+        title="DB에서 도시가스 0원 항목 일괄 삭제"
+      >
+        <i class="material-icons">{{ isCleaningUp ? 'hourglass_empty' : 'cleaning_services' }}</i>
+        {{ isCleaningUp ? '삭제 중...' : '도시가스 제거' }}
+      </button>
 
       <button class="add-utility-btn" @click="openEditModalForMonth(new Date().getMonth() + 1)">
         <i class="material-icons">edit_note</i> 공과금 등록/수정
@@ -636,6 +662,34 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
   background: #ffffff;
   color: #ff6f00;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.cleanup-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f3e5f5;
+  color: #7b1fa2;
+  border: 1.5px solid #ce93d8;
+  padding: 7px 12px;
+  border-radius: 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cleanup-btn:hover {
+  background: #e1bee7;
+}
+
+.cleanup-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cleanup-btn i {
+  font-size: 1rem;
 }
 
 .add-utility-btn {

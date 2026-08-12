@@ -333,6 +333,25 @@ export const useCoupleStore = defineStore("couple", () => {
     }
   };
 
+  // 도시가스 0원 항목 전체 삭제 후 Supabase에 즉시 저장
+  const cleanupDosiGas = async (): Promise<number> => {
+    const cleaned = utilityRecords.value.map((rec: any) => ({
+      ...rec,
+      items: (rec.items || []).filter(
+        (item: any) => !(item.name === "도시가스" && (Number(item.amount) || 0) === 0)
+      ),
+    }));
+    const removedCount = utilityRecords.value.reduce((sum: number, rec: any, i: number) => {
+      const before = (rec.items || []).length;
+      const after = (cleaned[i].items || []).length;
+      return sum + (before - after);
+    }, 0);
+    utilityRecords.value = cleaned;
+    if (typeof window !== "undefined") localStorage.setItem("couple_utilityRecords", JSON.stringify(cleaned));
+    await syncToSupabase("utilityRecords", cleaned);
+    return removedCount;
+  };
+
   const fetchAllData = async () => {
     try {
       // Supabase is the single source of truth.
@@ -480,5 +499,6 @@ export const useCoupleStore = defineStore("couple", () => {
     deleteDDay,
     fetchAllData,
     clearAllData,
+    cleanupDosiGas,
   };
 });
