@@ -50,14 +50,20 @@ const nuxtConfig: any = {
         {
           hid: "description",
           name: "description",
-          content: "우주 ♥ 혜빈 🐾 땅콩이와 함께하는 커플 스마트 가계부 및 일정 관리 앱",
+          content:
+            "우주 ♥ 혜빈 🐾 땅콩이와 함께하는 커플 스마트 가계부 및 일정 관리 앱",
         },
         {
           hid: "og:title",
           property: "og:title",
           content: "우주 ♥ 혜빈 | 우리 둘만의 공간",
         },
-        { hid: "og:description", property: "og:description", content: "공과금, 생활비, 대출 이자 및 약속 일정 통합 관리" },
+        { hid: "og:image", property: "og:image", content: "/image_og2.png" },
+        {
+          hid: "og:description",
+          property: "og:description",
+          content: "공과금, 생활비, 대출 이자 및 약속 일정 통합 관리",
+        },
         { hid: "og:type", property: "og:type", content: "website" },
       ],
       script: [],
@@ -103,7 +109,7 @@ const nuxtConfig: any = {
     public: {
       supabaseUrl: cleanEnvValue(process.env.SUPABASE_URL),
       supabaseKey: cleanEnvValue(process.env.SUPABASE_KEY),
-    }
+    },
   },
 
   supabase: {
@@ -154,7 +160,7 @@ const nuxtConfig: any = {
     // },
   },
 
-  compatibilityDate: '2026-07-26',
+  compatibilityDate: "2026-07-26",
 
   vite: {
     build: {
@@ -163,16 +169,16 @@ const nuxtConfig: any = {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules/vuetify')) {
-              return 'vuetify';
+            if (id.includes("node_modules/vuetify")) {
+              return "vuetify";
             }
-            if (id.includes('node_modules/@supabase')) {
-              return 'supabase';
+            if (id.includes("node_modules/@supabase")) {
+              return "supabase";
             }
-          }
-        }
-      }
-    }
+          },
+        },
+      },
+    },
   },
 
   postcss: {
