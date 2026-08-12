@@ -67,8 +67,32 @@ const currentLivingRec = computed(() => coupleStore.getLivingRecord(currentYear,
 const totalSpent = computed(() => currentLivingRec.value.items.reduce((sum, i) => sum + Number(i.amount), 0));
 const remainingLiving = computed(() => currentLivingRec.value.targetSavings - totalSpent.value);
 
-// Debts summary
-const totalMonthlyInterest = computed(() => coupleStore.debts.reduce((sum, d) => sum + Number(d.monthlyInterest), 0));
+// Debts summary (통계 제외 옵션 반영 및 소유자별 구분)
+const selectedDebtOwner = ref<'전체' | '공동' | '우주' | '혜빈'>('전체');
+const validDebts = computed(() => coupleStore.debts.filter((d) => !d.excludeFromStats));
+
+const debtSummaryByOwner = computed(() => {
+  const getSum = (ownerFilter?: '공동' | '우주' | '혜빈') => {
+    const list = ownerFilter 
+      ? validDebts.value.filter((d) => d.owner === ownerFilter)
+      : validDebts.value;
+    return {
+      interest: list.reduce((sum, d) => sum + Number(d.monthlyInterest), 0),
+      payment: list.reduce((sum, d) => sum + Number(d.monthlyPayment), 0),
+      remaining: list.reduce((sum, d) => sum + Number(d.remainingAmount), 0),
+      count: list.length,
+    };
+  };
+
+  return {
+    전체: getSum(),
+    공동: getSum('공동'),
+    우주: getSum('우주'),
+    혜빈: getSum('혜빈'),
+  };
+});
+
+const currentDebtMetrics = computed(() => debtSummaryByOwner.value[selectedDebtOwner.value]);
 
 // Upcoming schedules
 const upcomingSchedules = computed(() => {
@@ -157,18 +181,66 @@ const upcomingSchedules = computed(() => {
         </nuxt-link>
 
         <!-- Debt Summary Card -->
-        <nuxt-link to="/debt" class="summary-card debt-card">
+        <div class="summary-card debt-card">
           <div class="card-badge-row">
-            <span class="cute-badge debt">💳 총 대출 이자</span>
-            <span class="more-txt">자세히 ›</span>
+            <span class="cute-badge debt">💳 대출 이자 ({{ selectedDebtOwner }})</span>
+            
+            <!-- Owner Filter Pills -->
+            <div class="mini-owner-selector">
+              <button
+                v-for="ow in (['전체', '공동', '우주', '혜빈'] as const)"
+                :key="ow"
+                type="button"
+                class="mini-ow-btn"
+                :class="{ active: selectedDebtOwner === ow }"
+                @click.stop="selectedDebtOwner = ow"
+              >
+                {{ ow }}
+              </button>
+            </div>
+
+            <nuxt-link to="/debt" class="more-txt">자세히 ›</nuxt-link>
           </div>
+
           <div class="card-main-val debt">
-            {{ totalMonthlyInterest.toLocaleString() }} <span class="unit">원</span>
+            {{ currentDebtMetrics.interest.toLocaleString() }} <span class="unit">원</span>
           </div>
+
+          <!-- Owner Breakdown Chips -->
+          <div class="debt-owner-breakdown">
+            <button
+              type="button"
+              class="ow-chip-item 공동"
+              :class="{ active: selectedDebtOwner === '공동' }"
+              @click.stop="selectedDebtOwner = '공동'"
+            >
+              <span class="ow-lbl">공동</span>
+              <span class="ow-val">{{ debtSummaryByOwner.공동.interest.toLocaleString() }}원</span>
+            </button>
+            <button
+              type="button"
+              class="ow-chip-item 우주"
+              :class="{ active: selectedDebtOwner === '우주' }"
+              @click.stop="selectedDebtOwner = '우주'"
+            >
+              <span class="ow-lbl">우주</span>
+              <span class="ow-val">{{ debtSummaryByOwner.우주.interest.toLocaleString() }}원</span>
+            </button>
+            <button
+              type="button"
+              class="ow-chip-item 혜빈"
+              :class="{ active: selectedDebtOwner === '혜빈' }"
+              @click.stop="selectedDebtOwner = '혜빈'"
+            >
+              <span class="ow-lbl">혜빈</span>
+              <span class="ow-val">{{ debtSummaryByOwner.혜빈.interest.toLocaleString() }}원</span>
+            </button>
+          </div>
+
           <div class="card-sub-info">
-            관리 중인 대출 {{ coupleStore.debts.length }}건
+            잔여 원금 {{ currentDebtMetrics.remaining.toLocaleString() }}원 (대출 {{ currentDebtMetrics.count }}건)
           </div>
-        </nuxt-link>
+        </div>
       </div>
     </div>
 
@@ -471,7 +543,94 @@ const upcomingSchedules = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
   margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.mini-owner-selector {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 2px 4px;
+  border-radius: 12px;
+  border: 1px solid #ffd5d8;
+}
+
+.mini-ow-btn {
+  background: transparent;
+  border: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #777;
+  padding: 2px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mini-ow-btn.active {
+  background: #e53935;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 1px 4px rgba(229, 57, 53, 0.25);
+}
+
+.debt-owner-breakdown {
+  display: flex;
+  gap: 6px;
+  margin: 6px 0 4px 0;
+}
+
+.ow-chip-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ow-chip-item:active {
+  transform: scale(0.95);
+}
+
+.ow-chip-item.공동 {
+  background: #f3e5f5;
+  border-color: #e1bee7;
+  color: #7b1fa2;
+}
+
+.ow-chip-item.우주 {
+  background: #e3f2fd;
+  border-color: #bbdefb;
+  color: #1565c0;
+}
+
+.ow-chip-item.혜빈 {
+  background: #fce4ec;
+  border-color: #f8bbd0;
+  color: #c2185b;
+}
+
+.ow-chip-item.active {
+  box-shadow: 0 0 0 2px currentColor;
+}
+
+.ow-lbl {
+  font-size: 0.7rem;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.ow-val {
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .cute-badge {
