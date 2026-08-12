@@ -1,0 +1,798 @@
+<script setup lang="ts">
+import { ref, computed } from "vue";
+import { useCoupleStore, type DebtItem } from "~/stores/useCoupleStore";
+import { useCoupleDialogStore } from "~/stores/useCoupleDialogStore";
+
+definePageMeta({
+  layout: "user-layout",
+});
+
+const coupleStore = useCoupleStore();
+const dialogStore = useCoupleDialogStore();
+
+// Owner Filter Tab
+const activeOwnerTab = ref<'전체' | '우주' | '혜빈' | '공동'>('전체');
+const ownerTabs: ('전체' | '우주' | '혜빈' | '공동')[] = ['전체', '우주', '혜빈', '공동'];
+
+const filteredDebts = computed(() => {
+  if (activeOwnerTab.value === '전체') {
+    return coupleStore.debts;
+  }
+  return coupleStore.debts.filter((d) => d.owner === activeOwnerTab.value);
+});
+
+// Summary calculations
+const totalRemainingPrincipal = computed(() => {
+  return filteredDebts.value.reduce((sum, d) => sum + Number(d.remainingAmount), 0);
+});
+
+const totalMonthlyPaymentSum = computed(() => {
+  return filteredDebts.value.reduce((sum, d) => sum + Number(d.monthlyPayment), 0);
+});
+
+const totalMonthlyInterestSum = computed(() => {
+  return filteredDebts.value.reduce((sum, d) => sum + Number(d.monthlyInterest), 0);
+});
+
+// Add / Edit Modal State
+const showModal = ref(false);
+const isEditMode = ref(false);
+
+const editingDebt = ref<Partial<DebtItem>>({
+  owner: '공동',
+  title: '',
+  totalAmount: 0,
+  remainingAmount: 0,
+  interestRate: 4.0,
+  monthlyPayment: 0,
+  monthlyInterest: 0,
+  totalMonths: 36,
+  remainingMonths: 36,
+  memo: '',
+});
+
+const openAddModal = () => {
+  editingDebt.value = {
+    owner: activeOwnerTab.value === '전체' ? '공동' : activeOwnerTab.value,
+    title: '',
+    totalAmount: 0,
+    remainingAmount: 0,
+    interestRate: 4.0,
+    monthlyPayment: 0,
+    monthlyInterest: 0,
+    totalMonths: 36,
+    remainingMonths: 36,
+    memo: '',
+  };
+  isEditMode.value = false;
+  showModal.value = true;
+};
+
+const openEditModal = (item: DebtItem) => {
+  editingDebt.value = { ...item };
+  isEditMode.value = true;
+  showModal.value = true;
+};
+
+const handleSaveDebt = () => {
+  if (!editingDebt.value.title) {
+    dialogStore.showAlert("대출/빚 이름을 입력해주세요.", "입력 확인", "info");
+    return;
+  }
+  coupleStore.saveDebt(editingDebt.value);
+  showModal.value = false;
+};
+
+const handleDeleteDebt = (id: string) => {
+  dialogStore.showConfirm(
+    "이 대출 내역을 삭제하시겠습니까?",
+    () => {
+      coupleStore.deleteDebt(id);
+      showModal.value = false;
+    },
+    "대출 내역 삭제",
+    "delete_outline"
+  );
+};
+
+const getRepaymentPercent = (item: any) => {
+  if (!item.totalAmount || item.totalAmount === 0) return 0;
+  const paid = item.totalAmount - item.remainingAmount;
+  if (paid <= 0) return 0;
+  const pct = Math.round((paid / item.totalAmount) * 100);
+  return Math.min(Math.max(pct, 0), 100);
+};
+
+const autoCalculateInterestAndPayment = () => {
+  const rem = Number(editingDebt.value.remainingAmount) > 0 
+    ? Number(editingDebt.value.remainingAmount) 
+    : (Number(editingDebt.value.totalAmount) || 0);
+  const rate = Number(editingDebt.value.interestRate) || 0;
+  const months = Number(editingDebt.value.remainingMonths) || 1;
+
+  if (rem > 0 && rate >= 0) {
+    // 월 이자액 = Math.round((잔여 원금 * (금리 / 100)) / 12)
+    const calculatedInterest = Math.round((rem * (rate / 100)) / 12);
+    editingDebt.value.monthlyInterest = calculatedInterest;
+
+    // 월 총 상환액 = (잔여 원금 / 남은 개월 수) + 월 이자액
+    const monthlyPrincipal = months > 0 ? rem / months : 0;
+    editingDebt.value.monthlyPayment = Math.round(monthlyPrincipal + calculatedInterest);
+  }
+};
+</script>
+
+<template>
+  <div class="debt-page-container">
+    <!-- Header Banner -->
+    <div class="page-header-card">
+      <div class="header-top">
+        <div class="header-badge">
+          <span class="badge-icon">💳</span>
+          <span>대출 및 빚 관리</span>
+        </div>
+        <div class="owner-tabs-row">
+          <button
+            v-for="tab in ownerTabs"
+            :key="tab"
+            class="tab-chip"
+            :class="{ active: activeOwnerTab === tab }"
+            @click="activeOwnerTab = tab"
+          >
+            {{ tab }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Debt Summary Box -->
+      <div class="debt-summary-box">
+        <div class="metrics-grid">
+          <div class="metric-card remaining">
+            <div class="metric-label">잔여 원금 합계</div>
+            <div class="metric-val text-rose-600 bold">{{ totalRemainingPrincipal.toLocaleString() }} <span class="unit">원</span></div>
+          </div>
+          <div class="metric-card payment">
+            <div class="metric-label">월 상환액 (원리금)</div>
+            <div class="metric-val bold">{{ totalMonthlyPaymentSum.toLocaleString() }} <span class="unit">원</span></div>
+          </div>
+          <div class="metric-card interest">
+            <div class="metric-label">월 이자액</div>
+            <div class="metric-val text-rose-600 bold">{{ totalMonthlyInterestSum.toLocaleString() }} <span class="unit">원</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+      <div class="count-info">
+        총 <strong>{{ filteredDebts.length }}</strong>건의 항목
+      </div>
+      <button class="add-debt-btn" @click="openAddModal">
+        <i class="material-icons">add</i> 항목 등록
+      </button>
+    </div>
+
+    <!-- Debts Cards Grid -->
+    <div class="debt-cards-list">
+      <div v-if="filteredDebts.length === 0" class="empty-box">
+        <i class="material-icons">credit_card_off</i>
+        <p>등록된 대출/빚 내역이 없습니다.</p>
+      </div>
+
+      <div
+        v-for="item in filteredDebts"
+        :key="item.id"
+        class="debt-card"
+        @click="openEditModal(item)"
+      >
+        <div class="debt-card-header">
+          <span class="owner-tag" :class="item.owner">{{ item.owner }}</span>
+          <h3 class="debt-title">{{ item.title }}</h3>
+          <span class="interest-tag">금리 {{ item.interestRate }}%</span>
+        </div>
+
+        <div class="debt-card-body">
+          <!-- Remaining Principal & Repayment Progress Box -->
+          <div class="amount-main-box">
+            <div class="amount-top-line">
+              <div class="rem-group">
+                <span class="rem-lbl">잔여 원금</span>
+                <span class="rem-val text-rose-600">{{ Number(item.remainingAmount).toLocaleString() }}<span class="unit">원</span></span>
+              </div>
+              <div class="total-badge">
+                총 {{ Number(item.totalAmount).toLocaleString() }}원
+              </div>
+            </div>
+
+            <!-- Repayment Progress Track -->
+            <div class="repay-progress-wrapper">
+              <div class="repay-track">
+                <div
+                  class="repay-fill"
+                  :style="{ width: getRepaymentPercent(item) + '%' }"
+                ></div>
+              </div>
+              <div class="repay-txt">
+                <span>상환 {{ getRepaymentPercent(item) }}% 완료</span>
+                <span>잔여 {{ 100 - getRepaymentPercent(item) }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-grid">
+            <div class="detail-cell">
+              <span class="lbl">월 상환액</span>
+              <span class="val">{{ Number(item.monthlyPayment).toLocaleString() }}원</span>
+            </div>
+            <div class="detail-cell">
+              <span class="lbl">월 이자</span>
+              <span class="val text-rose-600">{{ Number(item.monthlyInterest).toLocaleString() }}원</span>
+            </div>
+            <div class="detail-cell">
+              <span class="lbl">남은 기간</span>
+              <span class="val">{{ item.remainingMonths }}개월 / {{ item.totalMonths }}개월</span>
+            </div>
+          </div>
+
+          <div v-if="item.memo" class="debt-memo">
+            📌 {{ item.memo }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add / Edit Modal -->
+    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+      <div class="modal-card edit-debt-modal">
+        <div class="modal-header">
+          <h3>💳 {{ isEditMode ? '대출 내역 수정' : '새 대출 내역 등록' }}</h3>
+          <button class="close-btn" @click="showModal = false">×</button>
+        </div>
+
+        <div class="modal-body scrollable-body">
+          <div class="input-group">
+            <label>소유자</label>
+            <div class="radio-selector">
+              <button
+                v-for="ow in ['공동', '우주', '혜빈']"
+                :key="ow"
+                type="button"
+                class="radio-btn"
+                :class="{ active: editingDebt.owner === ow }"
+                @click="editingDebt.owner = ow"
+              >
+                {{ ow }}
+              </button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>대출 / 빚 항목 이름</label>
+            <input v-model="editingDebt.title" type="text" placeholder="예: 신용대출, 학자금, 전세자금" />
+          </div>
+
+          <div class="input-row-flex">
+            <div class="input-group flex-1">
+              <label>총 대출 원금 (원)</label>
+              <input v-model.number="editingDebt.totalAmount" type="number" step="100000" @input="autoCalculateInterestAndPayment" />
+            </div>
+            <div class="input-group flex-1">
+              <label>잔여 원금 (원)</label>
+              <input v-model.number="editingDebt.remainingAmount" type="number" step="100000" @input="autoCalculateInterestAndPayment" />
+            </div>
+          </div>
+
+          <div class="input-row-flex">
+            <div class="input-group flex-1">
+              <label>금리 (%) <span class="auto-calc-hint">✨ 자동계산</span></label>
+              <input v-model.number="editingDebt.interestRate" type="number" step="0.1" placeholder="4.5" @input="autoCalculateInterestAndPayment" />
+            </div>
+            <div class="input-group flex-1">
+              <label>월 이자액 (원)</label>
+              <input v-model.number="editingDebt.monthlyInterest" type="number" step="1000" />
+            </div>
+          </div>
+
+          <div class="input-row-flex">
+            <div class="input-group flex-1">
+              <label>월 총 상환액 (원)</label>
+              <input v-model.number="editingDebt.monthlyPayment" type="number" step="10000" />
+            </div>
+            <div class="input-group flex-1">
+              <label>남은 개월 수</label>
+              <input v-model.number="editingDebt.remainingMonths" type="number" step="1" @input="autoCalculateInterestAndPayment" />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>메모</label>
+            <input v-model="editingDebt.memo" type="text" placeholder="예: 매월 15일 이체" />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button v-if="isEditMode" type="button" class="del-btn" @click="handleDeleteDebt(editingDebt.id!)">
+            삭제
+          </button>
+          <button type="button" class="save-btn" @click="handleSaveDebt">
+            저장하기
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.debt-page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Header Card */
+.page-header-card {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 24px;
+  border: 1px solid #fdd8dd;
+  box-shadow: 0 4px 16px rgba(229, 57, 53, 0.05);
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.header-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffebee;
+  color: #c62828;
+  font-size: 0.95rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.header-badge .badge-icon {
+  font-size: 1.1rem;
+}
+
+.owner-tabs-row {
+  display: flex;
+  gap: 4px;
+}
+
+.tab-chip {
+  background: #fff;
+  border: 1px solid #ffcdd2;
+  color: #c62828;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.tab-chip.active {
+  background: #e53935;
+  color: #fff;
+  border-color: #d32f2f;
+}
+
+/* Debt Summary Box & Metrics Grid */
+.debt-summary-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  background: #fff7f8;
+  border: 1px solid #ffebee;
+  border-radius: 18px;
+  padding: 12px 8px;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.metric-card.remaining {
+  border-right: 1px dashed #ffcdd2;
+  padding-right: 2px;
+}
+
+.metric-card.payment {
+  border-right: 1px dashed #ffcdd2;
+  padding-right: 2px;
+}
+
+.metric-label {
+  font-size: 0.76rem;
+  color: #666;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.metric-val {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #333;
+}
+
+.metric-val .unit {
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+/* Action Bar */
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.count-info {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.add-debt-btn {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.add-debt-btn i {
+  font-size: 1.05rem;
+}
+
+/* Debt Cards List */
+.debt-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.empty-box {
+  text-align: center;
+  padding: 30px 0;
+  color: #aaa;
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid #f0e6dc;
+}
+
+.empty-box i {
+  font-size: 2rem;
+  color: #ccc;
+}
+
+.debt-card {
+  background: #ffffff;
+  border: 1px solid #f0e6dc;
+  border-radius: 20px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.debt-card:active {
+  transform: scale(0.98);
+}
+
+.debt-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.owner-tag {
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+.owner-tag.우주 { background: #e3f2fd; color: #1565c0; }
+.owner-tag.혜빈 { background: #fce4ec; color: #c2185b; }
+.owner-tag.공동 { background: #f3e5f5; color: #7b1fa2; }
+
+.debt-title {
+  flex: 1;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.interest-tag {
+  background: #ffe0b2;
+  color: #e65100;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.debt-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.amount-main-box {
+  background: #fff8f8;
+  border: 1px solid #ffebee;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.amount-top-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rem-group {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.rem-lbl {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 700;
+}
+
+.rem-val {
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.rem-val .unit {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-left: 1px;
+}
+
+.total-badge {
+  font-size: 0.78rem;
+  color: #777;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 7px;
+  border-radius: 8px;
+  border: 1px solid #ffcdd2;
+}
+
+/* Repayment Progress Track */
+.repay-progress-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.repay-track {
+  width: 100%;
+  height: 7px;
+  background: #ffebee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.repay-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef5350 0%, #c62828 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.repay-txt {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: #777;
+  font-weight: 600;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #fafafa;
+  border: 1px solid #f0e6dc;
+  border-radius: 12px;
+  padding: 8px;
+  gap: 4px;
+}
+
+.detail-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.detail-cell .lbl {
+  font-size: 0.76rem;
+  color: #888;
+}
+
+.detail-cell .val {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #444;
+  margin-top: 1px;
+}
+
+.debt-memo {
+  font-size: 0.82rem;
+  color: #666;
+  background: #fff8e1;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #ffe082;
+}
+
+/* Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-card {
+  background: #fff;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.modal-header h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #333;
+}
+
+.auto-calc-hint {
+  font-size: 0.72rem;
+  color: #e53935;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.input-group {
+  margin-bottom: 12px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+.edit-debt-modal {
+  max-width: 420px;
+}
+
+.input-row-flex {
+  display: flex;
+  gap: 8px;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.radio-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.radio-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #666;
+  cursor: pointer;
+}
+
+.radio-btn.active {
+  background: #ffcdd2;
+  border-color: #e53935;
+  color: #b71c1c;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.save-btn {
+  flex: 1;
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.del-btn {
+  background: #ffebee;
+  color: #c62828;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+</style>

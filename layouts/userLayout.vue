@@ -1,135 +1,280 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref, provide } from "vue";
-import { cx } from "@emotion/css";
-import { UserLayoutStyle } from "~/layouts/style/UserLayoutStyle";
-import { useUserStore } from "~/stores/useUserStore";
+import { ref, onMounted, onBeforeUnmount, provide } from "vue";
+import { useRoute } from "vue-router";
+import CoupleDialogModal from "~/components/CoupleDialogModal.vue";
 
-const userStore = useUserStore();
-const userRole = computed(() => userStore.userRole);
-const loggedInUserName = computed(() => userStore.loggedInUser?.name || '방문자');
+import { useCoupleStore } from "~/stores/useCoupleStore";
 
-const isGroup7OrAdmin = computed(() => {
-  if (userRole.value === 'admin') return true;
-  return userStore.loggedInUser?.group === 7;
-});
-
-// 객선 장부 접근 권한: 관리자(admin) 및 간부조 정택광 전용
-const isLedgerAuthorized = computed(() => {
-  if (userRole.value === 'admin') return true;
-  return userStore.loggedInUser?.name === '정택광';
-});
-
-const toggleRole = () => {
-  userStore.userRole = userStore.userRole === "member" ? "admin" : "member";
-};
-
-/************************************************************
- * Dynamic Data ( 동적 데이터 )
- ************************************************************/
+const route = useRoute();
+const coupleStore = useCoupleStore();
 const windowWidth = ref(0);
 
-const isMobile = computed(() => {
-  return windowWidth.value <= 640;
-});
-
-provide("windowWidth", windowWidth);
-provide("isMobile", isMobile);
-
-/************************************************************
- * Function
- ************************************************************/
-const setWindowWidth = (data: UIEvent) => {
-  const target = data.target as Window;
-  windowWidth.value = target.innerWidth;
+let resizeAnimationFrame: number | null = null;
+const setWindowWidth = () => {
+  if (typeof window !== "undefined") {
+    if (resizeAnimationFrame) cancelAnimationFrame(resizeAnimationFrame);
+    resizeAnimationFrame = requestAnimationFrame(() => {
+      windowWidth.value = window.innerWidth;
+    });
+  }
 };
 
-/************************************************************
- * Mounted & Unmounted
- ************************************************************/
+provide("windowWidth", windowWidth);
+
 onMounted(() => {
-  windowWidth.value = window.innerWidth;
-  window.addEventListener("resize", setWindowWidth);
+  setWindowWidth();
+  window.addEventListener("resize", setWindowWidth, { passive: true });
+  coupleStore.fetchAllData();
 });
 
 onBeforeUnmount(() => {
+  if (resizeAnimationFrame) cancelAnimationFrame(resizeAnimationFrame);
   window.removeEventListener("resize", setWindowWidth);
 });
 </script>
 
 <template>
-  <v-app :full-height="false">
-    <div :class="cx('user-layout-wrapper', UserLayoutStyle.Default)">
-      <div :class="cx('user-layout-container', UserLayoutStyle.Container)">
-        <!-- Top Header -->
-        <header :class="cx('user-layout-header', UserLayoutStyle.Header)">
-          <div class="header-logo">
-            인천 항운 노조 시스템
-            <span v-if="userRole === 'admin'" class="logo-badge" style="background: rgba(225, 60, 60, 0.2); color: var(--system-red-color); border: 1px solid rgba(225, 60, 60, 0.3);">관리자용</span>
-            <span v-else class="logo-badge">조합원용</span>
-          </div>
-          <div class="header-user">
-            <nuxt-link 
-              to="/user/mypage" 
-              class="header-user-btn"
-              style="
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                color: #ffffff;
-                text-decoration: none;
-                background: rgba(255, 255, 255, 0.08);
-                padding: 0.4rem 0.9rem;
-                border-radius: 0.8rem;
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                cursor: pointer;
-                transition: all 0.2s;
-              "
-              title="마이페이지 이동"
-            >
-              <i class="material-icons" style="font-size: 1.6rem; color: #88c5ff;">account_circle</i>
-              <span style="font-size: 1.3rem;"><strong>{{ loggedInUserName }}</strong> 님</span>
-            </nuxt-link>
+  <v-app :full-height="false" class="couple-app-root">
+    <div class="app-viewport-wrapper">
+      <!-- Main Mobile Container (max-w-[480px]) -->
+      <div class="mobile-container">
+        <!-- Top App Bar Header -->
+        <header class="couple-header">
+          <div class="header-content">
+            <div class="brand-badge">
+              <span class="heart-icon">💖</span>
+              <span class="brand-title">우리 둘만의 공간</span>
+            </div>
+            <div class="couple-tag">
+              <span class="tag-pink">우주</span>
+              <span class="tag-heart">♥</span>
+              <span class="tag-mint">혜빈</span>
+              <span class="tag-pet">🐾 땅콩</span>
+            </div>
           </div>
         </header>
 
-        <!-- Main Body -->
-        <main :class="cx('user-layout-main', UserLayoutStyle.Main)">
+        <!-- Page Main Slot -->
+        <main class="couple-main-body">
           <slot />
         </main>
 
-        <!-- Bottom Navigation Bar -->
-        <nav 
-          :class="cx('user-layout-nav', UserLayoutStyle.BottomNav)"
-          :style="{ gridTemplateColumns: `repeat(${ (isGroup7OrAdmin ? 1 : 0) + (isLedgerAuthorized ? 1 : 0) + 4 }, 1fr)` }"
-        >
-          <nuxt-link to="/user/attendance" class="nav-item">
-            <i class="material-icons">event_available</i>
-            <span>출퇴근</span>
+        <!-- Bottom Navigation Bar (5 Items) -->
+        <nav class="couple-bottom-nav">
+          <nuxt-link to="/home" class="nav-item" :class="{ active: route.path === '/home' }">
+            <div class="nav-icon">
+              <i class="material-icons">favorite</i>
+            </div>
+            <span class="nav-label">홈</span>
           </nuxt-link>
-          <nuxt-link to="/user/ships" class="nav-item">
-            <i class="material-icons">directions_boat</i>
-            <span>운항정보</span>
+
+          <nuxt-link to="/utility" class="nav-item" :class="{ active: route.path === '/utility' }">
+            <div class="nav-icon">
+              <i class="material-icons">lightbulb</i>
+            </div>
+            <span class="nav-label">공과금</span>
           </nuxt-link>
-          <nuxt-link to="/user/weather" class="nav-item">
-            <i class="material-icons">thunderstorm</i>
-            <span>날씨</span>
+
+          <nuxt-link to="/living" class="nav-item" :class="{ active: route.path === '/living' }">
+            <div class="nav-icon">
+              <i class="material-icons">account_balance_wallet</i>
+            </div>
+            <span class="nav-label">생활비</span>
           </nuxt-link>
-          <nuxt-link v-if="isGroup7OrAdmin" to="/user/dues" class="nav-item">
-            <i class="material-icons">payments</i>
-            <span>회비관리</span>
+
+          <nuxt-link to="/debt" class="nav-item" :class="{ active: route.path === '/debt' }">
+            <div class="nav-icon">
+              <i class="material-icons">credit_card</i>
+            </div>
+            <span class="nav-label">대출/빚</span>
           </nuxt-link>
-          <nuxt-link to="/user/members" class="nav-item">
-            <i class="material-icons">groups</i>
-            <span>회원관리</span>
-          </nuxt-link>
-          <nuxt-link v-if="isLedgerAuthorized" to="/user/ledger" class="nav-item">
-            <i class="material-icons">assignment</i>
-            <span>객선장부</span>
+
+          <nuxt-link to="/schedule" class="nav-item" :class="{ active: route.path === '/schedule' }">
+            <div class="nav-icon">
+              <i class="material-icons">event</i>
+            </div>
+            <span class="nav-label">약속</span>
           </nuxt-link>
         </nav>
+        <CoupleDialogModal />
       </div>
     </div>
   </v-app>
 </template>
 
-<style lang="scss" scoped></style>
+<style scoped>
+.couple-app-root {
+  background-color: #f7f4f0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  color: #333333;
+}
+
+.app-viewport-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  background: #f7f4f0;
+}
+
+.mobile-container {
+  width: 100%;
+  max-width: 480px;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #fffdfa;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-bottom: 74px; /* Space for bottom nav */
+}
+
+/* Header */
+.couple-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 253, 250, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(240, 230, 220, 0.8);
+  padding: 12px 16px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.heart-icon {
+  font-size: 1.1rem;
+}
+
+.brand-title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: #4a3e3d;
+  letter-spacing: -0.3px;
+}
+
+.couple-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fbf2ec;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tag-pink {
+  color: #e57373;
+}
+
+.tag-heart {
+  color: #ff8a80;
+  font-size: 0.82rem;
+}
+
+.tag-mint {
+  color: #4db6ac;
+}
+
+.tag-pet {
+  color: #ffb74d;
+  margin-left: 2px;
+}
+
+/* Main Body */
+.couple-main-body {
+  flex: 1;
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Bottom Navigation */
+.couple-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid #f0e6dc;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  z-index: 50;
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #a09590;
+  transition: all 0.2s ease;
+  padding: 4px 0;
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+
+.nav-icon i {
+  font-size: 1.45rem;
+}
+
+.nav-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-top: 2px;
+  letter-spacing: -0.2px;
+}
+
+.nav-item.active {
+  color: #ff7043;
+}
+
+.nav-item.active .nav-icon {
+  background: #ffebe5;
+  color: #ff5722;
+}
+
+/* Small screen tweaks (320px) */
+@media (max-width: 360px) {
+  .couple-main-body {
+    padding: 12px;
+  }
+  .brand-title {
+    font-size: 0.92rem;
+  }
+  .couple-tag {
+    padding: 3px 7px;
+    font-size: 0.68rem;
+  }
+  .nav-label {
+    font-size: 0.64rem;
+  }
+}
+</style>

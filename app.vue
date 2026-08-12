@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount } from 'vue';
-import { useUserStore } from '~/stores/useUserStore';
+import { useCoupleStore } from '~/stores/useCoupleStore';
 
-const userStore = useUserStore();
+const coupleStore = useCoupleStore();
 let intervalId: any = null;
 
 onMounted(async () => {
-  await userStore.fetchAllData();
+  await coupleStore.fetchAllData();
   
-  // 다른 기기(휴대폰)에서 등록/수정한 데이터를 실시간 동기화하기 위해 5초마다 자동 갱신
+  // 5초마다 자동 갱신 (Supabase 실시간 동기화)
   intervalId = setInterval(async () => {
-    await userStore.fetchAllData();
+    await coupleStore.fetchAllData();
   }, 5000);
 });
 
