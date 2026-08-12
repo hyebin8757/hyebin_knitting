@@ -62,6 +62,7 @@ export interface DebtItem {
   monthlyInterest: number; // 월 이자액
   totalMonths: number; // 총 기간 (개월)
   remainingMonths: number; // 남은 개월 수
+  excludeFromStats?: boolean; // 상단 통계 합산 제외 여부
   memo?: string;
 }
 

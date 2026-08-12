@@ -21,17 +21,23 @@ const filteredDebts = computed(() => {
   return coupleStore.debts.filter((d) => d.owner === activeOwnerTab.value);
 });
 
-// Summary calculations
+// Summary calculations (통계 제외 옵션이 체크되지 않은 항목만 합산)
 const totalRemainingPrincipal = computed(() => {
-  return filteredDebts.value.reduce((sum, d) => sum + Number(d.remainingAmount), 0);
+  return filteredDebts.value
+    .filter((d) => !d.excludeFromStats)
+    .reduce((sum, d) => sum + Number(d.remainingAmount), 0);
 });
 
 const totalMonthlyPaymentSum = computed(() => {
-  return filteredDebts.value.reduce((sum, d) => sum + Number(d.monthlyPayment), 0);
+  return filteredDebts.value
+    .filter((d) => !d.excludeFromStats)
+    .reduce((sum, d) => sum + Number(d.monthlyPayment), 0);
 });
 
 const totalMonthlyInterestSum = computed(() => {
-  return filteredDebts.value.reduce((sum, d) => sum + Number(d.monthlyInterest), 0);
+  return filteredDebts.value
+    .filter((d) => !d.excludeFromStats)
+    .reduce((sum, d) => sum + Number(d.monthlyInterest), 0);
 });
 
 // Add / Edit Modal State
@@ -48,6 +54,7 @@ const editingDebt = ref<Partial<DebtItem>>({
   monthlyInterest: 0,
   totalMonths: 0,
   remainingMonths: 0,
+  excludeFromStats: false,
   memo: '',
 });
 
@@ -62,6 +69,7 @@ const openAddModal = () => {
     monthlyInterest: 0,
     totalMonths: 0,
     remainingMonths: 0,
+    excludeFromStats: false,
     memo: '',
   };
   isEditMode.value = false;
@@ -189,6 +197,7 @@ const autoCalculateInterestAndPayment = () => {
         <div class="debt-card-header">
           <span class="owner-tag" :class="item.owner">{{ item.owner }}</span>
           <h3 class="debt-title">{{ item.title }}</h3>
+          <span v-if="item.excludeFromStats" class="exclude-tag">📊 통계 제외</span>
           <span class="interest-tag">금리 {{ item.interestRate }}%</span>
         </div>
 
@@ -313,6 +322,14 @@ const autoCalculateInterestAndPayment = () => {
           <div class="input-group">
             <label>메모</label>
             <input v-model="editingDebt.memo" type="text" placeholder="예: 매월 15일 이체" />
+          </div>
+
+          <div class="input-group checkbox-group">
+            <label class="custom-checkbox-label">
+              <input v-model="editingDebt.excludeFromStats" type="checkbox" />
+              <span class="checkbox-txt">📊 상단 통계 합계에서 제외하기</span>
+            </label>
+            <p class="field-hint">체크 시 잔여 원금, 월 상환액 등 전체 통계 합계금액에 포함되지 않습니다.</p>
           </div>
         </div>
 
@@ -539,6 +556,16 @@ const autoCalculateInterestAndPayment = () => {
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 6px;
+}
+
+.exclude-tag {
+  background: #f1f3f4;
+  color: #5f6368;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #dadce0;
 }
 
 .debt-card-body {
@@ -801,5 +828,37 @@ const autoCalculateInterestAndPayment = () => {
   font-weight: 800;
   font-size: 1.02rem;
   cursor: pointer;
+}
+
+.checkbox-group {
+  margin-top: 6px;
+}
+
+.custom-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #e53935;
+  cursor: pointer;
+}
+
+.checkbox-txt {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: #888;
+  margin-top: 4px;
+  margin-left: 26px;
 }
 </style>
