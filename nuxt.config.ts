@@ -41,24 +41,24 @@ const nuxtConfig: any = {
       htmlAttrs: {
         lang: "ko",
       },
-      title: "인천 양육반 디지털 시스템",
+      title: "우주 ♥ 혜빈 | 커플 스마트 가계부 & 스케줄",
       charset: "utf-8",
       viewport:
         "width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, viewport-fit=cover",
       meta: [
         { "http-equiv": "X-UA-Compatible", content: "IE=edge,chrome=1" },
-        { "http-equiv": "Pragma", content: "no-cache" },
-        { "http-equiv": "Cache-control", content: "no-cache" },
-        { "http-equiv": "Expires", content: "0" },
+        {
+          hid: "description",
+          name: "description",
+          content: "우주 ♥ 혜빈 🐾 땅콩이와 함께하는 커플 스마트 가계부 및 일정 관리 앱",
+        },
         {
           hid: "og:title",
           property: "og:title",
-          content: "인천 양육반 디지털 시스템",
+          content: "우주 ♥ 혜빈 | 우리 둘만의 공간",
         },
-        { hid: "og:image", property: "og:image", content: "/image_og1.png" },
-        { hid: "og:description", property: "og:description", content: "설명" },
+        { hid: "og:description", property: "og:description", content: "공과금, 생활비, 대출 이자 및 약속 일정 통합 관리" },
         { hid: "og:type", property: "og:type", content: "website" },
-        { hid: "og:url", property: "og:url", content: "" },
       ],
       script: [],
       link: [{ rel: "icon", type: "image/png", href: "/favicon.png" }],
