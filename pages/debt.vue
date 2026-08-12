@@ -43,11 +43,11 @@ const editingDebt = ref<Partial<DebtItem>>({
   title: '',
   totalAmount: 0,
   remainingAmount: 0,
-  interestRate: 4.0,
+  interestRate: 0,
   monthlyPayment: 0,
   monthlyInterest: 0,
-  totalMonths: 36,
-  remainingMonths: 36,
+  totalMonths: 0,
+  remainingMonths: 0,
   memo: '',
 });
 
@@ -57,11 +57,11 @@ const openAddModal = () => {
     title: '',
     totalAmount: 0,
     remainingAmount: 0,
-    interestRate: 4.0,
+    interestRate: 0,
     monthlyPayment: 0,
     monthlyInterest: 0,
-    totalMonths: 36,
-    remainingMonths: 36,
+    totalMonths: 0,
+    remainingMonths: 0,
     memo: '',
   };
   isEditMode.value = false;
@@ -294,14 +294,19 @@ const autoCalculateInterestAndPayment = () => {
             </div>
           </div>
 
+          <div class="input-group">
+            <label>월 총 상환액 (원)</label>
+            <input v-model.number="editingDebt.monthlyPayment" type="number" step="10000" placeholder="0" />
+          </div>
+
           <div class="input-row-flex">
             <div class="input-group flex-1">
-              <label>월 총 상환액 (원)</label>
-              <input v-model.number="editingDebt.monthlyPayment" type="number" step="10000" />
+              <label>총 대출 기간 (개월)</label>
+              <input v-model.number="editingDebt.totalMonths" type="number" min="0" step="1" placeholder="0" />
             </div>
             <div class="input-group flex-1">
-              <label>남은 개월 수</label>
-              <input v-model.number="editingDebt.remainingMonths" type="number" step="1" @input="autoCalculateInterestAndPayment" />
+              <label>남은 개월 수 (개월)</label>
+              <input v-model.number="editingDebt.remainingMonths" type="number" min="0" step="1" placeholder="0" @input="autoCalculateInterestAndPayment" />
             </div>
           </div>
 
