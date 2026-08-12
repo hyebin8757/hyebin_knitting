@@ -690,13 +690,13 @@ const autoCalculateInterestAndPayment = () => {
 }
 
 .modal-header h3 {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #333;
 }
 
 .auto-calc-hint {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   color: #e53935;
   font-weight: 700;
   margin-left: 4px;
@@ -705,30 +705,32 @@ const autoCalculateInterestAndPayment = () => {
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   color: #aaa;
   cursor: pointer;
 }
 
 .input-group {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .input-group label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  color: #555;
-  margin-bottom: 4px;
+  color: #444;
+  margin-bottom: 6px;
 }
 
 .input-group input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 11px 14px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
-  font-size: 0.85rem;
+  font-size: 1.02rem;
   box-sizing: border-box;
+  background: #ffffff;
+  color: #333;
 }
 
 .edit-debt-modal {
@@ -751,13 +753,13 @@ const autoCalculateInterestAndPayment = () => {
 
 .radio-btn {
   flex: 1;
-  padding: 8px;
+  padding: 10px;
   border-radius: 10px;
   border: 1px solid #ddd;
   background: #f9f9f9;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: #666;
+  color: #555;
   cursor: pointer;
 }
 
@@ -778,10 +780,10 @@ const autoCalculateInterestAndPayment = () => {
   background: #e53935;
   color: #fff;
   border: none;
-  padding: 12px;
+  padding: 13px;
   border-radius: 14px;
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: 800;
+  font-size: 1.02rem;
   cursor: pointer;
 }
 
@@ -789,10 +791,10 @@ const autoCalculateInterestAndPayment = () => {
   background: #ffebee;
   color: #c62828;
   border: none;
-  padding: 12px 16px;
+  padding: 13px 18px;
   border-radius: 14px;
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: 800;
+  font-size: 1.02rem;
   cursor: pointer;
 }
 </style>

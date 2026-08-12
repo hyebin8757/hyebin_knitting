@@ -798,7 +798,7 @@ const spentPercentage = computed(() => {
 }
 
 .modal-header h3 {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #333;
 }
@@ -806,38 +806,59 @@ const spentPercentage = computed(() => {
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   color: #aaa;
   cursor: pointer;
 }
 
 .input-group {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .input-group label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  color: #555;
-  margin-bottom: 4px;
+  color: #444;
+  margin-bottom: 6px;
 }
 
 .input-group input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 11px 14px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
-  font-size: 0.85rem;
+  font-size: 1.02rem;
   box-sizing: border-box;
+  background: #ffffff;
+  color: #333;
+}
+
+/* iOS WebKit Date Input Fixes */
+.input-group input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 46px;
+  line-height: 1.4;
+  background-color: #ffffff;
+  display: block;
+  width: 100%;
+  font-size: 1.02rem;
+  color: #333;
+}
+
+.input-group input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  line-height: 1.4;
+  min-height: 1.4em;
 }
 
 .form-select {
   width: 100%;
-  padding: 10px;
+  padding: 11px 14px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
-  font-size: 0.85rem;
+  font-size: 1.02rem;
 }
 
 .radio-selector {
@@ -847,13 +868,13 @@ const spentPercentage = computed(() => {
 
 .radio-btn {
   flex: 1;
-  padding: 8px;
+  padding: 10px;
   border-radius: 10px;
   border: 1px solid #ddd;
   background: #f9f9f9;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: #666;
+  color: #555;
   cursor: pointer;
 }
 
@@ -877,9 +898,9 @@ const spentPercentage = computed(() => {
 .existing-cat-badge {
   background: #f0f0f0;
   color: #444;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  padding: 4px 8px;
+  padding: 5px 10px;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -890,7 +911,7 @@ const spentPercentage = computed(() => {
   background: none;
   border: none;
   color: #ef5350;
-  font-size: 0.9rem;
+  font-size: 1rem;
   cursor: pointer;
   padding: 0;
 }
@@ -906,10 +927,10 @@ const spentPercentage = computed(() => {
   background: #4caf50;
   color: #fff;
   border: none;
-  padding: 12px;
+  padding: 13px;
   border-radius: 14px;
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: 800;
+  font-size: 1.02rem;
   cursor: pointer;
 }
 
@@ -917,10 +938,10 @@ const spentPercentage = computed(() => {
   background: #ffebee;
   color: #c62828;
   border: none;
-  padding: 12px 16px;
+  padding: 13px 18px;
   border-radius: 14px;
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: 800;
+  font-size: 1.02rem;
   cursor: pointer;
 }
 </style>

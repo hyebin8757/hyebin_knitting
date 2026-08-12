@@ -523,7 +523,7 @@ const toggleComplete = (id: string, e: Event) => {
 }
 
 .modal-header h3 {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #333;
 }
@@ -531,30 +531,53 @@ const toggleComplete = (id: string, e: Event) => {
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   color: #aaa;
   cursor: pointer;
 }
 
 .input-group {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .input-group label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  color: #555;
-  margin-bottom: 4px;
+  color: #444;
+  margin-bottom: 6px;
 }
 
 .input-group input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 11px 14px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
-  font-size: 0.85rem;
+  font-size: 1.02rem;
   box-sizing: border-box;
+  background: #ffffff;
+  color: #333;
+}
+
+/* iOS WebKit Date & Time Input Fixes */
+.input-group input[type="date"],
+.input-group input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 46px;
+  line-height: 1.4;
+  background-color: #ffffff;
+  display: block;
+  width: 100%;
+  font-size: 1.02rem;
+  color: #333;
+}
+
+.input-group input[type="date"]::-webkit-date-and-time-value,
+.input-group input[type="time"]::-webkit-date-and-time-value {
+  text-align: left;
+  line-height: 1.4;
+  min-height: 1.4em;
 }
 
 .radio-selector {
@@ -564,13 +587,13 @@ const toggleComplete = (id: string, e: Event) => {
 
 .radio-btn {
   flex: 1;
-  padding: 8px 4px;
+  padding: 10px 6px;
   border-radius: 10px;
   border: 1px solid #ddd;
   background: #f9f9f9;
-  font-size: 0.75rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  color: #666;
+  color: #555;
   cursor: pointer;
 }
 
@@ -600,10 +623,10 @@ const toggleComplete = (id: string, e: Event) => {
   background: #3f51b5;
   color: #fff;
   border: none;
-  padding: 12px;
+  padding: 13px;
   border-radius: 14px;
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: 800;
+  font-size: 1.02rem;
   cursor: pointer;
 }
 
@@ -611,10 +634,10 @@ const toggleComplete = (id: string, e: Event) => {
   background: #ffebee;
   color: #c62828;
   border: none;
-  padding: 12px 16px;
+  padding: 13px 18px;
   border-radius: 14px;
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: 800;
+  font-size: 1.02rem;
   cursor: pointer;
 }
 </style>

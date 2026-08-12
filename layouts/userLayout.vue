@@ -155,12 +155,12 @@ onBeforeUnmount(() => {
 }
 
 .heart-icon {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .brand-title {
-  font-size: 1.12rem;
-  font-weight: 700;
+  font-size: 1.22rem;
+  font-weight: 800;
   color: #4a3e3d;
   letter-spacing: -0.3px;
 }
@@ -168,12 +168,12 @@ onBeforeUnmount(() => {
 .couple-tag {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   background: #fbf2ec;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.92rem;
+  font-weight: 700;
 }
 
 .tag-pink {
@@ -182,7 +182,7 @@ onBeforeUnmount(() => {
 
 .tag-heart {
   color: #ff8a80;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
 }
 
 .tag-mint {
@@ -235,18 +235,18 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
+  width: 34px;
   height: 28px;
   border-radius: 14px;
   transition: all 0.2s ease;
 }
 
 .nav-icon i {
-  font-size: 1.45rem;
+  font-size: 1.55rem;
 }
 
 .nav-label {
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   font-weight: 700;
   margin-top: 2px;
   letter-spacing: -0.2px;
@@ -267,14 +267,14 @@ onBeforeUnmount(() => {
     padding: 12px;
   }
   .brand-title {
-    font-size: 0.92rem;
+    font-size: 1.05rem;
   }
   .couple-tag {
-    padding: 3px 7px;
-    font-size: 0.68rem;
+    padding: 4px 8px;
+    font-size: 0.78rem;
   }
   .nav-label {
-    font-size: 0.64rem;
+    font-size: 0.78rem;
   }
 }
 </style>

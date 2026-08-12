@@ -94,8 +94,11 @@ const upcomingSchedules = computed(() => {
         </button>
       </div>
 
-      <!-- D-Day Cards Grid -->
-      <div class="dday-grid">
+      <!-- D-Day Cards Grid: nothing renders until Supabase fetch is fully complete -->
+      <div v-if="coupleStore.isLoaded && coupleStore.ddays.length === 0" class="empty-dday-box">
+        등록된 기념일이 없습니다. 오른쪽 위 '+ 기념일 추가' 버튼으로 소중한 날을 등록해보세요! 💕
+      </div>
+      <div v-else-if="coupleStore.isLoaded && coupleStore.ddays.length > 0" class="dday-grid">
         <div
           v-for="item in coupleStore.ddays"
           :key="item.id"
@@ -333,6 +336,17 @@ const upcomingSchedules = computed(() => {
   color: #888;
   text-decoration: none;
   font-weight: 600;
+}
+
+.empty-dday-box {
+  text-align: center;
+  padding: 20px 14px;
+  background: #fffdfa;
+  border: 1px dashed #ffd8cc;
+  border-radius: 18px;
+  font-size: 0.92rem;
+  color: #888;
+  line-height: 1.5;
 }
 
 /* D-Day Grid */
@@ -611,7 +625,7 @@ const upcomingSchedules = computed(() => {
 }
 
 .modal-header h3 {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #333;
 }
@@ -619,30 +633,51 @@ const upcomingSchedules = computed(() => {
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   color: #aaa;
   cursor: pointer;
 }
 
 .input-group {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .input-group label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  color: #555;
-  margin-bottom: 4px;
+  color: #444;
+  margin-bottom: 6px;
 }
 
 .input-group input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 11px 14px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
-  font-size: 0.85rem;
+  font-size: 1.02rem;
   box-sizing: border-box;
+  background: #ffffff;
+  color: #333;
+}
+
+/* iOS WebKit Date Input Fixes */
+.input-group input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 46px;
+  line-height: 1.4;
+  background-color: #ffffff;
+  display: block;
+  width: 100%;
+  font-size: 1.02rem;
+  color: #333;
+}
+
+.input-group input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  line-height: 1.4;
+  min-height: 1.4em;
 }
 
 .icon-selector {
@@ -651,8 +686,8 @@ const upcomingSchedules = computed(() => {
 }
 
 .icon-btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   border: 1px solid #eee;
   background: #fafafa;
@@ -679,10 +714,10 @@ const upcomingSchedules = computed(() => {
   background: #ff7043;
   color: #fff;
   border: none;
-  padding: 12px;
+  padding: 13px;
   border-radius: 14px;
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: 800;
+  font-size: 1.02rem;
   cursor: pointer;
 }
 
@@ -690,10 +725,10 @@ const upcomingSchedules = computed(() => {
   background: #ffebee;
   color: #c62828;
   border: none;
-  padding: 12px 16px;
+  padding: 13px 18px;
   border-radius: 14px;
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: 800;
+  font-size: 1.02rem;
   cursor: pointer;
 }
 </style>

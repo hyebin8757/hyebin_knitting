@@ -103,22 +103,7 @@ export const useCoupleStore = defineStore("couple", () => {
   };
 
   // --- 1. D-Day Data ---
-  const ddays = ref<DDayItem[]>([
-    {
-      id: "meet",
-      title: "우리가 만난 날",
-      date: "2022-05-20",
-      icon: "favorite",
-      isMain: true,
-    },
-    {
-      id: "ddangKong",
-      title: "땅콩이가 만난 날",
-      date: "2023-08-15",
-      icon: "pets",
-      isMain: true,
-    },
-  ]);
+  const ddays = ref<DDayItem[]>([]);
 
   // --- 2. Utility Bills Data (공과금) ---
   const utilityRecords = ref<MonthlyUtilityRecord[]>([]);
@@ -330,6 +315,8 @@ export const useCoupleStore = defineStore("couple", () => {
     syncToSupabase("ddays", ddays.value);
   };
 
+  const isLoaded = ref(false);
+
   // --- Supabase Sync & Fetch ---
   const syncToSupabase = async (key: string, data: any) => {
     try {
@@ -348,43 +335,84 @@ export const useCoupleStore = defineStore("couple", () => {
 
   const fetchAllData = async () => {
     try {
-      if (typeof window !== "undefined") {
-        const localLivingCats = localStorage.getItem("couple_livingCategories");
-        if (localLivingCats) livingCategories.value = JSON.parse(localLivingCats);
-
-        const localCustomUtil = localStorage.getItem("couple_customUtilityCategories");
-        if (localCustomUtil) customUtilityCategories.value = JSON.parse(localCustomUtil);
-
-        const localDdays = localStorage.getItem("couple_ddays");
-        if (localDdays) ddays.value = JSON.parse(localDdays);
-
-        const localUtils = localStorage.getItem("couple_utilityRecords");
-        if (localUtils) utilityRecords.value = JSON.parse(localUtils);
-
-        const localLiving = localStorage.getItem("couple_livingRecords");
-        if (localLiving) livingRecords.value = JSON.parse(localLiving);
-
-        const localDebts = localStorage.getItem("couple_debts");
-        if (localDebts) debts.value = JSON.parse(localDebts);
-
-        const localSchedules = localStorage.getItem("couple_schedules");
-        if (localSchedules) schedules.value = JSON.parse(localSchedules);
-      }
-
+      // Supabase is the single source of truth.
+      // We do NOT pre-load from localStorage to avoid showing stale/old data.
       const { data, error } = await supabase.from("couple_data").select("*");
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
+        // Track which keys Supabase returned
+        const fetchedKeys = new Set(data.map((row: any) => row.id));
+
         data.forEach((row: any) => {
-          if (row.id === "livingCategories" && row.content) livingCategories.value = row.content;
-          if (row.id === "customUtilityCategories" && row.content) customUtilityCategories.value = row.content;
-          if (row.id === "ddays" && row.content) ddays.value = row.content;
-          if (row.id === "utilityRecords" && row.content) utilityRecords.value = row.content;
-          if (row.id === "livingRecords" && row.content) livingRecords.value = row.content;
-          if (row.id === "debts" && row.content) debts.value = row.content;
-          if (row.id === "schedules" && row.content) schedules.value = row.content;
+          if (row.id === "livingCategories" && row.content) {
+            livingCategories.value = row.content;
+            if (typeof window !== "undefined") localStorage.setItem("couple_livingCategories", JSON.stringify(row.content));
+          }
+          if (row.id === "customUtilityCategories" && row.content) {
+            customUtilityCategories.value = row.content;
+            if (typeof window !== "undefined") localStorage.setItem("couple_customUtilityCategories", JSON.stringify(row.content));
+          }
+          if (row.id === "ddays" && row.content) {
+            ddays.value = row.content;
+            if (typeof window !== "undefined") localStorage.setItem("couple_ddays", JSON.stringify(row.content));
+          }
+          if (row.id === "utilityRecords" && row.content) {
+            utilityRecords.value = row.content;
+            if (typeof window !== "undefined") localStorage.setItem("couple_utilityRecords", JSON.stringify(row.content));
+          }
+          if (row.id === "livingRecords" && row.content) {
+            livingRecords.value = row.content;
+            if (typeof window !== "undefined") localStorage.setItem("couple_livingRecords", JSON.stringify(row.content));
+          }
+          if (row.id === "debts" && row.content) {
+            debts.value = row.content;
+            if (typeof window !== "undefined") localStorage.setItem("couple_debts", JSON.stringify(row.content));
+          }
+          if (row.id === "schedules" && row.content) {
+            schedules.value = row.content;
+            if (typeof window !== "undefined") localStorage.setItem("couple_schedules", JSON.stringify(row.content));
+          }
         });
+
+        // If a key is NOT in Supabase, reset to empty and clear localStorage cache
+        if (!fetchedKeys.has("ddays")) {
+          ddays.value = [];
+          if (typeof window !== "undefined") localStorage.removeItem("couple_ddays");
+        }
+        if (!fetchedKeys.has("utilityRecords")) {
+          utilityRecords.value = [];
+          if (typeof window !== "undefined") localStorage.removeItem("couple_utilityRecords");
+        }
+        if (!fetchedKeys.has("livingRecords")) {
+          livingRecords.value = [];
+          if (typeof window !== "undefined") localStorage.removeItem("couple_livingRecords");
+        }
+        if (!fetchedKeys.has("debts")) {
+          debts.value = [];
+          if (typeof window !== "undefined") localStorage.removeItem("couple_debts");
+        }
+        if (!fetchedKeys.has("schedules")) {
+          schedules.value = [];
+          if (typeof window !== "undefined") localStorage.removeItem("couple_schedules");
+        }
+      } else if (error) {
+        // Supabase failed - fall back to localStorage as last resort
+        if (typeof window !== "undefined") {
+          const localDdays = localStorage.getItem("couple_ddays");
+          if (localDdays) ddays.value = JSON.parse(localDdays);
+          const localUtils = localStorage.getItem("couple_utilityRecords");
+          if (localUtils) utilityRecords.value = JSON.parse(localUtils);
+          const localLiving = localStorage.getItem("couple_livingRecords");
+          if (localLiving) livingRecords.value = JSON.parse(localLiving);
+          const localDebts = localStorage.getItem("couple_debts");
+          if (localDebts) debts.value = JSON.parse(localDebts);
+          const localSchedules = localStorage.getItem("couple_schedules");
+          if (localSchedules) schedules.value = JSON.parse(localSchedules);
+        }
       }
     } catch (e) {
-      // Fallback
+      // Network failure fallback
+    } finally {
+      isLoaded.value = true;
     }
   };
 
@@ -409,6 +437,7 @@ export const useCoupleStore = defineStore("couple", () => {
   };
 
   return {
+    isLoaded,
     livingCategories,
     customUtilityCategories,
     addLivingCategory,
