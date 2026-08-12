@@ -48,23 +48,36 @@ const defaultCategoryNames = [
   "보증금 이자",
 ];
 
+
 const openEditModalForMonth = (month: number) => {
   editingMonth.value = month;
   const rec = coupleStore.getUtilityRecord(selectedYear.value, month);
 
+  let items: UtilityCategoryItem[];
   if (rec && rec.items && rec.items.length > 0) {
-    editingItems.value = rec.items.map((i) => ({ ...i }));
+    items = rec.items.map((i) => ({ ...i }));
   } else {
-    editingItems.value = defaultCategoryNames.map((catName, idx) => ({
+    items = defaultCategoryNames.map((catName, idx) => ({
       id: `u_${idx + 1}`,
       name: catName,
       amount: 0,
     }));
   }
 
+  // 렌더 시점에 도시가스 0원 항목 완전 제거 (캐시·구버전 코드 무관하게 보장)
+  const before = items.length;
+  editingItems.value = items.filter(
+    (item) => !(item.name === "도시가스" && (Number(item.amount) || 0) === 0)
+  );
+  // 제거된 항목이 있으면 DB에도 즉시 반영
+  if (editingItems.value.length < before) {
+    coupleStore.cleanupDosiGas();
+  }
+
   editingMemo.value = rec.memo || "";
   showEditModal.value = true;
 };
+
 
 const handleConfirmAddCustomCategory = () => {
   const name = newCatNameInput.value.trim();
