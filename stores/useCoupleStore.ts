@@ -348,29 +348,7 @@ export const useCoupleStore = defineStore("couple", () => {
 
   const fetchAllData = async () => {
     try {
-      // Force wipe all old dummy data from memory, localStorage, and Supabase
       if (typeof window !== "undefined") {
-        const resetKey = "couple_v3_dummy_purged";
-        if (!localStorage.getItem(resetKey)) {
-          localStorage.clear();
-          localStorage.setItem(resetKey, "true");
-          utilityRecords.value = [];
-          livingRecords.value = [];
-          debts.value = [];
-          schedules.value = [];
-
-          // Purge Supabase cloud DB completely
-          try {
-            await supabase.from("couple_data").delete().neq("id", "keep_nothing");
-            await syncToSupabase("utilityRecords", []);
-            await syncToSupabase("livingRecords", []);
-            await syncToSupabase("debts", []);
-            await syncToSupabase("schedules", []);
-            await syncToSupabase("ddays", ddays.value);
-          } catch (err) {}
-          return;
-        }
-
         const localLivingCats = localStorage.getItem("couple_livingCategories");
         if (localLivingCats) livingCategories.value = JSON.parse(localLivingCats);
 
@@ -399,24 +377,10 @@ export const useCoupleStore = defineStore("couple", () => {
           if (row.id === "livingCategories" && row.content) livingCategories.value = row.content;
           if (row.id === "customUtilityCategories" && row.content) customUtilityCategories.value = row.content;
           if (row.id === "ddays" && row.content) ddays.value = row.content;
-
-          // Exclude any remaining old dummy records with IDs u1~u7, l1~l3, d1~d3, s1~s3
-          if (row.id === "utilityRecords" && Array.isArray(row.content)) {
-            utilityRecords.value = row.content.filter((r: any) =>
-              r.items && r.items.some((i: any) => i.amount > 0 && !['u1','u2','u3','u4','u5','u6','u7'].includes(i.id))
-            );
-          }
-          if (row.id === "livingRecords" && Array.isArray(row.content)) {
-            livingRecords.value = row.content.filter((r: any) =>
-              r.items && r.items.some((i: any) => !['l1','l2','l3'].includes(i.id))
-            );
-          }
-          if (row.id === "debts" && Array.isArray(row.content)) {
-            debts.value = row.content.filter((d: any) => !['d1','d2','d3'].includes(d.id));
-          }
-          if (row.id === "schedules" && Array.isArray(row.content)) {
-            schedules.value = row.content.filter((s: any) => !['s1','s2','s3'].includes(s.id));
-          }
+          if (row.id === "utilityRecords" && row.content) utilityRecords.value = row.content;
+          if (row.id === "livingRecords" && row.content) livingRecords.value = row.content;
+          if (row.id === "debts" && row.content) debts.value = row.content;
+          if (row.id === "schedules" && row.content) schedules.value = row.content;
         });
       }
     } catch (e) {
