@@ -448,12 +448,13 @@ const submitBatchRows = async () => {
   }
 };
 
-// 📊 엑셀(XLSX) 다운로드 기능 구현 (3가지 정렬 탭 시트 동시 생성: 최신등록순, 오래된순, 선명가나다순)
+// 📊 엑셀(XLSX) 다운로드 기능 구현 (총 6가지 시트 동시 생성: 상세 3종 + 집계 3종)
 const exportToExcel = () => {
   const baseList = currentLedgerList.value;
+  const allLedgers = userStore.shipLedgers;
 
-  if (baseList.length === 0) {
-    showAlert(`${selectedDate.value} 날짜에 등록된 장부 데이터가 없습니다.`);
+  if (allLedgers.length === 0 && baseList.length === 0) {
+    showAlert(`등록된 장부 데이터가 없습니다.`);
     return;
   }
 
@@ -473,7 +474,7 @@ const exportToExcel = () => {
     return dateStr;
   };
 
-  // 엑셀 시트 생성용 헬퍼 함수
+  // 엑셀 시트 생성용 헬퍼 함수 (상세 리스트용)
   const createSheetData = (items: typeof baseList) => {
     return items.map((item, idx) => ({
       '연번': idx + 1,
@@ -488,7 +489,7 @@ const exportToExcel = () => {
     }));
   };
 
-  // 컬럼 너비 설정 (모든 시트 공통 최신화)
+  // 컬럼 너비 설정 (상세 시트 공통)
   const colWidths = [
     { wch: 6 },  // 연번
     { wch: 18 }, // 날짜 (등록시간)
@@ -499,6 +500,17 @@ const exportToExcel = () => {
     { wch: 10 }, // 결제구분
     { wch: 12 }, // 무게 (kg)
     { wch: 22 }  // 비고/메모
+  ];
+
+  // 집계 시트용 컬럼 너비
+  const summaryColWidths = [
+    { wch: 22 }, // 구분 / 월 / 일자
+    { wch: 12 }, // 건수
+    { wch: 18 }, // 총 운송 금액 (원)
+    { wch: 18 }, // 25% 조합 수수료 (원)
+    { wch: 14 }, // 현금 (원)
+    { wch: 14 }, // 입금 (원)
+    { wch: 14 }  // 미수 (원)
   ];
 
   // 워크북 생성
@@ -521,6 +533,130 @@ const exportToExcel = () => {
   const sheetShip = XLSX.utils.json_to_sheet(createSheetData(shipList));
   sheetShip['!cols'] = colWidths;
   XLSX.utils.book_append_sheet(workbook, sheetShip, '선명가나다순');
+
+  // 현재 선택된 년도 및 월 추출
+  const dateParts = selectedDate.value.split('-');
+  const yearStr = dateParts[0] || String(new Date().getFullYear());
+  const monthStr = dateParts[1] || String(new Date().getMonth() + 1).padStart(2, '0');
+  const selectedMonthPrefix = `${yearStr}-${monthStr}`;
+
+  // 4) 시트 4: 해당 년도의 총 금액 (연간 총 집계)
+  const yearRecords = allLedgers.filter(l => l.date && l.date.startsWith(yearStr));
+  const yearTotalAmount = yearRecords.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const yearFee = Math.round(yearTotalAmount * 0.25);
+  const yearCash = yearRecords.filter(l => (l.paymentType || '현금') === '현금').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const yearDeposit = yearRecords.filter(l => l.paymentType === '입금').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const yearMisu = yearRecords.filter(l => l.paymentType === '미수').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+
+  const yearSummarySheetData = [
+    {
+      '구분': `${yearStr}년 연간 총계`,
+      '총 등록 건수': yearRecords.length,
+      '총 운송 금액 (원)': yearTotalAmount,
+      '25% 조합 수수료 (원)': yearFee,
+      '현금 (원)': yearCash,
+      '입금 (원)': yearDeposit,
+      '미수 (원)': yearMisu
+    }
+  ];
+  const sheetYearSummary = XLSX.utils.json_to_sheet(yearSummarySheetData);
+  sheetYearSummary['!cols'] = summaryColWidths;
+  XLSX.utils.book_append_sheet(workbook, sheetYearSummary, `${yearStr}년_총금액`);
+
+  // 5) 시트 5: 해당 년도의 월 금액 (1월~12월 월별 집계 + 연간 합계)
+  const monthlyBreakdownData = [];
+  let grandCount = 0, grandAmount = 0, grandFee = 0, grandCash = 0, grandDeposit = 0, grandMisu = 0;
+
+  for (let m = 1; m <= 12; m++) {
+    const mPrefix = `${yearStr}-${String(m).padStart(2, '0')}`;
+    const mRecords = yearRecords.filter(l => l.date && l.date.startsWith(mPrefix));
+
+    const count = mRecords.length;
+    const amount = mRecords.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+    const fee = Math.round(amount * 0.25);
+    const cash = mRecords.filter(l => (l.paymentType || '현금') === '현금').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+    const deposit = mRecords.filter(l => l.paymentType === '입금').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+    const misu = mRecords.filter(l => l.paymentType === '미수').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+
+    grandCount += count;
+    grandAmount += amount;
+    grandFee += fee;
+    grandCash += cash;
+    grandDeposit += deposit;
+    grandMisu += misu;
+
+    monthlyBreakdownData.push({
+      '월': `${m}월 (${mPrefix})`,
+      '건수': count,
+      '총 운송 금액 (원)': amount,
+      '25% 조합 수수료 (원)': fee,
+      '현금 (원)': cash,
+      '입금 (원)': deposit,
+      '미수 (원)': misu
+    });
+  }
+
+  monthlyBreakdownData.push({
+    '월': `${yearStr}년 연간 합계`,
+    '건수': grandCount,
+    '총 운송 금액 (원)': grandAmount,
+    '25% 조합 수수료 (원)': grandFee,
+    '현금 (원)': grandCash,
+    '입금 (원)': grandDeposit,
+    '미수 (원)': grandMisu
+  });
+
+  const sheetMonthBreakdown = XLSX.utils.json_to_sheet(monthlyBreakdownData);
+  sheetMonthBreakdown['!cols'] = summaryColWidths;
+  XLSX.utils.book_append_sheet(workbook, sheetMonthBreakdown, `${yearStr}년_월별금액`);
+
+  // 6) 시트 6: 해당 년도의 특정 월의 일 금액 (1일~31일 일별 집계 + 월간 합계)
+  const totalDaysInMonth = new Date(Number(yearStr), Number(monthStr), 0).getDate();
+  const dailyBreakdownData = [];
+  let monthGrandCount = 0, monthGrandAmount = 0, monthGrandFee = 0, monthGrandCash = 0, monthGrandDeposit = 0, monthGrandMisu = 0;
+
+  for (let d = 1; d <= totalDaysInMonth; d++) {
+    const dDateStr = `${selectedMonthPrefix}-${String(d).padStart(2, '0')}`;
+    const dRecords = allLedgers.filter(l => l.date === dDateStr);
+
+    const count = dRecords.length;
+    const amount = dRecords.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+    const fee = Math.round(amount * 0.25);
+    const cash = dRecords.filter(l => (l.paymentType || '현금') === '현금').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+    const deposit = dRecords.filter(l => l.paymentType === '입금').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+    const misu = dRecords.filter(l => l.paymentType === '미수').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+
+    monthGrandCount += count;
+    monthGrandAmount += amount;
+    monthGrandFee += fee;
+    monthGrandCash += cash;
+    monthGrandDeposit += deposit;
+    monthGrandMisu += misu;
+
+    dailyBreakdownData.push({
+      '일자': `${Number(monthStr)}월 ${d}일 (${dDateStr})`,
+      '건수': count,
+      '총 운송 금액 (원)': amount,
+      '25% 조합 수수료 (원)': fee,
+      '현금 (원)': cash,
+      '입금 (원)': deposit,
+      '미수 (원)': misu
+    });
+  }
+
+  dailyBreakdownData.push({
+    '일자': `${Number(monthStr)}월 월간 합계`,
+    '건수': monthGrandCount,
+    '총 운송 금액 (원)': monthGrandAmount,
+    '25% 조합 수수료 (원)': monthGrandFee,
+    '현금 (원)': monthGrandCash,
+    '입금 (원)': monthGrandDeposit,
+    '미수 (원)': monthGrandMisu
+  });
+
+  const sheetDailyBreakdown = XLSX.utils.json_to_sheet(dailyBreakdownData);
+  sheetDailyBreakdown['!cols'] = summaryColWidths;
+  XLSX.utils.book_append_sheet(workbook, sheetDailyBreakdown, `${Number(monthStr)}월_일별금액`);
 
   // XLSX 파일 다운로드 실행
   const fileName = `객선_수화물운송장부_${selectedDate.value}.xlsx`;
