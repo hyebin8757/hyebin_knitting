@@ -513,6 +513,22 @@ const exportToExcel = () => {
     { wch: 14 }  // 미수 (원)
   ];
 
+  // 엑셀 시트 내 숫자 셀 1,000단위 콤마(#,##0) 포맷터 적용 헬퍼
+  const applyCommaFormatToSheet = (sheet: XLSX.WorkSheet) => {
+    if (!sheet || !sheet['!ref']) return;
+    const range = XLSX.utils.decode_range(sheet['!ref']);
+    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = sheet[cell_address];
+        if (cell && cell.t === 'n') {
+          cell.z = '#,##0';
+          cell.w = Number(cell.v).toLocaleString();
+        }
+      }
+    }
+  };
+
   // 워크북 생성
   const workbook = XLSX.utils.book_new();
 
@@ -520,18 +536,21 @@ const exportToExcel = () => {
   const descList = [...baseList].sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
   const sheetDesc = XLSX.utils.json_to_sheet(createSheetData(descList));
   sheetDesc['!cols'] = colWidths;
+  applyCommaFormatToSheet(sheetDesc);
   XLSX.utils.book_append_sheet(workbook, sheetDesc, '최신등록순');
 
   // 2) 시트 2: 오래된순 (오름차순)
   const ascList = [...baseList].sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
   const sheetAsc = XLSX.utils.json_to_sheet(createSheetData(ascList));
   sheetAsc['!cols'] = colWidths;
+  applyCommaFormatToSheet(sheetAsc);
   XLSX.utils.book_append_sheet(workbook, sheetAsc, '오래된순');
 
   // 3) 시트 3: 선명 가나다순
   const shipList = [...baseList].sort((a, b) => koreanCollator.compare(a.shipName || '', b.shipName || ''));
   const sheetShip = XLSX.utils.json_to_sheet(createSheetData(shipList));
   sheetShip['!cols'] = colWidths;
+  applyCommaFormatToSheet(sheetShip);
   XLSX.utils.book_append_sheet(workbook, sheetShip, '선명가나다순');
 
   // 현재 선택된 년도 및 월 추출
@@ -561,6 +580,7 @@ const exportToExcel = () => {
   ];
   const sheetYearSummary = XLSX.utils.json_to_sheet(yearSummarySheetData);
   sheetYearSummary['!cols'] = summaryColWidths;
+  applyCommaFormatToSheet(sheetYearSummary);
   XLSX.utils.book_append_sheet(workbook, sheetYearSummary, `${yearStr}년_총금액`);
 
   // 5) 시트 5: 해당 년도의 월 금액 (1월~12월 월별 집계 + 연간 합계)
@@ -608,6 +628,7 @@ const exportToExcel = () => {
 
   const sheetMonthBreakdown = XLSX.utils.json_to_sheet(monthlyBreakdownData);
   sheetMonthBreakdown['!cols'] = summaryColWidths;
+  applyCommaFormatToSheet(sheetMonthBreakdown);
   XLSX.utils.book_append_sheet(workbook, sheetMonthBreakdown, `${yearStr}년_월별금액`);
 
   // 6) 시트 6: 해당 년도의 특정 월의 일 금액 (1일~31일 일별 집계 + 월간 합계)
@@ -656,6 +677,7 @@ const exportToExcel = () => {
 
   const sheetDailyBreakdown = XLSX.utils.json_to_sheet(dailyBreakdownData);
   sheetDailyBreakdown['!cols'] = summaryColWidths;
+  applyCommaFormatToSheet(sheetDailyBreakdown);
   XLSX.utils.book_append_sheet(workbook, sheetDailyBreakdown, `${Number(monthStr)}월_일별금액`);
 
   // XLSX 파일 다운로드 실행
