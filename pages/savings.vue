@@ -162,7 +162,7 @@ const autoCalculateInterest = () => {
       <div class="metrics-dashboard">
         <div class="metric-card primary-card">
           <span class="m-label">총 모은 자산 (현재 잔액)</span>
-          <div class="m-val text-emerald-600">
+          <div class="m-val text-sky-600">
             {{ totalCurrentPrincipal.toLocaleString() }} <span class="unit">원</span>
           </div>
         </div>
@@ -170,7 +170,7 @@ const autoCalculateInterest = () => {
         <div class="metric-sub-grid">
           <div class="sub-metric">
             <span class="sub-label">월 납입액</span>
-            <span class="sub-val text-emerald-700">{{ totalMonthlyPaymentSum.toLocaleString() }}원</span>
+            <span class="sub-val text-blue-700">{{ totalMonthlyPaymentSum.toLocaleString() }}원</span>
           </div>
           <div class="sub-metric">
             <span class="sub-label">월 예상 이자</span>
@@ -219,7 +219,7 @@ const autoCalculateInterest = () => {
 
         <!-- Savings Progress & Principal -->
         <div class="principal-row">
-          <div class="main-amount text-emerald-600">
+          <div class="main-amount text-sky-600">
             {{ Number(item.currentAmount).toLocaleString() }}원
           </div>
         </div>
@@ -372,9 +372,9 @@ const autoCalculateInterest = () => {
 }
 
 .q-amt-pill {
-  background: #e8f5e9;
-  border: 1px solid #c8e6c9;
-  color: #2e7d32;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
   font-size: 0.72rem;
   font-weight: 800;
   padding: 2px 7px;
@@ -384,7 +384,7 @@ const autoCalculateInterest = () => {
 }
 
 .q-amt-pill:active {
-  background: #2e7d32;
+  background: #0284c7;
   color: #fff;
   transform: scale(0.95);
 }
@@ -406,8 +406,8 @@ const autoCalculateInterest = () => {
   background: #ffffff;
   padding: 16px;
   border-radius: 24px;
-  border: 1px solid #c8e6c9;
-  box-shadow: 0 4px 16px rgba(46, 125, 50, 0.05);
+  border: 1px solid #bae6fd;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.05);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -421,7 +421,7 @@ const autoCalculateInterest = () => {
 
 .header-badge {
   font-size: 1.12rem;
-  color: #1b5e20;
+  color: #0369a1;
 }
 
 .header-sub-tag {
@@ -433,7 +433,7 @@ const autoCalculateInterest = () => {
 .owner-tabs-row {
   display: flex;
   gap: 6px;
-  background: #f1f8e9;
+  background: #f0f9ff;
   padding: 4px;
   border-radius: 16px;
 }
@@ -445,7 +445,7 @@ const autoCalculateInterest = () => {
   padding: 6px 0;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #555;
+  color: #64748b;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -453,8 +453,8 @@ const autoCalculateInterest = () => {
 
 .owner-tab-btn.active {
   background: #ffffff;
-  color: #2e7d32;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  color: #0284c7;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.12);
 }
 
 /* Metrics Dashboard */
@@ -465,8 +465,8 @@ const autoCalculateInterest = () => {
 }
 
 .metric-card.primary-card {
-  background: #f1f8e9;
-  border: 1px solid #c8e6c9;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
   border-radius: 16px;
   padding: 12px 14px;
   display: flex;
@@ -476,7 +476,7 @@ const autoCalculateInterest = () => {
 .m-label {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #43a047;
+  color: #0284c7;
 }
 
 .m-val {
@@ -497,8 +497,8 @@ const autoCalculateInterest = () => {
 }
 
 .sub-metric {
-  background: #f9fbe7;
-  border: 1px solid #f0f4c3;
+  background: #f0f7ff;
+  border: 1px solid #dbeafe;
   border-radius: 14px;
   padding: 8px 12px;
   display: flex;
@@ -508,7 +508,7 @@ const autoCalculateInterest = () => {
 .sub-label {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #728c00;
+  color: #0369a1;
 }
 
 .sub-val {
@@ -533,7 +533,7 @@ const autoCalculateInterest = () => {
   display: flex;
   align-items: center;
   gap: 2px;
-  background: #2e7d32;
+  background: #0284c7;
   color: #fff;
   border: none;
   padding: 7px 14px;
@@ -541,6 +541,12 @@ const autoCalculateInterest = () => {
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.add-btn:active {
+  transform: scale(0.96);
+  background: #0369a1;
 }
 
 /* Cards List */
@@ -566,15 +572,15 @@ const autoCalculateInterest = () => {
 
 .saving-card {
   background: #ffffff;
-  border: 1px solid #c8e6c9;
+  border: 1px solid #bae6fd;
   border-radius: 20px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  box-shadow: 0 3px 10px rgba(46, 125, 50, 0.03);
+  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.04);
   cursor: pointer;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .saving-card:active {
@@ -616,8 +622,8 @@ const autoCalculateInterest = () => {
 .rate-badge {
   font-size: 0.76rem;
   font-weight: 800;
-  color: #2e7d32;
-  background: #e8f5e9;
+  color: #0369a1;
+  background: #e0f2fe;
   padding: 2px 8px;
   border-radius: 10px;
 }
@@ -649,7 +655,7 @@ const autoCalculateInterest = () => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  background: #f1f8e9;
+  background: #f0f7ff;
   padding: 8px 10px;
   border-radius: 12px;
   margin-top: 2px;
@@ -753,7 +759,7 @@ const autoCalculateInterest = () => {
 
 .auto-calc-hint {
   font-size: 0.72rem;
-  color: #43a047;
+  color: #0284c7;
   font-weight: 700;
 }
 
@@ -767,7 +773,7 @@ const autoCalculateInterest = () => {
 }
 
 .input-group input:focus {
-  border-color: #2e7d32;
+  border-color: #0284c7;
 }
 
 .input-row-flex {
@@ -797,9 +803,9 @@ const autoCalculateInterest = () => {
 }
 
 .radio-btn.active {
-  background: #e8f5e9;
-  color: #2e7d32;
-  border-color: #a5d6a7;
+  background: #e0f2fe;
+  color: #0284c7;
+  border-color: #bae6fd;
 }
 
 .checkbox-group {
