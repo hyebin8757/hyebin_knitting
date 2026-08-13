@@ -997,10 +997,14 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
 .modal-card {
   background: #fff;
   width: 100%;
-  max-width: 360px;
+  max-width: 440px;
+  max-height: 85vh;
   border-radius: 24px;
   padding: 20px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .edit-utility-modal {
@@ -1012,6 +1016,7 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -1034,6 +1039,7 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
   overflow-x: auto;
   margin-bottom: 12px;
   padding-bottom: 4px;
+  flex-shrink: 0;
 }
 
 .m-btn {
@@ -1055,7 +1061,7 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
 }
 
 .scrollable-body {
-  max-height: 55vh;
+  flex: 1;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -1206,7 +1212,8 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
 .modal-footer {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 12px;
+  flex-shrink: 0;
 }
 
 .save-btn {

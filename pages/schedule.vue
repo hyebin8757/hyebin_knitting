@@ -584,23 +584,37 @@ const getDurationBadge = (item: ScheduleItem) => {
 .modal-card {
   background: #fff;
   width: 100%;
-  max-width: 360px;
+  max-width: 440px;
+  max-height: 85vh;
   border-radius: 24px;
   padding: 20px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: #333;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
 }
 
 .close-btn {
@@ -612,23 +626,23 @@ const getDurationBadge = (item: ScheduleItem) => {
 }
 
 .input-group {
-  margin-bottom: 14px;
+  margin-bottom: 4px;
 }
 
 .input-group label {
   display: block;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #444;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .input-group input {
   width: 100%;
-  padding: 11px 14px;
+  padding: 10px 12px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
-  font-size: 1.02rem;
+  font-size: 0.95rem;
   box-sizing: border-box;
   background: #ffffff;
   color: #333;

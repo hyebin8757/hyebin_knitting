@@ -701,19 +701,22 @@ const autoCalculateInterest = () => {
 .modal-card {
   width: 100%;
   max-width: 440px;
+  max-height: 85vh;
   background: #fff;
   border-radius: 24px;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -731,11 +734,11 @@ const autoCalculateInterest = () => {
 }
 
 .scrollable-body {
-  max-height: 62vh;
+  flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   padding-right: 4px;
 }
 
@@ -828,6 +831,8 @@ const autoCalculateInterest = () => {
 .modal-footer {
   display: flex;
   gap: 8px;
+  margin-top: 12px;
+  flex-shrink: 0;
 }
 
 .del-btn {
