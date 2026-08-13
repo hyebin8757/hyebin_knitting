@@ -788,7 +788,8 @@ const autoCalculateInterest = () => {
 .modal-card {
   width: 100%;
   max-width: 440px;
-  max-height: 85vh;
+  max-height: 80vh;
+  max-height: 80dvh;
   background: #fff;
   border-radius: 24px;
   padding: 20px;

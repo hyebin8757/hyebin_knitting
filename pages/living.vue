@@ -1051,7 +1051,8 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   background: #fff;
   width: 100%;
   max-width: 440px;
-  max-height: 85vh;
+  max-height: 80vh;
+  max-height: 80dvh;
   border-radius: 24px;
   padding: 20px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
