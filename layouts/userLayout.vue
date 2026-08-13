@@ -9,6 +9,14 @@ const route = useRoute();
 const coupleStore = useCoupleStore();
 const windowWidth = ref(0);
 
+const isNavActive = (targetPath: string) => {
+  const currentPath = (route.path || '').replace(/\/$/, '') || '/';
+  if (targetPath === '/home') {
+    return currentPath === '/home' || currentPath === '' || currentPath === '/';
+  }
+  return currentPath.startsWith(targetPath);
+};
+
 let resizeAnimationFrame: number | null = null;
 const setWindowWidth = () => {
   if (typeof window !== "undefined") {
@@ -61,35 +69,35 @@ onBeforeUnmount(() => {
 
         <!-- Bottom Navigation Bar (5 Items) -->
         <nav class="couple-bottom-nav">
-          <nuxt-link to="/home" class="nav-item" :class="{ active: route.path === '/home' }">
+          <nuxt-link to="/home" class="nav-item" :class="{ active: isNavActive('/home') }">
             <div class="nav-icon">
               <i class="material-icons">favorite</i>
             </div>
             <span class="nav-label">홈</span>
           </nuxt-link>
 
-          <nuxt-link to="/utility" class="nav-item" :class="{ active: route.path === '/utility' }">
+          <nuxt-link to="/utility" class="nav-item" :class="{ active: isNavActive('/utility') }">
             <div class="nav-icon">
               <i class="material-icons">lightbulb</i>
             </div>
             <span class="nav-label">공과금</span>
           </nuxt-link>
 
-          <nuxt-link to="/living" class="nav-item" :class="{ active: route.path === '/living' }">
+          <nuxt-link to="/living" class="nav-item" :class="{ active: isNavActive('/living') }">
             <div class="nav-icon">
               <i class="material-icons">account_balance_wallet</i>
             </div>
             <span class="nav-label">생활비</span>
           </nuxt-link>
 
-          <nuxt-link to="/debt" class="nav-item" :class="{ active: route.path === '/debt' }">
+          <nuxt-link to="/debt" class="nav-item" :class="{ active: isNavActive('/debt') }">
             <div class="nav-icon">
               <i class="material-icons">credit_card</i>
             </div>
             <span class="nav-label">대출/빚</span>
           </nuxt-link>
 
-          <nuxt-link to="/schedule" class="nav-item" :class="{ active: route.path === '/schedule' }">
+          <nuxt-link to="/schedule" class="nav-item" :class="{ active: isNavActive('/schedule') }">
             <div class="nav-icon">
               <i class="material-icons">event</i>
             </div>
@@ -252,11 +260,15 @@ onBeforeUnmount(() => {
   letter-spacing: -0.2px;
 }
 
-.nav-item.active {
+.nav-item.active,
+.nav-item.router-link-active,
+.nav-item.router-link-exact-active {
   color: #ff7043;
 }
 
-.nav-item.active .nav-icon {
+.nav-item.active .nav-icon,
+.nav-item.router-link-active .nav-icon,
+.nav-item.router-link-exact-active .nav-icon {
   background: #ffebe5;
   color: #ff5722;
 }
