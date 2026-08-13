@@ -141,6 +141,43 @@ const spentPercentage = computed(() => {
   const pct = Math.round((totalSpent.value / record.value.targetSavings) * 100);
   return Math.min(pct, 100);
 });
+
+// 카테고리별 지출 금액 집계
+const categoryTotals = computed(() => {
+  const map: Record<string, number> = {};
+  coupleStore.livingCategories.forEach((cat) => {
+    map[cat] = 0;
+  });
+  record.value.items.forEach((item) => {
+    const amount = Number(item.amount) || 0;
+    map[item.category] = (map[item.category] || 0) + amount;
+  });
+  return map;
+});
+
+// 현재 선택된 카테고리의 상세 통계 요약
+const selectedCategoryStats = computed(() => {
+  const isAll = activeCategoryFilter.value === "전체";
+  const items = isAll ? record.value.items : record.value.items.filter((i) => i.category === activeCategoryFilter.value);
+  const categoryTotal = items.reduce((sum, i) => sum + Number(i.amount) || 0, 0);
+  const overallTotal = totalSpent.value;
+  const percentage = overallTotal > 0 ? Math.round((categoryTotal / overallTotal) * 100) : 0;
+  
+  const paidByGongdong = items.filter((i) => i.paidBy === "공동").reduce((sum, i) => sum + Number(i.amount) || 0, 0);
+  const paidByUju = items.filter((i) => i.paidBy === "우주").reduce((sum, i) => sum + Number(i.amount) || 0, 0);
+  const paidByHyebin = items.filter((i) => i.paidBy === "혜빈").reduce((sum, i) => sum + Number(i.amount) || 0, 0);
+
+  return {
+    isAll,
+    name: activeCategoryFilter.value,
+    total: categoryTotal,
+    count: items.length,
+    percentage,
+    paidByGongdong,
+    paidByUju,
+    paidByHyebin,
+  };
+});
 </script>
 
 <template>
@@ -222,7 +259,8 @@ const spentPercentage = computed(() => {
           :class="{ active: activeCategoryFilter === '전체' }"
           @click="activeCategoryFilter = '전체'"
         >
-          전체
+          <span>전체</span>
+          <span class="chip-sub-amt">{{ totalSpent.toLocaleString() }}원</span>
         </button>
 
         <button
@@ -232,7 +270,8 @@ const spentPercentage = computed(() => {
           :class="{ active: activeCategoryFilter === cat }"
           @click="activeCategoryFilter = cat"
         >
-          {{ cat }}
+          <span>{{ cat }}</span>
+          <span class="chip-sub-amt">{{ (categoryTotals[cat] || 0).toLocaleString() }}원</span>
         </button>
 
         <button class="add-cat-chip-btn" @click="showAddCategoryModal = true">
@@ -244,6 +283,38 @@ const spentPercentage = computed(() => {
         <button class="add-expense-btn" @click="openAddItemModal">
           <i class="material-icons">add</i> 지출 등록
         </button>
+      </div>
+    </div>
+
+    <!-- Selected Category Summary Dashboard Card (UX/UI Optimized) -->
+    <div class="category-summary-dashboard-card">
+      <div class="dash-top">
+        <div class="dash-title-group">
+          <span class="dash-tag">🏷️ {{ selectedCategoryStats.name }} 지출 합계</span>
+          <h4 class="dash-amount text-rose-600">{{ selectedCategoryStats.total.toLocaleString() }} <span class="unit">원</span></h4>
+        </div>
+        <div class="dash-right-info">
+          <span v-if="!selectedCategoryStats.isAll && totalSpent > 0" class="pct-badge">
+            전체 지출의 {{ selectedCategoryStats.percentage }}%
+          </span>
+          <span class="count-badge">총 {{ selectedCategoryStats.count }}건</span>
+        </div>
+      </div>
+
+      <!-- PaidBy Breakdown Row -->
+      <div v-if="selectedCategoryStats.count > 0" class="dash-paidby-row">
+        <div class="paidby-item 공동">
+          <span class="lbl">공동 결제</span>
+          <span class="val">{{ selectedCategoryStats.paidByGongdong.toLocaleString() }}원</span>
+        </div>
+        <div class="paidby-item 우주">
+          <span class="lbl">우주 결제</span>
+          <span class="val">{{ selectedCategoryStats.paidByUju.toLocaleString() }}원</span>
+        </div>
+        <div class="paidby-item 혜빈">
+          <span class="lbl">혜빈 결제</span>
+          <span class="val">{{ selectedCategoryStats.paidByHyebin.toLocaleString() }}원</span>
+        </div>
       </div>
     </div>
 
@@ -603,20 +674,38 @@ const spentPercentage = computed(() => {
 }
 
 .cat-chip {
-  background: #f0f0f0;
-  border: none;
-  padding: 6px 12px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  padding: 6px 14px;
   border-radius: 14px;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 700;
-  color: #666;
+  color: #555;
   white-space: nowrap;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .cat-chip.active {
   background: #2e7d32;
   color: #fff;
+  border-color: #1b5e20;
+  box-shadow: 0 3px 10px rgba(46, 125, 50, 0.25);
+}
+
+.chip-sub-amt {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #888;
+  margin-top: 1px;
+}
+
+.cat-chip.active .chip-sub-amt {
+  color: #e8f5e9;
 }
 
 .add-cat-chip-btn {
@@ -653,6 +742,98 @@ const spentPercentage = computed(() => {
 
 .add-expense-btn i {
   font-size: 1.15rem;
+}
+
+/* Category Summary Dashboard Card */
+.category-summary-dashboard-card {
+  background: #ffffff;
+  border: 1px solid #c8e6c9;
+  border-radius: 20px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 14px rgba(46, 125, 50, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dash-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dash-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-tag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.dash-amount {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+.dash-right-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.pct-badge {
+  background: #fff3e0;
+  color: #e65100;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid #ffe0b2;
+}
+
+.count-badge {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.dash-paidby-row {
+  display: flex;
+  gap: 6px;
+  border-top: 1px dashed #e0f2f1;
+  padding-top: 8px;
+}
+
+.paidby-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px;
+  border-radius: 10px;
+}
+
+.paidby-item.공동 { background: #f3e5f5; color: #7b1fa2; }
+.paidby-item.우주 { background: #e3f2fd; color: #1565c0; }
+.paidby-item.혜빈 { background: #fce4ec; color: #c2185b; }
+
+.paidby-item .lbl {
+  font-size: 0.68rem;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.paidby-item .val {
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 /* Items List */
