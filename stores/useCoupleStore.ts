@@ -70,7 +70,8 @@ export interface ScheduleItem {
   id: string;
   owner: '우주' | '혜빈' | '공동';
   title: string;
-  date: string; // YYYY-MM-DD
+  date: string; // 시작일 YYYY-MM-DD
+  endDate?: string; // 종료일 YYYY-MM-DD (연속/기간 일정 시 사용)
   time?: string; // HH:mm
   category: '약속' | '기념일' | '일상' | '중요';
   memo?: string;
@@ -309,6 +310,7 @@ export const useCoupleStore = defineStore("couple", () => {
         owner: schedData.owner || "공동",
         title: schedData.title || "새 일정",
         date: schedData.date || new Date().toISOString().split("T")[0],
+        endDate: schedData.endDate || schedData.date,
         time: schedData.time || "12:00",
         category: schedData.category || "약속",
         memo: schedData.memo || "",

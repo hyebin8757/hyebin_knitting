@@ -103,11 +103,14 @@ const debtSummaryByOwner = computed(() => {
 
 const currentDebtMetrics = computed(() => debtSummaryByOwner.value[selectedDebtOwner.value] || debtSummaryByOwner.value['전체']);
 
-// Upcoming schedules
+// Upcoming schedules (종료일 기준 오늘 이후 또는 진행 중인 일정)
 const upcomingSchedules = computed(() => {
   const todayStr = today.toISOString().split("T")[0];
   return coupleStore.schedules
-    .filter((s) => s.date >= todayStr && !s.isCompleted)
+    .filter((s) => {
+      const finishDate = s.endDate || s.date;
+      return finishDate >= todayStr && !s.isCompleted;
+    })
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 3);
 });
@@ -277,7 +280,11 @@ const upcomingSchedules = computed(() => {
           </div>
           <div class="sched-info">
             <div class="sched-title">{{ item.title }}</div>
-            <div class="sched-time">📅 {{ item.date }} {{ item.time || '' }}</div>
+            <div class="sched-time">
+              <span v-if="item.endDate && item.endDate !== item.date">📅 {{ item.date }} ~ {{ item.endDate }}</span>
+              <span v-else>📅 {{ item.date }}</span>
+              <span v-if="item.time"> ⏰ {{ item.time }}</span>
+            </div>
           </div>
           <span class="category-chip">{{ item.category }}</span>
         </div>

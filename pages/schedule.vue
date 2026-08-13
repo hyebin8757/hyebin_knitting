@@ -24,12 +24,28 @@ const resetToThisYear = () => {
 const selectedOwnerFilter = ref<'전체' | '우주' | '혜빈' | '공동'>('전체');
 const ownerFilters: ('전체' | '우주' | '혜빈' | '공동')[] = ['전체', '우주', '혜빈', '공동'];
 
+// Schedule Type State (당일 일정 vs 연속/기간 일정)
+const scheduleType = ref<'single' | 'range'>('single');
+
+const isScheduleInMonth = (s: ScheduleItem, year: number, month: number) => {
+  const ymStr = `${year}-${String(month).padStart(2, "0")}`;
+  const startDate = s.date;
+  const endDate = s.endDate || s.date;
+  
+  if (startDate.startsWith(ymStr) || endDate.startsWith(ymStr)) return true;
+
+  const firstDay = `${ymStr}-01`;
+  const lastDayObj = new Date(year, month, 0);
+  const lastDay = `${ymStr}-${String(lastDayObj.getDate()).padStart(2, "0")}`;
+
+  return startDate <= lastDay && endDate >= firstDay;
+};
+
 // Filtered schedules for selected year & month and owner filter
 const monthSchedules = computed(() => {
-  const ymStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, "0")}`;
   return coupleStore.schedules
     .filter((s) => {
-      const matchMonth = s.date.startsWith(ymStr);
+      const matchMonth = isScheduleInMonth(s, currentYear.value, currentMonth.value);
       const matchOwner = selectedOwnerFilter.value === '전체' || s.owner === selectedOwnerFilter.value;
       return matchMonth && matchOwner;
     })
@@ -44,6 +60,7 @@ const editingSchedule = ref<Partial<ScheduleItem>>({
   owner: '공동',
   title: '',
   date: today.toISOString().split("T")[0],
+  endDate: today.toISOString().split("T")[0],
   time: '12:00',
   category: '약속',
   memo: '',
@@ -51,10 +68,13 @@ const editingSchedule = ref<Partial<ScheduleItem>>({
 });
 
 const openAddModal = () => {
+  const defaultDate = `${currentYear.value}-${String(currentMonth.value).padStart(2, "0")}-15`;
+  scheduleType.value = 'single';
   editingSchedule.value = {
     owner: selectedOwnerFilter.value === '전체' ? '공동' : selectedOwnerFilter.value,
     title: '',
-    date: `${currentYear.value}-${String(currentMonth.value).padStart(2, "0")}-15`,
+    date: defaultDate,
+    endDate: defaultDate,
     time: '12:00',
     category: '약속',
     memo: '',
@@ -66,15 +86,34 @@ const openAddModal = () => {
 
 const openEditModal = (item: ScheduleItem) => {
   editingSchedule.value = { ...item };
+  if (item.endDate && item.endDate !== item.date) {
+    scheduleType.value = 'range';
+  } else {
+    scheduleType.value = 'single';
+  }
   isEditMode.value = true;
   showModal.value = true;
 };
 
 const handleSaveSchedule = () => {
   if (!editingSchedule.value.title || !editingSchedule.value.date) {
-    dialogStore.showAlert("일정 제목과 날짜를 입력해주세요.", "입력 확인", "info");
+    dialogStore.showAlert("일정 제목과 시작 날짜를 입력해주세요.", "입력 확인", "info");
     return;
   }
+
+  // 당일 일정일 경우 종료일을 시작일과 동일하게 설정
+  if (scheduleType.value === 'single') {
+    editingSchedule.value.endDate = editingSchedule.value.date;
+  } else if (!editingSchedule.value.endDate) {
+    editingSchedule.value.endDate = editingSchedule.value.date;
+  }
+
+  // 시작일이 종료일보다 늦을 경우 안전 검사
+  if (editingSchedule.value.endDate && editingSchedule.value.endDate < editingSchedule.value.date!) {
+    dialogStore.showAlert("종료 날짜는 시작 날짜보다 빠를 수 없습니다.", "날짜 확인", "warning");
+    return;
+  }
+
   coupleStore.saveSchedule(editingSchedule.value);
   showModal.value = false;
 };
@@ -94,6 +133,17 @@ const handleDeleteSchedule = (id: string) => {
 const toggleComplete = (id: string, e: Event) => {
   e.stopPropagation();
   coupleStore.toggleScheduleComplete(id);
+};
+
+const getDurationBadge = (item: ScheduleItem) => {
+  if (!item.endDate || item.endDate === item.date) return null;
+  const start = new Date(item.date);
+  const end = new Date(item.endDate);
+  const diffDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  if (diffDays > 1) {
+    return `${diffDays - 1}박 ${diffDays}일 (${diffDays}일간)`;
+  }
+  return null;
 };
 </script>
 
@@ -176,7 +226,11 @@ const toggleComplete = (id: string, e: Event) => {
           </div>
 
           <div class="sched-time-text">
-            <span>📅 {{ item.date }}</span>
+            <span v-if="item.endDate && item.endDate !== item.date" class="range-date-span">
+              📅 {{ item.date }} ~ {{ item.endDate }}
+              <span v-if="getDurationBadge(item)" class="duration-badge">{{ getDurationBadge(item) }}</span>
+            </span>
+            <span v-else>📅 {{ item.date }}</span>
             <span v-if="item.time">⏰ {{ item.time }}</span>
           </div>
 
@@ -213,11 +267,34 @@ const toggleComplete = (id: string, e: Event) => {
           </div>
 
           <div class="input-group">
-            <label>일정 제목</label>
-            <input v-model="editingSchedule.title" type="text" placeholder="예: 땅콩이 예방접종, 부부 데이트" />
+            <label>일정 유형</label>
+            <div class="radio-selector">
+              <button
+                type="button"
+                class="radio-btn"
+                :class="{ active: scheduleType === 'single' }"
+                @click="scheduleType = 'single'"
+              >
+                📅 당일 일정
+              </button>
+              <button
+                type="button"
+                class="radio-btn"
+                :class="{ active: scheduleType === 'range' }"
+                @click="scheduleType = 'range'"
+              >
+                🗓️ 연속/기간 일정
+              </button>
+            </div>
           </div>
 
-          <div class="input-row-flex">
+          <div class="input-group">
+            <label>일정 제목</label>
+            <input v-model="editingSchedule.title" type="text" placeholder="예: 여름 휴가, 땅콩이 예방접종, 부부 데이트" />
+          </div>
+
+          <!-- 당일 일정 선택 시 -->
+          <div v-if="scheduleType === 'single'" class="input-row-flex">
             <div class="input-group flex-1">
               <label>날짜</label>
               <input v-model="editingSchedule.date" type="date" />
@@ -476,9 +553,28 @@ const toggleComplete = (id: string, e: Event) => {
 
 .sched-time-text {
   display: flex;
+  align-items: center;
   gap: 8px;
   font-size: 0.82rem;
   color: #666;
+  flex-wrap: wrap;
+}
+
+.range-date-span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.duration-badge {
+  background: #e8eaf6;
+  color: #3f51b5;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid #c5cae9;
 }
 
 .sched-memo-text {
