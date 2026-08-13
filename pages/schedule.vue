@@ -24,8 +24,11 @@ const resetToThisYear = () => {
 const selectedOwnerFilter = ref<'전체' | '우주' | '혜빈' | '공동'>('전체');
 const ownerFilters: ('전체' | '우주' | '혜빈' | '공동')[] = ['전체', '우주', '혜빈', '공동'];
 
-// Schedule Type State (당일 일정 vs 연속/기간 일정)
-const scheduleType = ref<'single' | 'range'>('single');
+const onStartDateChange = () => {
+  if (!editingSchedule.value.endDate || editingSchedule.value.endDate < editingSchedule.value.date!) {
+    editingSchedule.value.endDate = editingSchedule.value.date;
+  }
+};
 
 const isScheduleInMonth = (s: ScheduleItem, year: number, month: number) => {
   const ymStr = `${year}-${String(month).padStart(2, "0")}`;
@@ -69,7 +72,6 @@ const editingSchedule = ref<Partial<ScheduleItem>>({
 
 const openAddModal = () => {
   const defaultDate = `${currentYear.value}-${String(currentMonth.value).padStart(2, "0")}-15`;
-  scheduleType.value = 'single';
   editingSchedule.value = {
     owner: selectedOwnerFilter.value === '전체' ? '공동' : selectedOwnerFilter.value,
     title: '',
@@ -86,10 +88,8 @@ const openAddModal = () => {
 
 const openEditModal = (item: ScheduleItem) => {
   editingSchedule.value = { ...item };
-  if (item.endDate && item.endDate !== item.date) {
-    scheduleType.value = 'range';
-  } else {
-    scheduleType.value = 'single';
+  if (!editingSchedule.value.endDate) {
+    editingSchedule.value.endDate = editingSchedule.value.date;
   }
   isEditMode.value = true;
   showModal.value = true;
@@ -101,15 +101,12 @@ const handleSaveSchedule = () => {
     return;
   }
 
-  // 당일 일정일 경우 종료일을 시작일과 동일하게 설정
-  if (scheduleType.value === 'single') {
-    editingSchedule.value.endDate = editingSchedule.value.date;
-  } else if (!editingSchedule.value.endDate) {
+  if (!editingSchedule.value.endDate) {
     editingSchedule.value.endDate = editingSchedule.value.date;
   }
 
-  // 시작일이 종료일보다 늦을 경우 안전 검사
-  if (editingSchedule.value.endDate && editingSchedule.value.endDate < editingSchedule.value.date!) {
+  // 시작일이 종료일보다 늦을 경우 안전 처리
+  if (editingSchedule.value.endDate < editingSchedule.value.date) {
     dialogStore.showAlert("종료 날짜는 시작 날짜보다 빠를 수 없습니다.", "날짜 확인", "warning");
     return;
   }
@@ -267,42 +264,24 @@ const getDurationBadge = (item: ScheduleItem) => {
           </div>
 
           <div class="input-group">
-            <label>일정 유형</label>
-            <div class="radio-selector">
-              <button
-                type="button"
-                class="radio-btn"
-                :class="{ active: scheduleType === 'single' }"
-                @click="scheduleType = 'single'"
-              >
-                📅 당일 일정
-              </button>
-              <button
-                type="button"
-                class="radio-btn"
-                :class="{ active: scheduleType === 'range' }"
-                @click="scheduleType = 'range'"
-              >
-                🗓️ 연속/기간 일정
-              </button>
-            </div>
-          </div>
-
-          <div class="input-group">
             <label>일정 제목</label>
             <input v-model="editingSchedule.title" type="text" placeholder="예: 여름 휴가, 땅콩이 예방접종, 부부 데이트" />
           </div>
 
-          <!-- 당일 일정 선택 시 -->
-          <div v-if="scheduleType === 'single'" class="input-row-flex">
+          <div class="input-row-flex">
             <div class="input-group flex-1">
-              <label>날짜</label>
-              <input v-model="editingSchedule.date" type="date" />
+              <label>시작 날짜 (몇 일부터)</label>
+              <input v-model="editingSchedule.date" type="date" @change="onStartDateChange" />
             </div>
             <div class="input-group flex-1">
-              <label>시간</label>
-              <input v-model="editingSchedule.time" type="time" />
+              <label>종료 날짜 (몇 일까지)</label>
+              <input v-model="editingSchedule.endDate" type="date" />
             </div>
+          </div>
+
+          <div class="input-group">
+            <label>시간 (선택)</label>
+            <input v-model="editingSchedule.time" type="time" />
           </div>
 
           <div class="input-group">
