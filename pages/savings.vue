@@ -121,7 +121,19 @@ const handleDeleteSaving = (id: string) => {
   );
 };
 
+const today = new Date();
+const currentMonthNum = today.getMonth() + 1;
+const currentYM = `${today.getFullYear()}-${String(currentMonthNum).padStart(2, '0')}`;
+
+const isPaidThisMonth = (item: SavingItem) => {
+  return item.lastPaidYearMonth === currentYM;
+};
+
 const handleProcessMonthlyPayment = (item: SavingItem) => {
+  if (isPaidThisMonth(item)) {
+    dialogStore.showAlert(`이미 ${currentMonthNum}월 불입 처리가 완료되었습니다!`, "납입 완료 안내", "info");
+    return;
+  }
   const payment = Number(item.monthlyPayment) || 0;
   if (payment <= 0) {
     dialogStore.showAlert("설정된 월 불입액이 0원입니다. 수정 모달에서 월 불입액을 먼저 설정해주세요!", "불입액 확인", "info");
@@ -130,12 +142,12 @@ const handleProcessMonthlyPayment = (item: SavingItem) => {
   const newCurrent = Number(item.currentAmount) + payment;
 
   dialogStore.showConfirm(
-    `[${item.title}] 적금의 이번 달 월 불입액(${payment.toLocaleString()}원)을 납입 완료 처리하시겠습니까?\n\n· 현재 모은 자산: ${Number(item.currentAmount).toLocaleString()}원 ➔ ${newCurrent.toLocaleString()}원\n· 남은 기간: ${item.remainingMonths}개월 ➔ ${Math.max(0, item.remainingMonths - 1)}개월`,
+    `[${item.title}] 적금의 ${currentMonthNum}월 월 불입액(${payment.toLocaleString()}원)을 납입 완료 처리하시겠습니까?\n\n· 현재 모은 자산: ${Number(item.currentAmount).toLocaleString()}원 ➔ ${newCurrent.toLocaleString()}원\n· 남은 기간: ${item.remainingMonths}개월 ➔ ${Math.max(0, item.remainingMonths - 1)}개월`,
     () => {
       coupleStore.processSavingMonthlyPayment(item.id);
-      dialogStore.showAlert("이번 달 불입액이 모은 자산에 누적되어 최신화되었습니다! 🎉", "적금 최신화 완료", "success");
+      dialogStore.showAlert(`${currentMonthNum}월 불입액이 모은 자산에 누적되어 최신화되었습니다! 🎉`, "적금 최신화 완료", "success");
     },
-    "이번 달 불입 완료",
+    `${currentMonthNum}월 불입 완료`,
     "account_balance"
   );
 };
@@ -268,9 +280,11 @@ const autoCalculateInterest = () => {
           <button
             type="button"
             class="saving-pay-btn"
+            :class="{ completed: isPaidThisMonth(item) }"
             @click.stop.prevent="handleProcessMonthlyPayment(item)"
           >
-            ⚡ 이번 달 불입 완료 (자산 누적)
+            <span v-if="isPaidThisMonth(item)">✅ {{ currentMonthNum }}월 불입 완료됨 (자산 누적 완료)</span>
+            <span v-else>⚡ {{ currentMonthNum }}월 월 불입 완료 (자산 누적)</span>
           </button>
         </div>
       </div>
@@ -741,6 +755,18 @@ const autoCalculateInterest = () => {
   background: #0284c7;
   color: #fff;
   transform: scale(0.98);
+}
+
+.saving-pay-btn.completed {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.saving-pay-btn.completed:active {
+  transform: none;
+  background: #f1f5f9;
 }
 
 /* Modal Styling */

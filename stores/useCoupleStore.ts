@@ -64,6 +64,7 @@ export interface DebtItem {
   remainingMonths: number; // 남은 개월 수
   excludeFromStats?: boolean; // 상단 통계 합산 제외 여부
   memo?: string;
+  lastPaidYearMonth?: string; // 최근 상환 처리한 년월 (예: "2026-08")
 }
 
 export interface SavingItem {
@@ -79,6 +80,7 @@ export interface SavingItem {
   remainingMonths: number; // 남은 만기 개월 수 (개월)
   excludeFromStats?: boolean; // 상단 통계 합산 제외 여부
   memo?: string;
+  lastPaidYearMonth?: string; // 최근 불입 처리한 년월 (예: "2026-08")
 }
 
 export interface ScheduleItem {
@@ -319,11 +321,15 @@ export const useCoupleStore = defineStore("couple", () => {
       const payment = Number(debt.monthlyPayment) || 0;
       const newRemaining = Math.max(0, (Number(debt.remainingAmount) || 0) - payment);
       const newMonths = Math.max(0, (Number(debt.remainingMonths) || 0) - 1);
+      
+      const now = new Date();
+      const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
       debts.value[idx] = {
         ...debt,
         remainingAmount: newRemaining,
         remainingMonths: newMonths,
+        lastPaidYearMonth: currentYM,
       };
       syncToSupabase("debts", debts.value);
     }
@@ -371,10 +377,14 @@ export const useCoupleStore = defineStore("couple", () => {
       const newCurrent = (Number(saving.currentAmount) || 0) + payment;
       const newMonths = Math.max(0, (Number(saving.remainingMonths) || 0) - 1);
 
+      const now = new Date();
+      const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
       savings.value[idx] = {
         ...saving,
         currentAmount: newCurrent,
         remainingMonths: newMonths,
+        lastPaidYearMonth: currentYM,
       };
       syncToSupabase("savings", savings.value);
     }

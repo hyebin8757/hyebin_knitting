@@ -121,7 +121,19 @@ const handleDeleteDebt = (id: string) => {
   );
 };
 
+const today = new Date();
+const currentMonthNum = today.getMonth() + 1;
+const currentYM = `${today.getFullYear()}-${String(currentMonthNum).padStart(2, '0')}`;
+
+const isPaidThisMonth = (item: DebtItem) => {
+  return item.lastPaidYearMonth === currentYM;
+};
+
 const handleProcessMonthlyPayment = (item: DebtItem) => {
+  if (isPaidThisMonth(item)) {
+    dialogStore.showAlert(`이미 ${currentMonthNum}월 상환 처리가 완료되었습니다!`, "납입 완료 안내", "info");
+    return;
+  }
   if (item.remainingAmount <= 0) {
     dialogStore.showAlert("이미 대출 원금이 모두 상환되었습니다!", "상환 완료", "info");
     return;
@@ -130,12 +142,12 @@ const handleProcessMonthlyPayment = (item: DebtItem) => {
   const newRemaining = Math.max(0, Number(item.remainingAmount) - payment);
 
   dialogStore.showConfirm(
-    `[${item.title}] 대출의 이번 달 월 상환액(${payment.toLocaleString()}원)을 상환 처리하시겠습니까?\n\n· 잔여 원금: ${Number(item.remainingAmount).toLocaleString()}원 ➔ ${newRemaining.toLocaleString()}원\n· 남은 기간: ${item.remainingMonths}개월 ➔ ${Math.max(0, item.remainingMonths - 1)}개월`,
+    `[${item.title}] 대출의 ${currentMonthNum}월 월 상환액(${payment.toLocaleString()}원)을 상환 처리하시겠습니까?\n\n· 잔여 원금: ${Number(item.remainingAmount).toLocaleString()}원 ➔ ${newRemaining.toLocaleString()}원\n· 남은 기간: ${item.remainingMonths}개월 ➔ ${Math.max(0, item.remainingMonths - 1)}개월`,
     () => {
       coupleStore.processDebtMonthlyPayment(item.id);
-      dialogStore.showAlert("이번 달 대출 상환액이 반영되어 잔여 원금이 최신화되었습니다! 👏", "상환 최신화 완료", "success");
+      dialogStore.showAlert(`${currentMonthNum}월 대출 상환액이 반영되어 잔여 원금이 최신화되었습니다! 👏`, "상환 최신화 완료", "success");
     },
-    "이번 달 상환 처리",
+    `${currentMonthNum}월 상환 처리`,
     "payments"
   );
 };
@@ -290,9 +302,11 @@ const autoCalculateInterestAndPayment = () => {
             <button
               type="button"
               class="repay-pay-btn"
+              :class="{ completed: isPaidThisMonth(item) }"
               @click.stop.prevent="handleProcessMonthlyPayment(item)"
             >
-              ⚡ 이번 달 월 상환 완료 (원금 차감)
+              <span v-if="isPaidThisMonth(item)">✅ {{ currentMonthNum }}월 상환 완료됨 (원금 차감 완료)</span>
+              <span v-else>⚡ {{ currentMonthNum }}월 월 상환 완료 (원금 차감)</span>
             </button>
           </div>
         </div>
@@ -831,6 +845,18 @@ const autoCalculateInterestAndPayment = () => {
   background: #e53935;
   color: #fff;
   transform: scale(0.98);
+}
+
+.repay-pay-btn.completed {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.repay-pay-btn.completed:active {
+  transform: none;
+  background: #f1f5f9;
 }
 
 /* Modal Styling */
