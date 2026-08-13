@@ -37,8 +37,9 @@ const editingMemo = ref("");
 // Add Custom Category sub-modal state
 const showAddCatSubModal = ref(false);
 const newCatNameInput = ref("");
+const addCatToAllMonths = ref(true); // 기본값: 전체 월 일괄 등록
 
-// Standard default categories (도시가스 제거)
+// Standard default categories
 const defaultCategoryNames = [
   "전기세",
   "관리비",
@@ -47,7 +48,6 @@ const defaultCategoryNames = [
   "마통 이자",
   "보증금 이자",
 ];
-
 
 const openEditModalForMonth = (month: number) => {
   editingMonth.value = month;
@@ -64,7 +64,7 @@ const openEditModalForMonth = (month: number) => {
     }));
   }
 
-  // 렌더 시점에 도시가스 0원 항목 완전 제거
+  // 렌더 시점에 도시가스 0원 항목 제거
   editingItems.value = items.filter(
     (item) => !(item.name === "도시가스" && (Number(item.amount) || 0) === 0)
   );
@@ -73,6 +73,34 @@ const openEditModalForMonth = (month: number) => {
   showEditModal.value = true;
 };
 
+// Remove Category sub-modal state
+const showRemoveOptionModal = ref(false);
+const targetRemoveItemIndex = ref<number | null>(null);
+const targetRemoveItemName = ref("");
+
+const promptRemoveItemRow = (index: number) => {
+  const item = editingItems.value[index];
+  targetRemoveItemIndex.value = index;
+  targetRemoveItemName.value = item.name;
+  showRemoveOptionModal.value = true;
+};
+
+const handleRemoveThisMonthOnly = () => {
+  if (targetRemoveItemIndex.value !== null) {
+    editingItems.value.splice(targetRemoveItemIndex.value, 1);
+  }
+  showRemoveOptionModal.value = false;
+};
+
+const handleRemoveAllMonths = () => {
+  if (targetRemoveItemIndex.value !== null && targetRemoveItemName.value) {
+    const catName = targetRemoveItemName.value;
+    editingItems.value.splice(targetRemoveItemIndex.value, 1);
+    coupleStore.removeUtilityItemFromAllMonths(selectedYear.value, catName);
+    dialogStore.showAlert(`'${catName}' 항목이 ${selectedYear.value}년 전체 월(1~12월)에서 일괄 삭제되었습니다.`, "일괄 삭제 완료", "success");
+  }
+  showRemoveOptionModal.value = false;
+};
 
 const handleConfirmAddCustomCategory = () => {
   const name = newCatNameInput.value.trim();
@@ -81,25 +109,22 @@ const handleConfirmAddCustomCategory = () => {
     return;
   }
   coupleStore.addCustomUtilityCategory(name);
-  editingItems.value.push({
-    id: "u_custom_" + Date.now(),
-    name: name,
-    amount: 0,
-  });
+
+  if (addCatToAllMonths.value) {
+    coupleStore.addUtilityItemToAllMonths(selectedYear.value, name);
+  }
+
+  const exists = editingItems.value.some((i) => i.name === name);
+  if (!exists) {
+    editingItems.value.push({
+      id: "u_custom_" + Date.now(),
+      name: name,
+      amount: 0,
+    });
+  }
+
   newCatNameInput.value = "";
   showAddCatSubModal.value = false;
-};
-
-const removeItemRow = (index: number) => {
-  const item = editingItems.value[index];
-  dialogStore.showConfirm(
-    `'${item.name}' 항목을 삭제하시겠습니까?`,
-    () => {
-      editingItems.value.splice(index, 1);
-    },
-    "항목 삭제",
-    "delete_outline"
-  );
 };
 
 // All active category names present in any month of selected year for matrix table
@@ -252,16 +277,6 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
           <i class="material-icons">table_chart</i> 연간 매트릭스 표
         </button>
       </div>
-      <!-- 도시가스 0원 일괄 삭제 버튼 -->
-      <button
-        class="cleanup-btn"
-        :disabled="isCleaningUp"
-        @click="handleCleanupDosiGas"
-        title="DB에서 도시가스 0원 항목 일괄 삭제"
-      >
-        <i class="material-icons">{{ isCleaningUp ? 'hourglass_empty' : 'cleaning_services' }}</i>
-        {{ isCleaningUp ? '삭제 중...' : '도시가스 제거' }}
-      </button>
 
       <button class="add-utility-btn" @click="openEditModalForMonth(new Date().getMonth() + 1)">
         <i class="material-icons">edit_note</i> 공과금 등록/수정
@@ -409,7 +424,7 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
                 v-else
                 type="button"
                 class="del-cat-btn"
-                @click="removeItemRow(idx)"
+                @click="promptRemoveItemRow(idx)"
                 title="항목 삭제"
               >
                 ×
@@ -447,7 +462,7 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
       </div>
     </div>
 
-    <!-- Sub-modal for adding custom utility category name -->
+    <!-- Sub-modal for adding custom utility category name (with batch-all-months checkbox) -->
     <div v-if="showAddCatSubModal" class="modal-overlay sub-overlay" @click.self="showAddCatSubModal = false">
       <div class="modal-card sub-modal-card">
         <div class="modal-header">
@@ -464,10 +479,54 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
               @keyup.enter="handleConfirmAddCustomCategory"
             />
           </div>
+
+          <div class="input-group checkbox-group mt-3">
+            <label class="custom-checkbox-label">
+              <input v-model="addCatToAllMonths" type="checkbox" />
+              <span class="checkbox-txt">🗓️ {{ selectedYear }}년 전체 월(1~12월)에 일괄 등록하기</span>
+            </label>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="save-btn" @click="handleConfirmAddCustomCategory">
             추가하기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub-modal for category removal options (Single Month vs Batch All Months) -->
+    <div v-if="showRemoveOptionModal" class="modal-overlay sub-overlay" @click.self="showRemoveOptionModal = false">
+      <div class="modal-card sub-modal-card remove-opt-card">
+        <div class="modal-header">
+          <h3>🗑️ 공과금 항목 삭제 옵션</h3>
+          <button class="close-btn" @click="showRemoveOptionModal = false">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="remove-target-title">'{{ targetRemoveItemName }}' 항목을 어떻게 삭제하시겠습니까?</p>
+          <p class="remove-target-sub">선택 연도: {{ selectedYear }}년 (현재 {{ editingMonth }}월 작성 중)</p>
+          
+          <div class="remove-options-list">
+            <button type="button" class="opt-btn single" @click="handleRemoveThisMonthOnly">
+              <div class="opt-icon"><i class="material-icons">event</i></div>
+              <div class="opt-text">
+                <div class="opt-title">{{ editingMonth }}월에서만 삭제</div>
+                <div class="opt-desc">현재 선택된 {{ editingMonth }}월에서만 해당 항목을 지웁니다.</div>
+              </div>
+            </button>
+
+            <button type="button" class="opt-btn all" @click="handleRemoveAllMonths">
+              <div class="opt-icon"><i class="material-icons">calendar_month</i></div>
+              <div class="opt-text">
+                <div class="opt-title">{{ selectedYear }}년 전체 월(1~12월) 일괄 삭제</div>
+                <div class="opt-desc">1월부터 12월까지 모든 월에서 해당 항목을 일괄 삭제합니다.</div>
+              </div>
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="cancel-btn" @click="showRemoveOptionModal = false">
+            취소
           </button>
         </div>
       </div>
@@ -1086,6 +1145,133 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
   font-weight: 700;
   font-size: 0.88rem;
   cursor: pointer;
+}
+
+.cancel-btn {
+  width: 100%;
+  background: #eee;
+  color: #555;
+  border: none;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* Custom Checkbox */
+.checkbox-group {
+  margin-top: 10px;
+}
+
+.custom-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-checkbox-label input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: #ff9800;
+  cursor: pointer;
+}
+
+.checkbox-txt {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Batch Remove Options Modal */
+.remove-opt-card {
+  max-width: 360px;
+}
+
+.remove-target-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #222;
+  margin-bottom: 2px;
+}
+
+.remove-target-sub {
+  font-size: 0.76rem;
+  color: #777;
+  margin-bottom: 14px;
+}
+
+.remove-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opt-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #e0e0e0;
+  background: #fafafa;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.opt-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+.opt-btn.single {
+  border-color: #ffe0b2;
+  background: #fffdf9;
+}
+
+.opt-btn.single .opt-icon {
+  color: #f57c00;
+  background: #fff3e0;
+}
+
+.opt-btn.all {
+  border-color: #ffcdd2;
+  background: #fff9f9;
+}
+
+.opt-btn.all .opt-icon {
+  color: #d32f2f;
+  background: #ffebee;
+}
+
+.opt-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.opt-icon i {
+  font-size: 1.2rem;
+}
+
+.opt-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.opt-desc {
+  font-size: 0.72rem;
+  color: #777;
+  line-height: 1.2;
 }
 
 .input-group {

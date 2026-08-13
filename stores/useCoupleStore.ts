@@ -170,6 +170,48 @@ export const useCoupleStore = defineStore("couple", () => {
     syncToSupabase("utilityRecords", utilityRecords.value);
   };
 
+  // 1월~12월 모든 월에 특정 공과금 항목 일괄 등록
+  const addUtilityItemToAllMonths = (year: number, categoryName: string) => {
+    for (let m = 1; m <= 12; m++) {
+      let rec = utilityRecords.value.find((r) => r.year === year && r.month === m);
+      if (!rec) {
+        rec = {
+          year,
+          month: m,
+          items: [
+            { id: "u1", name: "전기세", amount: 0 },
+            { id: "u3", name: "관리비", amount: 0 },
+            { id: "u4", name: "수도세", amount: 0 },
+            { id: "u5", name: "인터넷", amount: 0 },
+            { id: "u6", name: "마통 이자", amount: 0 },
+            { id: "u7", name: "보증금 이자", amount: 0 },
+          ],
+        };
+        utilityRecords.value.push(rec);
+      }
+      const exists = rec.items.some((i) => i.name === categoryName);
+      if (!exists) {
+        rec.items.push({
+          id: "u_cat_" + Date.now() + "_" + m + "_" + Math.random().toString(36).substr(2, 4),
+          name: categoryName,
+          amount: 0,
+        });
+      }
+    }
+    syncToSupabase("utilityRecords", utilityRecords.value);
+  };
+
+  // 1월~12월 모든 월에서 특정 공과금 항목 일괄 삭제
+  const removeUtilityItemFromAllMonths = (year: number, categoryName: string) => {
+    for (let m = 1; m <= 12; m++) {
+      const rec = utilityRecords.value.find((r) => r.year === year && r.month === m);
+      if (rec) {
+        rec.items = rec.items.filter((i) => i.name !== categoryName);
+      }
+    }
+    syncToSupabase("utilityRecords", utilityRecords.value);
+  };
+
   // Living Expenses helpers
   const getLivingRecord = (year: number, month: number) => {
     let rec = livingRecords.value.find((r) => r.year === year && r.month === month);
@@ -483,6 +525,8 @@ export const useCoupleStore = defineStore("couple", () => {
     getUtilityPerPerson,
     getUtilityRecord,
     saveUtilityRecord,
+    addUtilityItemToAllMonths,
+    removeUtilityItemFromAllMonths,
     getLivingRecord,
     saveLivingTarget,
     saveLivingItem,
