@@ -14,6 +14,27 @@ const dialogStore = useCoupleDialogStore();
 const activeOwnerTab = ref<'전체' | '우주' | '혜빈' | '공동'>('전체');
 const ownerTabs: ('전체' | '우주' | '혜빈' | '공동')[] = ['전체', '우주', '혜빈', '공동'];
 
+const quickAmountList = [
+  { label: '+10원', val: 10 },
+  { label: '+100원', val: 100 },
+  { label: '+1천원', val: 1000 },
+  { label: '+1만원', val: 10000 },
+  { label: '+5만원', val: 50000 },
+  { label: '+10만원', val: 100000 },
+  { label: '+50만원', val: 500000 },
+  { label: '+100만원', val: 1000000 },
+  { label: '+500만원', val: 5000000 },
+  { label: '+1000만원', val: 10000000 },
+];
+
+const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
+  if (delta === 0) {
+    obj[key] = 0;
+  } else {
+    obj[key] = (Number(obj[key]) || 0) + delta;
+  }
+};
+
 const filteredDebts = computed(() => {
   if (activeOwnerTab.value === '전체') {
     return coupleStore.debts;
@@ -281,14 +302,41 @@ const autoCalculateInterestAndPayment = () => {
             <input v-model="editingDebt.title" type="text" placeholder="예: 신용대출, 학자금, 전세자금" />
           </div>
 
-          <div class="input-row-flex">
-            <div class="input-group flex-1">
-              <label>총 대출 원금 (원)</label>
-              <input v-model.number="editingDebt.totalAmount" type="number" step="100000" @input="autoCalculateInterestAndPayment" />
+          <div class="input-group">
+            <label>총 대출 원금 (원)</label>
+            <input v-model.number="editingDebt.totalAmount" type="number" step="100000" @input="autoCalculateInterestAndPayment" />
+            <div class="quick-amount-pills-wrap">
+              <button
+                v-for="qa in quickAmountList"
+                :key="qa.label"
+                type="button"
+                class="q-amt-pill"
+                @click="applyQuickAmountObj(editingDebt, 'totalAmount', qa.val)"
+              >
+                {{ qa.label }}
+              </button>
+              <button type="button" class="q-amt-pill reset" @click="applyQuickAmountObj(editingDebt, 'totalAmount', 0)">
+                C 초기화
+              </button>
             </div>
-            <div class="input-group flex-1">
-              <label>잔여 원금 (원)</label>
-              <input v-model.number="editingDebt.remainingAmount" type="number" step="100000" @input="autoCalculateInterestAndPayment" />
+          </div>
+
+          <div class="input-group">
+            <label>잔여 원금 (원)</label>
+            <input v-model.number="editingDebt.remainingAmount" type="number" step="100000" @input="autoCalculateInterestAndPayment" />
+            <div class="quick-amount-pills-wrap">
+              <button
+                v-for="qa in quickAmountList"
+                :key="qa.label"
+                type="button"
+                class="q-amt-pill"
+                @click="applyQuickAmountObj(editingDebt, 'remainingAmount', qa.val)"
+              >
+                {{ qa.label }}
+              </button>
+              <button type="button" class="q-amt-pill reset" @click="applyQuickAmountObj(editingDebt, 'remainingAmount', 0)">
+                C 초기화
+              </button>
             </div>
           </div>
 
@@ -306,6 +354,20 @@ const autoCalculateInterestAndPayment = () => {
           <div class="input-group">
             <label>월 총 상환액 (원)</label>
             <input v-model.number="editingDebt.monthlyPayment" type="number" step="10000" placeholder="0" />
+            <div class="quick-amount-pills-wrap">
+              <button
+                v-for="qa in quickAmountList"
+                :key="qa.label"
+                type="button"
+                class="q-amt-pill"
+                @click="applyQuickAmountObj(editingDebt, 'monthlyPayment', qa.val)"
+              >
+                {{ qa.label }}
+              </button>
+              <button type="button" class="q-amt-pill reset" @click="applyQuickAmountObj(editingDebt, 'monthlyPayment', 0)">
+                C 초기화
+              </button>
+            </div>
           </div>
 
           <div class="input-row-flex">
@@ -347,6 +409,37 @@ const autoCalculateInterestAndPayment = () => {
 </template>
 
 <style scoped>
+.quick-amount-pills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.q-amt-pill {
+  background: #f3e5f5;
+  border: 1px solid #e1bee7;
+  color: #7b1fa2;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.q-amt-pill:active {
+  background: #ab47bc;
+  color: #fff;
+  transform: scale(0.95);
+}
+
+.q-amt-pill.reset {
+  background: #ffebee;
+  border-color: #ffcdd2;
+  color: #c62828;
+}
+
 .debt-page-container {
   display: flex;
   flex-direction: column;

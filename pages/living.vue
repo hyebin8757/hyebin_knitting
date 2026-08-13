@@ -369,6 +369,20 @@ const selectedCategoryStats = computed(() => {
               step="10000"
               placeholder="예: 1500000"
             />
+            <div class="quick-amount-pills-wrap">
+              <button
+                v-for="qa in quickAmountList"
+                :key="qa.label"
+                type="button"
+                class="q-amt-pill"
+                @click="applyQuickAmountRef(editingTargetAmount, qa.val)"
+              >
+                {{ qa.label }}
+              </button>
+              <button type="button" class="q-amt-pill reset" @click="applyQuickAmountRef(editingTargetAmount, 0)">
+                C 초기화
+              </button>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -454,6 +468,20 @@ const selectedCategoryStats = computed(() => {
           <div class="input-group">
             <label>금액 (원)</label>
             <input v-model.number="editingItem.amount" type="number" step="1000" placeholder="0" />
+            <div class="quick-amount-pills-wrap">
+              <button
+                v-for="qa in quickAmountList"
+                :key="qa.label"
+                type="button"
+                class="q-amt-pill"
+                @click="applyQuickAmountObj(editingItem, 'amount', qa.val)"
+              >
+                {{ qa.label }}
+              </button>
+              <button type="button" class="q-amt-pill reset" @click="applyQuickAmountObj(editingItem, 'amount', 0)">
+                C 초기화
+              </button>
+            </div>
           </div>
 
           <div class="input-group">
@@ -784,6 +812,37 @@ const selectedCategoryStats = computed(() => {
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+}
+
+.q-amt-pill {
+  background: #f1f8e9;
+  border: 1px solid #c8e6c9;
+  color: #2e7d32;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.q-amt-pill:active {
+  background: #2e7d32;
+  color: #fff;
+  transform: scale(0.95);
+}
+
+.q-amt-pill.reset {
+  background: #ffebee;
+  border-color: #ffcdd2;
+  color: #c62828;
+}
+
+.quick-amount-pills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
 }
 
 .pct-badge {

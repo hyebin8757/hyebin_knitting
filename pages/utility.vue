@@ -25,6 +25,27 @@ const resetToThisYear = () => {
   selectedYear.value = currentThisYear;
 };
 
+const quickAmountList = [
+  { label: '+10원', val: 10 },
+  { label: '+100원', val: 100 },
+  { label: '+1천원', val: 1000 },
+  { label: '+1만원', val: 10000 },
+  { label: '+5만원', val: 50000 },
+  { label: '+10만원', val: 100000 },
+  { label: '+50만원', val: 500000 },
+  { label: '+100만원', val: 1000000 },
+  { label: '+500만원', val: 5000000 },
+  { label: '+1000만원', val: 10000000 },
+];
+
+const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
+  if (delta === 0) {
+    obj[key] = 0;
+  } else {
+    obj[key] = (Number(obj[key]) || 0) + delta;
+  }
+};
+
 // View Mode: 'cards' or 'table'
 const viewMode = ref<'cards' | 'table'>('cards');
 
@@ -398,37 +419,53 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
             <div
               v-for="(item, idx) in editingItems"
               :key="item.id"
-              class="utility-input-row"
+              class="utility-input-block"
             >
-              <span class="cat-label">{{ item.name }}</span>
-              <div class="input-with-unit">
-                <input
-                  v-model.number="item.amount"
-                  type="number"
-                  placeholder="0"
-                  min="0"
-                  step="100"
-                />
-                <span class="unit">원</span>
+              <div class="utility-input-row">
+                <span class="cat-label">{{ item.name }}</span>
+                <div class="input-with-unit">
+                  <input
+                    v-model.number="item.amount"
+                    type="number"
+                    placeholder="0"
+                    min="0"
+                    step="100"
+                  />
+                  <span class="unit">원</span>
+                </div>
+                <button
+                  v-if="item.amount > 0"
+                  type="button"
+                  class="reset-amount-btn"
+                  @click="item.amount = 0"
+                  title="금액 초기화"
+                >
+                  <i class="material-icons">restart_alt</i>
+                </button>
+                <button
+                  v-else
+                  type="button"
+                  class="del-cat-btn"
+                  @click="promptRemoveItemRow(idx)"
+                  title="항목 삭제"
+                >
+                  ×
+                </button>
               </div>
-              <button
-                v-if="item.amount > 0"
-                type="button"
-                class="reset-amount-btn"
-                @click="item.amount = 0"
-                title="금액 초기화"
-              >
-                <i class="material-icons">restart_alt</i>
-              </button>
-              <button
-                v-else
-                type="button"
-                class="del-cat-btn"
-                @click="promptRemoveItemRow(idx)"
-                title="항목 삭제"
-              >
-                ×
-              </button>
+              <div class="quick-amount-pills-wrap compact">
+                <button
+                  v-for="qa in quickAmountList"
+                  :key="qa.label"
+                  type="button"
+                  class="q-amt-pill"
+                  @click="applyQuickAmountObj(item, 'amount', qa.val)"
+                >
+                  {{ qa.label }}
+                </button>
+                <button type="button" class="q-amt-pill reset" @click="applyQuickAmountObj(item, 'amount', 0)">
+                  C 초기화
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1030,14 +1067,51 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
   margin-bottom: 12px;
 }
 
-.utility-input-row {
+.utility-input-block {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
   background: #fafafa;
   padding: 8px 12px;
   border-radius: 14px;
   border: 1px solid #eee;
+}
+
+.utility-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quick-amount-pills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.q-amt-pill {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  color: #f57f17;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.q-amt-pill:active {
+  background: #ff9800;
+  color: #fff;
+  transform: scale(0.95);
+}
+
+.q-amt-pill.reset {
+  background: #ffebee;
+  border-color: #ffcdd2;
+  color: #c62828;
 }
 
 .cat-label {
