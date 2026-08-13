@@ -307,6 +307,11 @@ export const useCoupleStore = defineStore("couple", () => {
     syncToSupabase("debts", debts.value);
   };
 
+  const deleteDebt = (id: string) => {
+    debts.value = debts.value.filter((d) => d.id !== id);
+    syncToSupabase("debts", debts.value);
+  };
+
   // --- 4-2. Savings Data (적금/예금) ---
   const savings = ref<SavingItem[]>([]);
 
