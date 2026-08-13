@@ -103,6 +103,12 @@ const debtSummaryByOwner = computed(() => {
 
 const currentDebtMetrics = computed(() => debtSummaryByOwner.value[selectedDebtOwner.value] || debtSummaryByOwner.value['전체']);
 
+// Savings/Assets summary (적금/자산 총액)
+const validSavings = computed(() => coupleStore.savings.filter((s) => !s.excludeFromStats));
+const totalSavingsAmount = computed(() => validSavings.value.reduce((sum, s) => sum + (Number(s.currentAmount) || 0), 0));
+const totalSavingsCount = computed(() => validSavings.value.length);
+const totalSavingsMonthlyPayment = computed(() => validSavings.value.reduce((sum, s) => sum + (Number(s.monthlyPayment) || 0), 0));
+
 // Upcoming schedules (종료일 기준 오늘 이후 또는 진행 중인 일정)
 const upcomingSchedules = computed(() => {
   const todayStr = today.toISOString().split("T")[0];
@@ -253,6 +259,20 @@ const upcomingSchedules = computed(() => {
             잔여 원금 {{ currentDebtMetrics.remaining.toLocaleString() }}원 · 이자 {{ currentDebtMetrics.interest.toLocaleString() }}원 (대출 {{ currentDebtMetrics.count }}건)
           </div>
         </div>
+
+        <!-- Savings Summary Card -->
+        <nuxt-link to="/savings" class="summary-card savings-card">
+          <div class="card-badge-row">
+            <span class="cute-badge savings">🏦 모은 적금/자산 총액</span>
+            <span class="more-txt">자세히 ›</span>
+          </div>
+          <div class="card-main-val savings">
+            {{ totalSavingsAmount.toLocaleString() }} <span class="unit">원</span>
+          </div>
+          <div class="card-sub-info">
+            총 {{ totalSavingsCount }}개 자산 · 매월 {{ totalSavingsMonthlyPayment.toLocaleString() }}원 불입 중
+          </div>
+        </nuxt-link>
       </div>
     </div>
 
@@ -671,6 +691,11 @@ const upcomingSchedules = computed(() => {
   color: #c62828;
 }
 
+.cute-badge.savings {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
 .more-txt {
   font-size: 0.78rem;
   color: #999;
@@ -692,6 +717,7 @@ const upcomingSchedules = computed(() => {
 .card-main-val.util { color: #5d4037; }
 .card-main-val.living { color: #1b5e20; }
 .card-main-val.debt { color: #b71c1c; }
+.card-main-val.savings { color: #2e7d32; }
 
 .card-sub-info {
   font-size: 0.78rem;
