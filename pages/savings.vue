@@ -224,7 +224,6 @@ const autoCalculateInterest = () => {
         <div class="principal-row">
           <div class="main-amount text-emerald-600">
             {{ Number(item.currentAmount).toLocaleString() }}원
-            <span v-if="item.totalAmount > 0" class="total-target-txt">/ 목표 {{ Number(item.totalAmount).toLocaleString() }}원</span>
           </div>
         </div>
 
@@ -278,25 +277,6 @@ const autoCalculateInterest = () => {
           <div class="input-group">
             <label>적금 / 예금 / 자산 항목 이름</label>
             <input v-model="editingSaving.title" type="text" placeholder="예: 청년희망적금, 주택청약, 정기예금" />
-          </div>
-
-          <div class="input-group">
-            <label>목표 자산 금액 (원)</label>
-            <input v-model.number="editingSaving.totalAmount" type="number" step="100000" />
-            <div class="quick-amount-pills-wrap">
-              <button
-                v-for="qa in quickAmountList"
-                :key="qa.label"
-                type="button"
-                class="q-amt-pill"
-                @click="applyQuickAmountObj(editingSaving, 'totalAmount', qa.val)"
-              >
-                {{ qa.label }}
-              </button>
-              <button type="button" class="q-amt-pill reset" @click="applyQuickAmountObj(editingSaving, 'totalAmount', 0)">
-                C 초기화
-              </button>
-            </div>
           </div>
 
           <div class="input-group">
