@@ -66,6 +66,21 @@ export interface DebtItem {
   memo?: string;
 }
 
+export interface SavingItem {
+  id: string;
+  owner: '우주' | '혜빈' | '공동';
+  title: string; // 적금/예금 상품명
+  totalAmount: number; // 목표 자산 (원)
+  currentAmount: number; // 현재 잔액 / 모은 금액 (원)
+  interestRate: number; // 이율 (%)
+  monthlyPayment: number; // 월 납입액 (원)
+  monthlyInterest: number; // 월 예상 이자 수익 (원)
+  totalMonths: number; // 총 기간 (개월)
+  remainingMonths: number; // 남은 만기 개월 수 (개월)
+  excludeFromStats?: boolean; // 상단 통계 합산 제외 여부
+  memo?: string;
+}
+
 export interface ScheduleItem {
   id: string;
   owner: '우주' | '혜빈' | '공동';
@@ -292,9 +307,38 @@ export const useCoupleStore = defineStore("couple", () => {
     syncToSupabase("debts", debts.value);
   };
 
-  const deleteDebt = (id: string) => {
-    debts.value = debts.value.filter((d) => d.id !== id);
-    syncToSupabase("debts", debts.value);
+  // --- 4-2. Savings Data (적금/예금) ---
+  const savings = ref<SavingItem[]>([]);
+
+  const saveSaving = (savingData: Partial<SavingItem> & { id?: string }) => {
+    if (savingData.id) {
+      const idx = savings.value.findIndex((s) => s.id === savingData.id);
+      if (idx !== -1) {
+        savings.value[idx] = { ...savings.value[idx], ...savingData } as SavingItem;
+      }
+    } else {
+      const newSaving: SavingItem = {
+        id: "sv_" + Date.now(),
+        owner: savingData.owner || "공동",
+        title: savingData.title || "새 적금",
+        totalAmount: Number(savingData.totalAmount) || 0,
+        currentAmount: Number(savingData.currentAmount) || 0,
+        interestRate: Number(savingData.interestRate) || 0,
+        monthlyPayment: Number(savingData.monthlyPayment) || 0,
+        monthlyInterest: Number(savingData.monthlyInterest) || 0,
+        totalMonths: Number(savingData.totalMonths) || 12,
+        remainingMonths: Number(savingData.remainingMonths) || 12,
+        excludeFromStats: savingData.excludeFromStats || false,
+        memo: savingData.memo || "",
+      };
+      savings.value.push(newSaving);
+    }
+    syncToSupabase("savings", savings.value);
+  };
+
+  const deleteSaving = (id: string) => {
+    savings.value = savings.value.filter((s) => s.id !== id);
+    syncToSupabase("savings", savings.value);
   };
 
   // Schedules CRUD
@@ -418,6 +462,9 @@ export const useCoupleStore = defineStore("couple", () => {
         const localDebts = localStorage.getItem("couple_debts");
         if (localDebts) debts.value = JSON.parse(localDebts);
 
+        const localSavings = localStorage.getItem("couple_savings");
+        if (localSavings) savings.value = JSON.parse(localSavings);
+
         const localSchedules = localStorage.getItem("couple_schedules");
         if (localSchedules) schedules.value = JSON.parse(localSchedules);
       }
@@ -460,6 +507,10 @@ export const useCoupleStore = defineStore("couple", () => {
             debts.value = row.content;
             if (typeof window !== "undefined") localStorage.setItem("couple_debts", JSON.stringify(row.content));
           }
+          if (row.id === "savings" && row.content) {
+            savings.value = row.content;
+            if (typeof window !== "undefined") localStorage.setItem("couple_savings", JSON.stringify(row.content));
+          }
           if (row.id === "schedules" && row.content) {
             schedules.value = row.content;
             if (typeof window !== "undefined") localStorage.setItem("couple_schedules", JSON.stringify(row.content));
@@ -475,6 +526,9 @@ export const useCoupleStore = defineStore("couple", () => {
         }
         if ((!fetchedKeys.has("debts") || !debts.value.length) && debts.value.length > 0) {
           syncToSupabase("debts", debts.value);
+        }
+        if ((!fetchedKeys.has("savings") || !savings.value.length) && savings.value.length > 0) {
+          syncToSupabase("savings", savings.value);
         }
         if ((!fetchedKeys.has("ddays") || !ddays.value.length) && ddays.value.length > 0) {
           syncToSupabase("ddays", ddays.value);
@@ -498,11 +552,13 @@ export const useCoupleStore = defineStore("couple", () => {
       localStorage.removeItem("couple_utilityRecords");
       localStorage.removeItem("couple_livingRecords");
       localStorage.removeItem("couple_debts");
+      localStorage.removeItem("couple_savings");
       localStorage.removeItem("couple_schedules");
     }
     utilityRecords.value = [];
     livingRecords.value = [];
     debts.value = [];
+    savings.value = [];
     schedules.value = [];
 
     try {
@@ -521,6 +577,7 @@ export const useCoupleStore = defineStore("couple", () => {
     utilityRecords,
     livingRecords,
     debts,
+    savings,
     schedules,
     getDaysCount,
     getUtilityTotal,
@@ -535,6 +592,8 @@ export const useCoupleStore = defineStore("couple", () => {
     deleteLivingItem,
     saveDebt,
     deleteDebt,
+    saveSaving,
+    deleteSaving,
     saveSchedule,
     deleteSchedule,
     toggleScheduleComplete,

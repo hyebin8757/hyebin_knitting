@@ -67,7 +67,7 @@ onBeforeUnmount(() => {
           <slot />
         </main>
 
-        <!-- Bottom Navigation Bar (5 Items) -->
+        <!-- Bottom Navigation Bar (6 Items) -->
         <nav class="couple-bottom-nav">
           <nuxt-link to="/home" class="nav-item" :class="{ active: isNavActive('/home') }">
             <div class="nav-icon">
@@ -88,6 +88,13 @@ onBeforeUnmount(() => {
               <i class="material-icons">account_balance_wallet</i>
             </div>
             <span class="nav-label">생활비</span>
+          </nuxt-link>
+
+          <nuxt-link to="/savings" class="nav-item" :class="{ active: isNavActive('/savings') }">
+            <div class="nav-icon">
+              <i class="material-icons">savings</i>
+            </div>
+            <span class="nav-label">적금/자산</span>
           </nuxt-link>
 
           <nuxt-link to="/debt" class="nav-item" :class="{ active: isNavActive('/debt') }">
@@ -223,7 +230,7 @@ onBeforeUnmount(() => {
   backdrop-filter: blur(12px);
   border-top: 1px solid #f0e6dc;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   z-index: 50;
   box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.03);
 }
