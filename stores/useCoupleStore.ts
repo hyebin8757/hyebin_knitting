@@ -148,7 +148,6 @@ export const useCoupleStore = defineStore("couple", () => {
         month,
         items: [
           { id: "u1", name: "전기세", amount: 0 },
-          { id: "u2", name: "도시가스", amount: 0 },
           { id: "u3", name: "관리비", amount: 0 },
           { id: "u4", name: "수도세", amount: 0 },
           { id: "u5", name: "인터넷", amount: 0 },
@@ -355,11 +354,33 @@ export const useCoupleStore = defineStore("couple", () => {
 
   const fetchAllData = async () => {
     try {
-      // Supabase is the single source of truth.
-      // We do NOT pre-load from localStorage to avoid showing stale/old data.
+      // 1. 먼저 localStorage에 남아있는 캐시 데이터를 안전하게 선로드 (Offline/Zero-data 방지)
+      if (typeof window !== "undefined") {
+        const localLivingCats = localStorage.getItem("couple_livingCategories");
+        if (localLivingCats) livingCategories.value = JSON.parse(localLivingCats);
+
+        const localCustomUtil = localStorage.getItem("couple_customUtilityCategories");
+        if (localCustomUtil) customUtilityCategories.value = JSON.parse(localCustomUtil);
+
+        const localDdays = localStorage.getItem("couple_ddays");
+        if (localDdays) ddays.value = JSON.parse(localDdays);
+
+        const localUtils = localStorage.getItem("couple_utilityRecords");
+        if (localUtils) utilityRecords.value = JSON.parse(localUtils);
+
+        const localLiving = localStorage.getItem("couple_livingRecords");
+        if (localLiving) livingRecords.value = JSON.parse(localLiving);
+
+        const localDebts = localStorage.getItem("couple_debts");
+        if (localDebts) debts.value = JSON.parse(localDebts);
+
+        const localSchedules = localStorage.getItem("couple_schedules");
+        if (localSchedules) schedules.value = JSON.parse(localSchedules);
+      }
+
+      // 2. Supabase 데이터 조회
       const { data, error } = await supabase.from("couple_data").select("*");
       if (!error && data) {
-        // Track which keys Supabase returned
         const fetchedKeys = new Set(data.map((row: any) => row.id));
 
         data.forEach((row: any) => {
@@ -375,8 +396,8 @@ export const useCoupleStore = defineStore("couple", () => {
             ddays.value = row.content;
             if (typeof window !== "undefined") localStorage.setItem("couple_ddays", JSON.stringify(row.content));
           }
-          if (row.id === "utilityRecords" && row.content) {
-            // 매 로드 시 도시가스 0원 항목 자동 제거 후 변경사항있으면 Supabase에 다시 저장
+          if (row.id === "utilityRecords" && row.content && Array.isArray(row.content) && row.content.length > 0) {
+            // 도시가스 0원 항목 정리
             const rawRecords: any[] = row.content;
             const cleanedRecords = rawRecords.map((rec: any) => ({
               ...rec,
@@ -384,13 +405,8 @@ export const useCoupleStore = defineStore("couple", () => {
                 (item: any) => !(item.name === "도시가스" && (Number(item.amount) || 0) === 0)
               ),
             }));
-            const hadChanges = JSON.stringify(rawRecords) !== JSON.stringify(cleanedRecords);
             utilityRecords.value = cleanedRecords;
             if (typeof window !== "undefined") localStorage.setItem("couple_utilityRecords", JSON.stringify(cleanedRecords));
-            if (hadChanges) {
-              // 백그라운드로 Supabase에 클린 데이터 저장
-              syncToSupabase("utilityRecords", cleanedRecords);
-            }
           }
           if (row.id === "livingRecords" && row.content) {
             livingRecords.value = row.content;
@@ -406,41 +422,21 @@ export const useCoupleStore = defineStore("couple", () => {
           }
         });
 
-        // If a key is NOT in Supabase, reset to empty and clear localStorage cache
-        if (!fetchedKeys.has("ddays")) {
-          ddays.value = [];
-          if (typeof window !== "undefined") localStorage.removeItem("couple_ddays");
+        // 3. Supabase에 데이터가 없으나 local에 기존 작성 데이터가 있는 경우 -> Supabase로 자동 동기화 (복구)
+        if ((!fetchedKeys.has("utilityRecords") || !utilityRecords.value.length) && utilityRecords.value.length > 0) {
+          syncToSupabase("utilityRecords", utilityRecords.value);
         }
-        if (!fetchedKeys.has("utilityRecords")) {
-          utilityRecords.value = [];
-          if (typeof window !== "undefined") localStorage.removeItem("couple_utilityRecords");
+        if ((!fetchedKeys.has("livingRecords") || !livingRecords.value.length) && livingRecords.value.length > 0) {
+          syncToSupabase("livingRecords", livingRecords.value);
         }
-        if (!fetchedKeys.has("livingRecords")) {
-          livingRecords.value = [];
-          if (typeof window !== "undefined") localStorage.removeItem("couple_livingRecords");
+        if ((!fetchedKeys.has("debts") || !debts.value.length) && debts.value.length > 0) {
+          syncToSupabase("debts", debts.value);
         }
-        if (!fetchedKeys.has("debts")) {
-          debts.value = [];
-          if (typeof window !== "undefined") localStorage.removeItem("couple_debts");
+        if ((!fetchedKeys.has("ddays") || !ddays.value.length) && ddays.value.length > 0) {
+          syncToSupabase("ddays", ddays.value);
         }
-        if (!fetchedKeys.has("schedules")) {
-          schedules.value = [];
-          if (typeof window !== "undefined") localStorage.removeItem("couple_schedules");
-        }
-
-      } else if (error) {
-        // Supabase failed - fall back to localStorage as last resort
-        if (typeof window !== "undefined") {
-          const localDdays = localStorage.getItem("couple_ddays");
-          if (localDdays) ddays.value = JSON.parse(localDdays);
-          const localUtils = localStorage.getItem("couple_utilityRecords");
-          if (localUtils) utilityRecords.value = JSON.parse(localUtils);
-          const localLiving = localStorage.getItem("couple_livingRecords");
-          if (localLiving) livingRecords.value = JSON.parse(localLiving);
-          const localDebts = localStorage.getItem("couple_debts");
-          if (localDebts) debts.value = JSON.parse(localDebts);
-          const localSchedules = localStorage.getItem("couple_schedules");
-          if (localSchedules) schedules.value = JSON.parse(localSchedules);
+        if ((!fetchedKeys.has("schedules") || !schedules.value.length) && schedules.value.length > 0) {
+          syncToSupabase("schedules", schedules.value);
         }
       }
     } catch (e) {

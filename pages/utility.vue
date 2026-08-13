@@ -64,15 +64,10 @@ const openEditModalForMonth = (month: number) => {
     }));
   }
 
-  // 렌더 시점에 도시가스 0원 항목 완전 제거 (캐시·구버전 코드 무관하게 보장)
-  const before = items.length;
+  // 렌더 시점에 도시가스 0원 항목 완전 제거
   editingItems.value = items.filter(
     (item) => !(item.name === "도시가스" && (Number(item.amount) || 0) === 0)
   );
-  // 제거된 항목이 있으면 DB에도 즉시 반영
-  if (editingItems.value.length < before) {
-    coupleStore.cleanupDosiGas();
-  }
 
   editingMemo.value = rec.memo || "";
   showEditModal.value = true;
