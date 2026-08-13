@@ -575,6 +575,11 @@ const upcomingSchedules = computed(() => {
   border-color: #fdd8dd;
 }
 
+.summary-card.savings-card {
+  background: #f0f7ff;
+  border-color: #cce3ff;
+}
+
 .card-badge-row {
   display: flex;
   align-items: center;
@@ -692,8 +697,8 @@ const upcomingSchedules = computed(() => {
 }
 
 .cute-badge.savings {
-  background: #e8f5e9;
-  color: #1b5e20;
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
 .more-txt {
@@ -717,7 +722,7 @@ const upcomingSchedules = computed(() => {
 .card-main-val.util { color: #5d4037; }
 .card-main-val.living { color: #1b5e20; }
 .card-main-val.debt { color: #b71c1c; }
-.card-main-val.savings { color: #2e7d32; }
+.card-main-val.savings { color: #0284c7; }
 
 .card-sub-info {
   font-size: 0.78rem;
