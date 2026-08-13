@@ -69,42 +69,42 @@ onBeforeUnmount(() => {
 
         <!-- Bottom Navigation Bar (6 Items) -->
         <nav class="couple-bottom-nav">
-          <nuxt-link to="/home" class="nav-item" :class="{ active: isNavActive('/home') }">
+          <nuxt-link to="/home" class="nav-item nav-home" :class="{ active: isNavActive('/home') }">
             <div class="nav-icon">
               <i class="material-icons">favorite</i>
             </div>
             <span class="nav-label">홈</span>
           </nuxt-link>
 
-          <nuxt-link to="/utility" class="nav-item" :class="{ active: isNavActive('/utility') }">
+          <nuxt-link to="/utility" class="nav-item nav-utility" :class="{ active: isNavActive('/utility') }">
             <div class="nav-icon">
               <i class="material-icons">lightbulb</i>
             </div>
             <span class="nav-label">공과금</span>
           </nuxt-link>
 
-          <nuxt-link to="/living" class="nav-item" :class="{ active: isNavActive('/living') }">
+          <nuxt-link to="/living" class="nav-item nav-living" :class="{ active: isNavActive('/living') }">
             <div class="nav-icon">
               <i class="material-icons">account_balance_wallet</i>
             </div>
             <span class="nav-label">생활비</span>
           </nuxt-link>
 
-          <nuxt-link to="/savings" class="nav-item" :class="{ active: isNavActive('/savings') }">
+          <nuxt-link to="/savings" class="nav-item nav-savings" :class="{ active: isNavActive('/savings') }">
             <div class="nav-icon">
               <i class="material-icons">savings</i>
             </div>
             <span class="nav-label">적금/자산</span>
           </nuxt-link>
 
-          <nuxt-link to="/debt" class="nav-item" :class="{ active: isNavActive('/debt') }">
+          <nuxt-link to="/debt" class="nav-item nav-debt" :class="{ active: isNavActive('/debt') }">
             <div class="nav-icon">
               <i class="material-icons">credit_card</i>
             </div>
             <span class="nav-label">대출/빚</span>
           </nuxt-link>
 
-          <nuxt-link to="/schedule" class="nav-item" :class="{ active: isNavActive('/schedule') }">
+          <nuxt-link to="/schedule" class="nav-item nav-schedule" :class="{ active: isNavActive('/schedule') }">
             <div class="nav-icon">
               <i class="material-icons">event</i>
             </div>
@@ -279,6 +279,43 @@ onBeforeUnmount(() => {
   background: #ffebe5;
   color: #ff5722;
 }
+
+/* --- 메뉴 탭별 전용 시그니처 테마 컬러 매칭 --- */
+/* 1. 홈 (러블리 핑크) */
+.nav-item.nav-home.active,
+.nav-item.nav-home.router-link-active { color: #e91e63; }
+.nav-item.nav-home.active .nav-icon,
+.nav-item.nav-home.router-link-active .nav-icon { background: #ffe4ec; color: #e91e63; }
+
+/* 2. 공과금 (오렌지) */
+.nav-item.nav-utility.active,
+.nav-item.nav-utility.router-link-active { color: #f57c00; }
+.nav-item.nav-utility.active .nav-icon,
+.nav-item.nav-utility.router-link-active .nav-icon { background: #fff3e0; color: #f57c00; }
+
+/* 3. 생활비 (에메랄드 그린) */
+.nav-item.nav-living.active,
+.nav-item.nav-living.router-link-active { color: #2e7d32; }
+.nav-item.nav-living.active .nav-icon,
+.nav-item.nav-living.router-link-active .nav-icon { background: #e8f5e9; color: #2e7d32; }
+
+/* 4. 적금/자산 (시원한 스카이블루) */
+.nav-item.nav-savings.active,
+.nav-item.nav-savings.router-link-active { color: #0284c7; }
+.nav-item.nav-savings.active .nav-icon,
+.nav-item.nav-savings.router-link-active .nav-icon { background: #e0f2fe; color: #0284c7; }
+
+/* 5. 대출/빚 (강렬한 레드) */
+.nav-item.nav-debt.active,
+.nav-item.nav-debt.router-link-active { color: #e53935; }
+.nav-item.nav-debt.active .nav-icon,
+.nav-item.nav-debt.router-link-active .nav-icon { background: #ffebee; color: #e53935; }
+
+/* 6. 약속 (인디고 퍼플) */
+.nav-item.nav-schedule.active,
+.nav-item.nav-schedule.router-link-active { color: #3f51b5; }
+.nav-item.nav-schedule.active .nav-icon,
+.nav-item.nav-schedule.router-link-active .nav-icon { background: #e8eaf6; color: #3f51b5; }
 
 /* Small screen tweaks (320px) */
 @media (max-width: 360px) {
