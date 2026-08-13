@@ -192,7 +192,7 @@ const upcomingSchedules = computed(() => {
         <!-- Debt Summary Card -->
         <div class="summary-card debt-card">
           <div class="card-badge-row">
-            <span class="cute-badge debt">💳 대출 이자 ({{ selectedDebtOwner }})</span>
+            <span class="cute-badge debt">💳 월 대출 상환액 ({{ selectedDebtOwner }})</span>
             
             <!-- Owner Filter Pills -->
             <div class="mini-owner-selector">
@@ -212,10 +212,10 @@ const upcomingSchedules = computed(() => {
           </div>
 
           <div class="card-main-val debt">
-            {{ currentDebtMetrics.interest.toLocaleString() }} <span class="unit">원</span>
+            {{ currentDebtMetrics.payment.toLocaleString() }} <span class="unit">원</span>
           </div>
 
-          <!-- Owner Breakdown Chips -->
+          <!-- Owner Breakdown Chips (Monthly Payment per Owner) -->
           <div class="debt-owner-breakdown">
             <button
               type="button"
@@ -224,7 +224,7 @@ const upcomingSchedules = computed(() => {
               @click.stop.prevent="selectedDebtOwner = '공동'"
             >
               <span class="ow-lbl">공동</span>
-              <span class="ow-val">{{ debtSummaryByOwner.공동.interest.toLocaleString() }}원</span>
+              <span class="ow-val">{{ debtSummaryByOwner.공동.payment.toLocaleString() }}원</span>
             </button>
             <button
               type="button"
@@ -233,7 +233,7 @@ const upcomingSchedules = computed(() => {
               @click.stop.prevent="selectedDebtOwner = '우주'"
             >
               <span class="ow-lbl">우주</span>
-              <span class="ow-val">{{ debtSummaryByOwner.우주.interest.toLocaleString() }}원</span>
+              <span class="ow-val">{{ debtSummaryByOwner.우주.payment.toLocaleString() }}원</span>
             </button>
             <button
               type="button"
@@ -242,12 +242,12 @@ const upcomingSchedules = computed(() => {
               @click.stop.prevent="selectedDebtOwner = '혜빈'"
             >
               <span class="ow-lbl">혜빈</span>
-              <span class="ow-val">{{ debtSummaryByOwner.혜빈.interest.toLocaleString() }}원</span>
+              <span class="ow-val">{{ debtSummaryByOwner.혜빈.payment.toLocaleString() }}원</span>
             </button>
           </div>
 
           <div class="card-sub-info">
-            잔여 원금 {{ currentDebtMetrics.remaining.toLocaleString() }}원 (대출 {{ currentDebtMetrics.count }}건)
+            잔여 원금 {{ currentDebtMetrics.remaining.toLocaleString() }}원 · 이자 {{ currentDebtMetrics.interest.toLocaleString() }}원 (대출 {{ currentDebtMetrics.count }}건)
           </div>
         </div>
       </div>
