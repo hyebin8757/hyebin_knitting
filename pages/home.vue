@@ -67,19 +67,28 @@ const currentLivingRec = computed(() => coupleStore.getLivingRecord(currentYear,
 const totalSpent = computed(() => currentLivingRec.value.items.reduce((sum, i) => sum + Number(i.amount), 0));
 const remainingLiving = computed(() => currentLivingRec.value.targetSavings - totalSpent.value);
 
-// Debts summary (통계 제외 옵션 반영 및 소유자별 구분)
+// Debts summary (소유자별 구분 및 정규화 매칭)
 const selectedDebtOwner = ref<'전체' | '공동' | '우주' | '혜빈'>('전체');
 const validDebts = computed(() => coupleStore.debts.filter((d) => !d.excludeFromStats));
+
+const getNormalizedOwner = (ownerStr?: string): '공동' | '우주' | '혜빈' => {
+  if (!ownerStr) return '공동';
+  const clean = String(ownerStr).trim();
+  if (clean === '공용' || clean === '공동') return '공동';
+  if (clean.includes('우주')) return '우주';
+  if (clean.includes('혜빈')) return '혜빈';
+  return '공동';
+};
 
 const debtSummaryByOwner = computed(() => {
   const getSum = (ownerFilter?: '공동' | '우주' | '혜빈') => {
     const list = ownerFilter 
-      ? validDebts.value.filter((d) => d.owner === ownerFilter)
+      ? validDebts.value.filter((d) => getNormalizedOwner(d.owner) === ownerFilter)
       : validDebts.value;
     return {
-      interest: list.reduce((sum, d) => sum + Number(d.monthlyInterest), 0),
-      payment: list.reduce((sum, d) => sum + Number(d.monthlyPayment), 0),
-      remaining: list.reduce((sum, d) => sum + Number(d.remainingAmount), 0),
+      interest: list.reduce((sum, d) => sum + Number(d.monthlyInterest) || 0, 0),
+      payment: list.reduce((sum, d) => sum + Number(d.monthlyPayment) || 0, 0),
+      remaining: list.reduce((sum, d) => sum + Number(d.remainingAmount) || 0, 0),
       count: list.length,
     };
   };
@@ -92,7 +101,7 @@ const debtSummaryByOwner = computed(() => {
   };
 });
 
-const currentDebtMetrics = computed(() => debtSummaryByOwner.value[selectedDebtOwner.value]);
+const currentDebtMetrics = computed(() => debtSummaryByOwner.value[selectedDebtOwner.value] || debtSummaryByOwner.value['전체']);
 
 // Upcoming schedules
 const upcomingSchedules = computed(() => {
@@ -193,7 +202,7 @@ const upcomingSchedules = computed(() => {
                 type="button"
                 class="mini-ow-btn"
                 :class="{ active: selectedDebtOwner === ow }"
-                @click.stop="selectedDebtOwner = ow"
+                @click.stop.prevent="selectedDebtOwner = ow"
               >
                 {{ ow }}
               </button>
@@ -212,7 +221,7 @@ const upcomingSchedules = computed(() => {
               type="button"
               class="ow-chip-item 공동"
               :class="{ active: selectedDebtOwner === '공동' }"
-              @click.stop="selectedDebtOwner = '공동'"
+              @click.stop.prevent="selectedDebtOwner = '공동'"
             >
               <span class="ow-lbl">공동</span>
               <span class="ow-val">{{ debtSummaryByOwner.공동.interest.toLocaleString() }}원</span>
@@ -221,7 +230,7 @@ const upcomingSchedules = computed(() => {
               type="button"
               class="ow-chip-item 우주"
               :class="{ active: selectedDebtOwner === '우주' }"
-              @click.stop="selectedDebtOwner = '우주'"
+              @click.stop.prevent="selectedDebtOwner = '우주'"
             >
               <span class="ow-lbl">우주</span>
               <span class="ow-val">{{ debtSummaryByOwner.우주.interest.toLocaleString() }}원</span>
@@ -230,7 +239,7 @@ const upcomingSchedules = computed(() => {
               type="button"
               class="ow-chip-item 혜빈"
               :class="{ active: selectedDebtOwner === '혜빈' }"
-              @click.stop="selectedDebtOwner = '혜빈'"
+              @click.stop.prevent="selectedDebtOwner = '혜빈'"
             >
               <span class="ow-lbl">혜빈</span>
               <span class="ow-val">{{ debtSummaryByOwner.혜빈.interest.toLocaleString() }}원</span>
