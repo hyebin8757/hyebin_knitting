@@ -530,22 +530,27 @@ const autoCalculateInterest = () => {
 }
 
 .add-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   background: #0284c7;
   color: #fff;
   border: none;
-  padding: 7px 14px;
-  border-radius: 14px;
-  font-size: 0.88rem;
+  padding: 5px 11px;
+  border-radius: 12px;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
+  line-height: 1;
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
+.add-btn i {
+  font-size: 0.95rem;
+}
+
 .add-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.95);
   background: #0369a1;
 }
 

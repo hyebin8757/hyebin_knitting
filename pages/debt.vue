@@ -562,21 +562,22 @@ const autoCalculateInterestAndPayment = () => {
 }
 
 .add-debt-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   background: #e53935;
   color: #fff;
   border: none;
-  padding: 7px 14px;
-  border-radius: 14px;
-  font-size: 0.88rem;
+  padding: 5px 11px;
+  border-radius: 12px;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
+  line-height: 1;
 }
 
 .add-debt-btn i {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
 }
 
 /* Debt Cards List */
