@@ -446,26 +446,23 @@ export const useCoupleStore = defineStore("couple", () => {
   };
 
   const fetchAllData = async () => {
-    if (isFetchingData.value) return;
-    isFetchingData.value = true;
-
     try {
       // 1. 먼저 localStorage에 남아있는 캐시 데이터를 안전하게 선로드 (Offline/Zero-data 방지)
       if (typeof window !== "undefined") {
         const localLivingCats = localStorage.getItem("couple_livingCategories");
-        if (localLivingCats) livingCategories.value = safeJsonParse(localLivingCats, livingCategories.value);
+        if (localLivingCats) livingCategories.value = JSON.parse(localLivingCats);
 
         const localCustomUtil = localStorage.getItem("couple_customUtilityCategories");
-        if (localCustomUtil) customUtilityCategories.value = safeJsonParse(localCustomUtil, customUtilityCategories.value);
+        if (localCustomUtil) customUtilityCategories.value = JSON.parse(localCustomUtil);
 
         const localDdays = localStorage.getItem("couple_ddays");
-        if (localDdays) ddays.value = safeJsonParse(localDdays, ddays.value);
+        if (localDdays) ddays.value = JSON.parse(localDdays);
 
         const localUtils = localStorage.getItem("couple_utilityRecords");
-        if (localUtils) utilityRecords.value = safeJsonParse(localUtils, utilityRecords.value);
+        if (localUtils) utilityRecords.value = JSON.parse(localUtils);
 
         const localLiving = localStorage.getItem("couple_livingRecords");
-        if (localLiving) livingRecords.value = safeJsonParse(localLiving, livingRecords.value);
+        if (localLiving) livingRecords.value = JSON.parse(localLiving);
 
         const localDebts = localStorage.getItem("couple_debts");
         if (localDebts) debts.value = JSON.parse(localDebts);
@@ -549,7 +546,6 @@ export const useCoupleStore = defineStore("couple", () => {
       // Network failure fallback
     } finally {
       isLoaded.value = true;
-      isFetchingData.value = false;
     }
   };
 
