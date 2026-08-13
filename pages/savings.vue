@@ -19,11 +19,8 @@ const quickAmountList = [
   { label: '+100원', val: 100 },
   { label: '+1천원', val: 1000 },
   { label: '+1만원', val: 10000 },
-  { label: '+5만원', val: 50000 },
   { label: '+10만원', val: 100000 },
-  { label: '+50만원', val: 500000 },
   { label: '+100만원', val: 1000000 },
-  { label: '+500만원', val: 5000000 },
   { label: '+1000만원', val: 10000000 },
 ];
 
