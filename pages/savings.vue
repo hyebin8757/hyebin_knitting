@@ -121,6 +121,25 @@ const handleDeleteSaving = (id: string) => {
   );
 };
 
+const handleProcessMonthlyPayment = (item: SavingItem) => {
+  const payment = Number(item.monthlyPayment) || 0;
+  if (payment <= 0) {
+    dialogStore.showAlert("설정된 월 불입액이 0원입니다. 수정 모달에서 월 불입액을 먼저 설정해주세요!", "불입액 확인", "info");
+    return;
+  }
+  const newCurrent = Number(item.currentAmount) + payment;
+
+  dialogStore.showConfirm(
+    `[${item.title}] 적금의 이번 달 월 불입액(${payment.toLocaleString()}원)을 납입 완료 처리하시겠습니까?\n\n· 현재 모은 자산: ${Number(item.currentAmount).toLocaleString()}원 ➔ ${newCurrent.toLocaleString()}원\n· 남은 기간: ${item.remainingMonths}개월 ➔ ${Math.max(0, item.remainingMonths - 1)}개월`,
+    () => {
+      coupleStore.processSavingMonthlyPayment(item.id);
+      dialogStore.showAlert("이번 달 불입액이 모은 자산에 누적되어 최신화되었습니다! 🎉", "적금 최신화 완료", "success");
+    },
+    "이번 달 불입 완료",
+    "account_balance"
+  );
+};
+
 // 금리 & 월 예상 이자 자동 계산 헬퍼
 const autoCalculateInterest = () => {
   const current = Number(editingSaving.value.currentAmount) || 0;
@@ -242,6 +261,17 @@ const autoCalculateInterest = () => {
 
         <div v-if="item.memo" class="card-memo">
           💬 {{ item.memo }}
+        </div>
+
+        <!-- Monthly Savings Action Bar -->
+        <div class="card-saving-action-row">
+          <button
+            type="button"
+            class="saving-pay-btn"
+            @click.stop.prevent="handleProcessMonthlyPayment(item)"
+          >
+            ⚡ 이번 달 불입 완료 (자산 누적)
+          </button>
         </div>
       </div>
     </div>
@@ -688,6 +718,29 @@ const autoCalculateInterest = () => {
   background: #f9f9f9;
   padding: 4px 8px;
   border-radius: 8px;
+}
+
+.card-saving-action-row {
+  margin-top: 4px;
+}
+
+.saving-pay-btn {
+  width: 100%;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 7px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.saving-pay-btn:active {
+  background: #0284c7;
+  color: #fff;
+  transform: scale(0.98);
 }
 
 /* Modal Styling */

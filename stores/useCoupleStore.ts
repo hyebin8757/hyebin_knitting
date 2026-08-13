@@ -312,6 +312,23 @@ export const useCoupleStore = defineStore("couple", () => {
     syncToSupabase("debts", debts.value);
   };
 
+  const processDebtMonthlyPayment = (id: string) => {
+    const idx = debts.value.findIndex((d) => d.id === id);
+    if (idx !== -1) {
+      const debt = debts.value[idx];
+      const payment = Number(debt.monthlyPayment) || 0;
+      const newRemaining = Math.max(0, (Number(debt.remainingAmount) || 0) - payment);
+      const newMonths = Math.max(0, (Number(debt.remainingMonths) || 0) - 1);
+
+      debts.value[idx] = {
+        ...debt,
+        remainingAmount: newRemaining,
+        remainingMonths: newMonths,
+      };
+      syncToSupabase("debts", debts.value);
+    }
+  };
+
   // --- 4-2. Savings Data (적금/예금) ---
   const savings = ref<SavingItem[]>([]);
 
@@ -344,6 +361,23 @@ export const useCoupleStore = defineStore("couple", () => {
   const deleteSaving = (id: string) => {
     savings.value = savings.value.filter((s) => s.id !== id);
     syncToSupabase("savings", savings.value);
+  };
+
+  const processSavingMonthlyPayment = (id: string) => {
+    const idx = savings.value.findIndex((s) => s.id === id);
+    if (idx !== -1) {
+      const saving = savings.value[idx];
+      const payment = Number(saving.monthlyPayment) || 0;
+      const newCurrent = (Number(saving.currentAmount) || 0) + payment;
+      const newMonths = Math.max(0, (Number(saving.remainingMonths) || 0) - 1);
+
+      savings.value[idx] = {
+        ...saving,
+        currentAmount: newCurrent,
+        remainingMonths: newMonths,
+      };
+      syncToSupabase("savings", savings.value);
+    }
   };
 
   // Schedules CRUD
@@ -597,8 +631,10 @@ export const useCoupleStore = defineStore("couple", () => {
     deleteLivingItem,
     saveDebt,
     deleteDebt,
+    processDebtMonthlyPayment,
     saveSaving,
     deleteSaving,
+    processSavingMonthlyPayment,
     saveSchedule,
     deleteSchedule,
     toggleScheduleComplete,

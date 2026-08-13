@@ -116,8 +116,27 @@ const handleDeleteDebt = (id: string) => {
       coupleStore.deleteDebt(id);
       showModal.value = false;
     },
-    "대출 내역 삭제",
+    "대출 삭제",
     "delete_outline"
+  );
+};
+
+const handleProcessMonthlyPayment = (item: DebtItem) => {
+  if (item.remainingAmount <= 0) {
+    dialogStore.showAlert("이미 대출 원금이 모두 상환되었습니다!", "상환 완료", "info");
+    return;
+  }
+  const payment = Number(item.monthlyPayment) || 0;
+  const newRemaining = Math.max(0, Number(item.remainingAmount) - payment);
+
+  dialogStore.showConfirm(
+    `[${item.title}] 대출의 이번 달 월 상환액(${payment.toLocaleString()}원)을 상환 처리하시겠습니까?\n\n· 잔여 원금: ${Number(item.remainingAmount).toLocaleString()}원 ➔ ${newRemaining.toLocaleString()}원\n· 남은 기간: ${item.remainingMonths}개월 ➔ ${Math.max(0, item.remainingMonths - 1)}개월`,
+    () => {
+      coupleStore.processDebtMonthlyPayment(item.id);
+      dialogStore.showAlert("이번 달 대출 상환액이 반영되어 잔여 원금이 최신화되었습니다! 👏", "상환 최신화 완료", "success");
+    },
+    "이번 달 상환 처리",
+    "payments"
   );
 };
 
@@ -264,6 +283,17 @@ const autoCalculateInterestAndPayment = () => {
 
           <div v-if="item.memo" class="debt-memo">
             📌 {{ item.memo }}
+          </div>
+
+          <!-- Monthly Repayment Action Bar -->
+          <div class="card-repay-action-row">
+            <button
+              type="button"
+              class="repay-pay-btn"
+              @click.stop.prevent="handleProcessMonthlyPayment(item)"
+            >
+              ⚡ 이번 달 월 상환 완료 (원금 차감)
+            </button>
           </div>
         </div>
       </div>
@@ -778,6 +808,29 @@ const autoCalculateInterestAndPayment = () => {
   padding: 6px 10px;
   border-radius: 10px;
   border: 1px solid #ffe082;
+}
+
+.card-repay-action-row {
+  margin-top: 4px;
+}
+
+.repay-pay-btn {
+  width: 100%;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  color: #e53935;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 7px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.repay-pay-btn:active {
+  background: #e53935;
+  color: #fff;
+  transform: scale(0.98);
 }
 
 /* Modal Styling */
