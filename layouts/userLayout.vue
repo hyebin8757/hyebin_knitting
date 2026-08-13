@@ -144,6 +144,8 @@ onBeforeUnmount(() => {
   flex-direction: column;
   position: relative;
   padding-bottom: 74px; /* Space for bottom nav */
+  touch-action: manipulation;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Header */
