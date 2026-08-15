@@ -120,6 +120,25 @@ const handleRemoveAllMonths = () => {
   showRemoveOptionModal.value = false;
 };
 
+// 매월 동일 금액 일괄 반복 적용
+const handleApplyToAllMonths = (item: UtilityCategoryItem) => {
+  const amt = Number(item.amount) || 0;
+  if (amt <= 0) {
+    dialogStore.showAlert(`'${item.name}' 금액을 0원보다 크게 입력한 후 매월 반복을 설정해 주세요.`, "금액 입력 확인", "info");
+    return;
+  }
+
+  dialogStore.showConfirm(
+    `'${item.name}' 항목의 금액(${amt.toLocaleString()}원)을 ${selectedYear.value}년 1월~12월 전체 월에 동일하게 반복 적용하시겠습니까?`,
+    () => {
+      coupleStore.applyUtilityItemToAllMonths(selectedYear.value, item.name, amt);
+      dialogStore.showAlert(`'${item.name}' 항목 ${amt.toLocaleString()}원이 ${selectedYear.value}년 전체 12개 월에 일괄 적용되었습니다! 🔁`, "매월 반복 적용 완료", "success");
+    },
+    "매월 동일 반복 적용",
+    "sync"
+  );
+};
+
 const handleConfirmAddCustomCategory = () => {
   const name = newCatNameInput.value.trim();
   if (!name) {
@@ -431,6 +450,14 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
                   <span class="unit">원</span>
                 </div>
                 <button
+                  type="button"
+                  class="repeat-all-btn"
+                  @click="handleApplyToAllMonths(item)"
+                  title="이 금액을 1~12월 매월 동일하게 반복 적용"
+                >
+                  <i class="material-icons">sync</i>
+                </button>
+                <button
                   v-if="item.amount > 0"
                   type="button"
                   class="reset-amount-btn"
@@ -461,6 +488,9 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
                 </button>
                 <button type="button" class="q-amt-pill reset" @click="applyQuickAmountObj(item, 'amount', 0)">
                   C 초기화
+                </button>
+                <button type="button" class="q-amt-pill repeat" @click="handleApplyToAllMonths(item)" title="이 금액을 1~12월 전체 월에 동일하게 반복 적용">
+                  🔁 매월 반복
                 </button>
               </div>
             </div>
@@ -1118,6 +1148,17 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
   color: #c62828;
 }
 
+.q-amt-pill.repeat {
+  background: #e3f2fd;
+  border-color: #90caf9;
+  color: #1565c0;
+}
+
+.q-amt-pill.repeat:active {
+  background: #1976d2;
+  color: #fff;
+}
+
 .cat-label {
   width: 95px;
   font-size: 0.8rem;
@@ -1175,6 +1216,32 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
 }
 
 .reset-amount-btn .material-icons {
+  font-size: 1rem;
+}
+
+.repeat-all-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 8px;
+  color: #1565c0;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.repeat-all-btn:active {
+  background: #1976d2;
+  color: #fff;
+  transform: scale(0.95);
+}
+
+.repeat-all-btn .material-icons {
   font-size: 1rem;
 }
 
