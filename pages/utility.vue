@@ -57,6 +57,11 @@ const showAddCatSubModal = ref(false);
 const newCatNameInput = ref("");
 const addCatToAllMonths = ref(true); // 기본값: 전체 월 일괄 등록
 
+// Remove Category sub-modal state
+const showRemoveOptionModal = ref(false);
+const targetRemoveItemIndex = ref<number | null>(null);
+const targetRemoveItemName = ref("");
+
 const isAnyModalOpen = computed(() => showEditModal.value || showAddCatSubModal.value || showRemoveOptionModal.value);
 useBodyScrollLock(isAnyModalOpen);
 
@@ -94,10 +99,7 @@ const openEditModalForMonth = (month: number) => {
   showEditModal.value = true;
 };
 
-// Remove Category sub-modal state
-const showRemoveOptionModal = ref(false);
-const targetRemoveItemIndex = ref<number | null>(null);
-const targetRemoveItemName = ref("");
+
 
 const promptRemoveItemRow = (index: number) => {
   const item = editingItems.value[index];
