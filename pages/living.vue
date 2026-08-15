@@ -396,7 +396,7 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
         v-for="item in filteredItems"
         :key="item.id"
         class="expense-item-card"
-        :class="{ 'excluded-card': item.includeInBalance === false }"
+        :class="{ 'included-card': item.includeInBalance !== false }"
         @click="openEditItemModal(item)"
       >
         <div class="item-left">
@@ -408,13 +408,12 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
             <div class="item-meta">
               <span>📅 {{ item.date }}</span>
               <span class="paid-by-badge" :class="item.paidBy">{{ item.paidBy || '공동' }} 결제</span>
-              <span v-if="item.includeInBalance === false" class="exclude-from-balance-badge">📊 잔액제외</span>
             </div>
           </div>
         </div>
 
         <div class="item-right">
-          <span class="item-amount" :class="{ 'amount-excluded': item.includeInBalance === false }">-{{ Number(item.amount).toLocaleString() }}원</span>
+          <span class="item-amount" :class="{ 'amount-included': item.includeInBalance !== false }">-{{ Number(item.amount).toLocaleString() }}원</span>
           <button class="del-icon-btn" @click.stop="handleDeleteItem(item.id)">
             <i class="material-icons">delete_outline</i>
           </button>
@@ -1020,6 +1019,8 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   cursor: pointer;
   transition: background 0.15s ease, transform 0.15s ease;
   min-height: 56px;
+  overflow: hidden;
+  gap: 8px;
 }
 
 .expense-item-card:active {
@@ -1031,6 +1032,16 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.item-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .item-category-tag {
@@ -1047,22 +1058,22 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 .item-category-tag.생필품 { background: #b2dfdb; color: #004d40; }
 .item-category-tag.기타 { background: #cfd8dc; color: #37474f; }
 
-.item-details {
-  display: flex;
-  flex-direction: column;
-}
 
 .item-title {
   font-size: 1.0rem;
   font-weight: 700;
   color: #333;
   line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .item-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 5px;
   font-size: 0.82rem;
   color: #999;
   margin-top: 2px;
@@ -1087,30 +1098,18 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 .item-amount {
   font-size: 1.08rem;
   font-weight: 900;
-  color: #e53935;
+  color: #aaa;
   white-space: nowrap;
 }
 
-.item-amount.amount-excluded {
-  color: #bbb;
-  text-decoration: line-through;
-  font-weight: 700;
+/* 잔액 계산 포함 항목 강조 */
+.included-card {
+  border-left: 3px solid #4caf50 !important;
+  background: linear-gradient(to right, #f0fff4, #ffffff) !important;
 }
 
-.excluded-card {
-  opacity: 0.65;
-  background: #f9f9f9 !important;
-  border-color: #eee !important;
-}
-
-.exclude-from-balance-badge {
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #999;
-  background: #f5f5f5;
-  padding: 1px 5px;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
+.item-amount.amount-included {
+  color: #e53935;
 }
 
 .del-icon-btn {
