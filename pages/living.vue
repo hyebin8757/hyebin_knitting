@@ -801,28 +801,27 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 .add-expense-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: linear-gradient(135deg, #43a047, #2e7d32);
   color: #fff;
   border: none;
-  padding: 10px 18px;
-  border-radius: 16px;
-  font-size: 0.95rem;
-  font-weight: 800;
+  padding: 7px 13px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  min-height: 44px;
-  box-shadow: 0 3px 10px rgba(46, 125, 50, 0.25);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .add-expense-btn:active {
   transform: scale(0.96);
-  box-shadow: 0 1px 6px rgba(46, 125, 50, 0.2);
+  box-shadow: 0 1px 4px rgba(46, 125, 50, 0.15);
 }
 
 .add-expense-btn i {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 /* Category Summary Dashboard Card */

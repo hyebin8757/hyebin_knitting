@@ -421,17 +421,16 @@ const getDurationBadge = (item: ScheduleItem) => {
 .add-sched-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: linear-gradient(135deg, #5c6bc0, #3f51b5);
   color: #fff;
   border: none;
-  padding: 9px 16px;
-  border-radius: 16px;
-  font-size: 0.9rem;
-  font-weight: 800;
+  padding: 7px 13px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
   cursor: pointer;
-  min-height: 44px;
-  box-shadow: 0 3px 10px rgba(63, 81, 181, 0.25);
+  box-shadow: 0 2px 8px rgba(63, 81, 181, 0.2);
   transition: transform 0.15s ease;
 }
 
@@ -440,7 +439,7 @@ const getDurationBadge = (item: ScheduleItem) => {
 }
 
 .add-sched-btn i {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 
 /* Schedule List */

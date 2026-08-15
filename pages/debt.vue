@@ -675,14 +675,13 @@ const autoCalculateInterestAndPayment = () => {
   background: linear-gradient(135deg, #ef5350, #e53935);
   color: #fff;
   border: none;
-  padding: 8px 14px;
-  border-radius: 14px;
-  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   line-height: 1;
-  min-height: 40px;
-  box-shadow: 0 3px 10px rgba(229, 57, 53, 0.25);
+  box-shadow: 0 2px 8px rgba(229, 57, 53, 0.2);
   transition: transform 0.15s ease;
 }
 
@@ -691,7 +690,7 @@ const autoCalculateInterestAndPayment = () => {
 }
 
 .add-debt-btn i {
-  font-size: 1.0rem;
+  font-size: 0.95rem;
 }
 
 /* Debt Cards List */
