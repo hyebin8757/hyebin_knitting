@@ -450,14 +450,6 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
                   <span class="unit">원</span>
                 </div>
                 <button
-                  type="button"
-                  class="repeat-all-btn"
-                  @click="handleApplyToAllMonths(item)"
-                  title="이 금액을 1~12월 매월 동일하게 반복 적용"
-                >
-                  <i class="material-icons">sync</i>
-                </button>
-                <button
                   v-if="item.amount > 0"
                   type="button"
                   class="reset-amount-btn"
