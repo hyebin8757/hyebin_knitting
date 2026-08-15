@@ -754,9 +754,10 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
 }
 
 .summary-col .value {
-  font-size: 1.1rem;
-  font-weight: 800;
+  font-size: 1.2rem;
+  font-weight: 900;
   margin-top: 2px;
+  letter-spacing: -0.3px;
 }
 
 .divider {
@@ -835,19 +836,26 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
 .add-utility-btn {
   display: flex;
   align-items: center;
-  gap: 2px;
-  background: #ff9800;
+  gap: 4px;
+  background: linear-gradient(135deg, #ffa726, #f57c00);
   color: #fff;
   border: none;
-  padding: 7px 14px;
-  border-radius: 14px;
-  font-size: 0.88rem;
-  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  font-weight: 800;
   cursor: pointer;
+  min-height: 44px;
+  box-shadow: 0 3px 10px rgba(245, 124, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.add-utility-btn:active {
+  transform: scale(0.96);
 }
 
 .add-utility-btn i {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
 }
 
 /* Monthly Cards Grid */
@@ -861,14 +869,15 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
   background: #ffffff;
   border: 1px solid #f0e6dc;
   border-radius: 20px;
-  padding: 12px;
+  padding: 14px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-  transition: transform 0.2s;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .month-card:active {
   transform: scale(0.97);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
 .month-card-header {
@@ -908,11 +917,11 @@ const yearlyPerPerson = computed(() => Math.round(yearlyTotal.value / 2));
 .total-row, .per-person-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
 }
 
 .total-row {
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 
 .lbl {

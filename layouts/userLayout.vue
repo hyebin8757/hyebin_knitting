@@ -143,7 +143,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   position: relative;
-  padding-bottom: 74px; /* Space for bottom nav */
+  padding-bottom: 80px; /* Space for bottom nav */
   touch-action: manipulation;
   -webkit-overflow-scrolling: touch;
   font-size: 11.5px;
@@ -233,14 +233,16 @@ onBeforeUnmount(() => {
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  height: 64px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid #f0e6dc;
+  height: 68px;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(240, 230, 220, 0.9);
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   z-index: 50;
-  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.06);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .nav-item {
@@ -249,30 +251,37 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: #a09590;
-  transition: all 0.2s ease;
-  padding: 4px 0;
+  color: #bbb4b0;
+  transition: color 0.2s ease, transform 0.15s ease;
+  padding: 6px 0 4px 0;
+  position: relative;
+  gap: 2px;
+}
+
+.nav-item:active {
+  transform: scale(0.92);
 }
 
 .nav-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 28px;
-  border-radius: 14px;
-  transition: all 0.2s ease;
+  width: 38px;
+  height: 30px;
+  border-radius: 16px;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .nav-icon i {
-  font-size: 1.55rem;
+  font-size: 1.6rem;
+  transition: font-size 0.2s ease;
 }
 
 .nav-label {
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  margin-top: 2px;
   letter-spacing: -0.2px;
+  transition: color 0.2s ease;
 }
 
 .nav-item.active,
@@ -286,6 +295,13 @@ onBeforeUnmount(() => {
 .nav-item.router-link-exact-active .nav-icon {
   background: #ffebe5;
   color: #ff5722;
+  transform: scale(1.08);
+}
+
+.nav-item.active .nav-icon i,
+.nav-item.router-link-active .nav-icon i,
+.nav-item.router-link-exact-active .nav-icon i {
+  font-size: 1.65rem;
 }
 
 /* --- 메뉴 탭별 전용 시그니처 테마 컬러 매칭 --- */
@@ -293,37 +309,37 @@ onBeforeUnmount(() => {
 .nav-item.nav-home.active,
 .nav-item.nav-home.router-link-active { color: #e91e63; }
 .nav-item.nav-home.active .nav-icon,
-.nav-item.nav-home.router-link-active .nav-icon { background: #ffe4ec; color: #e91e63; }
+.nav-item.nav-home.router-link-active .nav-icon { background: #ffe4ec; color: #e91e63; box-shadow: 0 2px 8px rgba(233, 30, 99, 0.2); }
 
 /* 2. 공과금 (오렌지) */
 .nav-item.nav-utility.active,
 .nav-item.nav-utility.router-link-active { color: #f57c00; }
 .nav-item.nav-utility.active .nav-icon,
-.nav-item.nav-utility.router-link-active .nav-icon { background: #fff3e0; color: #f57c00; }
+.nav-item.nav-utility.router-link-active .nav-icon { background: #fff3e0; color: #f57c00; box-shadow: 0 2px 8px rgba(245, 124, 0, 0.2); }
 
 /* 3. 생활비 (에메랄드 그린) */
 .nav-item.nav-living.active,
 .nav-item.nav-living.router-link-active { color: #2e7d32; }
 .nav-item.nav-living.active .nav-icon,
-.nav-item.nav-living.router-link-active .nav-icon { background: #e8f5e9; color: #2e7d32; }
+.nav-item.nav-living.router-link-active .nav-icon { background: #e8f5e9; color: #2e7d32; box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2); }
 
 /* 4. 적금/자산 (시원한 스카이블루) */
 .nav-item.nav-savings.active,
 .nav-item.nav-savings.router-link-active { color: #0284c7; }
 .nav-item.nav-savings.active .nav-icon,
-.nav-item.nav-savings.router-link-active .nav-icon { background: #e0f2fe; color: #0284c7; }
+.nav-item.nav-savings.router-link-active .nav-icon { background: #e0f2fe; color: #0284c7; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.2); }
 
 /* 5. 대출/빚 (강렬한 레드) */
 .nav-item.nav-debt.active,
 .nav-item.nav-debt.router-link-active { color: #e53935; }
 .nav-item.nav-debt.active .nav-icon,
-.nav-item.nav-debt.router-link-active .nav-icon { background: #ffebee; color: #e53935; }
+.nav-item.nav-debt.router-link-active .nav-icon { background: #ffebee; color: #e53935; box-shadow: 0 2px 8px rgba(229, 57, 53, 0.2); }
 
 /* 6. 약속 (인디고 퍼플) */
 .nav-item.nav-schedule.active,
 .nav-item.nav-schedule.router-link-active { color: #3f51b5; }
 .nav-item.nav-schedule.active .nav-icon,
-.nav-item.nav-schedule.router-link-active .nav-icon { background: #e8eaf6; color: #3f51b5; }
+.nav-item.nav-schedule.router-link-active .nav-icon { background: #e8eaf6; color: #3f51b5; box-shadow: 0 2px 8px rgba(63, 81, 181, 0.2); }
 
 /* Small screen tweaks (320px) */
 @media (max-width: 360px) {

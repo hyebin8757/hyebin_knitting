@@ -390,17 +390,20 @@ const getDurationBadge = (item: ScheduleItem) => {
   background: rgba(255, 255, 255, 0.75);
   border: 1px solid #9fa8da;
   color: #283593;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  padding: 6px 0;
-  border-radius: 12px;
+  padding: 8px 0;
+  border-radius: 14px;
   cursor: pointer;
+  min-height: 40px;
+  transition: all 0.15s ease;
 }
 
 .owner-chip.active {
   background: #3f51b5;
   color: #fff;
   border-color: #303f9f;
+  box-shadow: 0 2px 8px rgba(63, 81, 181, 0.3);
 }
 
 /* Action Bar */
@@ -418,19 +421,26 @@ const getDurationBadge = (item: ScheduleItem) => {
 .add-sched-btn {
   display: flex;
   align-items: center;
-  gap: 2px;
-  background: #3f51b5;
+  gap: 4px;
+  background: linear-gradient(135deg, #5c6bc0, #3f51b5);
   color: #fff;
   border: none;
-  padding: 7px 14px;
-  border-radius: 14px;
-  font-size: 0.88rem;
-  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  font-weight: 800;
   cursor: pointer;
+  min-height: 44px;
+  box-shadow: 0 3px 10px rgba(63, 81, 181, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.add-sched-btn:active {
+  transform: scale(0.96);
 }
 
 .add-sched-btn i {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
 }
 
 /* Schedule List */
@@ -461,27 +471,30 @@ const getDurationBadge = (item: ScheduleItem) => {
   background: #ffffff;
   border: 1px solid #f0e6dc;
   border-radius: 20px;
-  padding: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
   cursor: pointer;
-  transition: transform 0.2s, opacity 0.2s;
+  transition: background 0.15s ease, transform 0.15s ease;
+  min-height: 60px;
 }
 
 .schedule-card.completed {
-  opacity: 0.6;
-  background: #fafafa;
+  opacity: 0.55;
+  background: #f9f9f9;
 }
 
 .schedule-card:active {
   transform: scale(0.98);
+  background: #f8f8f6;
 }
 
 .checkbox-col {
-  padding-top: 2px;
+  padding-top: 3px;
+  min-width: 28px;
 }
 
 .check-icon {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   color: #3f51b5;
 }
 
@@ -522,9 +535,10 @@ const getDurationBadge = (item: ScheduleItem) => {
 .category-tag.중요 { background: #ffebee; color: #c62828; }
 
 .sched-title-text {
-  font-size: 1.02rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: #333;
+  line-height: 1.3;
 }
 
 .sched-title-text.line-through {

@@ -670,25 +670,25 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   display: flex;
   align-items: center;
   gap: 2px;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   color: #666;
   font-weight: 700;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .metric-label .edit-icon {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   color: #2e7d32;
 }
 
 .metric-val {
-  font-size: 0.96rem;
-  font-weight: 800;
+  font-size: 1.05rem;
+  font-weight: 900;
   color: #333;
 }
 
 .metric-val .unit {
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
@@ -751,32 +751,34 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   justify-content: center;
   background: #ffffff;
   border: 1px solid #e0e0e0;
-  padding: 6px 14px;
-  border-radius: 14px;
-  font-size: 0.84rem;
+  padding: 7px 14px;
+  border-radius: 16px;
+  font-size: 0.86rem;
   font-weight: 700;
   color: #555;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-height: 44px;
 }
 
 .cat-chip.active {
   background: #2e7d32;
   color: #fff;
   border-color: #1b5e20;
-  box-shadow: 0 3px 10px rgba(46, 125, 50, 0.25);
+  box-shadow: 0 3px 12px rgba(46, 125, 50, 0.3);
+  transform: scale(1.02);
 }
 
 .chip-sub-amt {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 800;
   color: #888;
   margin-top: 1px;
 }
 
 .cat-chip.active .chip-sub-amt {
-  color: #e8f5e9;
+  color: #c8e6c9;
 }
 
 .add-cat-chip-btn {
@@ -799,20 +801,28 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 .add-expense-btn {
   display: flex;
   align-items: center;
-  gap: 2px;
-  background: #4caf50;
+  gap: 4px;
+  background: linear-gradient(135deg, #43a047, #2e7d32);
   color: #fff;
   border: none;
-  padding: 8px 14px;
-  border-radius: 14px;
-  font-size: 0.92rem;
-  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
+  min-height: 44px;
+  box-shadow: 0 3px 10px rgba(46, 125, 50, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.add-expense-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 1px 6px rgba(46, 125, 50, 0.2);
 }
 
 .add-expense-btn i {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
 }
 
 /* Category Summary Dashboard Card */
@@ -965,14 +975,16 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   justify-content: space-between;
   background: #ffffff;
   border: 1px solid #f0e6dc;
-  border-radius: 16px;
-  padding: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  border-radius: 18px;
+  padding: 13px 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: background 0.15s ease, transform 0.15s ease;
+  min-height: 56px;
 }
 
 .expense-item-card:active {
+  background: #fafaf8;
   transform: scale(0.98);
 }
 
@@ -1002,17 +1014,19 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 }
 
 .item-title {
-  font-size: 0.98rem;
+  font-size: 1.0rem;
   font-weight: 700;
   color: #333;
+  line-height: 1.3;
 }
 
 .item-meta {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
-  color: #888;
+  font-size: 0.82rem;
+  color: #999;
+  margin-top: 2px;
 }
 
 .paid-by-badge {
@@ -1032,20 +1046,34 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 }
 
 .item-amount {
-  font-size: 1.02rem;
-  font-weight: 800;
+  font-size: 1.08rem;
+  font-weight: 900;
   color: #e53935;
+  white-space: nowrap;
 }
 
 .del-icon-btn {
   background: none;
   border: none;
-  color: #ccc;
+  color: #ddd;
   cursor: pointer;
+  padding: 4px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.del-icon-btn:active {
+  background: #ffebee;
+  color: #e53935;
 }
 
 .del-icon-btn i {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
 }
 
 /* Modal Styling */

@@ -639,20 +639,20 @@ const autoCalculateInterestAndPayment = () => {
 }
 
 .metric-label {
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   color: #666;
   font-weight: 700;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .metric-val {
-  font-size: 0.96rem;
-  font-weight: 800;
+  font-size: 1.05rem;
+  font-weight: 900;
   color: #333;
 }
 
 .metric-val .unit {
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
@@ -672,19 +672,26 @@ const autoCalculateInterestAndPayment = () => {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  background: #e53935;
+  background: linear-gradient(135deg, #ef5350, #e53935);
   color: #fff;
   border: none;
-  padding: 5px 11px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  padding: 8px 14px;
+  border-radius: 14px;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   line-height: 1;
+  min-height: 40px;
+  box-shadow: 0 3px 10px rgba(229, 57, 53, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.add-debt-btn:active {
+  transform: scale(0.95);
 }
 
 .add-debt-btn i {
-  font-size: 0.95rem;
+  font-size: 1.0rem;
 }
 
 /* Debt Cards List */
@@ -801,8 +808,9 @@ const autoCalculateInterestAndPayment = () => {
 }
 
 .rem-val {
-  font-size: 1.15rem;
+  font-size: 1.28rem;
   font-weight: 900;
+  letter-spacing: -0.5px;
 }
 
 .rem-val .unit {
@@ -872,10 +880,10 @@ const autoCalculateInterestAndPayment = () => {
 }
 
 .detail-cell .val {
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: 0.9rem;
+  font-weight: 800;
   color: #444;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 .debt-memo {
@@ -896,12 +904,13 @@ const autoCalculateInterestAndPayment = () => {
   background: #ffebee;
   border: 1px solid #ffcdd2;
   color: #e53935;
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   font-weight: 800;
-  padding: 7px 0;
-  border-radius: 12px;
+  padding: 10px 0;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-height: 44px;
 }
 
 .repay-pay-btn:active {

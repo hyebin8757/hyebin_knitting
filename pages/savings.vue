@@ -580,9 +580,10 @@ const autoCalculateInterest = () => {
 }
 
 .m-val {
-  font-size: 1.35rem;
-  font-weight: 800;
-  margin-top: 2px;
+  font-size: 1.45rem;
+  font-weight: 900;
+  margin-top: 3px;
+  letter-spacing: -0.5px;
 }
 
 .m-val .unit {
@@ -633,20 +634,22 @@ const autoCalculateInterest = () => {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  background: #0284c7;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
   color: #fff;
   border: none;
-  padding: 5px 11px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  padding: 8px 14px;
+  border-radius: 14px;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   line-height: 1;
+  min-height: 40px;
+  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25);
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .add-btn i {
-  font-size: 0.95rem;
+  font-size: 1.0rem;
 }
 
 .add-btn:active {
@@ -746,8 +749,9 @@ const autoCalculateInterest = () => {
 }
 
 .main-amount {
-  font-size: 1.28rem;
-  font-weight: 800;
+  font-size: 1.42rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
 }
 
 .total-target-txt {
@@ -772,14 +776,15 @@ const autoCalculateInterest = () => {
 }
 
 .detail-col .lbl {
-  font-size: 0.68rem;
-  color: #666;
+  font-size: 0.72rem;
+  color: #777;
 }
 
 .detail-col .val {
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   color: #333;
-  margin-top: 1px;
+  margin-top: 2px;
+  font-weight: 700;
 }
 
 .card-memo {
@@ -799,12 +804,13 @@ const autoCalculateInterest = () => {
   background: #e0f2fe;
   border: 1px solid #bae6fd;
   color: #0369a1;
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   font-weight: 800;
-  padding: 7px 0;
-  border-radius: 12px;
+  padding: 10px 0;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-height: 44px;
 }
 
 .saving-pay-btn:active {

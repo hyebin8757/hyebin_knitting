@@ -400,9 +400,9 @@ const upcomingSchedules = computed(() => {
 .section-container {
   background: #ffffff;
   border-radius: 24px;
-  padding: 16px;
+  padding: 18px 16px;
   border: 1px solid #f0e6dc;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
 }
 
 .section-header {
@@ -416,27 +416,34 @@ const upcomingSchedules = computed(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 1.08rem;
-  font-weight: 700;
+  font-size: 1.12rem;
+  font-weight: 800;
   color: #3e3332;
 }
 
 .add-btn {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   background: #fff0f5;
   color: #e91e63;
-  border: none;
-  padding: 5px 12px;
-  border-radius: 14px;
-  font-size: 0.85rem;
+  border: 1px solid #ffcdd8;
+  padding: 7px 14px;
+  border-radius: 16px;
+  font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+  min-height: 36px;
+}
+
+.add-btn:active {
+  transform: scale(0.95);
+  background: #ffd6e5;
 }
 
 .add-btn i {
-  font-size: 1rem;
+  font-size: 1.05rem;
 }
 
 .more-link {
@@ -448,13 +455,13 @@ const upcomingSchedules = computed(() => {
 
 .empty-dday-box {
   text-align: center;
-  padding: 20px 14px;
+  padding: 28px 14px;
   background: #fffdfa;
-  border: 1px dashed #ffd8cc;
+  border: 1.5px dashed #ffd8cc;
   border-radius: 18px;
-  font-size: 0.92rem;
-  color: #888;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  color: #aaa;
+  line-height: 1.7;
 }
 
 /* D-Day Grid */
@@ -467,75 +474,57 @@ const upcomingSchedules = computed(() => {
 .dday-card {
   background: #fffaf5;
   border: 1px solid #ffe8d6;
-  border-radius: 18px;
-  padding: 14px;
+  border-radius: 20px;
+  padding: 16px 14px;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  min-height: 100px;
 }
 
 .dday-card:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
 .dday-card.main-card {
   background: linear-gradient(135deg, #fff0f3 0%, #ffdde1 100%);
   border-color: #ffccd5;
+  box-shadow: 0 4px 14px rgba(255, 100, 130, 0.12);
 }
 
 .dday-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .dday-icon i {
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   color: #e91e63;
 }
 
 .dday-badge {
-  background: #ff4081;
+  background: linear-gradient(135deg, #ff4081, #ff1744);
   color: #fff;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 800;
-  padding: 3px 9px;
-  border-radius: 10px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  letter-spacing: -0.3px;
 }
 
 .dday-title {
-  font-size: 1.02rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: #333;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
+  line-height: 1.3;
 }
 
 .dday-date {
-  font-size: 0.8rem;
-  color: #777;
-}
-
-/* Summary Grid */
-.summary-cards-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.summary-card {
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-  border-radius: 22px;
-  text-decoration: none;
-  border: 1px solid;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
-
-.summary-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  font-size: 0.82rem;
+  color: #888;
 }
 
 /* Summary Grid */
@@ -548,12 +537,12 @@ const upcomingSchedules = computed(() => {
 .summary-card {
   display: flex;
   flex-direction: column;
-  padding: 14px;
-  border-radius: 18px;
+  padding: 16px;
+  border-radius: 20px;
   text-decoration: none;
   border: 1px solid #f0e6dc;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
 .summary-card:active {
@@ -708,14 +697,15 @@ const upcomingSchedules = computed(() => {
 }
 
 .card-main-val {
-  font-size: 1.25rem;
+  font-size: 1.38rem;
   font-weight: 900;
   color: #333;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
+  line-height: 1.2;
 }
 
 .card-main-val .unit {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -725,8 +715,9 @@ const upcomingSchedules = computed(() => {
 .card-main-val.savings { color: #0284c7; }
 
 .card-sub-info {
-  font-size: 0.78rem;
-  color: #777;
+  font-size: 0.82rem;
+  color: #888;
+  line-height: 1.4;
 }
 
 /* Schedule List Mini */
@@ -738,19 +729,25 @@ const upcomingSchedules = computed(() => {
 
 .empty-state {
   text-align: center;
-  padding: 16px 0;
-  font-size: 0.88rem;
-  color: #999;
+  padding: 24px 0;
+  font-size: 0.92rem;
+  color: #bbb;
 }
 
 .schedule-card-mini {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #fbfbfb;
-  padding: 10px 12px;
-  border-radius: 14px;
+  background: #fafafa;
+  padding: 12px 14px;
+  border-radius: 16px;
   border: 1px solid #f0f0f0;
+  min-height: 52px;
+  transition: background 0.15s ease;
+}
+
+.schedule-card-mini:active {
+  background: #f5f5f5;
 }
 
 .sched-owner-badge {
