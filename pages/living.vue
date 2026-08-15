@@ -77,13 +77,28 @@ const editingItem = ref<Partial<LivingCategoryItem>>({
   paidBy: "공동",
 });
 
+const getDefaultDateForSelectedMonth = () => {
+  const now = new Date();
+  const currentY = now.getFullYear();
+  const currentM = now.getMonth() + 1;
+  const currentD = now.getDate();
+
+  if (selectedYear.value === currentY && selectedMonth.value === currentM) {
+    return now.toISOString().split("T")[0];
+  }
+
+  const lastDay = new Date(selectedYear.value, selectedMonth.value, 0).getDate();
+  const targetDay = Math.min(currentD, lastDay);
+  return `${selectedYear.value}-${String(selectedMonth.value).padStart(2, "0")}-${String(targetDay).padStart(2, "0")}`;
+};
+
 const openAddItemModal = () => {
   const defaultCat = coupleStore.livingCategories[0] || "식비";
   editingItem.value = {
     category: defaultCat,
     title: "",
     amount: 0,
-    date: `${selectedYear.value}-${String(selectedMonth.value).padStart(2, "0")}-01`,
+    date: getDefaultDateForSelectedMonth(),
     paidBy: "공동",
   };
   isEditMode.value = false;
