@@ -77,6 +77,7 @@ const editingItem = ref<Partial<LivingCategoryItem>>({
   amount: 0,
   date: today.toISOString().split("T")[0],
   paidBy: "공동",
+  includeInBalance: true,
 });
 
 const getDefaultDateForSelectedMonth = () => {
@@ -102,13 +103,15 @@ const openAddItemModal = () => {
     amount: 0,
     date: getDefaultDateForSelectedMonth(),
     paidBy: "공동",
+    includeInBalance: true,
   };
   isEditMode.value = false;
   showItemModal.value = true;
 };
 
 const openEditItemModal = (item: LivingCategoryItem) => {
-  editingItem.value = { ...item };
+  // 기존 데이터는 includeInBalance 필드가 없을 수 있으므로 기본값 true
+  editingItem.value = { ...item, includeInBalance: item.includeInBalance !== false };
   isEditMode.value = true;
   showItemModal.value = true;
 };
@@ -145,8 +148,23 @@ const filteredItems = computed(() => {
 });
 
 // Calculations
+// 잔액 계산에 포함(책크 O)된 항목만 합산
 const totalSpent = computed(() => {
+  return record.value.items
+    .filter((item) => item.includeInBalance !== false)
+    .reduce((sum, item) => sum + Number(item.amount), 0);
+});
+
+// 전체 항목 합산 (카테고리 통계용)
+const totalSpentAll = computed(() => {
   return record.value.items.reduce((sum, item) => sum + Number(item.amount), 0);
+});
+
+// 잔액 계산에서 제외된 항목 합계 (알림용)
+const totalExcluded = computed(() => {
+  return record.value.items
+    .filter((item) => item.includeInBalance === false)
+    .reduce((sum, item) => sum + Number(item.amount), 0);
 });
 
 const remainingBalance = computed(() => {
@@ -177,7 +195,7 @@ const selectedCategoryStats = computed(() => {
   const isAll = activeCategoryFilter.value === "전체";
   const items = isAll ? record.value.items : record.value.items.filter((i) => i.category === activeCategoryFilter.value);
   const categoryTotal = items.reduce((sum, i) => sum + Number(i.amount) || 0, 0);
-  const overallTotal = totalSpent.value;
+  const overallTotal = totalSpentAll.value; // 전체 항목 기준으로 비율 계산
   const percentage = overallTotal > 0 ? Math.round((categoryTotal / overallTotal) * 100) : 0;
   
   const paidByGongdong = items.filter((i) => i.paidBy === "공동").reduce((sum, i) => sum + Number(i.amount) || 0, 0);
@@ -264,7 +282,7 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 
           <!-- Spent Amount Column -->
           <div class="metric-card spent">
-            <div class="metric-label">사용한 지출</div>
+            <div class="metric-label">지출 (잔액계산 포함분)</div>
             <div class="metric-val text-rose-600">-{{ totalSpent.toLocaleString() }} <span class="unit">원</span></div>
           </div>
 
@@ -275,6 +293,12 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
               {{ remainingBalance.toLocaleString() }} <span class="unit">원</span>
             </div>
           </div>
+        </div>
+
+        <!-- 제외 항목 안내 -->
+        <div v-if="totalExcluded > 0" class="excluded-notice">
+          <i class="material-icons">info_outline</i>
+          잔액 계산 제외 {{ totalExcluded.toLocaleString() }}원 (해당 항목은 상단 요약에서 제외됨)
         </div>
 
         <!-- Modern Progress Bar -->
@@ -303,7 +327,7 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
           @click="activeCategoryFilter = '전체'"
         >
           <span>전체</span>
-          <span class="chip-sub-amt">{{ totalSpent.toLocaleString() }}원</span>
+          <span class="chip-sub-amt">{{ totalSpentAll.toLocaleString() }}원</span>
         </button>
 
         <button
@@ -372,6 +396,7 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
         v-for="item in filteredItems"
         :key="item.id"
         class="expense-item-card"
+        :class="{ 'excluded-card': item.includeInBalance === false }"
         @click="openEditItemModal(item)"
       >
         <div class="item-left">
@@ -383,12 +408,13 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
             <div class="item-meta">
               <span>📅 {{ item.date }}</span>
               <span class="paid-by-badge" :class="item.paidBy">{{ item.paidBy || '공동' }} 결제</span>
+              <span v-if="item.includeInBalance === false" class="exclude-from-balance-badge">📊 잔액제외</span>
             </div>
           </div>
         </div>
 
         <div class="item-right">
-          <span class="item-amount">-{{ Number(item.amount).toLocaleString() }}원</span>
+          <span class="item-amount" :class="{ 'amount-excluded': item.includeInBalance === false }">-{{ Number(item.amount).toLocaleString() }}원</span>
           <button class="del-icon-btn" @click.stop="handleDeleteItem(item.id)">
             <i class="material-icons">delete_outline</i>
           </button>
@@ -546,6 +572,20 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
                 {{ owner }}
               </button>
             </div>
+          </div>
+
+          <!-- 잔액 계산 포함 체크박스 -->
+          <div class="input-group balance-toggle-group">
+            <label class="balance-toggle-label" @click="editingItem.includeInBalance = !editingItem.includeInBalance">
+              <div class="toggle-switch" :class="{ on: editingItem.includeInBalance !== false }">
+                <div class="toggle-knob"></div>
+              </div>
+              <div class="toggle-text">
+                <span class="toggle-title">잔액 계산에 포함</span>
+                <span class="toggle-desc" v-if="editingItem.includeInBalance !== false">상단 모인금액 지출로 차감됩니다</span>
+                <span class="toggle-desc excluded" v-else>이 항목은 잔액 계산에서 제외됩니다</span>
+              </div>
+            </label>
           </div>
         </div>
         <div class="modal-footer">
@@ -1051,6 +1091,28 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   white-space: nowrap;
 }
 
+.item-amount.amount-excluded {
+  color: #bbb;
+  text-decoration: line-through;
+  font-weight: 700;
+}
+
+.excluded-card {
+  opacity: 0.65;
+  background: #f9f9f9 !important;
+  border-color: #eee !important;
+}
+
+.exclude-from-balance-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #999;
+  background: #f5f5f5;
+  padding: 1px 5px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
 .del-icon-btn {
   background: none;
   border: none;
@@ -1270,4 +1332,92 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   font-size: 1.02rem;
   cursor: pointer;
 }
+
+/* 잔액 계산 포함 토글 */
+.balance-toggle-group {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-top: 2px;
+}
+
+.balance-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.toggle-switch {
+  width: 44px;
+  height: 24px;
+  background: #e0e0e0;
+  border-radius: 12px;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.toggle-switch.on {
+  background: #4caf50;
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: left 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-switch.on .toggle-knob {
+  left: 23px;
+}
+
+.toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggle-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.toggle-desc {
+  font-size: 0.78rem;
+  color: #4caf50;
+}
+
+.toggle-desc.excluded {
+  color: #999;
+}
+
+/* 제외 항목 안내 박스 */
+.excluded-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #795548;
+  font-weight: 600;
+}
+
+.excluded-notice i {
+  font-size: 1rem;
+  color: #f9a825;
+  flex-shrink: 0;
+}
 </style>
+

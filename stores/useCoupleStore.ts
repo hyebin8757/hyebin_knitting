@@ -42,6 +42,7 @@ export interface LivingCategoryItem {
   amount: number;
   date: string; // YYYY-MM-DD
   paidBy?: '우주' | '혜빈' | '공동';
+  includeInBalance?: boolean; // true(기본값) = 잔액 계산에 포함
 }
 
 export interface MonthlyLivingRecord {
@@ -306,6 +307,7 @@ export const useCoupleStore = defineStore("couple", () => {
         amount: Number(item.amount) || 0,
         date: item.date || new Date().toISOString().split("T")[0],
         paidBy: item.paidBy || "공동",
+        includeInBalance: item.includeInBalance !== false, // 기본값 true
       };
       rec.items.push(newItem);
     }
