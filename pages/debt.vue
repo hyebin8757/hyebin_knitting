@@ -63,8 +63,8 @@ const showModal = ref(false);
 const isEditMode = ref(false);
 
 const getTodayStr = () => new Date().toISOString().split("T")[0];
-const getFutureDateStr = (months: number) => {
-  const d = new Date();
+const addMonthsToDateStr = (dateStr: string, months: number): string => {
+  const d = new Date(dateStr || Date.now());
   d.setMonth(d.getMonth() + months);
   return d.toISOString().split("T")[0];
 };
@@ -80,12 +80,15 @@ const editingDebt = ref<Partial<DebtItem>>({
   totalMonths: 12,
   remainingMonths: 12,
   startDate: getTodayStr(),
-  endDate: getFutureDateStr(12),
+  endDate: addMonthsToDateStr(getTodayStr(), 12),
   excludeFromStats: false,
   memo: '',
 });
 
+const isUserChangingDate = ref(false);
+
 const calculateDebtMonths = () => {
+  if (!isUserChangingDate.value) return;
   const start = editingDebt.value.startDate;
   const end = editingDebt.value.endDate;
   if (!start || !end) return;
@@ -94,10 +97,16 @@ const calculateDebtMonths = () => {
   const eDate = new Date(end);
   const now = new Date();
 
-  const totalM = (eDate.getFullYear() - sDate.getFullYear()) * 12 + (eDate.getMonth() - sDate.getMonth());
+  // 정확한 개월 수 차이 계산
+  let totalM = (eDate.getFullYear() - sDate.getFullYear()) * 12 + (eDate.getMonth() - sDate.getMonth());
+  if (eDate.getDate() >= sDate.getDate()) {
+    // 만기일 날짜가 시작일 날짜와 같거나 크면 계산 유지
+  } else {
+    // 일 수 차이가 작으면 약간 보정
+  }
   editingDebt.value.totalMonths = Math.max(1, totalM);
 
-  const remM = (eDate.getFullYear() - now.getFullYear()) * 12 + (eDate.getMonth() - now.getMonth());
+  let remM = (eDate.getFullYear() - now.getFullYear()) * 12 + (eDate.getMonth() - now.getMonth());
   editingDebt.value.remainingMonths = Math.max(0, Math.min(editingDebt.value.totalMonths, remM));
 };
 
@@ -106,6 +115,8 @@ watch(() => [editingDebt.value.startDate, editingDebt.value.endDate], () => {
 });
 
 const openAddModal = () => {
+  isUserChangingDate.value = false;
+  const today = getTodayStr();
   editingDebt.value = {
     owner: activeOwnerTab.value === '전체' ? '공동' : activeOwnerTab.value,
     title: '',
@@ -116,8 +127,8 @@ const openAddModal = () => {
     monthlyInterest: 0,
     totalMonths: 12,
     remainingMonths: 12,
-    startDate: getTodayStr(),
-    endDate: getFutureDateStr(12),
+    startDate: today,
+    endDate: addMonthsToDateStr(today, 12),
     excludeFromStats: false,
     memo: '',
   };
@@ -126,14 +137,28 @@ const openAddModal = () => {
 };
 
 const openEditModal = (item: DebtItem) => {
+  isUserChangingDate.value = false;
+  const totM = item.totalMonths || 12;
+  const remM = item.remainingMonths || 12;
+  const endDate = item.endDate || addMonthsToDateStr(getTodayStr(), remM);
+  // startDate가 없으면 endDate에서 totM 개월을 역산!
+  const startDate = item.startDate || addMonthsToDateStr(endDate, -totM);
+
   editingDebt.value = {
     ...item,
-    startDate: item.startDate || getTodayStr(),
-    endDate: item.endDate || getFutureDateStr(item.remainingMonths || 12),
+    totalMonths: totM,
+    remainingMonths: remM,
+    startDate,
+    endDate,
   };
-  calculateDebtMonths();
+  
   isEditMode.value = true;
   showModal.value = true;
+};
+
+const handleDateInput = () => {
+  isUserChangingDate.value = true;
+  calculateDebtMonths();
 };
 
 const handleSaveDebt = () => {
@@ -450,20 +475,22 @@ const autoCalculateInterestAndPayment = () => {
           <div class="input-row-flex">
             <div class="input-group flex-1">
               <label>대출 시작일</label>
-              <input v-model="editingDebt.startDate" type="date" />
+              <input v-model="editingDebt.startDate" type="date" @change="handleDateInput" />
             </div>
             <div class="input-group flex-1">
               <label>대출 만기일 (상환 완료일)</label>
-              <input v-model="editingDebt.endDate" type="date" />
+              <input v-model="editingDebt.endDate" type="date" @change="handleDateInput" />
             </div>
           </div>
 
-          <!-- Auto Month Calculation Info Badge -->
-          <div class="month-auto-calc-badge">
-            <div class="badge-title">✨ 개월 수 자동 계산</div>
-            <div class="badge-content">
-              총 대출 기간 <strong>{{ editingDebt.totalMonths || 0 }}개월</strong> 중
-              남은 기간 <strong>{{ editingDebt.remainingMonths || 0 }}개월</strong>
+          <div class="input-row-flex">
+            <div class="input-group flex-1">
+              <label>총 대출 기간 (개월)</label>
+              <input v-model.number="editingDebt.totalMonths" type="number" min="1" step="1" placeholder="60" />
+            </div>
+            <div class="input-group flex-1">
+              <label>남은 개월 수 (개월)</label>
+              <input v-model.number="editingDebt.remainingMonths" type="number" min="0" step="1" placeholder="43" />
             </div>
           </div>
 

@@ -63,8 +63,8 @@ const showModal = ref(false);
 const isEditMode = ref(false);
 
 const getTodayStr = () => new Date().toISOString().split("T")[0];
-const getFutureDateStr = (months: number) => {
-  const d = new Date();
+const addMonthsToDateStr = (dateStr: string, months: number): string => {
+  const d = new Date(dateStr || Date.now());
   d.setMonth(d.getMonth() + months);
   return d.toISOString().split("T")[0];
 };
@@ -80,12 +80,15 @@ const editingSaving = ref<Partial<SavingItem>>({
   totalMonths: 12,
   remainingMonths: 12,
   startDate: getTodayStr(),
-  endDate: getFutureDateStr(12),
+  endDate: addMonthsToDateStr(getTodayStr(), 12),
   excludeFromStats: false,
   memo: '',
 });
 
+const isUserChangingDate = ref(false);
+
 const calculateSavingMonths = () => {
+  if (!isUserChangingDate.value) return;
   const start = editingSaving.value.startDate;
   const end = editingSaving.value.endDate;
   if (!start || !end) return;
@@ -94,10 +97,10 @@ const calculateSavingMonths = () => {
   const eDate = new Date(end);
   const now = new Date();
 
-  const totalM = (eDate.getFullYear() - sDate.getFullYear()) * 12 + (eDate.getMonth() - sDate.getMonth());
+  let totalM = (eDate.getFullYear() - sDate.getFullYear()) * 12 + (eDate.getMonth() - sDate.getMonth());
   editingSaving.value.totalMonths = Math.max(1, totalM);
 
-  const remM = (eDate.getFullYear() - now.getFullYear()) * 12 + (eDate.getMonth() - now.getMonth());
+  let remM = (eDate.getFullYear() - now.getFullYear()) * 12 + (eDate.getMonth() - now.getMonth());
   editingSaving.value.remainingMonths = Math.max(0, Math.min(editingSaving.value.totalMonths, remM));
 };
 
@@ -106,6 +109,8 @@ watch(() => [editingSaving.value.startDate, editingSaving.value.endDate], () => 
 });
 
 const openAddModal = () => {
+  isUserChangingDate.value = false;
+  const today = getTodayStr();
   editingSaving.value = {
     owner: activeOwnerTab.value === '전체' ? '공동' : activeOwnerTab.value,
     title: '',
@@ -116,8 +121,8 @@ const openAddModal = () => {
     monthlyInterest: 0,
     totalMonths: 12,
     remainingMonths: 12,
-    startDate: getTodayStr(),
-    endDate: getFutureDateStr(12),
+    startDate: today,
+    endDate: addMonthsToDateStr(today, 12),
     excludeFromStats: false,
     memo: '',
   };
@@ -126,14 +131,27 @@ const openAddModal = () => {
 };
 
 const openEditModal = (item: SavingItem) => {
+  isUserChangingDate.value = false;
+  const totM = item.totalMonths || 12;
+  const remM = item.remainingMonths || 12;
+  const endDate = item.endDate || addMonthsToDateStr(getTodayStr(), remM);
+  const startDate = item.startDate || addMonthsToDateStr(endDate, -totM);
+
   editingSaving.value = {
     ...item,
-    startDate: item.startDate || getTodayStr(),
-    endDate: item.endDate || getFutureDateStr(item.remainingMonths || 12),
+    totalMonths: totM,
+    remainingMonths: remM,
+    startDate,
+    endDate,
   };
-  calculateSavingMonths();
+  
   isEditMode.value = true;
   showModal.value = true;
+};
+
+const handleDateInput = () => {
+  isUserChangingDate.value = true;
+  calculateSavingMonths();
 };
 
 const handleSaveSaving = () => {
@@ -408,20 +426,22 @@ const autoCalculateInterest = () => {
           <div class="input-row-flex">
             <div class="input-group flex-1">
               <label>적금 시작일</label>
-              <input v-model="editingSaving.startDate" type="date" />
+              <input v-model="editingSaving.startDate" type="date" @change="handleDateInput" />
             </div>
             <div class="input-group flex-1">
               <label>적금 만기일</label>
-              <input v-model="editingSaving.endDate" type="date" />
+              <input v-model="editingSaving.endDate" type="date" @change="handleDateInput" />
             </div>
           </div>
 
-          <!-- Auto Month Calculation Info Badge -->
-          <div class="month-auto-calc-badge blue">
-            <div class="badge-title">✨ 개월 수 자동 계산</div>
-            <div class="badge-content">
-              총 약정 기간 <strong>{{ editingSaving.totalMonths || 0 }}개월</strong> 중
-              남은 기간 <strong>{{ editingSaving.remainingMonths || 0 }}개월</strong>
+          <div class="input-row-flex">
+            <div class="input-group flex-1">
+              <label>총 약정 기간 (개월)</label>
+              <input v-model.number="editingSaving.totalMonths" type="number" min="1" step="1" placeholder="12" />
+            </div>
+            <div class="input-group flex-1">
+              <label>남은 만기 개월 수 (개월)</label>
+              <input v-model.number="editingSaving.remainingMonths" type="number" min="0" step="1" placeholder="12" />
             </div>
           </div>
 
