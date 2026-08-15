@@ -36,7 +36,7 @@ export const CommonStyle = {
     //}
 
     html {
-      font-size: 10px;
+      font-size: 11.5px;
       // 새로고침 시 세로 스크롤 없을 때 좌, 우로 움직이는 현상 때문에 추가함
       overflow-y: scroll;
     }

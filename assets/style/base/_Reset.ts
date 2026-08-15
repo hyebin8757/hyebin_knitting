@@ -89,7 +89,7 @@ export const ResetStyle = {
     button {
       line-height: 1.5;
       font-family: "Pretendard", "Noto Sans KR", "Noto Sans Korean", -apple-system, "system-ui",  Arial, sans-serif;
-      font-size: 10px;
+      font-size: 11.5px;
       font-weight: 400;
     }
 

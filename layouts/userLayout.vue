@@ -135,8 +135,8 @@ onBeforeUnmount(() => {
 
 .mobile-container {
   width: 100%;
-  max-width: 480px;
-  min-width: 320px;
+  max-width: 540px;
+  margin: 0 auto;
   min-height: 100vh;
   background: #fffdfa;
   box-shadow: 0 0 25px rgba(0, 0, 0, 0.04);
@@ -146,6 +146,7 @@ onBeforeUnmount(() => {
   padding-bottom: 74px; /* Space for bottom nav */
   touch-action: manipulation;
   -webkit-overflow-scrolling: touch;
+  font-size: 11.5px;
 }
 
 /* Header */
