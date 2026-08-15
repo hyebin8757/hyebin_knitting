@@ -62,6 +62,13 @@ const totalMonthlyInterestSum = computed(() => {
 const showModal = ref(false);
 const isEditMode = ref(false);
 
+const getTodayStr = () => new Date().toISOString().split("T")[0];
+const getFutureDateStr = (months: number) => {
+  const d = new Date();
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString().split("T")[0];
+};
+
 const editingDebt = ref<Partial<DebtItem>>({
   owner: '공동',
   title: '',
@@ -70,10 +77,32 @@ const editingDebt = ref<Partial<DebtItem>>({
   interestRate: 0,
   monthlyPayment: 0,
   monthlyInterest: 0,
-  totalMonths: 0,
-  remainingMonths: 0,
+  totalMonths: 12,
+  remainingMonths: 12,
+  startDate: getTodayStr(),
+  endDate: getFutureDateStr(12),
   excludeFromStats: false,
   memo: '',
+});
+
+const calculateDebtMonths = () => {
+  const start = editingDebt.value.startDate;
+  const end = editingDebt.value.endDate;
+  if (!start || !end) return;
+
+  const sDate = new Date(start);
+  const eDate = new Date(end);
+  const now = new Date();
+
+  const totalM = (eDate.getFullYear() - sDate.getFullYear()) * 12 + (eDate.getMonth() - sDate.getMonth());
+  editingDebt.value.totalMonths = Math.max(1, totalM);
+
+  const remM = (eDate.getFullYear() - now.getFullYear()) * 12 + (eDate.getMonth() - now.getMonth());
+  editingDebt.value.remainingMonths = Math.max(0, Math.min(editingDebt.value.totalMonths, remM));
+};
+
+watch(() => [editingDebt.value.startDate, editingDebt.value.endDate], () => {
+  calculateDebtMonths();
 });
 
 const openAddModal = () => {
@@ -85,8 +114,10 @@ const openAddModal = () => {
     interestRate: 0,
     monthlyPayment: 0,
     monthlyInterest: 0,
-    totalMonths: 0,
-    remainingMonths: 0,
+    totalMonths: 12,
+    remainingMonths: 12,
+    startDate: getTodayStr(),
+    endDate: getFutureDateStr(12),
     excludeFromStats: false,
     memo: '',
   };
@@ -95,7 +126,12 @@ const openAddModal = () => {
 };
 
 const openEditModal = (item: DebtItem) => {
-  editingDebt.value = { ...item };
+  editingDebt.value = {
+    ...item,
+    startDate: item.startDate || getTodayStr(),
+    endDate: item.endDate || getFutureDateStr(item.remainingMonths || 12),
+  };
+  calculateDebtMonths();
   isEditMode.value = true;
   showModal.value = true;
 };
@@ -413,12 +449,21 @@ const autoCalculateInterestAndPayment = () => {
 
           <div class="input-row-flex">
             <div class="input-group flex-1">
-              <label>총 대출 기간 (개월)</label>
-              <input v-model.number="editingDebt.totalMonths" type="number" min="0" step="1" placeholder="0" />
+              <label>대출 시작일</label>
+              <input v-model="editingDebt.startDate" type="date" />
             </div>
             <div class="input-group flex-1">
-              <label>남은 개월 수 (개월)</label>
-              <input v-model.number="editingDebt.remainingMonths" type="number" min="0" step="1" placeholder="0" @input="autoCalculateInterestAndPayment" />
+              <label>대출 만기일 (상환 완료일)</label>
+              <input v-model="editingDebt.endDate" type="date" />
+            </div>
+          </div>
+
+          <!-- Auto Month Calculation Info Badge -->
+          <div class="month-auto-calc-badge">
+            <div class="badge-title">✨ 개월 수 자동 계산</div>
+            <div class="badge-content">
+              총 대출 기간 <strong>{{ editingDebt.totalMonths || 0 }}개월</strong> 중
+              남은 기간 <strong>{{ editingDebt.remainingMonths || 0 }}개월</strong>
             </div>
           </div>
 
@@ -957,6 +1002,31 @@ const autoCalculateInterestAndPayment = () => {
 .input-row-flex {
   display: flex;
   gap: 8px;
+}
+
+.month-auto-calc-badge {
+  background: #fff5f5;
+  border: 1px solid #ffcdd2;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-top: -4px;
+}
+
+.month-auto-calc-badge .badge-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #e53935;
+}
+
+.month-auto-calc-badge .badge-content {
+  font-size: 0.82rem;
+  color: #444;
+  margin-top: 2px;
+}
+
+.month-auto-calc-badge .badge-content strong {
+  color: #b71c1c;
+  font-size: 0.86rem;
 }
 
 .flex-1 {

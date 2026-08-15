@@ -62,6 +62,8 @@ export interface DebtItem {
   monthlyInterest: number; // 월 이자액
   totalMonths: number; // 총 기간 (개월)
   remainingMonths: number; // 남은 개월 수
+  startDate?: string; // 시작 날짜 (YYYY-MM-DD)
+  endDate?: string; // 만기/상환 완료 날짜 (YYYY-MM-DD)
   excludeFromStats?: boolean; // 상단 통계 합산 제외 여부
   memo?: string;
   lastPaidYearMonth?: string; // 최근 상환 처리한 년월 (예: "2026-08")
@@ -78,6 +80,8 @@ export interface SavingItem {
   monthlyInterest: number; // 월 예상 이자 수익 (원)
   totalMonths: number; // 총 기간 (개월)
   remainingMonths: number; // 남은 만기 개월 수 (개월)
+  startDate?: string; // 시작 날짜 (YYYY-MM-DD)
+  endDate?: string; // 만기/상환 완료 날짜 (YYYY-MM-DD)
   excludeFromStats?: boolean; // 상단 통계 합산 제외 여부
   memo?: string;
   lastPaidYearMonth?: string; // 최근 불입 처리한 년월 (예: "2026-08")
@@ -335,6 +339,8 @@ export const useCoupleStore = defineStore("couple", () => {
         monthlyInterest: Number(debtData.monthlyInterest) || 0,
         totalMonths: Number(debtData.totalMonths) || 12,
         remainingMonths: Number(debtData.remainingMonths) || 12,
+        startDate: debtData.startDate || "",
+        endDate: debtData.endDate || "",
         memo: debtData.memo || "",
       };
       debts.value.push(newDebt);
@@ -389,6 +395,8 @@ export const useCoupleStore = defineStore("couple", () => {
         monthlyInterest: Number(savingData.monthlyInterest) || 0,
         totalMonths: Number(savingData.totalMonths) || 12,
         remainingMonths: Number(savingData.remainingMonths) || 12,
+        startDate: savingData.startDate || "",
+        endDate: savingData.endDate || "",
         excludeFromStats: savingData.excludeFromStats || false,
         memo: savingData.memo || "",
       };

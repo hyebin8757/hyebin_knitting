@@ -62,6 +62,13 @@ const totalMonthlyInterestSum = computed(() => {
 const showModal = ref(false);
 const isEditMode = ref(false);
 
+const getTodayStr = () => new Date().toISOString().split("T")[0];
+const getFutureDateStr = (months: number) => {
+  const d = new Date();
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString().split("T")[0];
+};
+
 const editingSaving = ref<Partial<SavingItem>>({
   owner: '공동',
   title: '',
@@ -70,10 +77,32 @@ const editingSaving = ref<Partial<SavingItem>>({
   interestRate: 0,
   monthlyPayment: 0,
   monthlyInterest: 0,
-  totalMonths: 0,
-  remainingMonths: 0,
+  totalMonths: 12,
+  remainingMonths: 12,
+  startDate: getTodayStr(),
+  endDate: getFutureDateStr(12),
   excludeFromStats: false,
   memo: '',
+});
+
+const calculateSavingMonths = () => {
+  const start = editingSaving.value.startDate;
+  const end = editingSaving.value.endDate;
+  if (!start || !end) return;
+
+  const sDate = new Date(start);
+  const eDate = new Date(end);
+  const now = new Date();
+
+  const totalM = (eDate.getFullYear() - sDate.getFullYear()) * 12 + (eDate.getMonth() - sDate.getMonth());
+  editingSaving.value.totalMonths = Math.max(1, totalM);
+
+  const remM = (eDate.getFullYear() - now.getFullYear()) * 12 + (eDate.getMonth() - now.getMonth());
+  editingSaving.value.remainingMonths = Math.max(0, Math.min(editingSaving.value.totalMonths, remM));
+};
+
+watch(() => [editingSaving.value.startDate, editingSaving.value.endDate], () => {
+  calculateSavingMonths();
 });
 
 const openAddModal = () => {
@@ -85,8 +114,10 @@ const openAddModal = () => {
     interestRate: 0,
     monthlyPayment: 0,
     monthlyInterest: 0,
-    totalMonths: 0,
-    remainingMonths: 0,
+    totalMonths: 12,
+    remainingMonths: 12,
+    startDate: getTodayStr(),
+    endDate: getFutureDateStr(12),
     excludeFromStats: false,
     memo: '',
   };
@@ -95,7 +126,12 @@ const openAddModal = () => {
 };
 
 const openEditModal = (item: SavingItem) => {
-  editingSaving.value = { ...item };
+  editingSaving.value = {
+    ...item,
+    startDate: item.startDate || getTodayStr(),
+    endDate: item.endDate || getFutureDateStr(item.remainingMonths || 12),
+  };
+  calculateSavingMonths();
   isEditMode.value = true;
   showModal.value = true;
 };
@@ -371,12 +407,21 @@ const autoCalculateInterest = () => {
 
           <div class="input-row-flex">
             <div class="input-group flex-1">
-              <label>총 약정 기간 (개월)</label>
-              <input v-model.number="editingSaving.totalMonths" type="number" min="0" step="1" placeholder="12" />
+              <label>적금 시작일</label>
+              <input v-model="editingSaving.startDate" type="date" />
             </div>
             <div class="input-group flex-1">
-              <label>남은 만기 개월 수 (개월)</label>
-              <input v-model.number="editingSaving.remainingMonths" type="number" min="0" step="1" placeholder="12" />
+              <label>적금 만기일</label>
+              <input v-model="editingSaving.endDate" type="date" />
+            </div>
+          </div>
+
+          <!-- Auto Month Calculation Info Badge -->
+          <div class="month-auto-calc-badge blue">
+            <div class="badge-title">✨ 개월 수 자동 계산</div>
+            <div class="badge-content">
+              총 약정 기간 <strong>{{ editingSaving.totalMonths || 0 }}개월</strong> 중
+              남은 기간 <strong>{{ editingSaving.remainingMonths || 0 }}개월</strong>
             </div>
           </div>
 
@@ -849,11 +894,12 @@ const autoCalculateInterest = () => {
 }
 
 .input-group input[type="text"],
-.input-group input[type="number"] {
+.input-group input[type="number"],
+.input-group input[type="date"] {
   border: 1px solid #ddd;
   border-radius: 12px;
   padding: 9px 12px;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   outline: none;
 }
 
@@ -864,6 +910,31 @@ const autoCalculateInterest = () => {
 .input-row-flex {
   display: flex;
   gap: 10px;
+}
+
+.month-auto-calc-badge {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-top: -4px;
+}
+
+.month-auto-calc-badge .badge-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #0284c7;
+}
+
+.month-auto-calc-badge .badge-content {
+  font-size: 0.82rem;
+  color: #444;
+  margin-top: 2px;
+}
+
+.month-auto-calc-badge .badge-content strong {
+  color: #0369a1;
+  font-size: 0.86rem;
 }
 
 .flex-1 {
