@@ -75,6 +75,8 @@ const defaultCategoryNames = [
   "보증금 이자",
 ];
 
+const initialStateJson = ref("");
+
 const openEditModalForMonth = (month: number) => {
   editingMonth.value = month;
   const rec = coupleStore.getUtilityRecord(selectedYear.value, month);
@@ -96,6 +98,13 @@ const openEditModalForMonth = (month: number) => {
   );
 
   editingMemo.value = rec.memo || "";
+  
+  // 모달 오픈 시점의 초기 상태 스냅샷 저장 (수정 변경 여부 정밀 비교용)
+  initialStateJson.value = JSON.stringify({
+    items: editingItems.value,
+    memo: editingMemo.value,
+  });
+
   showEditModal.value = true;
 };
 
@@ -191,10 +200,13 @@ const modalPerPerson = computed(() => {
   return Math.round(modalTotalSum.value / 2);
 });
 
-// Unsaved changes guard: true if any amount > 0 or memo filled
+// Unsaved changes guard: true ONLY if user actually modified amounts, categories or memo
 const hasUnsavedChanges = computed(() => {
-  const anyAmount = editingItems.value.some((item) => Number(item.amount) > 0);
-  return anyAmount || editingMemo.value.trim().length > 0;
+  const currentJson = JSON.stringify({
+    items: editingItems.value,
+    memo: editingMemo.value,
+  });
+  return currentJson !== initialStateJson.value;
 });
 
 const handleCloseModal = () => {
