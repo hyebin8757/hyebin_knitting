@@ -496,16 +496,36 @@ export const useCoupleStore = defineStore("couple", () => {
   const isLoaded = ref(false);
 
   // --- Supabase Sync & Fetch ---
+  const syncTimers: Record<string, any> = {};
+
   const syncToSupabase = async (key: string, data: any) => {
     try {
       if (typeof window !== "undefined") {
+        // 1. 메인 로컬스토리지 즉시 반영 (0ms 지연)
         localStorage.setItem(`couple_${key}`, JSON.stringify(data));
+
+        // 2. 2중 안전 데이터 백업 락 (데이터가 유효하고 비어있지 않을 경우 백업 스냅샷 자동 보관)
+        if (Array.isArray(data) && data.length > 0) {
+          localStorage.setItem(`couple_backup_${key}`, JSON.stringify(data));
+        }
       }
-      await supabase.from("couple_data").upsert({
-        id: key,
-        content: data,
-        updated_at: new Date().toISOString(),
-      });
+
+      // 3. Supabase 서버 저장 300ms 디바운스로 네트워크 병목 제거 & 저장 안정성 향상
+      if (syncTimers[key]) {
+        clearTimeout(syncTimers[key]);
+      }
+
+      syncTimers[key] = setTimeout(async () => {
+        try {
+          await supabase.from("couple_data").upsert({
+            id: key,
+            content: data,
+            updated_at: new Date().toISOString(),
+          });
+        } catch (err) {
+          console.warn(`[Supabase Sync Warning] Key: ${key}`, err);
+        }
+      }, 300);
     } catch (e) {
       // Fallback local persistence
     }
@@ -532,31 +552,39 @@ export const useCoupleStore = defineStore("couple", () => {
 
   const fetchAllData = async () => {
     try {
-      // 1. 먼저 localStorage에 남아있는 캐시 데이터를 안전하게 선로드 (Offline/Zero-data 방지)
+      // 1. 먼저 localStorage 및 2중 백업 스냅샷에서 캐시 데이터를 안전하게 선로드 (Offline/Zero-data 방지)
       if (typeof window !== "undefined") {
-        const localLivingCats = localStorage.getItem("couple_livingCategories");
-        if (localLivingCats) livingCategories.value = JSON.parse(localLivingCats);
+        const loadWithBackup = (key: string) => {
+          const primary = localStorage.getItem(`couple_${key}`);
+          if (primary) return JSON.parse(primary);
+          const backup = localStorage.getItem(`couple_backup_${key}`);
+          if (backup) return JSON.parse(backup);
+          return null;
+        };
 
-        const localCustomUtil = localStorage.getItem("couple_customUtilityCategories");
-        if (localCustomUtil) customUtilityCategories.value = JSON.parse(localCustomUtil);
+        const localLivingCats = loadWithBackup("livingCategories");
+        if (localLivingCats) livingCategories.value = localLivingCats;
 
-        const localDdays = localStorage.getItem("couple_ddays");
-        if (localDdays) ddays.value = JSON.parse(localDdays);
+        const localCustomUtil = loadWithBackup("customUtilityCategories");
+        if (localCustomUtil) customUtilityCategories.value = localCustomUtil;
 
-        const localUtils = localStorage.getItem("couple_utilityRecords");
-        if (localUtils) utilityRecords.value = JSON.parse(localUtils);
+        const localDdays = loadWithBackup("ddays");
+        if (localDdays) ddays.value = localDdays;
 
-        const localLiving = localStorage.getItem("couple_livingRecords");
-        if (localLiving) livingRecords.value = JSON.parse(localLiving);
+        const localUtils = loadWithBackup("utilityRecords");
+        if (localUtils) utilityRecords.value = localUtils;
 
-        const localDebts = localStorage.getItem("couple_debts");
-        if (localDebts) debts.value = JSON.parse(localDebts);
+        const localLiving = loadWithBackup("livingRecords");
+        if (localLiving) livingRecords.value = localLiving;
 
-        const localSavings = localStorage.getItem("couple_savings");
-        if (localSavings) savings.value = JSON.parse(localSavings);
+        const localDebts = loadWithBackup("debts");
+        if (localDebts) debts.value = localDebts;
 
-        const localSchedules = localStorage.getItem("couple_schedules");
-        if (localSchedules) schedules.value = JSON.parse(localSchedules);
+        const localSavings = loadWithBackup("savings");
+        if (localSavings) savings.value = localSavings;
+
+        const localSchedules = loadWithBackup("schedules");
+        if (localSchedules) schedules.value = localSchedules;
       }
 
       // 2. Supabase 데이터 조회
