@@ -483,17 +483,6 @@ const autoCalculateInterestAndPayment = () => {
             </div>
           </div>
 
-          <div class="input-row-flex">
-            <div class="input-group flex-1">
-              <label>총 대출 기간 (개월)</label>
-              <input v-model.number="editingDebt.totalMonths" type="number" min="1" step="1" placeholder="60" />
-            </div>
-            <div class="input-group flex-1">
-              <label>남은 개월 수 (개월)</label>
-              <input v-model.number="editingDebt.remainingMonths" type="number" min="0" step="1" placeholder="43" />
-            </div>
-          </div>
-
           <div class="input-group">
             <label>메모</label>
             <input v-model="editingDebt.memo" type="text" placeholder="예: 매월 15일 이체" />

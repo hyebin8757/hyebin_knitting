@@ -434,17 +434,6 @@ const autoCalculateInterest = () => {
             </div>
           </div>
 
-          <div class="input-row-flex">
-            <div class="input-group flex-1">
-              <label>총 약정 기간 (개월)</label>
-              <input v-model.number="editingSaving.totalMonths" type="number" min="1" step="1" placeholder="12" />
-            </div>
-            <div class="input-group flex-1">
-              <label>남은 만기 개월 수 (개월)</label>
-              <input v-model.number="editingSaving.remainingMonths" type="number" min="0" step="1" placeholder="12" />
-            </div>
-          </div>
-
           <div class="input-group">
             <label>메모</label>
             <input v-model="editingSaving.memo" type="text" placeholder="예: 국민은행 자동이체 10일" />
