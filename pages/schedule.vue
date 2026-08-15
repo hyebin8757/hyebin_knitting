@@ -59,6 +59,8 @@ const monthSchedules = computed(() => {
 const showModal = ref(false);
 const isEditMode = ref(false);
 
+useBodyScrollLock(showModal);
+
 const editingSchedule = ref<Partial<ScheduleItem>>({
   owner: '공동',
   title: '',

@@ -211,6 +211,11 @@ onBeforeUnmount(() => {
   margin-left: 2px;
 }
 
+:global(body.modal-open) {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
 /* Main Body */
 .couple-main-body {
   flex: 1;

@@ -69,6 +69,8 @@ const handleDeleteCategory = (catName: string) => {
 const showItemModal = ref(false);
 const isEditMode = ref(false);
 
+useBodyScrollLock(showItemModal);
+
 const editingItem = ref<Partial<LivingCategoryItem>>({
   category: "식비",
   title: "",

@@ -62,6 +62,8 @@ const totalMonthlyInterestSum = computed(() => {
 const showModal = ref(false);
 const isEditMode = ref(false);
 
+useBodyScrollLock(showModal);
+
 const getTodayStr = () => new Date().toISOString().split("T")[0];
 const addMonthsToDateStr = (dateStr: string, months: number): string => {
   const d = new Date(dateStr || Date.now());

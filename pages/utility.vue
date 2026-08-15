@@ -57,6 +57,9 @@ const showAddCatSubModal = ref(false);
 const newCatNameInput = ref("");
 const addCatToAllMonths = ref(true); // 기본값: 전체 월 일괄 등록
 
+const isAnyModalOpen = computed(() => showEditModal.value || showAddCatSubModal.value || showRemoveOptionModal.value);
+useBodyScrollLock(isAnyModalOpen);
+
 // Standard default categories
 const defaultCategoryNames = [
   "전기세",

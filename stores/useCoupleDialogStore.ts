@@ -60,6 +60,10 @@ export const useCoupleDialogStore = defineStore("coupleDialog", () => {
     }
   };
 
+  if (typeof window !== "undefined") {
+    useBodyScrollLock(isOpen);
+  }
+
   const close = () => {
     isOpen.value = false;
   };
