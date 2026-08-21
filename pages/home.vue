@@ -64,7 +64,11 @@ const utilityPerPerson = computed(() => coupleStore.getUtilityPerPerson(currentU
 
 // Living summary
 const currentLivingRec = computed(() => coupleStore.getLivingRecord(currentYear, currentMonth));
-const totalSpent = computed(() => currentLivingRec.value.items.reduce((sum, i) => sum + Number(i.amount), 0));
+const totalSpent = computed(() =>
+  currentLivingRec.value.items
+    .filter((i) => i.includeInBalance !== false)
+    .reduce((sum, i) => sum + Number(i.amount), 0)
+);
 const remainingLiving = computed(() => currentLivingRec.value.targetSavings - totalSpent.value);
 
 // Debts summary (소유자별 구분 및 정규화 매칭)
