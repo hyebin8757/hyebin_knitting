@@ -282,14 +282,13 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 
       <!-- Living Summary Dashboard -->
       <div class="savings-summary-box">
-        <!-- 전월 이월금 안내 뱃지 (가로 정렬 2-Column 바) -->
+        <!-- 전월 이월금 슬림 좌측 정렬 안내 바 -->
         <div v-if="carriedOverBalance !== 0" class="carryover-notice">
-          <span class="carryover-tag">📦 {{ selectedMonth === 1 ? 12 : selectedMonth - 1 }}월 이월금</span>
-          <span class="carryover-val" :class="carriedOverBalance > 0 ? 'plus' : 'minus'">
-            {{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원
+          <i class="material-icons">swap_right_circle</i>
+          <span>
+            전월({{ selectedMonth === 1 ? 12 : selectedMonth - 1 }}월) 이월금
+            <strong :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">{{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원</strong> 반영 (총 가용 {{ totalAvailableMoney.toLocaleString() }}원)
           </span>
-          <span class="carryover-divider">│</span>
-          <span class="total-avail">총 가용 <strong>{{ totalAvailableMoney.toLocaleString() }}원</strong></span>
         </div>
 
         <div class="metrics-grid">
@@ -1452,50 +1451,29 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   flex-shrink: 0;
 }
 
-/* 전월 이월금 안내 박스 (가로 2-Column 바 스타일링) */
+/* 전월 이월금 슬림 좌측 정렬 안내 바 */
 .carryover-notice {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: #e8f5e9;
-  border: 1px solid #c8e6c9;
-  border-radius: 12px;
-  padding: 8px 12px;
-  font-size: 0.82rem;
-  color: #2e7d32;
-  font-weight: 700;
+  justify-content: flex-start;
+  gap: 6px;
+  background: #f0fdf4;
+  border: 1px solid #dcfce7;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  color: #166534;
+  font-weight: 600;
+  text-align: left;
+  line-height: 1.3;
+  word-break: keep-all;
   white-space: nowrap;
 }
 
-.carryover-tag {
-  background: #2e7d32;
-  color: #ffffff;
-  padding: 2px 7px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.carryover-val {
-  font-weight: 800;
-}
-
-.carryover-val.plus {
-  color: #2e7d32;
-}
-
-.carryover-val.minus {
-  color: #e53935;
-}
-
-.carryover-divider {
-  color: #a5d6a7;
-  font-size: 0.75rem;
-}
-
-.total-avail strong {
-  color: #1b5e20;
+.carryover-notice i {
+  font-size: 1rem;
+  color: #22c55e;
+  flex-shrink: 0;
 }
 </style>
 
