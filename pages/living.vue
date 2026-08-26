@@ -282,13 +282,12 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 
       <!-- Living Summary Dashboard -->
       <div class="savings-summary-box">
-        <!-- 전월 이월금 안내 뱃지 -->
+        <!-- 전월 이월금 안내 뱃지 (단일행 깔끔 포맷팅) -->
         <div v-if="carriedOverBalance !== 0" class="carryover-notice">
           <i class="material-icons">swap_right_circle</i>
           <span>
             전월({{ selectedMonth === 1 ? 12 : selectedMonth - 1 }}월) 이월금
-            <strong :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">{{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원</strong>이 반영되어 총 가용 금액은
-            <strong class="text-emerald-700">{{ totalAvailableMoney.toLocaleString() }}원</strong>입니다.
+            <strong :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">{{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원</strong> 반영 (총 가용 {{ totalAvailableMoney.toLocaleString() }}원)
           </span>
         </div>
 
@@ -1450,17 +1449,20 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   gap: 6px;
   background: #e8f5e9;
   border: 1px solid #c8e6c9;
-  border-radius: 14px;
-  padding: 10px 14px;
-  font-size: 0.82rem;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
   color: #2e7d32;
   font-weight: 700;
   text-align: center;
-  line-height: 1.4;
+  word-break: keep-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .carryover-notice i {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: #4caf50;
   flex-shrink: 0;
 }
