@@ -282,13 +282,14 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 
       <!-- Living Summary Dashboard -->
       <div class="savings-summary-box">
-        <!-- 전월 이월금 안내 뱃지 (단일행 깔끔 포맷팅) -->
+        <!-- 전월 이월금 안내 뱃지 (가로 정렬 2-Column 바) -->
         <div v-if="carriedOverBalance !== 0" class="carryover-notice">
-          <i class="material-icons">swap_right_circle</i>
-          <span>
-            전월({{ selectedMonth === 1 ? 12 : selectedMonth - 1 }}월) 이월금
-            <strong :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">{{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원</strong> 반영 (총 가용 {{ totalAvailableMoney.toLocaleString() }}원)
+          <span class="carryover-tag">📦 {{ selectedMonth === 1 ? 12 : selectedMonth - 1 }}월 이월금</span>
+          <span class="carryover-val" :class="carriedOverBalance > 0 ? 'plus' : 'minus'">
+            {{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원
           </span>
+          <span class="carryover-divider">│</span>
+          <span class="total-avail">총 가용 <strong>{{ totalAvailableMoney.toLocaleString() }}원</strong></span>
         </div>
 
         <div class="metrics-grid">
@@ -303,13 +304,17 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 
           <!-- Spent Amount Column -->
           <div class="metric-card spent">
-            <div class="metric-label">지출 (잔액계산 포함분)</div>
+            <div class="metric-label">
+              <span>지출 금액</span>
+            </div>
             <div class="metric-val text-rose-600">-{{ totalSpent.toLocaleString() }} <span class="unit">원</span></div>
           </div>
 
           <!-- Remaining Balance Column -->
           <div class="metric-card remaining">
-            <div class="metric-label">남은 잔액</div>
+            <div class="metric-label">
+              <span>남은 잔액</span>
+            </div>
             <div class="metric-val bold" :class="remainingBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'">
               {{ remainingBalance.toLocaleString() }} <span class="unit">원</span>
             </div>
@@ -730,11 +735,13 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 .metric-label {
   display: flex;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 3px;
   font-size: 0.78rem;
   color: #666;
   font-weight: 700;
-  margin-bottom: 3px;
+  height: 20px;
+  margin-bottom: 2px;
 }
 
 .metric-label .edit-icon {
@@ -746,6 +753,10 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   font-size: 1.05rem;
   font-weight: 900;
   color: #333;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .metric-val .unit {
@@ -1441,30 +1452,50 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   flex-shrink: 0;
 }
 
-/* 전월 이월금 안내 박스 */
+/* 전월 이월금 안내 박스 (가로 2-Column 바 스타일링) */
 .carryover-notice {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   background: #e8f5e9;
   border: 1px solid #c8e6c9;
   border-radius: 12px;
   padding: 8px 12px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: #2e7d32;
   font-weight: 700;
-  text-align: center;
-  word-break: keep-all;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.carryover-notice i {
-  font-size: 1.05rem;
-  color: #4caf50;
-  flex-shrink: 0;
+.carryover-tag {
+  background: #2e7d32;
+  color: #ffffff;
+  padding: 2px 7px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.carryover-val {
+  font-weight: 800;
+}
+
+.carryover-val.plus {
+  color: #2e7d32;
+}
+
+.carryover-val.minus {
+  color: #e53935;
+}
+
+.carryover-divider {
+  color: #a5d6a7;
+  font-size: 0.75rem;
+}
+
+.total-avail strong {
+  color: #1b5e20;
 }
 </style>
 
