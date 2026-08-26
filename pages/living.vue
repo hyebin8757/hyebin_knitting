@@ -287,14 +287,13 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
           <i class="material-icons">swap_right_circle</i>
           <span>
             전월({{ selectedMonth === 1 ? 12 : selectedMonth - 1 }}월) 이월금
-            <strong :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">
-              {{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원이
-            </strong> 이번 달 잔액에 반영되었습니다.
+            <strong :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">{{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원</strong>이 반영되어 총 가용 금액은
+            <strong class="text-emerald-700">{{ totalAvailableMoney.toLocaleString() }}원</strong>입니다.
           </span>
         </div>
 
-        <div class="metrics-grid" :class="{ 'has-carryover': carriedOverBalance !== 0 }">
-          <!-- 1. Collected Amount Column -->
+        <div class="metrics-grid">
+          <!-- Collected Amount Column -->
           <div class="metric-card collected" @click="openTargetModal">
             <div class="metric-label">
               <span>이번 달 모인 금액</span>
@@ -303,25 +302,13 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
             <div class="metric-val bold">{{ record.targetSavings.toLocaleString() }} <span class="unit">원</span></div>
           </div>
 
-          <!-- 2. Carryover Amount Column (Only when carryover !== 0) -->
-          <div v-if="carriedOverBalance !== 0" class="metric-card carryover">
-            <div class="metric-label">
-              <span>전월 이월금</span>
-            </div>
-            <div class="metric-val bold" :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">
-              {{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }} <span class="unit">원</span>
-            </div>
-          </div>
-
-          <!-- 3. Spent Amount Column -->
+          <!-- Spent Amount Column -->
           <div class="metric-card spent">
             <div class="metric-label">지출 (잔액계산 포함분)</div>
-            <div class="metric-val text-rose-600">
-              {{ totalSpent > 0 ? `-${totalSpent.toLocaleString()}` : '0' }} <span class="unit">원</span>
-            </div>
+            <div class="metric-val text-rose-600">-{{ totalSpent.toLocaleString() }} <span class="unit">원</span></div>
           </div>
 
-          <!-- 4. Remaining Balance Column -->
+          <!-- Remaining Balance Column -->
           <div class="metric-card remaining">
             <div class="metric-label">남은 잔액</div>
             <div class="metric-val bold" :class="remainingBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'">
@@ -715,15 +702,12 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  gap: 0;
   background: #f4fbf7;
   border: 1px solid #e0f2f1;
   border-radius: 18px;
-  padding: 12px 6px;
-}
-
-.metrics-grid.has-carryover {
-  grid-template-columns: repeat(4, 1fr);
+  padding: 14px 6px;
+  align-items: stretch;
 }
 
 .metric-card {
@@ -732,52 +716,16 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   align-items: center;
   justify-content: center;
   text-align: center;
+  padding: 0 4px;
 }
 
 .metric-card.collected {
   cursor: pointer;
   border-right: 1px dashed #b2dfdb;
-  padding-right: 2px;
-}
-
-.metric-card.carryover {
-  border-right: 1px dashed #b2dfdb;
-  padding-right: 2px;
 }
 
 .metric-card.spent {
   border-right: 1px dashed #b2dfdb;
-  padding-right: 2px;
-}
-
-@media (max-width: 420px) {
-  .metrics-grid.has-carryover {
-    grid-template-columns: repeat(2, 1fr);
-    row-gap: 12px;
-    column-gap: 6px;
-    padding: 12px 8px;
-  }
-
-  .metrics-grid.has-carryover .metric-card.collected {
-    border-right: 1px dashed #b2dfdb;
-    border-bottom: 1px dashed #b2dfdb;
-    padding-bottom: 8px;
-  }
-
-  .metrics-grid.has-carryover .metric-card.carryover {
-    border-right: none;
-    border-bottom: 1px dashed #b2dfdb;
-    padding-bottom: 8px;
-  }
-
-  .metrics-grid.has-carryover .metric-card.spent {
-    border-right: 1px dashed #b2dfdb;
-    padding-top: 4px;
-  }
-
-  .metrics-grid.has-carryover .metric-card.remaining {
-    padding-top: 4px;
-  }
 }
 
 .metric-label {
@@ -1498,28 +1446,23 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 .carryover-notice {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   background: #e8f5e9;
   border: 1px solid #c8e6c9;
-  border-radius: 12px;
-  padding: 8px 12px;
-  font-size: 0.8rem;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
   color: #2e7d32;
   font-weight: 700;
+  text-align: center;
+  line-height: 1.4;
 }
 
 .carryover-notice i {
   font-size: 1.1rem;
   color: #4caf50;
   flex-shrink: 0;
-}
-
-.sub-carryover-info {
-  font-size: 0.7rem;
-  color: #2e7d32;
-  font-weight: 700;
-  margin-top: 3px;
-  letter-spacing: -0.3px;
 }
 </style>
 
