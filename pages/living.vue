@@ -288,31 +288,40 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
           <span>
             전월({{ selectedMonth === 1 ? 12 : selectedMonth - 1 }}월) 이월금
             <strong :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">
-              {{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원
-            </strong>이 이번 달 잔액에 반영되었습니다.
+              {{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원이
+            </strong> 이번 달 잔액에 반영되었습니다.
           </span>
         </div>
 
-        <div class="metrics-grid">
-          <!-- Collected Amount Column -->
+        <div class="metrics-grid" :class="{ 'has-carryover': carriedOverBalance !== 0 }">
+          <!-- 1. Collected Amount Column -->
           <div class="metric-card collected" @click="openTargetModal">
             <div class="metric-label">
               <span>이번 달 모인 금액</span>
               <i class="material-icons edit-icon">edit</i>
             </div>
             <div class="metric-val bold">{{ record.targetSavings.toLocaleString() }} <span class="unit">원</span></div>
-            <div v-if="carriedOverBalance !== 0" class="sub-carryover-info">
-              (이월 포함 {{ totalAvailableMoney.toLocaleString() }}원)
+          </div>
+
+          <!-- 2. Carryover Amount Column (Only when carryover !== 0) -->
+          <div v-if="carriedOverBalance !== 0" class="metric-card carryover">
+            <div class="metric-label">
+              <span>전월 이월금</span>
+            </div>
+            <div class="metric-val bold" :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">
+              {{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }} <span class="unit">원</span>
             </div>
           </div>
 
-          <!-- Spent Amount Column -->
+          <!-- 3. Spent Amount Column -->
           <div class="metric-card spent">
             <div class="metric-label">지출 (잔액계산 포함분)</div>
-            <div class="metric-val text-rose-600">-{{ totalSpent.toLocaleString() }} <span class="unit">원</span></div>
+            <div class="metric-val text-rose-600">
+              {{ totalSpent > 0 ? `-${totalSpent.toLocaleString()}` : '0' }} <span class="unit">원</span>
+            </div>
           </div>
 
-          <!-- Remaining Balance Column -->
+          <!-- 4. Remaining Balance Column -->
           <div class="metric-card remaining">
             <div class="metric-label">남은 잔액</div>
             <div class="metric-val bold" :class="remainingBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'">
@@ -706,17 +715,22 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: 4px;
   background: #f4fbf7;
   border: 1px solid #e0f2f1;
   border-radius: 18px;
-  padding: 12px 8px;
+  padding: 12px 6px;
+}
+
+.metrics-grid.has-carryover {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .metric-card {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
@@ -726,9 +740,44 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   padding-right: 2px;
 }
 
+.metric-card.carryover {
+  border-right: 1px dashed #b2dfdb;
+  padding-right: 2px;
+}
+
 .metric-card.spent {
   border-right: 1px dashed #b2dfdb;
   padding-right: 2px;
+}
+
+@media (max-width: 420px) {
+  .metrics-grid.has-carryover {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 12px;
+    column-gap: 6px;
+    padding: 12px 8px;
+  }
+
+  .metrics-grid.has-carryover .metric-card.collected {
+    border-right: 1px dashed #b2dfdb;
+    border-bottom: 1px dashed #b2dfdb;
+    padding-bottom: 8px;
+  }
+
+  .metrics-grid.has-carryover .metric-card.carryover {
+    border-right: none;
+    border-bottom: 1px dashed #b2dfdb;
+    padding-bottom: 8px;
+  }
+
+  .metrics-grid.has-carryover .metric-card.spent {
+    border-right: 1px dashed #b2dfdb;
+    padding-top: 4px;
+  }
+
+  .metrics-grid.has-carryover .metric-card.remaining {
+    padding-top: 4px;
+  }
 }
 
 .metric-label {
