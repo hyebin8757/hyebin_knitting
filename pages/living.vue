@@ -148,7 +148,17 @@ const filteredItems = computed(() => {
 });
 
 // Calculations
-// 잔액 계산에 포함(책크 O)된 항목만 합산
+// 전월 이월금 (전월 잔액)
+const carriedOverBalance = computed(() => {
+  return coupleStore.getCarriedOverLivingBalance(selectedYear.value, selectedMonth.value);
+});
+
+// 이번 달 총 가용 금액 (이번 달 모인 금액 + 전월 이월금)
+const totalAvailableMoney = computed(() => {
+  return record.value.targetSavings + carriedOverBalance.value;
+});
+
+// 잔액 계산에 포함(체크 O)된 항목만 합산
 const totalSpent = computed(() => {
   return record.value.items
     .filter((item) => item.includeInBalance !== false)
@@ -167,14 +177,16 @@ const totalExcluded = computed(() => {
     .reduce((sum, item) => sum + Number(item.amount), 0);
 });
 
+// 최종 남은 잔액 (총 가용 금액 - 지출)
 const remainingBalance = computed(() => {
-  return record.value.targetSavings - totalSpent.value;
+  return totalAvailableMoney.value - totalSpent.value;
 });
 
+// 지출 비율 (총 가용 금액 대비 지출 퍼센트)
 const spentPercentage = computed(() => {
-  if (!record.value.targetSavings || record.value.targetSavings === 0) return 0;
-  const pct = Math.round((totalSpent.value / record.value.targetSavings) * 100);
-  return Math.min(pct, 100);
+  if (!totalAvailableMoney.value || totalAvailableMoney.value <= 0) return 0;
+  const pct = Math.round((totalSpent.value / totalAvailableMoney.value) * 100);
+  return Math.min(Math.max(pct, 0), 100);
 });
 
 // 카테고리별 지출 금액 집계
@@ -270,6 +282,17 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
 
       <!-- Living Summary Dashboard -->
       <div class="savings-summary-box">
+        <!-- 전월 이월금 안내 뱃지 -->
+        <div v-if="carriedOverBalance !== 0" class="carryover-notice">
+          <i class="material-icons">swap_right_circle</i>
+          <span>
+            전월({{ selectedMonth === 1 ? 12 : selectedMonth - 1 }}월) 이월금
+            <strong :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">
+              {{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원
+            </strong>이 이번 달 잔액에 반영되었습니다.
+          </span>
+        </div>
+
         <div class="metrics-grid">
           <!-- Collected Amount Column -->
           <div class="metric-card collected" @click="openTargetModal">
@@ -278,6 +301,9 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
               <i class="material-icons edit-icon">edit</i>
             </div>
             <div class="metric-val bold">{{ record.targetSavings.toLocaleString() }} <span class="unit">원</span></div>
+            <div v-if="carriedOverBalance !== 0" class="sub-carryover-info">
+              (이월 포함 {{ totalAvailableMoney.toLocaleString() }}원)
+            </div>
           </div>
 
           <!-- Spent Amount Column -->
@@ -1417,6 +1443,34 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   font-size: 1rem;
   color: #f9a825;
   flex-shrink: 0;
+}
+
+/* 전월 이월금 안내 박스 */
+.carryover-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.carryover-notice i {
+  font-size: 1.1rem;
+  color: #4caf50;
+  flex-shrink: 0;
+}
+
+.sub-carryover-info {
+  font-size: 0.7rem;
+  color: #2e7d32;
+  font-weight: 700;
+  margin-top: 3px;
+  letter-spacing: -0.3px;
 }
 </style>
 

@@ -322,6 +322,53 @@ export const useCoupleStore = defineStore("couple", () => {
     }
   };
 
+  // 전월 이월금 (전월 잔액) 순차적 계산 헬퍼
+  const getCarriedOverLivingBalance = (targetYear: number, targetMonth: number) => {
+    if (!livingRecords.value || livingRecords.value.length === 0) return 0;
+
+    // 수집된 기록 중 가장 이른 년월 찾기
+    let minYear = targetYear;
+    let minMonth = targetMonth;
+
+    livingRecords.value.forEach((r) => {
+      if (r.year < minYear || (r.year === minYear && r.month < minMonth)) {
+        minYear = r.year;
+        minMonth = r.month;
+      }
+    });
+
+    // targetYear/targetMonth보다 이전 기록이 없으면 이월금 0
+    if (minYear > targetYear || (minYear === targetYear && minMonth >= targetMonth)) {
+      return 0;
+    }
+
+    // 가장 이른 년월부터 targetYear/targetMonth 직전 월까지 순차적으로 잔액 계산하여 이월
+    let currentCarryOver = 0;
+    let currY = minYear;
+    let currM = minMonth;
+
+    while (currY < targetYear || (currY === targetYear && currM < targetMonth)) {
+      const rec = livingRecords.value.find((r) => r.year === currY && r.month === currM);
+      const targetSavings = rec ? Number(rec.targetSavings) || 0 : 0;
+      const items = rec ? rec.items : [];
+
+      const spent = items
+        .filter((item) => item.includeInBalance !== false)
+        .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+      // (이번 달 모인 금액 + 전월 이월금) - 지출 = 이번 달 최종 잔액 (다음 달로 이월됨)
+      currentCarryOver = (targetSavings + currentCarryOver) - spent;
+
+      currM++;
+      if (currM > 12) {
+        currM = 1;
+        currY++;
+      }
+    }
+
+    return currentCarryOver;
+  };
+
   // Debts CRUD
   const saveDebt = (debtData: Partial<DebtItem> & { id?: string }) => {
     if (debtData.id) {
@@ -708,6 +755,7 @@ export const useCoupleStore = defineStore("couple", () => {
     removeUtilityItemFromAllMonths,
     applyUtilityItemToAllMonths,
     getLivingRecord,
+    getCarriedOverLivingBalance,
     saveLivingTarget,
     saveLivingItem,
     deleteLivingItem,
