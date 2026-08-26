@@ -284,8 +284,7 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
       <div class="savings-summary-box">
         <!-- 전월 이월금 뱃지 (좌측 정렬 컴팩트 뱃지) -->
         <div v-if="carriedOverBalance !== 0" class="carryover-notice">
-          <i class="material-icons">swap_right_circle</i>
-          <span>전월({{ selectedMonth === 1 ? 12 : selectedMonth - 1 }}월) 이월금 <strong :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">{{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원</strong></span>
+          <span>📦 전월({{ selectedMonth === 1 ? 12 : selectedMonth - 1 }}월) 이월금 <strong :class="carriedOverBalance > 0 ? 'text-emerald-600' : 'text-rose-600'">{{ carriedOverBalance > 0 ? '+' : '' }}{{ carriedOverBalance.toLocaleString() }}원</strong></span>
         </div>
 
         <div class="metrics-grid">
@@ -1462,12 +1461,6 @@ const applyQuickAmountObj = (obj: any, key: string, delta: number) => {
   color: #2e7d32;
   font-weight: 700;
   margin-bottom: 2px;
-}
-
-.carryover-notice i {
-  font-size: 0.95rem;
-  color: #4caf50;
-  flex-shrink: 0;
 }
 </style>
 
