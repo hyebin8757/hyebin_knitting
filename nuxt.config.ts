@@ -41,7 +41,7 @@ const nuxtConfig: any = {
       htmlAttrs: {
         lang: "ko",
       },
-      title: "혜빈이와 먼작콩 | 스마트 가계부 & 스케줄",
+      title: "혜빈이와 먼작콩",
       charset: "utf-8",
       viewport:
         "width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, viewport-fit=cover",
@@ -50,23 +50,23 @@ const nuxtConfig: any = {
         {
           hid: "description",
           name: "description",
-          content: "혜빈이와 먼작콩 | 스마트 가계부 및 일정 관리 앱",
+          content: "혜빈이와 먼작콩",
         },
         {
           hid: "og:title",
           property: "og:title",
           content: "혜빈이와 먼작콩",
         },
-        { hid: "og:image", property: "og:image", content: "/image_og2.png" },
+        { hid: "og:image", property: "og:image", content: "/image_og3.png" },
         {
           hid: "og:description",
           property: "og:description",
-          content: "공과금, 생활비, 대출 이자 및 약속 일정 통합 관리",
+          content: "먼작콩의 뜨개 이야기",
         },
         { hid: "og:type", property: "og:type", content: "website" },
       ],
       script: [],
-      link: [{ rel: "icon", type: "image/png", href: "/favicon.png" }],
+      link: [{ rel: "icon", type: "image/png", href: "/favicon1.png" }],
     },
   },
 
