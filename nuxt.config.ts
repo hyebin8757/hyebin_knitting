@@ -41,7 +41,7 @@ const nuxtConfig: any = {
       htmlAttrs: {
         lang: "ko",
       },
-      title: "우주 ♥ 혜빈 | 커플 스마트 가계부 & 스케줄",
+      title: "혜빈이와 먼작콩 | 스마트 가계부 & 스케줄",
       charset: "utf-8",
       viewport:
         "width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, viewport-fit=cover",
@@ -50,13 +50,12 @@ const nuxtConfig: any = {
         {
           hid: "description",
           name: "description",
-          content:
-            "우주 ♥ 혜빈 🐾 땅콩이와 함께하는 커플 스마트 가계부 및 일정 관리 앱",
+          content: "혜빈이와 먼작콩 | 스마트 가계부 및 일정 관리 앱",
         },
         {
           hid: "og:title",
           property: "og:title",
-          content: "우주 ♥ 혜빈 | 우리 둘만의 공간",
+          content: "혜빈이와 먼작콩",
         },
         { hid: "og:image", property: "og:image", content: "/image_og2.png" },
         {

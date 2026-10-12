@@ -51,13 +51,12 @@ onBeforeUnmount(() => {
           <div class="header-content">
             <div class="brand-badge">
               <span class="heart-icon">💖</span>
-              <span class="brand-title">우리 둘만의 공간</span>
+              <span class="brand-title">혜빈이와 먼작콩</span>
             </div>
             <div class="couple-tag">
-              <span class="tag-pink">우주</span>
-              <span class="tag-heart">♥</span>
               <span class="tag-mint">혜빈</span>
-              <span class="tag-pet">🐾 땅콩</span>
+              <span class="tag-heart">♥</span>
+              <span class="tag-pet">🐾 먼작콩</span>
             </div>
           </div>
         </header>
