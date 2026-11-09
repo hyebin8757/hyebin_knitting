@@ -65,7 +65,9 @@ const nuxtConfig: any = {
         },
         { hid: "og:type", property: "og:type", content: "website" },
       ],
-      script: [],
+      script: [
+        { src: "https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js", defer: true },
+      ],
       link: [{ rel: "icon", type: "image/png", href: "/favicon1.png" }],
     },
   },
