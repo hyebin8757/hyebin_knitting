@@ -418,13 +418,35 @@ const loginWithKakaoSdk = () => {
     store.showAlert("카카오 SDK 로딩 중입니다. 잠시 후 다시 시도해 주세요.", { type: "warning" });
     return;
   }
-  const appKey = settingsForm.value.kakaoJsKey?.trim() || "539e6a00f074d209172922dd81d3f9b2";
-  if (!kakao.isInitialized()) {
-    try {
+
+  // 사용자가 입력한 JavaScript 키 확인
+  let appKey = settingsForm.value.kakaoJsKey?.trim();
+
+  // 토큰 칸에 32자리 앱 키(예: 767966...)를 넣으셨다면 자동으로 JavaScript 키로 활용
+  if (!appKey && settingsForm.value.kakaoAccessToken?.trim().length === 32) {
+    appKey = settingsForm.value.kakaoAccessToken.trim();
+    settingsForm.value.kakaoJsKey = appKey;
+  }
+
+  if (!appKey) {
+    store.showAlert("카카오 개발자센터의 'JavaScript 키'를 먼저 입력해주세요!\n\n확인 경로: 카카오 개발자센터(developers.kakao.com) ➔ 내 애플리케이션 ➔ 앱 키 ➔ JavaScript 키 (32자리)", {
+      title: "JavaScript 키 입력 필요",
+      type: "warning",
+    });
+    return;
+  }
+
+  try {
+    if (kakao.isInitialized && kakao.isInitialized()) {
+      if (typeof kakao.cleanup === "function") {
+        kakao.cleanup();
+      }
       kakao.init(appKey);
-    } catch (e) {
-      console.warn("Kakao init warning:", e);
+    } else {
+      kakao.init(appKey);
     }
+  } catch (e) {
+    console.warn("Kakao init warning:", e);
   }
 
   if (typeof kakao.Auth?.login === "function") {
@@ -434,6 +456,7 @@ const loginWithKakaoSdk = () => {
         if (authObj.access_token) {
           settingsForm.value.kakaoAccessToken = authObj.access_token;
           store.updateAdminSettings({
+            kakaoJsKey: appKey,
             kakaoAccessToken: authObj.access_token,
             kakaoAlertEnabled: true,
           });
@@ -444,20 +467,23 @@ const loginWithKakaoSdk = () => {
         }
       },
       fail: function (err: any) {
-        store.showAlert("카카오 로그인 취소 또는 오류:\n" + (err?.error_description || JSON.stringify(err)), {
-          title: "로그인 오류",
+        let errorMsg = err?.error_description || JSON.stringify(err);
+        if (errorMsg.includes("client_id") || errorMsg.includes("KOE001") || errorMsg.includes("KOE101")) {
+          errorMsg = "입력하신 카카오 JavaScript 키가 올바르지 않거나 도메인이 등록되지 않았습니다.\n\n카카오 개발자센터(developers.kakao.com)에서 아래 2가지를 확인해주세요:\n1. [내 애플리케이션] ➔ [앱 키]의 'JavaScript 키'가 맞는지 확인\n2. [플랫폼] ➔ [Web]에 사이트 주소('https://hyebinknitting.netlify.app')가 등록되어 있는지 확인";
+        }
+        store.showAlert(errorMsg, {
+          title: "카카오 로그인 오류",
           type: "error",
         });
       },
     });
   } else if (typeof kakao.Auth?.authorize === "function") {
-    // SDK v2일 경우 리다이렉트 로그인 지원
     kakao.Auth.authorize({
       redirectUri: window.location.href.split("#")[0].split("?")[0],
       scope: "talk_message",
     });
   } else {
-    store.showAlert("카카오 인증 모듈이 준비 중입니다. 잠시 후 다시 시도해 주시거나 아래 가이드에 따라 발급받으신 토큰을 입력창에 넣어주세요.", {
+    store.showAlert("카카오 인증 모듈이 준비 중입니다. 잠시 후 다시 시도해 주세요.", {
       type: "warning",
       title: "알림",
     });
@@ -1813,14 +1839,26 @@ const handleLogout = () => {
                 </div>
               </div>
 
-              <!-- 카카오 토큰 입력 및 원클릭 연동 버튼 -->
+              <!-- 카카오 키 & 토큰 입력 및 원클릭 연동 버튼 -->
               <div class="kakao-token-grid">
+                <div class="form-group mb-3">
+                  <label class="token-lbl">카카오 JavaScript 앱 키 (내 애플리케이션 ➔ 앱 키)</label>
+                  <input
+                    v-model="settingsForm.kakaoJsKey"
+                    type="text"
+                    placeholder="카카오 개발자센터의 JavaScript 키 (32자리) 입력"
+                    class="form-control font-mono"
+                  />
+                  <small class="text-muted" style="font-size: 11px; color: #888; display: block; margin-top: 4px;">
+                    * '카카오 로그인으로 1초 연동'을 누를 때 사용되는 앱 키입니다.
+                  </small>
+                </div>
                 <div class="form-group">
                   <label class="token-lbl">카카오톡 Access Token (액세스 토큰)</label>
                   <input
                     v-model="settingsForm.kakaoAccessToken"
                     type="text"
-                    placeholder="카카오 개발자센터에서 발급받은 액세스 토큰 붙여넣기"
+                    placeholder="카카오 로그인 연동 시 자동 입력되거나 토큰 직접 붙여넣기"
                     class="form-control font-mono"
                   />
                 </div>
