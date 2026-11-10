@@ -413,7 +413,7 @@ const testKakaoTalk = async () => {
 
 // 카카오 SDK 로그인 연동
 const loginWithKakaoSdk = () => {
-  const kakao = (typeof window !== "undefined" ? (window as any).Kakao : null);
+  const kakao = typeof window !== "undefined" ? (window as any).Kakao : null;
   if (!kakao) {
     store.showAlert("카카오 SDK 로딩 중입니다. 잠시 후 다시 시도해 주세요.", { type: "warning" });
     return;
@@ -427,28 +427,41 @@ const loginWithKakaoSdk = () => {
     }
   }
 
-  kakao.Auth.login({
-    scope: "talk_message",
-    success: function (authObj: any) {
-      if (authObj.access_token) {
-        settingsForm.value.kakaoAccessToken = authObj.access_token;
-        store.updateAdminSettings({
-          kakaoAccessToken: authObj.access_token,
-          kakaoAlertEnabled: true,
+  if (typeof kakao.Auth?.login === "function") {
+    kakao.Auth.login({
+      scope: "talk_message",
+      success: function (authObj: any) {
+        if (authObj.access_token) {
+          settingsForm.value.kakaoAccessToken = authObj.access_token;
+          store.updateAdminSettings({
+            kakaoAccessToken: authObj.access_token,
+            kakaoAlertEnabled: true,
+          });
+          store.showAlert("💛 카카오톡 로그인이 성공적으로 완료되었습니다!\n이제 '내 카톡으로 테스트 알림 보내기'를 눌러 확인해보세요.", {
+            title: "카카오 로그인 완료",
+            type: "success",
+          });
+        }
+      },
+      fail: function (err: any) {
+        store.showAlert("카카오 로그인 취소 또는 오류:\n" + (err?.error_description || JSON.stringify(err)), {
+          title: "로그인 오류",
+          type: "error",
         });
-        store.showAlert("💛 카카오톡 로그인이 성공적으로 완료되었습니다!\n이제 '내 카톡으로 테스트 알림 보내기'를 눌러 확인해보세요.", {
-          title: "카카오 로그인 완료",
-          type: "success",
-        });
-      }
-    },
-    fail: function (err: any) {
-      store.showAlert("카카오 로그인 취소 또는 오류:\n" + JSON.stringify(err), {
-        title: "로그인 오류",
-        type: "error",
-      });
-    },
-  });
+      },
+    });
+  } else if (typeof kakao.Auth?.authorize === "function") {
+    // SDK v2일 경우 리다이렉트 로그인 지원
+    kakao.Auth.authorize({
+      redirectUri: window.location.href.split("#")[0].split("?")[0],
+      scope: "talk_message",
+    });
+  } else {
+    store.showAlert("카카오 인증 모듈이 준비 중입니다. 잠시 후 다시 시도해 주시거나 아래 가이드에 따라 발급받으신 토큰을 입력창에 넣어주세요.", {
+      type: "warning",
+      title: "알림",
+    });
+  }
 };
 
 // 알림음 및 진동 테스트
