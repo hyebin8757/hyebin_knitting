@@ -452,6 +452,7 @@ const loginWithKakaoSdk = () => {
   if (typeof kakao.Auth?.login === "function") {
     kakao.Auth.login({
       scope: "talk_message",
+      throughTalk: false, // 💡 중요: PC/Mac 모바일 시뮬레이터에서 카카오톡 앱 intent 호출 방지 및 웹 팝업 강제
       success: function (authObj: any) {
         if (authObj.access_token) {
           settingsForm.value.kakaoAccessToken = authObj.access_token;
