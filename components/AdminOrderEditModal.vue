@@ -233,7 +233,8 @@ const handleSave = () => {
               <div v-if="form.customImage" class="photo-preview-box">
                 <img :src="form.customImage" alt="첨부 사진 미리보기" class="preview-img" />
                 <button type="button" class="btn-remove-photo" @click="removeCustomImage" title="사진 삭제">
-                  🗑️ 사진 삭제
+                  <i class="material-icons btn-del-icon">delete</i>
+                  <span>사진 삭제</span>
                 </button>
               </div>
 
@@ -256,7 +257,7 @@ const handleSave = () => {
             <div class="photo-btn-row">
               <button type="button" class="btn-upload-trigger" @click="triggerFileInput">
                 <i class="material-icons">add_photo_alternate</i>
-                <span>📁 사진 파일 / 앨범에서 선택</span>
+                <span>사진 파일 / 앨범에서 선택</span>
               </button>
             </div>
 
@@ -664,6 +665,9 @@ const handleSave = () => {
   position: absolute;
   top: 10px;
   right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: rgba(220, 38, 38, 0.88);
   color: #ffffff;
   border: none;
@@ -674,6 +678,10 @@ const handleSave = () => {
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transition: background 0.2s;
+}
+
+.btn-del-icon {
+  font-size: 0.95rem;
 }
 
 .btn-remove-photo:hover {

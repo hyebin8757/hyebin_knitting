@@ -10,6 +10,7 @@ import OrderLookupModal from "~/components/OrderLookupModal.vue";
 import ReviewWriteModal from "~/components/ReviewWriteModal.vue";
 import NotificationModal from "~/components/NotificationModal.vue";
 import CustomAlertModal from "~/components/CustomAlertModal.vue";
+import UserNoticeModal from "~/components/UserNoticeModal.vue";
 
 const route = useRoute();
 const store = useKnittingStore();
@@ -43,6 +44,7 @@ onMounted(() => {
 
       <!-- 전역 모달들 (알림 모달은 오직 관리자 페이지에서만 마운트) -->
       <NotificationModal v-if="isAdminRoute" />
+      <UserNoticeModal v-if="!isAdminRoute" />
       <FeedbackModal />
       <OrderLookupModal />
       <ReviewWriteModal />

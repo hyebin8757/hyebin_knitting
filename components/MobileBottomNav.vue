@@ -58,7 +58,7 @@ const isLoginPage = computed(() => route.path === "/admin/login");
         @click="store.switchAdminTab('inquiries')"
       >
         <div class="icon-wrap">
-          <i class="material-icons">chat</i>
+          <i class="material-icons">support_agent</i>
           <span v-if="store.unreadInquiriesCount > 0" class="nav-unread-badge bg-badge-green">
             {{ store.unreadInquiriesCount }}
           </span>
@@ -74,7 +74,7 @@ const isLoginPage = computed(() => route.path === "/admin/login");
         @click="store.switchAdminTab('reviews')"
       >
         <div class="icon-wrap">
-          <i class="material-icons">stars</i>
+          <i class="material-icons">photo_camera</i>
           <span v-if="store.reviews.length > 0" class="nav-unread-badge bg-badge-amber">
             {{ store.reviews.length }}
           </span>
@@ -90,7 +90,7 @@ const isLoginPage = computed(() => route.path === "/admin/login");
         @click="store.switchAdminTab('settings')"
       >
         <div class="icon-wrap">
-          <i class="material-icons">phonelink_ring</i>
+          <i class="material-icons">tune</i>
         </div>
         <span>알림설정</span>
       </button>
@@ -130,7 +130,7 @@ const isLoginPage = computed(() => route.path === "/admin/login");
         :class="{ active: store.isFeedbackModalOpen }"
         @click="store.isFeedbackModalOpen = true"
       >
-        <i class="material-icons">chat</i>
+        <i class="material-icons">support_agent</i>
         <span>의견/문의</span>
       </button>
     </template>

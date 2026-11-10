@@ -46,18 +46,18 @@ const handleQuickLookup = () => {
 
         <div class="hero-actions">
           <nuxt-link to="/order" class="btn-hero-primary">
-            <i class="material-icons">edit_note</i>
+            <i class="material-icons">shopping_bag</i>
             <span>뜨개옷 주문서 작성하기</span>
           </nuxt-link>
           <!-- 포토 후기 버튼 (추후 적용 예정으로 숨김 처리)
           <nuxt-link to="/reviews" class="btn-hero-secondary">
-            <i class="material-icons">rate_review</i>
+            <i class="material-icons">photo_camera</i>
             <span>생생 포토 후기 ({{ store.reviews.length }})</span>
           </nuxt-link>
           -->
           <button type="button" class="btn-hero-outline" @click="store.isFeedbackModalOpen = true">
-            <i class="material-icons">chat_bubble_outline</i>
-            <span>💌 의견 / 제작 문의하기</span>
+            <i class="material-icons">support_agent</i>
+            <span>의견 / 제작 문의하기</span>
           </button>
         </div>
       </div>
@@ -113,7 +113,12 @@ const handleQuickLookup = () => {
         </div>
 
         <div class="products-grid">
-          <div v-for="product in store.products" :key="product.id" class="product-card">
+          <div
+            v-for="product in store.products"
+            :id="`product-${product.id}`"
+            :key="product.id"
+            class="product-card"
+          >
             <!-- 이미지 스와이프 영역 (최대 5장 지원) -->
             <div class="img-wrap">
               <ProductImageSwipe
@@ -434,6 +439,17 @@ const handleQuickLookup = () => {
 .product-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 24px rgba(255, 117, 143, 0.15);
+}
+
+.product-card.product-card-highlight {
+  border-color: #ff4d6d !important;
+  box-shadow: 0 0 0 4.5px rgba(255, 77, 109, 0.45), 0 12px 28px rgba(255, 77, 109, 0.25) !important;
+  animation: cardPulse 0.7s ease-in-out 4 alternate;
+}
+
+@keyframes cardPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.035); }
 }
 
 .img-wrap {

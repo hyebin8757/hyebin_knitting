@@ -77,7 +77,7 @@ const onLogoClick = (e: MouseEvent) => {
             @click="store.isFeedbackModalOpen = true"
             title="의견 및 제작 문의 보내기"
           >
-            <span class="btn-icon">💌</span>
+            <i class="material-icons btn-icon" style="font-size: 1.05rem;">support_agent</i>
             <span class="btn-text">의견 보내기</span>
           </button>
         </template>

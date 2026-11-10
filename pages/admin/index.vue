@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import { useKnittingStore, type OrderItem, type RefundItem, type InquiryItem, type ProductItem } from "~/stores/useKnittingStore";
+import { useKnittingStore, type OrderItem, type RefundItem, type InquiryItem, type ProductItem, type PopupNotice } from "~/stores/useKnittingStore";
 import AdminOrderEditModal from "~/components/AdminOrderEditModal.vue";
 import AdminProductModal from "~/components/AdminProductModal.vue";
+import UserNoticeModal from "~/components/UserNoticeModal.vue";
 
 const router = useRouter();
 const store = useKnittingStore();
@@ -39,10 +40,10 @@ const handleResetProducts = () => {
   store.resetProductsToDefault();
 };
 
-// 탭: 'orders' | 'products' | 'notices' | 'refunds' | 'inquiries' | 'reviews' | 'settings' (스토어와 양방향 연동)
+// 탭: 'orders' | 'products' | 'notices' | 'popups' | 'refunds' | 'inquiries' | 'reviews' | 'settings' (스토어와 양방향 연동)
 const currentTab = computed({
   get: () => store.adminActiveTab,
-  set: (val: "orders" | "products" | "notices" | "refunds" | "inquiries" | "reviews" | "settings") => {
+  set: (val: "orders" | "products" | "notices" | "popups" | "refunds" | "inquiries" | "reviews" | "settings") => {
     store.switchAdminTab(val);
   },
 });
@@ -110,6 +111,91 @@ const handleResetNotices = () => {
   syncNoticesForm();
 };
 
+// 🌟 사용자 팝업 안내 & 신상품 안내 관리 폼 상태
+const popupForm = ref<PopupNotice>({
+  isActive: true,
+  type: "product",
+  targetProductId: "apple",
+  badgeText: "NEW 신상품 출시 안내",
+  title: "2026 앉은누이 귀여운 신상 컬렉션 오픈!",
+  content: `동글동글 귀여운 인형 친구들을 위한 맞춤 사과 뜨개옷이 새롭게 출시되었습니다!
+100% 핸드메이드 정성으로 한 땀 한 땀 제작되는 맞춤 뜨개옷을 지금 바로 주문서에서 만나보세요 ✨`,
+  imageUrl: "/images/products/apple.jpg",
+  isAlways: true,
+  startDate: "2026-11-01T00:00",
+  endDate: "2026-12-31T23:59",
+  actionButtonText: "신상품 바로 보러가기",
+  showActionButton: true,
+});
+
+const selectedTargetProduct = computed(() => {
+  if (!popupForm.value.targetProductId) return null;
+  return store.products.find((p) => p.id === popupForm.value.targetProductId) || null;
+});
+
+const syncPopupForm = () => {
+  if (store.popupNotice) {
+    popupForm.value = { ...store.popupNotice };
+  }
+};
+
+watch(
+  () => store.popupNotice,
+  () => {
+    syncPopupForm();
+  },
+  { immediate: true, deep: true }
+);
+
+// 신상품 타겟 변경 시 이미지 및 버튼명 자동 동기화
+const handlePopupProductSelect = () => {
+  if (popupForm.value.type === "product" && popupForm.value.targetProductId) {
+    const found = store.products.find((p) => p.id === popupForm.value.targetProductId);
+    if (found) {
+      popupForm.value.imageUrl = found.image || (found.images && found.images[0]) || "";
+      popupForm.value.actionButtonText = `${found.name} 바로 보러가기`;
+    }
+  }
+};
+
+// 팝업 설정 저장
+const savePopupNoticeSettings = () => {
+  const sanitizeLeadingEmoji = (str: string) =>
+    (str || "").replace(/^[\s\p{Extended_Pictographic}\u200d\ufe0f🍎🧶📢🌟🛒🛍️👉✨]+/u, "").trim();
+
+  store.updatePopupNotice({
+    isActive: popupForm.value.isActive,
+    type: popupForm.value.type,
+    targetProductId: popupForm.value.targetProductId,
+    badgeText: sanitizeLeadingEmoji(popupForm.value.badgeText),
+    title: popupForm.value.title.trim(),
+    content: popupForm.value.content.trim(),
+    imageUrl: popupForm.value.imageUrl.trim(),
+    isAlways: popupForm.value.isAlways,
+    startDate: popupForm.value.startDate,
+    endDate: popupForm.value.endDate,
+    actionButtonText: sanitizeLeadingEmoji(popupForm.value.actionButtonText),
+    showActionButton: popupForm.value.showActionButton,
+  });
+
+  store.showAlert("🌟 사용자 팝업 안내 설정이 성공적으로 저장되었습니다!\n방문자가 사이트 접속 시 설정된 기간과 조건에 따라 모달이 노출됩니다. ✨", {
+    title: "팝업 안내 설정 저장 완료",
+    type: "success",
+  });
+};
+
+// 팝업 기본 설정 복원
+const handleResetPopupNotice = () => {
+  store.resetPopupNoticeToDefault();
+  syncPopupForm();
+};
+
+// 팝업 실시간 미리보기 모달 열기
+const openPopupPreview = () => {
+  store.popupNotice = { ...popupForm.value };
+  store.isUserNoticeModalOpen = true;
+};
+
 // 관리자 메뉴/탭 선택 시 해당 콘텐츠 영역으로 부드럽게 자동 스크롤 이동
 const scrollToContent = () => {
   if (typeof window === "undefined") return;
@@ -167,7 +253,14 @@ const settingsForm = ref({
   bankName: "카카오뱅크",
   accountNumber: "",
   accountHolder: "",
+});
+
+// 🔐 관리자 비밀번호 변경 폼
+const pwForm = ref({
+  currentPassword: "",
   newPassword: "",
+  newPasswordConfirm: "",
+  showPassword: false,
 });
 
 onMounted(() => {
@@ -191,7 +284,6 @@ onMounted(() => {
     bankName: store.settings.bankName || "카카오뱅크",
     accountNumber: store.settings.accountNumber || "3333-12-8924018",
     accountHolder: store.settings.accountHolder || "전혜빈",
-    newPassword: "",
   };
 
   // 운송장 번호 초깃값 세팅
@@ -366,7 +458,7 @@ const testNotificationSound = () => {
   store.showToast("🔔 띵동! 크리스탈 차임벨과 진동이 울렸습니다.", "info");
 };
 
-// 설정 저장
+// 계좌 및 알림 설정 저장
 const saveSettings = () => {
   const payload: any = {
     soundAlertEnabled: settingsForm.value.soundAlertEnabled,
@@ -383,15 +475,66 @@ const saveSettings = () => {
     accountHolder: settingsForm.value.accountHolder.trim(),
   };
 
-  if (settingsForm.value.newPassword.trim()) {
-    payload.adminPassword = settingsForm.value.newPassword.trim();
-  }
-
   store.updateAdminSettings(payload);
-  store.showAlert("카카오톡 알림 및 전체 설정이 안전하게 저장되었습니다!", {
+  store.showAlert("카카오톡 알림 및 계좌 설정이 안전하게 저장되었습니다!", {
     title: "설정 저장 완료",
     type: "success",
   });
+};
+
+// 🔐 관리자 비밀번호 변경
+const handleChangePassword = () => {
+  if (!pwForm.value.currentPassword) {
+    store.showAlert("현재 관리자 비밀번호를 입력해주세요.", {
+      title: "비밀번호 변경 안내",
+      type: "warning",
+    });
+    return;
+  }
+
+  if (!store.verifyAdminPassword(pwForm.value.currentPassword)) {
+    store.showAlert("현재 비밀번호가 일치하지 않습니다. 다시 확인해주세요.", {
+      title: "비밀번호 불일치",
+      type: "warning",
+    });
+    return;
+  }
+
+  if (!pwForm.value.newPassword || pwForm.value.newPassword.trim().length < 4) {
+    store.showAlert("새 비밀번호는 최소 4자 이상 입력해주세요.", {
+      title: "비밀번호 자릿수 오류",
+      type: "warning",
+    });
+    return;
+  }
+
+  if (pwForm.value.newPassword !== pwForm.value.newPasswordConfirm) {
+    store.showAlert("새 비밀번호와 확인 입력이 일치하지 않습니다. 다시 확인해주세요.", {
+      title: "비밀번호 확인 불일치",
+      type: "warning",
+    });
+    return;
+  }
+
+  if (pwForm.value.newPassword === pwForm.value.currentPassword) {
+    store.showAlert("기존 비밀번호와 동일합니다. 다른 새로운 비밀번호를 입력해주세요.", {
+      title: "비밀번호 변경 안내",
+      type: "warning",
+    });
+    return;
+  }
+
+  const success = store.changeAdminPassword(pwForm.value.newPassword);
+  if (success) {
+    pwForm.value.currentPassword = "";
+    pwForm.value.newPassword = "";
+    pwForm.value.newPasswordConfirm = "";
+
+    store.showAlert("관리자 비밀번호가 성공적으로 변경되었습니다! 🔐\n다음 로그인 시 변경된 새 비밀번호로 접속해주세요.", {
+      title: "비밀번호 변경 완료",
+      type: "success",
+    });
+  }
 };
 
 // 로그아웃
@@ -418,7 +561,7 @@ const handleLogout = () => {
         <div class="topbar-right">
           <!-- 🔔 실시간 알림 모달 열기 버튼 -->
           <button class="btn-open-notif-modal" @click="store.isNotificationModalOpen = true" title="실시간 알림 모달 열기">
-            <span class="btn-bell-emoji">🔔</span>
+            <i class="material-icons btn-bell-icon">notifications</i>
             <span class="btn-text">실시간 알림</span>
             <span v-if="store.unreadNotificationCount > 0" class="admin-notif-badge">
               {{ store.unreadNotificationCount }}
@@ -433,7 +576,7 @@ const handleLogout = () => {
 
           <!-- 상점 이동 버튼 -->
           <nuxt-link to="/" class="btn-nav-site" title="구매자 상점 페이지로 이동">
-            <i class="material-icons">store</i>
+            <i class="material-icons">storefront</i>
             <span class="btn-text">상점 둘러보기</span>
           </nuxt-link>
 
@@ -513,7 +656,7 @@ const handleLogout = () => {
           :class="{ active: currentTab === 'products' }"
           @click="currentTab = 'products'"
         >
-          <i class="material-icons">inventory_2</i>
+          <i class="material-icons">checkroom</i>
           <span>주문서 상품 관리</span>
           <span class="tab-badge">{{ store.products.length }}</span>
         </button>
@@ -527,6 +670,17 @@ const handleLogout = () => {
           <i class="material-icons">campaign</i>
           <span>공지 & 주문안내</span>
           <span class="tab-badge">4건</span>
+        </button>
+
+        <!-- 🌟 신규 메뉴: 팝업 공지 & 신상품 안내 관리 -->
+        <button
+          class="tab-btn"
+          :class="{ active: currentTab === 'popups' }"
+          @click="currentTab = 'popups'"
+        >
+          <i class="material-icons">auto_awesome</i>
+          <span>사용자 팝업 안내</span>
+          <span v-if="store.popupNotice.isActive" class="tab-badge bg-badge-pink">ON</span>
         </button>
 
         <button
@@ -544,7 +698,7 @@ const handleLogout = () => {
           :class="{ active: currentTab === 'inquiries' }"
           @click="currentTab = 'inquiries'"
         >
-          <i class="material-icons">mark_chat_unread</i>
+          <i class="material-icons">support_agent</i>
           <span>고객 문의</span>
           <span v-if="store.unreadInquiriesCount > 0" class="tab-badge bg-green">{{ store.unreadInquiriesCount }}</span>
         </button>
@@ -554,7 +708,7 @@ const handleLogout = () => {
           :class="{ active: currentTab === 'reviews' }"
           @click="currentTab = 'reviews'"
         >
-          <i class="material-icons">stars</i>
+          <i class="material-icons">photo_camera</i>
           <span>리뷰 관리</span>
           <span class="tab-badge">{{ store.reviews.length }}</span>
         </button>
@@ -564,7 +718,7 @@ const handleLogout = () => {
           :class="{ active: currentTab === 'settings' }"
           @click="currentTab = 'settings'"
         >
-          <i class="material-icons">phonelink_ring</i>
+          <i class="material-icons">tune</i>
           <span>알림 & 상점 설정</span>
         </button>
       </div>
@@ -1122,6 +1276,285 @@ const handleLogout = () => {
         </div>
       </div>
 
+      <!-- 🌟 탭: 사용자 팝업 & 신상품 안내 관리 -->
+      <div v-if="currentTab === 'popups'" class="tab-panel">
+        <div class="panel-header notices-panel-header">
+          <div class="panel-header-titles">
+            <h3 class="panel-title">📢 사용자 팝업 & 신상품 안내 설정</h3>
+            <p class="panel-desc">
+              사용자가 사이트에 방문했을 때 화면에 띄울 공지사항 및 신상품 출시 안내 팝업 모달을 설정합니다.
+              노출 기간 설정, 새 상품 바로가기 링크, "오늘 하루 보지 않기" 기능을 지원합니다.
+            </p>
+          </div>
+          <div class="panel-actions">
+            <button
+              type="button"
+              class="btn-preview-popup"
+              @click="openPopupPreview"
+              title="설정된 팝업 미리보기"
+            >
+              <i class="material-icons">preview</i>
+              <span>팝업 미리보기</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="notices-form-grid">
+          <!-- 1. 팝업 활성화 & 팝업 유형 선택 카드 -->
+          <div class="notice-editor-card card-notice-pink">
+            <div class="editor-card-header">
+              <span class="editor-badge bg-badge-pink">기본 설정</span>
+              <div class="editor-header-meta">
+                <h4 class="editor-title">🔔 팝업 노출 여부 및 유형 선택</h4>
+                <span class="editor-hint">팝업 활성화 및 공지 or 신상품 안내 모드를 선택합니다</span>
+              </div>
+            </div>
+            <div class="editor-body">
+              <div class="popup-config-grid">
+                <!-- 활성화 토글 -->
+                <div class="form-group">
+                  <label class="input-label">팝업 모달 노출 상태</label>
+                  <div class="toggle-card-row">
+                    <label class="switch">
+                      <input type="checkbox" v-model="popupForm.isActive" />
+                      <span class="slider"></span>
+                    </label>
+                    <span class="toggle-status-txt" :class="{ 'text-pink font-bold': popupForm.isActive }">
+                      {{ popupForm.isActive ? '🟢 사용자에게 팝업 노출 중 (ON)' : '⚪ 팝업 숨김 (OFF)' }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 팝업 유형 라디오 -->
+                <div class="form-group">
+                  <label class="input-label">팝업 안내 유형</label>
+                  <div class="popup-type-selector">
+                    <button
+                      type="button"
+                      class="btn-type-opt"
+                      :class="{ active: popupForm.type === 'product' }"
+                      @click="popupForm.type = 'product'; handlePopupProductSelect();"
+                    >
+                      <span class="type-opt-icon">🧶</span>
+                      <div class="type-opt-text">
+                        <strong>새 상품 안내</strong>
+                        <small>상품 바로가기 연동</small>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-type-opt"
+                      :class="{ active: popupForm.type === 'notice' }"
+                      @click="popupForm.type = 'notice'"
+                    >
+                      <span class="type-opt-icon">📢</span>
+                      <div class="type-opt-text">
+                        <strong>일반 공지사항</strong>
+                        <small>공지 / 배송 / 이벤트</small>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. 새 상품 안내 타겟 상품 설정 (type === 'product' 일 때) -->
+          <div v-if="popupForm.type === 'product'" class="notice-editor-card card-notice-brand">
+            <div class="editor-card-header">
+              <span class="editor-badge bg-badge-brand">신상품 연동</span>
+              <div class="editor-header-meta">
+                <h4 class="editor-title">🎯 새 상품 바로가기 대상 상품 선택</h4>
+                <span class="editor-hint">사용자가 팝업에서 버튼을 클릭하면 해당 상품 주문서로 즉시 이동합니다</span>
+              </div>
+            </div>
+            <div class="editor-body">
+              <div class="popup-config-grid">
+                <div class="form-group">
+                  <label class="input-label">안내할 대상 상품 선택 <span class="req">*</span></label>
+                  <select
+                    v-model="popupForm.targetProductId"
+                    class="notice-input"
+                    @change="handlePopupProductSelect"
+                  >
+                    <option v-for="p in store.products" :key="p.id" :value="p.id">
+                      {{ p.name }} ({{ p.price.toLocaleString() }}원)
+                    </option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="input-label">바로가기 버튼 문구</label>
+                  <input
+                    v-model="popupForm.actionButtonText"
+                    type="text"
+                    class="notice-input"
+                    placeholder="예: 신상품 바로 보러가기"
+                  />
+                </div>
+              </div>
+
+              <!-- 선택된 상품 간이 미리보기 카드 -->
+              <div v-if="selectedTargetProduct" class="target-prod-preview-card">
+                <img :src="selectedTargetProduct.image" :alt="selectedTargetProduct.name" class="target-prod-img" />
+                <div class="target-prod-info">
+                  <div class="target-prod-name-row">
+                    <span class="target-badge">{{ selectedTargetProduct.tag || 'BEST' }}</span>
+                    <strong class="target-prod-name">{{ selectedTargetProduct.name }}</strong>
+                    <span class="target-prod-price">{{ selectedTargetProduct.price.toLocaleString() }}원</span>
+                  </div>
+                  <p class="target-prod-desc">{{ selectedTargetProduct.description }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. 팝업 타이틀 및 본문 내용 작성 -->
+          <div class="notice-editor-card card-notice-blue">
+            <div class="editor-card-header">
+              <span class="editor-badge bg-badge-blue">내용 입력</span>
+              <div class="editor-header-meta">
+                <h4 class="editor-title">✏️ 팝업 타이틀 및 상세 안내 문구</h4>
+                <span class="editor-hint">사용자 모달에 표시될 제목과 본문 내용을 입력합니다</span>
+              </div>
+            </div>
+            <div class="editor-body">
+              <div class="popup-config-grid">
+                <div class="form-group">
+                  <label class="input-label">상단 뱃지 문구</label>
+                  <input
+                    v-model="popupForm.badgeText"
+                    type="text"
+                    class="notice-input"
+                    placeholder="예: NEW 신상품 출시 안내"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="input-label">팝업 메인 타이틀 (제목)</label>
+                  <input
+                    v-model="popupForm.title"
+                    type="text"
+                    class="notice-input font-bold"
+                    placeholder="예: 2026 앉은누이 귀여운 가을 신상 오픈!"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group mt-3">
+                <label class="input-label">팝업 상세 안내 본문 (줄바꿈 지원)</label>
+                <textarea
+                  v-model="popupForm.content"
+                  rows="4"
+                  class="notice-textarea"
+                  placeholder="팝업 본문 내용을 입력하세요"
+                ></textarea>
+              </div>
+
+              <!-- 팝업 이미지 URL -->
+              <div class="form-group mt-3">
+                <label class="input-label">팝업 대표 이미지 URL (선택)</label>
+                <input
+                  v-model="popupForm.imageUrl"
+                  type="text"
+                  class="notice-input font-mono"
+                  placeholder="https://... 또는 /images/products/apple.jpg"
+                />
+              </div>
+
+              <!-- 일반 공지일 때 버튼 설정 -->
+              <div v-if="popupForm.type === 'notice'" class="popup-config-grid mt-3">
+                <div class="form-group">
+                  <label class="input-label">하단 바로가기 버튼 표시</label>
+                  <label class="switch">
+                    <input type="checkbox" v-model="popupForm.showActionButton" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div v-if="popupForm.showActionButton" class="form-group">
+                  <label class="input-label">버튼 문구</label>
+                  <input
+                    v-model="popupForm.actionButtonText"
+                    type="text"
+                    class="notice-input"
+                    placeholder="예: 주문서 바로가기"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. 노출 기간 설정 카드 -->
+          <div class="notice-editor-card card-notice-amber">
+            <div class="editor-card-header">
+              <span class="editor-badge bg-badge-amber">기간 설정</span>
+              <div class="editor-header-meta">
+                <h4 class="editor-title">📅 팝업 노출 기간 설정</h4>
+                <span class="editor-hint">설정한 기간 동안에만 사용자에게 팝업이 노출되며, 기간 경과 시 자동 종료됩니다</span>
+              </div>
+            </div>
+            <div class="editor-body">
+              <div class="form-group mb-3">
+                <label class="dont-show-label">
+                  <input
+                    type="checkbox"
+                    v-model="popupForm.isAlways"
+                    class="dont-show-checkbox"
+                  />
+                  <strong>상시 노출 (기간 제한 없이 항상 노출)</strong>
+                </label>
+              </div>
+
+              <div v-if="!popupForm.isAlways" class="popup-config-grid">
+                <div class="form-group">
+                  <label class="input-label">노출 시작 일시</label>
+                  <input
+                    v-model="popupForm.startDate"
+                    type="datetime-local"
+                    class="notice-input font-mono"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="input-label">노출 종료 일시</label>
+                  <input
+                    v-model="popupForm.endDate"
+                    type="datetime-local"
+                    class="notice-input font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 하단 전폭 저장 바 -->
+        <div class="notices-bottom-actions">
+          <button
+            type="button"
+            class="btn-reset-prods"
+            @click="handleResetPopupNotice"
+          >
+            <i class="material-icons">restart_alt</i>
+            <span>기본 설정 복원</span>
+          </button>
+          <button
+            type="button"
+            class="btn-preview-bottom"
+            @click="openPopupPreview"
+          >
+            <i class="material-icons">preview</i>
+            <span>미리보기</span>
+          </button>
+          <button
+            type="button"
+            class="btn-save-notices-bottom"
+            @click="savePopupNoticeSettings"
+          >
+            <i class="material-icons">check_circle</i>
+            <span>팝업 안내 설정 저장하기</span>
+          </button>
+        </div>
+      </div>
+
       <!-- 탭 2: 환불 / 취소 관리 -->
       <div v-if="currentTab === 'refunds'" class="tab-panel">
         <div class="panel-header">
@@ -1425,18 +1858,19 @@ const handleLogout = () => {
             <!-- 알림음 테스트 버튼 -->
             <div class="sound-test-bar">
               <button type="button" class="btn-test-chime" @click="testNotificationSound">
-                🔔 스마트폰 소리 & 진동 테스트 울리기
+                <i class="material-icons">notifications_active</i>
+                <span>스마트폰 소리 & 진동 테스트 울리기</span>
               </button>
             </div>
           </div>
 
-          <!-- 입금 계좌 & 비밀번호 설정 카드 -->
+          <!-- 입금 계좌 설정 카드 -->
           <div class="setting-card">
             <div class="card-title-group">
               <span class="card-icon">🏦</span>
               <div>
-                <h3 class="setting-title">공식 입금 계좌 & 비밀번호 설정</h3>
-                <p class="setting-sub">주문서에 노출되는 공식 계좌 정보와 관리자 비밀번호를 관리합니다.</p>
+                <h3 class="setting-title">공식 입금 계좌 설정</h3>
+                <p class="setting-sub">주문서 및 주문 조회 화면에 노출되는 공식 계좌 정보를 관리합니다.</p>
               </div>
             </div>
 
@@ -1455,19 +1889,63 @@ const handleLogout = () => {
               </div>
             </div>
 
-            <div class="form-group pw-group">
-              <label>새 관리자 비밀번호 (변경 시에만 입력)</label>
-              <input
-                v-model="settingsForm.newPassword"
-                type="password"
-                placeholder="새로운 비밀번호 입력"
-                class="form-control"
-              />
+            <button type="button" class="btn-save-settings" @click="saveSettings">
+              <i class="material-icons">save</i>
+              <span>계좌 및 알림 설정 저장하기</span>
+            </button>
+          </div>
+
+          <!-- 🔐 관리자 비밀번호 변경 전용 카드 -->
+          <div class="setting-card card-security">
+            <div class="card-title-group">
+              <span class="card-icon"><i class="material-icons" style="font-size: 1.5rem; color: #ff4d6d;">lock</i></span>
+              <div>
+                <h3 class="setting-title">관리자 비밀번호 변경</h3>
+                <p class="setting-sub">관리자 페이지 접속에 사용할 비밀번호를 안전하게 변경합니다.</p>
+              </div>
             </div>
 
-            <button type="button" class="btn-save-settings" @click="saveSettings">
-              전체 설정 저장하기 💾
-            </button>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label>현재 비밀번호 <span class="req">*</span></label>
+                <input
+                  v-model="pwForm.currentPassword"
+                  :type="pwForm.showPassword ? 'text' : 'password'"
+                  placeholder="현재 비밀번호 입력"
+                  class="form-control"
+                />
+              </div>
+              <div class="form-group">
+                <label>새 비밀번호 (4자 이상) <span class="req">*</span></label>
+                <input
+                  v-model="pwForm.newPassword"
+                  :type="pwForm.showPassword ? 'text' : 'password'"
+                  placeholder="새로운 비밀번호 입력"
+                  class="form-control"
+                />
+              </div>
+              <div class="form-group">
+                <label>새 비밀번호 확인 <span class="req">*</span></label>
+                <input
+                  v-model="pwForm.newPasswordConfirm"
+                  :type="pwForm.showPassword ? 'text' : 'password'"
+                  placeholder="새 비밀번호 다시 입력"
+                  class="form-control"
+                />
+              </div>
+            </div>
+
+            <div class="pw-action-row">
+              <label class="toggle-pw-label">
+                <input type="checkbox" v-model="pwForm.showPassword" />
+                <span>비밀번호 표시하기</span>
+              </label>
+
+              <button type="button" class="btn-change-pw" @click="handleChangePassword">
+                <i class="material-icons">vpn_key</i>
+                <span>비밀번호 변경하기</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1484,6 +1962,9 @@ const handleLogout = () => {
       v-model="isProductModalOpen"
       :product="selectedProductToEdit"
     />
+
+    <!-- 🌟 사용자 팝업 안내 미리보기 모달 (관리자 화면에서도 즉시 실시간 확인 가능) -->
+    <UserNoticeModal />
   </div>
 </template>
 
@@ -1603,8 +2084,8 @@ const handleLogout = () => {
   transform: translateY(-1px);
 }
 
-.btn-bell-emoji {
-  font-size: 1rem;
+.btn-bell-icon {
+  font-size: 1.15rem;
 }
 
 .admin-notif-badge {
@@ -2432,6 +2913,156 @@ const handleLogout = () => {
   transform: translateY(-1px);
 }
 
+/* 🌟 팝업 설정 전용 스타일 */
+.btn-preview-popup,
+.btn-preview-bottom {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fdfbf7;
+  color: #ff4d6d;
+  border: 1.5px solid #ffccd5;
+  border-radius: 14px;
+  padding: 10px 18px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-preview-popup:hover,
+.btn-preview-bottom:hover {
+  background: #fff0f3;
+  border-color: #ff4d6d;
+  transform: translateY(-1px);
+}
+
+.popup-config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.toggle-card-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.toggle-status-txt {
+  font-size: 0.86rem;
+  color: #635350;
+}
+
+.popup-type-selector {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-type-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fdfbf7;
+  border: 1.5px solid #ebdcd0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-type-opt .type-opt-icon {
+  font-size: 1.3rem;
+}
+
+.btn-type-opt .type-opt-text strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #2b1f1d;
+}
+
+.btn-type-opt .type-opt-text small {
+  display: block;
+  font-size: 0.72rem;
+  color: #8c7e7b;
+}
+
+.btn-type-opt.active {
+  border-color: #ff4d6d;
+  background: #fff0f3;
+  box-shadow: 0 0 0 3px rgba(255, 77, 109, 0.15);
+}
+
+.btn-type-opt.active .type-opt-text strong {
+  color: #ff4d6d;
+}
+
+/* 타겟 상품 간이 미리보기 카드 */
+.target-prod-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fdfbf7;
+  border: 1.5px solid #ffd6de;
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+
+.target-prod-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid #ebdcd0;
+}
+
+.target-prod-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.target-prod-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.target-badge {
+  background: #ff4d6d;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.target-prod-name {
+  font-size: 0.95rem;
+  color: #2b1f1d;
+}
+
+.target-prod-price {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ff4d6d;
+}
+
+.target-prod-desc {
+  font-size: 0.78rem;
+  color: #8c7e7b;
+  margin: 0;
+  line-height: 1.35;
+}
+
 /* ========================================================
    주문서 상품 (카탈로그) 관리 패널 스타일
    ======================================================== */
@@ -3011,6 +3642,10 @@ const handleLogout = () => {
 }
 
 .btn-test-chime {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: #ff4d6d;
   color: #ffffff;
   border: none;
@@ -3054,6 +3689,9 @@ const handleLogout = () => {
 
 .btn-save-settings {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: linear-gradient(135deg, #ff758f 0%, #ff4d6d 100%);
   color: #ffffff;
   border: none;
@@ -3064,6 +3702,71 @@ const handleLogout = () => {
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(255, 77, 109, 0.35);
   margin-top: 8px;
+}
+
+/* 🔐 관리자 비밀번호 변경 스타일 */
+.card-security {
+  background: #fffafa;
+  border: 1.5px solid #ffd0da;
+}
+
+.card-security .form-group .req {
+  color: #ff4d6d;
+  font-weight: bold;
+}
+
+.pw-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #f2dcdc;
+}
+
+.toggle-pw-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #6b5855;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-pw-label input {
+  accent-color: #ff4d6d;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.btn-change-pw {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #2b1f1d;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(43, 31, 29, 0.18);
+}
+
+.btn-change-pw:hover {
+  background: #ff4d6d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(255, 77, 109, 0.35);
+}
+
+.btn-change-pw .material-icons {
+  font-size: 1.1rem;
 }
 
 /* Switch toggle */
@@ -3912,6 +4615,28 @@ input:checked + .slider:before {
   }
 
   .btn-save-notices-bottom {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .popup-config-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .popup-type-selector {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .target-prod-preview-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .btn-preview-popup,
+  .btn-preview-bottom {
     width: 100%;
     justify-content: center;
   }

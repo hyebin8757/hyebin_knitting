@@ -391,7 +391,7 @@ const handleSave = () => {
                 @click="triggerFileInput"
               >
                 <i class="material-icons">add_a_photo</i>
-                <span>📁 모바일 앨범 / 사진 선택 (최대 5장)</span>
+                <span>파일 앨범 / 사진 선택 (최대 5장)</span>
               </button>
             </div>
 

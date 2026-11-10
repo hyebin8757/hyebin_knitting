@@ -21,13 +21,8 @@ const handleLogin = () => {
   if (success) {
     router.push("/admin");
   } else {
-    errorMessage.value = "비밀번호가 일치하지 않습니다. (기본: admin1234)";
+    errorMessage.value = "비밀번호가 일치하지 않습니다. 다시 확인해주세요.";
   }
-};
-
-const fillDefaultPassword = () => {
-  password.value = store.settings.adminPassword || "admin1234";
-  handleLogin();
 };
 </script>
 
@@ -35,7 +30,9 @@ const fillDefaultPassword = () => {
   <div class="admin-login-page">
     <div class="login-card">
       <div class="login-header">
-        <div class="brand-circle">🔒</div>
+        <div class="brand-circle">
+          <i class="material-icons" style="font-size: 2rem; color: #ff4d6d;">lock</i>
+        </div>
         <h1 class="login-title">뜨개 공방 관리자 로그인</h1>
         <p class="login-subtitle">주문 내역, 환불 요청, 고객 의견 관리를 위한 전용 페이지입니다.</p>
       </div>
@@ -66,16 +63,8 @@ const fillDefaultPassword = () => {
 
         <button type="submit" class="btn-login">
           <span>관리자 대시보드 입장</span>
-          <i class="material-icons">arrow_forward</i>
+          <i class="material-icons">login</i>
         </button>
-
-        <div class="demo-hint-box">
-          <p class="hint-title">💡 초기 관리자 비밀번호 안내</p>
-          <p class="hint-desc">기본 비밀번호는 <code>admin1234</code> 입니다.<br />관리자 대시보드 설정 탭에서 언제든 변경할 수 있습니다.</p>
-          <button type="button" class="btn-quick-fill" @click="fillDefaultPassword">
-            원클릭 자동 로그인
-          </button>
-        </div>
 
         <div class="back-link-wrap">
           <nuxt-link to="/" class="back-home-link">← 쇼핑몰 홈으로 돌아가기</nuxt-link>
@@ -222,51 +211,6 @@ const fillDefaultPassword = () => {
 .btn-login:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(255, 77, 109, 0.45);
-}
-
-.demo-hint-box {
-  background: #fff8f0;
-  border: 1px dashed #fed7aa;
-  border-radius: 14px;
-  padding: 14px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-}
-
-.hint-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #c2410c;
-  margin: 0;
-}
-
-.hint-desc {
-  font-size: 0.76rem;
-  color: #7c2d12;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.hint-desc code {
-  background: #ffedd5;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 700;
-}
-
-.btn-quick-fill {
-  margin-top: 4px;
-  background: #f97316;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 6px 16px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
 }
 
 .back-link-wrap {

@@ -63,8 +63,8 @@ const handleLike = (id: string) => {
             </div>
           </div>
           <button class="btn-write-rev" @click="store.isReviewWriteModalOpen = true">
-            <i class="material-icons">edit</i>
-            <span>후기 작성하기 ✨</span>
+            <i class="material-icons">rate_review</i>
+            <span>후기 작성하기</span>
           </button>
         </div>
       </section>

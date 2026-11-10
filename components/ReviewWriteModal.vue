@@ -171,7 +171,8 @@ const submitReview = () => {
         <div class="modal-actions">
           <button type="button" class="btn-cancel" @click="closeModal">취소</button>
           <button type="submit" class="btn-submit" :disabled="isSubmitting">
-            리뷰 등록하기 💖
+            <i class="material-icons" style="font-size: 1.05rem; vertical-align: middle; margin-right: 4px;">rate_review</i>
+            <span>리뷰 등록하기</span>
           </button>
         </div>
       </form>

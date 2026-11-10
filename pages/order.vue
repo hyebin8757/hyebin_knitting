@@ -324,7 +324,6 @@ const resetForNewOrder = () => {
       <form v-else class="order-form-card" @submit.prevent="handleOpenConfirmModal">
         <!-- 폼 상단 헤더 -->
         <div class="form-hero">
-          <div class="top-yarn-badge">🧶 Google Form 연동 주문서</div>
           <h1 class="form-main-title">앉은누이 뜨개옷 주문서</h1>
           <p class="form-guide-text">수량은 폼에 기재되어있는 것을 선택해주세요!</p>
           <p class="form-highlight-text">주문서 작성 전 꼭 확인하시고 주문 부탁드려요 :)</p>

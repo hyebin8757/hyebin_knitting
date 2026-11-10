@@ -1,5 +1,28 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+const getEnvValue = (key: string): string => {
+  if (typeof process !== "undefined" && process.env && process.env[key]) {
+    return process.env[key]!;
+  }
+  return "";
+};
+
+let _supabaseClient: SupabaseClient | null = null;
+const getSupabase = (): SupabaseClient | null => {
+  if (_supabaseClient) return _supabaseClient;
+  const url = getEnvValue("SUPABASE_URL") || "https://taxlvyiijpanfzwrmuih.supabase.co";
+  const key = getEnvValue("SUPABASE_KEY") || "";
+  if (url && key) {
+    try {
+      _supabaseClient = createClient(url, key);
+    } catch (e) {
+      console.warn("[Supabase] Init warning:", e);
+    }
+  }
+  return _supabaseClient;
+};
 
 export interface ProductItem {
   id: string;
@@ -157,6 +180,38 @@ export const DEFAULT_SITE_NOTICES: SiteNotices = {
   instagramId: `@hyebin_knit`,
   makingPeriod: `입금 확인 후 약 3~7 영업일 소요`,
   courierInfo: `CJ대한통운 / 우체국 / GS25·CU 편의점 택배`,
+};
+
+// 🌟 사용자 대상 팝업 모달 안내 설정 (공지 및 새 상품 안내)
+export interface PopupNotice {
+  isActive: boolean; // 팝업 노출 활성화 여부
+  type: "product" | "notice"; // 새 상품 안내 vs 일반 공지
+  targetProductId: string; // 새 상품일 경우 이동할 대상 상품 ID
+  badgeText: string; // 모달 상단 뱃지
+  title: string; // 팝업 제목
+  content: string; // 팝업 상세 내용
+  imageUrl: string; // 팝업 사진 URL
+  isAlways: boolean; // 기간 무제한(상시 노출) 여부
+  startDate: string; // 노출 시작 일시 (YYYY-MM-DDTHH:mm)
+  endDate: string; // 노출 종료 일시 (YYYY-MM-DDTHH:mm)
+  actionButtonText: string; // 바로가기 버튼 문구
+  showActionButton: boolean; // 바로가기 버튼 표시 여부
+}
+
+export const DEFAULT_POPUP_NOTICE: PopupNotice = {
+  isActive: true,
+  type: "product",
+  targetProductId: "apple",
+  badgeText: "NEW 신상품 출시 안내",
+  title: "2026 앉은누이 귀여운 신상 컬렉션 오픈!",
+  content: `동글동글 귀여운 인형 친구들을 위한 맞춤 사과 뜨개옷이 새롭게 출시되었습니다!
+100% 핸드메이드 정성으로 한 땀 한 땀 제작되는 맞춤 뜨개옷을 지금 바로 주문서에서 만나보세요 ✨`,
+  imageUrl: "/images/products/apple.jpg",
+  isAlways: true,
+  startDate: "2026-11-01T00:00",
+  endDate: "2026-12-31T23:59",
+  actionButtonText: "신상품 바로 보러가기",
+  showActionButton: true,
 };
 
 // 9가지 앉은누이 뜨개옷 상품 정밀 데이터 (최대 5장 다중 사진 지원)
@@ -465,13 +520,17 @@ export const useKnittingStore = defineStore("knittingStore", () => {
 
   // 관리자 인증 & 설정
   const isAdminLoggedIn = ref<boolean>(false);
-  const adminActiveTab = ref<"orders" | "products" | "notices" | "refunds" | "inquiries" | "reviews" | "settings">("orders");
+  const adminActiveTab = ref<"orders" | "products" | "notices" | "popups" | "refunds" | "inquiries" | "reviews" | "settings">("orders");
   const adminScrollTrigger = ref<number>(0);
 
   // 📢 사용자 페이지 공지 및 주문 안내 문구 상태 (2~5번 이미지)
   const siteNotices = ref<SiteNotices>({ ...DEFAULT_SITE_NOTICES });
 
-  const switchAdminTab = (tab: "orders" | "products" | "notices" | "refunds" | "inquiries" | "reviews" | "settings") => {
+  // 🌟 사용자 팝업 안내 및 신상품 안내 설정
+  const popupNotice = ref<PopupNotice>({ ...DEFAULT_POPUP_NOTICE });
+  const isUserNoticeModalOpen = ref<boolean>(false);
+
+  const switchAdminTab = (tab: "orders" | "products" | "notices" | "popups" | "refunds" | "inquiries" | "reviews" | "settings") => {
     adminActiveTab.value = tab;
     adminScrollTrigger.value++;
   };
@@ -625,6 +684,25 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         }
       }
 
+      // 🌟 사용자 팝업 안내 및 신상품 안내 설정 불러오기
+      const storedPopup = localStorage.getItem("knitting_popup_notice");
+      if (storedPopup) {
+        try {
+          const parsed = JSON.parse(storedPopup);
+          popupNotice.value = { ...DEFAULT_POPUP_NOTICE, ...parsed };
+          const stripLeadingEmoji = (str?: string) =>
+            str ? str.replace(/^[\s\p{Extended_Pictographic}\u200d\ufe0f🍎🧶📢🌟🛒🛍️👉✨]+/u, "").trim() : "";
+          if (popupNotice.value.actionButtonText) {
+            popupNotice.value.actionButtonText = stripLeadingEmoji(popupNotice.value.actionButtonText);
+          }
+          if (popupNotice.value.badgeText) {
+            popupNotice.value.badgeText = stripLeadingEmoji(popupNotice.value.badgeText);
+          }
+        } catch (e) {
+          console.error("Failed to parse popup notice:", e);
+        }
+      }
+
       const adminSession = sessionStorage.getItem("knitting_admin_auth");
       if (adminSession === "true") {
         isAdminLoggedIn.value = true;
@@ -632,6 +710,9 @@ export const useKnittingStore = defineStore("knittingStore", () => {
 
       // ⏰ 로컬스토리지 불러올 때 24시간 지난 미입금 주문 즉시 자동 취소 검사
       checkAndCancelExpiredOrders();
+
+      // 🌐 Supabase 서버와 비동기 데이터 동기화 (최신 상품, 공지, 주문, 리뷰)
+      syncFromSupabase();
     } catch (e) {
       console.error("Failed to load from localStorage:", e);
     }
@@ -696,6 +777,216 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     }, 60000);
   }
 
+  // 🌐 Supabase 서버와 비동기 데이터 동기화
+  const syncFromSupabase = async () => {
+    const client = getSupabase();
+    if (!client) return;
+
+    try {
+      // 1. 상품 카탈로그 동기화
+      const { data: pData } = await client
+        .from("knitting_products")
+        .select("*")
+        .order("order_num", { ascending: true });
+      if (pData && pData.length > 0) {
+        products.value = pData.map((row: any) => ({
+          id: row.id,
+          name: row.name,
+          price: row.price,
+          image: row.image,
+          images: row.images || [row.image],
+          tag: row.tag || "BEST",
+          badgeColor: row.badge_color || "#ff4d6d",
+          description: row.description || "",
+          details: row.details || "",
+          isPopular: row.is_popular ?? false,
+        }));
+        if (typeof window !== "undefined") {
+          localStorage.setItem("knitting_products", JSON.stringify(products.value));
+        }
+      }
+
+      // 2. 공지 & 주문안내 문구 동기화
+      const { data: nData } = await client
+        .from("knitting_site_notices")
+        .select("*")
+        .eq("id", "main_notices")
+        .maybeSingle();
+      if (nData) {
+        siteNotices.value = {
+          noticeContent: nData.notice_content || siteNotices.value.noticeContent,
+          shippingContent: nData.shipping_content || siteNotices.value.shippingContent,
+          cautionContent: nData.caution_content || siteNotices.value.cautionContent,
+          washingContent: nData.washing_content || siteNotices.value.washingContent,
+          shopIntro: nData.shop_intro || siteNotices.value.shopIntro,
+          instagramId: nData.instagram_id || siteNotices.value.instagramId,
+          makingPeriod: nData.making_period || siteNotices.value.makingPeriod,
+          courierInfo: nData.courier_info || siteNotices.value.courierInfo,
+        };
+        if (typeof window !== "undefined") {
+          localStorage.setItem("knitting_site_notices", JSON.stringify(siteNotices.value));
+        }
+      }
+
+      // 3. 팝업 안내 설정 동기화
+      const { data: popData } = await client
+        .from("knitting_popup_notice")
+        .select("*")
+        .eq("id", "main_popup")
+        .maybeSingle();
+      if (popData) {
+        popupNotice.value = {
+          isActive: popData.is_active ?? popupNotice.value.isActive,
+          type: popData.type || popupNotice.value.type,
+          targetProductId: popData.target_product_id || popupNotice.value.targetProductId,
+          badgeText: popData.badge_text || popupNotice.value.badgeText,
+          title: popData.title || popupNotice.value.title,
+          content: popData.content || popupNotice.value.content,
+          imageUrl: popData.image_url || popupNotice.value.imageUrl,
+          isAlways: popData.is_always ?? popupNotice.value.isAlways,
+          startDate: popData.start_date || popupNotice.value.startDate,
+          endDate: popData.end_date || popupNotice.value.endDate,
+          actionButtonText: popData.action_button_text || popupNotice.value.actionButtonText,
+          showActionButton: popData.show_action_button ?? popupNotice.value.showActionButton,
+        };
+        if (typeof window !== "undefined") {
+          localStorage.setItem("knitting_popup_notice", JSON.stringify(popupNotice.value));
+        }
+      }
+
+      // 4. 구매자 리뷰 동기화
+      const { data: rData } = await client
+        .from("knitting_reviews")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (rData && rData.length > 0) {
+        reviews.value = rData.map((row: any) => ({
+          id: row.id,
+          author: row.author,
+          rating: row.rating,
+          productName: row.product_name,
+          content: row.content,
+          image: row.image,
+          createdAt: row.created_at ? new Date(row.created_at).toLocaleString("ko-KR") : "",
+          likes: row.likes || 0,
+          isVerified: row.is_verified ?? true,
+          isVisible: row.is_visible ?? true,
+        }));
+        if (typeof window !== "undefined") {
+          localStorage.setItem("knitting_reviews", JSON.stringify(reviews.value));
+        }
+      }
+
+      // 5. 주문 내역 동기화
+      const { data: oData } = await client
+        .from("knitting_orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (oData && oData.length > 0) {
+        orders.value = oData.map((row: any) => ({
+          id: row.id,
+          createdAt: row.created_at ? new Date(row.created_at).toLocaleString("ko-KR") : "",
+          createdAtTimestamp: row.created_at_timestamp || new Date(row.created_at).getTime(),
+          instagramId: row.instagram_id,
+          buyerName: row.buyer_name,
+          phone: row.phone,
+          address: row.address,
+          shippingId: row.shipping_id,
+          shippingType: row.shipping_type,
+          shippingCost: row.shipping_cost,
+          items: row.items || [],
+          totalProductAmount: row.total_product_amount,
+          totalAmount: row.total_amount,
+          depositorName: row.depositor_name,
+          memo: row.memo,
+          status: row.status,
+          trackingNumber: row.tracking_number,
+          statusHistory: row.status_history || [],
+          customImage: row.custom_image,
+          adminNotes: row.admin_notes,
+        }));
+        if (typeof window !== "undefined") {
+          localStorage.setItem("knitting_orders", JSON.stringify(orders.value));
+        }
+      }
+
+      // 6. 환불 및 문의 내역 동기화
+      const { data: refData } = await client
+        .from("knitting_refunds")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (refData && refData.length > 0) {
+        refunds.value = refData.map((row: any) => ({
+          id: row.id,
+          createdAt: row.created_at ? new Date(row.created_at).toLocaleString("ko-KR") : "",
+          orderId: row.order_id,
+          buyerName: row.buyer_name,
+          phone: row.phone,
+          amount: row.amount,
+          reason: row.reason,
+          refundBank: row.refund_bank,
+          refundAccount: row.refund_account,
+          refundHolder: row.refund_holder,
+          status: row.status,
+          adminNote: row.admin_note,
+        }));
+        if (typeof window !== "undefined") {
+          localStorage.setItem("knitting_refunds", JSON.stringify(refunds.value));
+        }
+      }
+
+      const { data: inqData } = await client
+        .from("knitting_inquiries")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (inqData && inqData.length > 0) {
+        inquiries.value = inqData.map((row: any) => ({
+          id: row.id,
+          createdAt: row.created_at ? new Date(row.created_at).toLocaleString("ko-KR") : "",
+          type: row.type,
+          name: row.name,
+          contact: row.contact,
+          content: row.content,
+          status: row.status,
+          adminReply: row.admin_reply,
+        }));
+        if (typeof window !== "undefined") {
+          localStorage.setItem("knitting_inquiries", JSON.stringify(inquiries.value));
+        }
+      }
+
+      // 7. 상점 및 카카오톡 설정 동기화
+      const { data: sData } = await client
+        .from("knitting_settings")
+        .select("*")
+        .eq("id", "main_settings")
+        .maybeSingle();
+      if (sData) {
+        settings.value = {
+          ...settings.value,
+          adminPassword: sData.admin_password || settings.value.adminPassword,
+          bankName: sData.bank_name || settings.value.bankName,
+          accountNumber: sData.account_number || settings.value.accountNumber,
+          accountHolder: sData.account_holder || settings.value.accountHolder,
+          soundAlertEnabled: sData.sound_alert_enabled ?? true,
+          browserNotificationEnabled: sData.browser_notification_enabled ?? true,
+          kakaoAlertEnabled: sData.kakao_alert_enabled ?? true,
+          kakaoAccessToken: sData.kakao_access_token || "",
+          kakaoJsKey: sData.kakao_js_key || settings.value.kakaoJsKey,
+          kakaoNotifyOrder: sData.kakao_notify_order ?? true,
+          kakaoNotifyRefund: sData.kakao_notify_refund ?? true,
+          kakaoNotifyReview: sData.kakao_notify_review ?? true,
+          kakaoNotifyInquiry: sData.kakao_notify_inquiry ?? true,
+        };
+        if (typeof window !== "undefined") {
+          localStorage.setItem("knitting_settings", JSON.stringify(settings.value));
+        }
+      }
+    } catch (err) {
+      console.warn("[Supabase] Data sync notice:", err);
+    }
+  };
+
   const saveToLocalStorage = () => {
     if (typeof window === "undefined") return;
     try {
@@ -707,6 +998,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       localStorage.setItem("knitting_notifications", JSON.stringify(notifications.value));
       localStorage.setItem("knitting_settings", JSON.stringify(settings.value));
       localStorage.setItem("knitting_site_notices", JSON.stringify(siteNotices.value));
+      localStorage.setItem("knitting_popup_notice", JSON.stringify(popupNotice.value));
     } catch (e: any) {
       console.warn("LocalStorage save warning (recovering quota):", e);
       // QuotaExceededError 발생 시 알림 기록 등 비필수 데이터 정리 후 핵심 데이터(상품, 주문) 재저장
@@ -986,6 +1278,38 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       sendKakaoTalkMessage(kakaoText);
     }
 
+    // 🌐 Supabase 서버 주문 등록
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_orders").insert({
+          id: newOrder.id,
+          created_at_timestamp: newOrder.createdAtTimestamp,
+          instagram_id: newOrder.instagramId,
+          buyer_name: newOrder.buyerName,
+          phone: newOrder.phone,
+          address: newOrder.address,
+          shipping_id: newOrder.shippingId,
+          shipping_type: newOrder.shippingType,
+          shipping_cost: newOrder.shippingCost,
+          items: newOrder.items,
+          total_product_amount: newOrder.totalProductAmount,
+          total_amount: newOrder.totalAmount,
+          depositor_name: newOrder.depositorName,
+          memo: newOrder.memo,
+          status: newOrder.status,
+          tracking_number: newOrder.trackingNumber || null,
+          status_history: newOrder.statusHistory || [],
+          custom_image: newOrder.customImage || null,
+          admin_notes: newOrder.adminNotes || null,
+        }).then(({ error }: any) => {
+          if (error) console.warn("[Supabase] Order insert error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("[Supabase] Order sync error:", e);
+    }
+
     return newOrder;
   };
 
@@ -1006,6 +1330,23 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     });
 
     saveToLocalStorage();
+
+    // 🌐 Supabase 서버 상태 업데이트
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_orders").update({
+          status: newStatus,
+          tracking_number: order.trackingNumber || null,
+          status_history: order.statusHistory || [],
+          updated_at: new Date().toISOString(),
+        }).eq("id", orderId).then(({ error }: any) => {
+          if (error) console.warn("[Supabase] Order status update error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("[Supabase] Order status sync error:", e);
+    }
   };
 
   // 관리자 전용: 주문서 상세 및 맞춤 사진 수정
@@ -1045,6 +1386,38 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     };
 
     saveToLocalStorage();
+
+    // 🌐 Supabase 서버 주문서 상세 업데이트
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_orders").update({
+          instagram_id: orders.value[orderIndex].instagramId,
+          buyer_name: orders.value[orderIndex].buyerName,
+          phone: orders.value[orderIndex].phone,
+          address: orders.value[orderIndex].address,
+          shipping_id: orders.value[orderIndex].shippingId,
+          shipping_type: orders.value[orderIndex].shippingType,
+          shipping_cost: orders.value[orderIndex].shippingCost,
+          items: orders.value[orderIndex].items,
+          total_product_amount: orders.value[orderIndex].totalProductAmount,
+          total_amount: orders.value[orderIndex].totalAmount,
+          depositor_name: orders.value[orderIndex].depositorName,
+          memo: orders.value[orderIndex].memo,
+          status: orders.value[orderIndex].status,
+          tracking_number: orders.value[orderIndex].trackingNumber || null,
+          status_history: orders.value[orderIndex].statusHistory || [],
+          custom_image: orders.value[orderIndex].customImage || null,
+          admin_notes: orders.value[orderIndex].adminNotes || null,
+          updated_at: new Date().toISOString(),
+        }).eq("id", orderId).then(({ error }: any) => {
+          if (error) console.warn("[Supabase] Order details update error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("[Supabase] Order details sync error:", e);
+    }
+
     showToast("주문서 및 사진 수정이 안전하게 저장되었습니다! ✨");
     return true;
   };
@@ -1110,6 +1483,30 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       sendKakaoTalkMessage(kakaoText);
     }
 
+    // 🌐 Supabase 서버 환불 요청 등록
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_refunds").insert({
+          id: newRefund.id,
+          order_id: newRefund.orderId,
+          buyer_name: newRefund.buyerName,
+          phone: newRefund.phone,
+          amount: newRefund.amount,
+          reason: newRefund.reason,
+          refund_bank: newRefund.refundBank,
+          refund_account: newRefund.refundAccount,
+          refund_holder: newRefund.refundHolder,
+          status: newRefund.status,
+          admin_note: newRefund.adminNote || null,
+        }).then(({ error }: any) => {
+          if (error) console.warn("[Supabase] Refund insert error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("[Supabase] Refund sync error:", e);
+    }
+
     return newRefund;
   };
 
@@ -1120,6 +1517,22 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     refund.status = status;
     if (adminNote) refund.adminNote = adminNote;
     saveToLocalStorage();
+
+    // 🌐 Supabase 서버 환불 상태 업데이트
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_refunds").update({
+          status,
+          admin_note: adminNote || null,
+          updated_at: new Date().toISOString(),
+        }).eq("id", refundId).then(({ error }: any) => {
+          if (error) console.warn("[Supabase] Refund status update error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("[Supabase] Refund status sync error:", e);
+    }
   };
 
   // 의견/문의 등록 및 카카오톡 알림
@@ -1171,6 +1584,25 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       sendKakaoTalkMessage(kakaoText);
     }
 
+    // 🌐 Supabase 서버 문의 등록
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_inquiries").insert({
+          id: newInquiry.id,
+          type: newInquiry.type,
+          name: newInquiry.name,
+          contact: newInquiry.contact,
+          content: newInquiry.content,
+          status: newInquiry.status,
+        }).then(({ error }: any) => {
+          if (error) console.warn("[Supabase] Inquiry insert error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("[Supabase] Inquiry sync error:", e);
+    }
+
     return newInquiry;
   };
 
@@ -1181,6 +1613,22 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     inquiry.status = status;
     if (reply !== undefined) inquiry.adminReply = reply;
     saveToLocalStorage();
+
+    // 🌐 Supabase 서버 문의 상태 업데이트
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_inquiries").update({
+          status,
+          admin_reply: reply !== undefined ? reply : (inquiry.adminReply || null),
+          updated_at: new Date().toISOString(),
+        }).eq("id", inquiryId).then(({ error }: any) => {
+          if (error) console.warn("[Supabase] Inquiry status update error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("[Supabase] Inquiry status sync error:", e);
+    }
   };
 
   // 리뷰 등록 및 카카오톡 알림
@@ -1224,6 +1672,28 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     // 🔔 사운드 & 브라우저 알림
     playChimeSound();
     triggerBrowserNotification("⭐ 새 뜨개옷 후기 등록", `${newReview.author}님의 후기 (평점: ${newReview.rating}점)`);
+
+    // 🌐 Supabase 서버 리뷰 등록
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_reviews").insert({
+          id: newReview.id,
+          author: newReview.author,
+          rating: newReview.rating,
+          product_name: newReview.productName,
+          content: newReview.content,
+          image: newReview.image || null,
+          likes: newReview.likes,
+          is_verified: newReview.isVerified,
+          is_visible: newReview.isVisible,
+        }).then(({ error }: any) => {
+          if (error) console.warn("[Supabase] Review insert error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("[Supabase] Review sync error:", e);
+    }
 
     // 💛 관리자 카카오톡 알림
     if (settings.value.kakaoNotifyReview) {
@@ -1285,6 +1755,63 @@ export const useKnittingStore = defineStore("knittingStore", () => {
   const updateAdminSettings = (newSettings: Partial<AdminSettings>) => {
     settings.value = { ...settings.value, ...newSettings };
     saveToLocalStorage();
+
+    // 🌐 Supabase 서버 설정 업데이트
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_settings").upsert({
+          id: "main_settings",
+          admin_password: settings.value.adminPassword,
+          sound_alert_enabled: settings.value.soundAlertEnabled,
+          browser_notification_enabled: settings.value.browserNotificationEnabled,
+          kakao_alert_enabled: settings.value.kakaoAlertEnabled,
+          kakao_access_token: settings.value.kakaoAccessToken,
+          kakao_js_key: settings.value.kakaoJsKey,
+          kakao_notify_order: settings.value.kakaoNotifyOrder,
+          kakao_notify_refund: settings.value.kakaoNotifyRefund,
+          kakao_notify_review: settings.value.kakaoNotifyReview,
+          kakao_notify_inquiry: settings.value.kakaoNotifyInquiry,
+          bank_name: settings.value.bankName,
+          account_number: settings.value.accountNumber,
+          account_holder: settings.value.accountHolder,
+          updated_at: new Date().toISOString(),
+        }).then(({ error }: any) => {
+          if (error) console.warn("[Supabase] Settings update error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("[Supabase] Settings sync error:", e);
+    }
+  };
+
+  // 관리자 비밀번호 변경 및 검증
+  const verifyAdminPassword = (pw: string): boolean => {
+    const current = settings.value.adminPassword || "admin1234";
+    return pw === current;
+  };
+
+  const changeAdminPassword = (newPw: string): boolean => {
+    if (!newPw || newPw.trim().length < 4) return false;
+    settings.value.adminPassword = newPw.trim();
+    saveToLocalStorage();
+
+    // 🌐 Supabase 서버 비밀번호 업데이트
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_settings").update({
+          admin_password: settings.value.adminPassword,
+          updated_at: new Date().toISOString(),
+        }).eq("id", "main_settings").then(({ error }: any) => {
+          if (error) console.warn("[Supabase] Password update error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("[Supabase] Password sync error:", e);
+    }
+
+    return true;
   };
 
   // 상태 라벨 헬퍼
@@ -1342,6 +1869,31 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     };
     products.value.unshift(newProduct);
     saveToLocalStorage();
+
+    // 🌐 Supabase 비동기 동기화
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_products").insert({
+          id: newProduct.id,
+          name: newProduct.name,
+          price: newProduct.price,
+          image: newProduct.image,
+          images: newProduct.images || [newProduct.image],
+          tag: newProduct.tag || "BEST",
+          badge_color: newProduct.badgeColor || "#ff4d6d",
+          description: newProduct.description || "",
+          details: newProduct.details || "",
+          is_popular: Boolean(newProduct.isPopular),
+          order_num: 0,
+        }).then(({ error }: any) => {
+          if (error) console.error("Supabase addProduct sync error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("Supabase addProduct background sync failed", e);
+    }
+
     showToast(`'${newProduct.name}' 상품이 성공적으로 등록되었습니다! 🎉`);
     return newProduct;
   };
@@ -1372,6 +1924,31 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       images: nextImages,
     };
     saveToLocalStorage();
+
+    // 🌐 Supabase 비동기 동기화
+    try {
+      const client = getSupabase();
+      if (client) {
+        const prod = products.value[index];
+        client.from("knitting_products").update({
+          name: prod.name,
+          price: prod.price,
+          image: prod.image,
+          images: prod.images || [prod.image],
+          tag: prod.tag || "BEST",
+          badge_color: prod.badgeColor || "#ff4d6d",
+          description: prod.description || "",
+          details: prod.details || "",
+          is_popular: Boolean(prod.isPopular),
+          updated_at: new Date().toISOString(),
+        }).eq("id", id).then(({ error }: any) => {
+          if (error) console.error("Supabase updateProduct sync error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("Supabase updateProduct background sync failed", e);
+    }
+
     showToast(`'${products.value[index].name}' 상품 정보가 안전하게 수정되었습니다! ✨`);
     return true;
   };
@@ -1389,6 +1966,19 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     const targetName = target ? target.name : "상품";
     products.value = products.value.filter((p) => p.id !== id);
     saveToLocalStorage();
+
+    // 🌐 Supabase 비동기 동기화
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_products").delete().eq("id", id).then(({ error }: any) => {
+          if (error) console.error("Supabase deleteProduct sync error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("Supabase deleteProduct background sync failed", e);
+    }
+
     showToast(`'${targetName}' 상품이 삭제되었습니다.`);
     return true;
   };
@@ -1407,6 +1997,30 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       ...payload,
     };
     saveToLocalStorage();
+
+    // 🌐 Supabase 비동기 동기화
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_site_notices").upsert({
+          id: "main_notices",
+          notice_content: siteNotices.value.noticeContent,
+          shipping_content: siteNotices.value.shippingContent,
+          caution_content: siteNotices.value.cautionContent,
+          washing_content: siteNotices.value.washingContent,
+          shop_intro: siteNotices.value.shopIntro,
+          instagram_id: siteNotices.value.instagramId,
+          making_period: siteNotices.value.makingPeriod,
+          courier_info: siteNotices.value.courierInfo,
+          updated_at: new Date().toISOString(),
+        }).then(({ error }: any) => {
+          if (error) console.error("Supabase updateSiteNotices sync error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("Supabase updateSiteNotices background sync failed", e);
+    }
+
     showToast("공지 및 주문 안내 문구가 안전하게 저장되었습니다! ✨");
     return true;
   };
@@ -1418,6 +2032,61 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     showToast("초기 기본 공지 및 주문 안내 문구로 복원되었습니다.");
   };
 
+  // 🌟 관리자 전용: 사용자 팝업 안내 & 새 상품 안내 설정 저장
+  const updatePopupNotice = (payload: Partial<PopupNotice>) => {
+    const cleanPayload = { ...payload };
+    const stripLeadingEmoji = (str?: string) =>
+      str ? str.replace(/^[\s\p{Extended_Pictographic}\u200d\ufe0f🍎🧶📢🌟🛒🛍️👉✨]+/u, "").trim() : str;
+    if (cleanPayload.actionButtonText) {
+      cleanPayload.actionButtonText = stripLeadingEmoji(cleanPayload.actionButtonText);
+    }
+    if (cleanPayload.badgeText) {
+      cleanPayload.badgeText = stripLeadingEmoji(cleanPayload.badgeText);
+    }
+    popupNotice.value = {
+      ...popupNotice.value,
+      ...cleanPayload,
+    };
+    saveToLocalStorage();
+
+    // 🌐 Supabase 비동기 동기화
+    try {
+      const client = getSupabase();
+      if (client) {
+        client.from("knitting_popup_notice").upsert({
+          id: "main_popup",
+          is_active: popupNotice.value.isActive,
+          type: popupNotice.value.type,
+          target_product_id: popupNotice.value.targetProductId,
+          badge_text: popupNotice.value.badgeText,
+          title: popupNotice.value.title,
+          content: popupNotice.value.content,
+          image_url: popupNotice.value.imageUrl,
+          is_always: popupNotice.value.isAlways,
+          start_date: popupNotice.value.startDate,
+          end_date: popupNotice.value.endDate,
+          action_button_text: popupNotice.value.actionButtonText,
+          show_action_button: popupNotice.value.showActionButton,
+          updated_at: new Date().toISOString(),
+        }).then(({ error }: any) => {
+          if (error) console.error("Supabase updatePopupNotice sync error:", error);
+        });
+      }
+    } catch (e) {
+      console.warn("Supabase updatePopupNotice background sync failed", e);
+    }
+
+    showToast("사용자 팝업 안내 설정이 저장되었습니다! ✨");
+    return true;
+  };
+
+  // 🌟 관리자 전용: 기본 팝업 설정으로 복원
+  const resetPopupNoticeToDefault = () => {
+    popupNotice.value = { ...DEFAULT_POPUP_NOTICE };
+    saveToLocalStorage();
+    showToast("기본 팝업 안내 설정으로 복원되었습니다.");
+  };
+
   return {
     products,
     orders,
@@ -1427,6 +2096,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     notifications,
     settings,
     siteNotices,
+    popupNotice,
+    isUserNoticeModalOpen,
     isAdminLoggedIn,
     adminActiveTab,
     adminScrollTrigger,
@@ -1472,6 +2143,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     resetProductsToDefault,
     updateSiteNotices,
     resetSiteNoticesToDefault,
+    updatePopupNotice,
+    resetPopupNoticeToDefault,
     requestRefund,
     updateRefundStatus,
     createInquiry,
@@ -1483,6 +2156,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     loginAdmin,
     logoutAdmin,
     updateAdminSettings,
+    verifyAdminPassword,
+    changeAdminPassword,
     getStatusLabel,
     getStatusColor,
   };
