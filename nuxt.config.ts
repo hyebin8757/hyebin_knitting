@@ -108,14 +108,14 @@ const nuxtConfig: any = {
 
   runtimeConfig: {
     public: {
-      supabaseUrl: cleanEnvValue(process.env.SUPABASE_URL),
-      supabaseKey: cleanEnvValue(process.env.SUPABASE_KEY),
+      supabaseUrl: cleanEnvValue(process.env.SUPABASE_URL) || "https://taxlvyiijpanfzwrmuih.supabase.co",
+      supabaseKey: cleanEnvValue(process.env.SUPABASE_KEY) || "sb_publishable_Xyp-Y9U-x152t2e6C1cItw_futrI8_G",
     },
   },
 
   supabase: {
-    url: cleanEnvValue(process.env.SUPABASE_URL),
-    key: cleanEnvValue(process.env.SUPABASE_KEY),
+    url: cleanEnvValue(process.env.SUPABASE_URL) || "https://taxlvyiijpanfzwrmuih.supabase.co",
+    key: cleanEnvValue(process.env.SUPABASE_KEY) || "sb_publishable_Xyp-Y9U-x152t2e6C1cItw_futrI8_G",
     redirect: false,
   },
 

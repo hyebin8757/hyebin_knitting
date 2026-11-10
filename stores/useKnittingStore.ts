@@ -12,14 +12,31 @@ const getEnvValue = (key: string): string => {
 let _supabaseClient: SupabaseClient | null = null;
 const getSupabase = (): SupabaseClient | null => {
   if (_supabaseClient) return _supabaseClient;
-  const url = getEnvValue("SUPABASE_URL") || "https://taxlvyiijpanfzwrmuih.supabase.co";
-  const key = getEnvValue("SUPABASE_KEY") || "";
+
+  let url = "https://taxlvyiijpanfzwrmuih.supabase.co";
+  let key = "sb_publishable_Xyp-Y9U-x152t2e6C1cItw_futrI8_G";
+
+  try {
+    const config = useRuntimeConfig();
+    if (config?.public?.supabaseUrl) url = config.public.supabaseUrl;
+    if (config?.public?.supabaseKey) key = config.public.supabaseKey;
+  } catch (e) {
+    // 런타임 이전 환경 fallback
+  }
+
+  if (!key && typeof process !== "undefined" && process.env) {
+    if (process.env.SUPABASE_URL) url = process.env.SUPABASE_URL;
+    if (process.env.SUPABASE_KEY) key = process.env.SUPABASE_KEY;
+  }
+
   if (url && key) {
     try {
       _supabaseClient = createClient(url, key);
     } catch (e) {
-      console.warn("[Supabase] Init warning:", e);
+      console.warn("[Supabase] Init error:", e);
     }
+  } else {
+    console.warn("[Supabase] SUPABASE_KEY가 비어있어 클라우드 동기화가 대기 중입니다.");
   }
   return _supabaseClient;
 };
