@@ -34,14 +34,13 @@ const handleQuickLookup = () => {
     <!-- 메인 히어로 배너 -->
     <section class="hero-section">
       <div class="hero-inner">
-        <div class="hero-badge">🧶 2026 앉은누이 뜨개옷 신상 컬렉션</div>
+        <div class="hero-badge">🌸 100% 핸드메이드 인형옷 공방</div>
         <h1 class="hero-title">
-          동글동글 인형 친구들을 위한<br />
-          <span class="highlight-text">사랑스러운 맞춤 뜨개 옷장</span> ✨
+          <span class="hero-main-title">🧶 먼작콩 뜨개상점</span>
+          <span class="hero-sub-title highlight-text">치이카와 앉은누이 전용 뜨개옷</span>
         </h1>
         <p class="hero-desc">
-          사과, 복숭아, 딸기부터 세라복과 도토리 세트까지!<br />
-          한 땀 한 땀 100% 정성껏 제작하는 핸드메이드 뜨개옷을 만나보세요.
+          한 땀 한 땀 정성을 담아 사랑스럽게 맞춤 제작해 드립니다 ✨
         </p>
 
         <div class="hero-actions">
@@ -220,7 +219,7 @@ const handleQuickLookup = () => {
 /* 히어로 섹션 */
 .hero-section {
   background: linear-gradient(180deg, #fff2f4 0%, #faf7f2 100%);
-  padding: 40px 16px 20px;
+  padding: 38px 16px 20px;
   text-align: center;
 }
 
@@ -230,39 +229,60 @@ const handleQuickLookup = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
 .hero-badge {
   background: #ffffff;
   color: #ff4d6d;
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 6px 16px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 5px 16px;
   border-radius: 20px;
   box-shadow: 0 2px 10px rgba(255, 77, 109, 0.12);
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   border: 1px solid #ffd6de;
+  letter-spacing: -0.2px;
 }
 
 .hero-title {
-  font-size: 2.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  text-align: center;
+}
+
+.hero-main-title {
+  font-size: 1.95rem;
   font-weight: 900;
   color: #2b1f1d;
-  line-height: 1.35;
-  margin: 0 0 16px;
+  letter-spacing: -0.5px;
+  line-height: 1.25;
+}
+
+.hero-sub-title {
+  font-size: 1.7rem;
+  font-weight: 900;
+  line-height: 1.3;
   letter-spacing: -0.5px;
 }
 
 .highlight-text {
   color: #ff4d6d;
   background: linear-gradient(transparent 65%, #ffd6de 65%);
+  padding: 0 6px;
+  border-radius: 6px;
 }
 
 .hero-desc {
-  font-size: 0.98rem;
+  font-size: 0.95rem;
   color: #6b5c58;
   line-height: 1.6;
-  margin: 0 0 28px;
+  margin: 0 0 24px;
+  word-break: keep-all;
+  text-align: center;
 }
 
 .hero-actions {
@@ -724,30 +744,44 @@ const handleQuickLookup = () => {
   }
 
   .hero-section {
-    padding: 22px 14px 12px;
+    padding: 22px 14px 14px;
+    text-align: center;
   }
 
   .hero-inner {
     padding: 0; /* 이중 패딩 제거로 비정상적인 여백 해소 */
     width: 100%;
+    align-items: center;
+    text-align: center;
   }
 
   .hero-badge {
-    font-size: 0.76rem;
+    font-size: 0.74rem;
     padding: 4px 12px;
     margin-bottom: 10px;
   }
 
   .hero-title {
-    font-size: 1.45rem;
-    line-height: 1.35;
+    gap: 4px;
     margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .hero-main-title {
+    font-size: 1.45rem;
+    line-height: 1.25;
+  }
+
+  .hero-sub-title {
+    font-size: 1.3rem;
+    line-height: 1.3;
   }
 
   .hero-desc {
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     line-height: 1.5;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
+    text-align: center;
   }
 
   .hero-actions {
