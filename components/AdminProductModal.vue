@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
-import { useKnittingStore, type ProductItem } from "~/stores/useKnittingStore";
+import { useKnittingStore, INITIAL_PRODUCTS, type ProductItem } from "~/stores/useKnittingStore";
 import { compressImageFile } from "~/utils/imageCompress";
 
 const props = defineProps<{
@@ -97,14 +97,19 @@ watch(
         : (newVal.image ? [newVal.image] : ["/images/products/apple.jpg"]);
       imageList.value = imgs.slice(0, 5);
 
+      const defaultProd = INITIAL_PRODUCTS.find((p) => p.id === newVal.id);
+      const defaultOpts = (newVal.options && newVal.options.length > 0)
+        ? [...newVal.options]
+        : (defaultProd?.options ? [...defaultProd.options] : []);
+
       form.value = {
         name: newVal.name || "",
         price: newVal.price || 14000,
         tag: newVal.tag || "BEST",
         badgeColor: newVal.badgeColor || "#ff4d6d",
         description: newVal.description || "",
-        details: newVal.details || "",
-        options: newVal.options ? [...newVal.options] : [],
+        details: newVal.details || defaultProd?.details || "",
+        options: defaultOpts,
         isPopular: newVal.isPopular ?? true,
       };
     } else {

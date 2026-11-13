@@ -572,13 +572,20 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         try {
           const parsed = JSON.parse(storedProducts);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            products.value = parsed.map((p) => ({
-              ...p,
-              images: (p.images && Array.isArray(p.images) && p.images.length > 0)
-                ? p.images
-                : (p.image ? [p.image] : []),
-              options: (p.options && Array.isArray(p.options)) ? p.options : [],
-            }));
+            products.value = parsed.map((p) => {
+              const defaultProd = INITIAL_PRODUCTS.find((ip) => ip.id === p.id);
+              const hasOptions = Array.isArray(p.options) && p.options.length > 0;
+              return {
+                ...p,
+                images: (p.images && Array.isArray(p.images) && p.images.length > 0)
+                  ? p.images
+                  : (p.image ? [p.image] : []),
+                options: hasOptions
+                  ? p.options
+                  : (defaultProd?.options ? [...defaultProd.options] : []),
+                details: p.details || defaultProd?.details || "",
+              };
+            });
           }
         } catch (e) {
           console.error("Failed to parse stored products:", e);
@@ -781,19 +788,29 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         .select("*")
         .order("order_num", { ascending: true });
       if (pData && pData.length > 0) {
-        products.value = pData.map((row: any) => ({
-          id: row.id,
-          name: row.name,
-          price: row.price,
-          image: row.image,
-          images: row.images || [row.image],
-          tag: row.tag || "BEST",
-          badgeColor: row.badge_color || "#ff4d6d",
-          description: row.description || "",
-          details: row.details || "",
-          options: (row.options && Array.isArray(row.options)) ? row.options : [],
-          isPopular: row.is_popular ?? false,
-        }));
+        products.value = pData.map((row: any) => {
+          const defaultProd = INITIAL_PRODUCTS.find((p) => p.id === row.id);
+          const hasDbOptions = Array.isArray(row.options) && row.options.length > 0;
+          // DB에 options가 정상 존재하면 DB값 우선, DB에 컬럼이 없거나 null/빈배열이면 기본 데이터 옵션으로 자동 fallback
+          const options = hasDbOptions
+            ? row.options
+            : (defaultProd?.options ? [...defaultProd.options] : []);
+          const details = row.details || defaultProd?.details || "";
+
+          return {
+            id: row.id,
+            name: row.name,
+            price: row.price,
+            image: row.image,
+            images: row.images || [row.image],
+            tag: row.tag || "BEST",
+            badgeColor: row.badge_color || "#ff4d6d",
+            description: row.description || "",
+            details,
+            options,
+            isPopular: row.is_popular ?? false,
+          };
+        });
         safeSetItem("knitting_products", products.value);
       }
 
