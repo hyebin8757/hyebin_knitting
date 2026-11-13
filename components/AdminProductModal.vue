@@ -218,7 +218,7 @@ const closeModal = () => {
 };
 
 // 저장 처리
-const handleSave = () => {
+const handleSave = async () => {
   if (!form.value.name.trim()) {
     store.showAlert("상품명을 입력해주세요.", { type: "warning", title: "필수 입력 누락" });
     return;
@@ -238,7 +238,7 @@ const handleSave = () => {
   const finalImages = imageList.value.slice(0, 5);
 
   if (isEditMode.value && props.product) {
-    store.updateProduct(props.product.id, {
+    await store.updateProduct(props.product.id, {
       name: form.value.name.trim(),
       price: Number(form.value.price),
       image: mainImage,
@@ -251,7 +251,7 @@ const handleSave = () => {
     });
     emit("saved", props.product.id);
   } else {
-    const created = store.addProduct({
+    const created = await store.addProduct({
       name: form.value.name.trim(),
       price: Number(form.value.price),
       image: mainImage,
@@ -262,7 +262,7 @@ const handleSave = () => {
       details: form.value.details.trim(),
       isPopular: form.value.isPopular,
     });
-    emit("saved", created.id);
+    emit("saved", created ? created.id : "");
   }
 
   closeModal();
@@ -564,7 +564,7 @@ const handleSave = () => {
   border-radius: 24px;
   width: 100%;
   max-width: 520px;
-  max-height: 90vh;
+  max-height: 90dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -635,6 +635,7 @@ const handleSave = () => {
 .modal-body {
   padding: 16px 20px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 16px;

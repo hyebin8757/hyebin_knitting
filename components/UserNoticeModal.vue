@@ -269,11 +269,13 @@ const handleScrollToProduct = () => {
 .site-popup-dialog {
   width: 100%;
   max-width: 380px;
+  max-height: 88dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: #ffffff;
   border-radius: 24px;
   box-shadow: 0 16px 40px rgba(43, 31, 29, 0.25);
   border: 2px solid #ffd6de;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;

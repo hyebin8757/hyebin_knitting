@@ -56,6 +56,7 @@ onMounted(() => {
 <style scoped>
 .mobile-outer-container {
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: #f5ede4;
   display: flex;
   justify-content: center;
@@ -65,6 +66,7 @@ onMounted(() => {
   width: 100%;
   max-width: 540px; /* 모바일 중심 앱 규격 (모바일 화면에선 100%, PC에선 세련된 모바일 뷰) */
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -75,6 +77,8 @@ onMounted(() => {
   position: relative;
   overflow-x: hidden;
   box-sizing: border-box;
+  /* 📱 하단 탭바 및 iPhone 홈 인디케이터에 가려지지 않도록 안전 여백 확보 */
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
 }
 
 .site-main {

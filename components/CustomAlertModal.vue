@@ -82,6 +82,9 @@ const getIcon = (type: string) => {
 .custom-alert-card {
   width: 100%;
   max-width: 320px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: #ffffff;
   border-radius: 24px;
   padding: 24px 20px 20px;
@@ -165,7 +168,7 @@ const getIcon = (type: string) => {
    ======================================================== */
 .custom-toast-container {
   position: fixed;
-  top: 24px;
+  top: calc(16px + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
   z-index: 10000;

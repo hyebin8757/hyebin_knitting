@@ -32,8 +32,8 @@ const openEditProductModal = (prod: ProductItem) => {
   isProductModalOpen.value = true;
 };
 
-const handleDeleteProduct = (productId: string) => {
-  store.deleteProduct(productId);
+const handleDeleteProduct = async (productId: string) => {
+  await store.deleteProduct(productId);
 };
 
 const handleResetProducts = () => {
@@ -79,9 +79,17 @@ const syncNoticesForm = () => {
   };
 };
 
+watch(
+  () => store.siteNotices,
+  () => {
+    syncNoticesForm();
+  },
+  { deep: true }
+);
+
 // 공지 & 주문안내 저장 핸들러
-const saveSiteNotices = () => {
-  store.updateSiteNotices({
+const saveSiteNotices = async () => {
+  await store.updateSiteNotices({
     noticeContent: noticesForm.value.noticeContent.trim(),
     shippingContent: noticesForm.value.shippingContent.trim(),
     cautionContent: noticesForm.value.cautionContent.trim(),
@@ -93,13 +101,13 @@ const saveSiteNotices = () => {
   });
 
   // 공식 계좌 정보도 함께 동기화
-  store.updateAdminSettings({
+  await store.updateAdminSettings({
     bankName: noticesForm.value.bankName.trim(),
     accountNumber: noticesForm.value.accountNumber.trim(),
     accountHolder: noticesForm.value.accountHolder.trim(),
   });
 
-  store.showAlert("📢 공지사항 및 주문 안내 문구가 성공적으로 저장되었습니다!\n홈페이지, 주문서 작성 페이지, 푸터에 실시간으로 즉시 반영되었습니다. ✨", {
+  store.showAlert("📢 공지사항 및 주문 안내 문구가 안전하게 저장되었습니다!\n클라우드 데이터베이스 및 모든 페이지에 즉시 실시간 반영되었습니다. ✨", {
     title: "공지 & 주문안내 저장 완료",
     type: "success",
   });
@@ -159,11 +167,11 @@ const handlePopupProductSelect = () => {
 };
 
 // 팝업 설정 저장
-const savePopupNoticeSettings = () => {
+const savePopupNoticeSettings = async () => {
   const sanitizeLeadingEmoji = (str: string) =>
     (str || "").replace(/^[\s\p{Extended_Pictographic}\u200d\ufe0f🍎🧶📢🌟🛒🛍️👉✨]+/u, "").trim();
 
-  store.updatePopupNotice({
+  await store.updatePopupNotice({
     isActive: popupForm.value.isActive,
     type: popupForm.value.type,
     targetProductId: popupForm.value.targetProductId,
@@ -303,6 +311,27 @@ onMounted(() => {
   // 📢 공지 & 주문안내 문구 폼 주입
   syncNoticesForm();
 });
+
+watch(
+  () => store.settings,
+  () => {
+    settingsForm.value = {
+      soundAlertEnabled: store.settings.soundAlertEnabled ?? true,
+      browserNotificationEnabled: store.settings.browserNotificationEnabled ?? true,
+      kakaoAlertEnabled: store.settings.kakaoAlertEnabled ?? true,
+      kakaoAccessToken: store.settings.kakaoAccessToken || "",
+      kakaoJsKey: store.settings.kakaoJsKey || "",
+      kakaoNotifyOrder: store.settings.kakaoNotifyOrder ?? true,
+      kakaoNotifyRefund: store.settings.kakaoNotifyRefund ?? true,
+      kakaoNotifyReview: store.settings.kakaoNotifyReview ?? true,
+      kakaoNotifyInquiry: store.settings.kakaoNotifyInquiry ?? true,
+      bankName: store.settings.bankName || "카카오뱅크",
+      accountNumber: store.settings.accountNumber || "3333-12-8924018",
+      accountHolder: store.settings.accountHolder || "전혜빈",
+    };
+  },
+  { deep: true }
+);
 
 // 주문 필터링
 const filteredOrders = computed(() => {
@@ -499,7 +528,7 @@ const testNotificationSound = () => {
 };
 
 // 계좌 및 알림 설정 저장
-const saveSettings = () => {
+const saveSettings = async () => {
   const payload: any = {
     soundAlertEnabled: settingsForm.value.soundAlertEnabled,
     browserNotificationEnabled: settingsForm.value.browserNotificationEnabled,
@@ -515,15 +544,15 @@ const saveSettings = () => {
     accountHolder: settingsForm.value.accountHolder.trim(),
   };
 
-  store.updateAdminSettings(payload);
-  store.showAlert("카카오톡 알림 및 계좌 설정이 안전하게 저장되었습니다!", {
+  await store.updateAdminSettings(payload);
+  store.showAlert("카카오톡 알림 및 계좌 설정이 안전하게 저장되었습니다! 💾\n클라우드에 안전하게 동기화되었습니다.", {
     title: "설정 저장 완료",
     type: "success",
   });
 };
 
 // 🔐 관리자 비밀번호 변경
-const handleChangePassword = () => {
+const handleChangePassword = async () => {
   if (!pwForm.value.currentPassword) {
     store.showAlert("현재 관리자 비밀번호를 입력해주세요.", {
       title: "비밀번호 변경 안내",
@@ -564,7 +593,7 @@ const handleChangePassword = () => {
     return;
   }
 
-  const success = store.changeAdminPassword(pwForm.value.newPassword);
+  const success = await store.changeAdminPassword(pwForm.value.newPassword);
   if (success) {
     pwForm.value.currentPassword = "";
     pwForm.value.newPassword = "";
@@ -2022,9 +2051,10 @@ const handleLogout = () => {
 
 <style scoped>
 .admin-dashboard-page {
-  padding: 32px 16px 80px;
+  padding: 32px 16px calc(96px + env(safe-area-inset-bottom, 0px));
   background-color: #faf7f2;
   min-height: calc(100vh - 80px);
+  min-height: calc(100dvh - 80px);
 }
 
 .admin-container {

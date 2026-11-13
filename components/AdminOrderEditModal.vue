@@ -516,7 +516,7 @@ const handleSave = () => {
 .modal-dialog {
   width: 100%;
   max-width: 580px;
-  max-height: 92vh;
+  max-height: 90dvh;
   background: #ffffff;
   border-radius: 24px;
   border: 1px solid #ebdcd0;
@@ -586,6 +586,7 @@ const handleSave = () => {
 .modal-body {
   padding: 20px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -1098,7 +1099,7 @@ const handleSave = () => {
 /* 반응형 (320px 모바일 완벽 대응) */
 @media (max-width: 640px) {
   .modal-dialog {
-    max-height: 95vh;
+    max-height: 90dvh;
     border-radius: 18px;
   }
 

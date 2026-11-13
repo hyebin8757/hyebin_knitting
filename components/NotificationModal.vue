@@ -369,7 +369,7 @@ const closeModal = () => {
 .modal-sheet {
   width: 100%;
   max-width: 560px;
-  max-height: 88vh;
+  max-height: 88dvh;
   background: #ffffff;
   border-top-left-radius: 28px;
   border-top-right-radius: 28px;
@@ -377,6 +377,7 @@ const closeModal = () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  -webkit-overflow-scrolling: touch;
   animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -886,7 +887,7 @@ const closeModal = () => {
 
 /* 하단 푸터 바 */
 .sheet-footer {
-  padding: 12px 18px;
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
   background: #fbf7f2;
   border-top: 1px solid #f0e6dd;
   display: flex;

@@ -328,8 +328,9 @@ const submitRefund = (orderId: string) => {
   border-radius: 24px;
   width: 100%;
   max-width: 560px;
-  max-height: 90vh;
+  max-height: 90dvh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 20px 40px rgba(78, 42, 50, 0.2);
   display: flex;
   flex-direction: column;
@@ -922,7 +923,9 @@ const submitRefund = (orderId: string) => {
   .modal-card {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    max-height: 85vh;
+    max-height: 88dvh;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    -webkit-overflow-scrolling: touch;
   }
 }
 </style>

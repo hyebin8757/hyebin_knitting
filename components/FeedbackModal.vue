@@ -200,8 +200,9 @@ const submitInquiry = async () => {
   border-radius: 24px;
   width: 100%;
   max-width: 500px;
-  max-height: 90vh;
+  max-height: 90dvh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 20px 40px rgba(78, 42, 50, 0.2);
   display: flex;
   flex-direction: column;

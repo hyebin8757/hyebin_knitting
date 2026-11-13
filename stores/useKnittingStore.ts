@@ -2,6 +2,33 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+/**
+ * 🍎 iOS Safari(WebKit) 호환 날짜 파서
+ * "2026-11-08 14:30" 같은 문자열을 iOS Safari가 Invalid Date(NaN)로 처리하는 버그를 완벽하게 방지
+ */
+export const parseSafeDate = (dateStr?: string | number | null): Date => {
+  if (!dateStr) return new Date();
+  if (typeof dateStr === "number") return new Date(dateStr);
+  if (dateStr instanceof Date) return dateStr;
+
+  const raw = String(dateStr).trim();
+  // "2026-11-08 14:30" -> "2026/11/08 14:30" (WebKit 표준 지원 포맷)
+  const normalized = raw.replace(/-/g, "/");
+  const d = new Date(normalized);
+  if (!isNaN(d.getTime())) return d;
+
+  const isoFallback = new Date(raw);
+  if (!isNaN(isoFallback.getTime())) return isoFallback;
+
+  return new Date();
+};
+
+export const formatSafeLocaleDate = (dateStr?: string | number | null): string => {
+  if (!dateStr) return "";
+  const d = parseSafeDate(dateStr);
+  return d.toLocaleString("ko-KR", { dateStyle: "short", timeStyle: "short" });
+};
+
 const getEnvValue = (key: string): string => {
   if (typeof process !== "undefined" && process.env && process.env[key]) {
     return process.env[key]!;
@@ -794,6 +821,9 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     }, 60000);
   }
 
+  // 🌐 Supabase 데이터 동기화 완료 여부 플래그
+  const isSynced = ref(false);
+
   // 🌐 Supabase 서버와 비동기 데이터 동기화
   const syncFromSupabase = async () => {
     const client = getSupabase();
@@ -818,9 +848,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           details: row.details || "",
           isPopular: row.is_popular ?? false,
         }));
-        if (typeof window !== "undefined") {
-          localStorage.setItem("knitting_products", JSON.stringify(products.value));
-        }
+        safeSetItem("knitting_products", products.value);
       }
 
       // 2. 공지 & 주문안내 문구 동기화
@@ -840,9 +868,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           makingPeriod: nData.making_period || siteNotices.value.makingPeriod,
           courierInfo: nData.courier_info || siteNotices.value.courierInfo,
         };
-        if (typeof window !== "undefined") {
-          localStorage.setItem("knitting_site_notices", JSON.stringify(siteNotices.value));
-        }
+        safeSetItem("knitting_site_notices", siteNotices.value);
       }
 
       // 3. 팝업 안내 설정 동기화
@@ -866,9 +892,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           actionButtonText: popData.action_button_text || popupNotice.value.actionButtonText,
           showActionButton: popData.show_action_button ?? popupNotice.value.showActionButton,
         };
-        if (typeof window !== "undefined") {
-          localStorage.setItem("knitting_popup_notice", JSON.stringify(popupNotice.value));
-        }
+        safeSetItem("knitting_popup_notice", popupNotice.value);
       }
 
       // 4. 구매자 리뷰 동기화
@@ -884,14 +908,12 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           productName: row.product_name,
           content: row.content,
           image: row.image,
-          createdAt: row.created_at ? new Date(row.created_at).toLocaleString("ko-KR") : "",
+          createdAt: formatSafeLocaleDate(row.created_at),
           likes: row.likes || 0,
           isVerified: row.is_verified ?? true,
           isVisible: row.is_visible ?? true,
         }));
-        if (typeof window !== "undefined") {
-          localStorage.setItem("knitting_reviews", JSON.stringify(reviews.value));
-        }
+        safeSetItem("knitting_reviews", reviews.value);
       }
 
       // 5. 주문 내역 동기화
@@ -902,8 +924,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       if (oData && oData.length > 0) {
         orders.value = oData.map((row: any) => ({
           id: row.id,
-          createdAt: row.created_at ? new Date(row.created_at).toLocaleString("ko-KR") : "",
-          createdAtTimestamp: row.created_at_timestamp || new Date(row.created_at).getTime(),
+          createdAt: formatSafeLocaleDate(row.created_at),
+          createdAtTimestamp: row.created_at_timestamp || parseSafeDate(row.created_at).getTime(),
           instagramId: row.instagram_id,
           buyerName: row.buyer_name,
           phone: row.phone,
@@ -922,9 +944,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           customImage: row.custom_image,
           adminNotes: row.admin_notes,
         }));
-        if (typeof window !== "undefined") {
-          localStorage.setItem("knitting_orders", JSON.stringify(orders.value));
-        }
+        safeSetItem("knitting_orders", orders.value);
       }
 
       // 6. 환불 및 문의 내역 동기화
@@ -935,7 +955,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       if (refData && refData.length > 0) {
         refunds.value = refData.map((row: any) => ({
           id: row.id,
-          createdAt: row.created_at ? new Date(row.created_at).toLocaleString("ko-KR") : "",
+          createdAt: formatSafeLocaleDate(row.created_at),
           orderId: row.order_id,
           buyerName: row.buyer_name,
           phone: row.phone,
@@ -947,9 +967,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           status: row.status,
           adminNote: row.admin_note,
         }));
-        if (typeof window !== "undefined") {
-          localStorage.setItem("knitting_refunds", JSON.stringify(refunds.value));
-        }
+        safeSetItem("knitting_refunds", refunds.value);
       }
 
       const { data: inqData } = await client
@@ -959,7 +977,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       if (inqData && inqData.length > 0) {
         inquiries.value = inqData.map((row: any) => ({
           id: row.id,
-          createdAt: row.created_at ? new Date(row.created_at).toLocaleString("ko-KR") : "",
+          createdAt: formatSafeLocaleDate(row.created_at),
           type: row.type,
           name: row.name,
           contact: row.contact,
@@ -967,9 +985,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           status: row.status,
           adminReply: row.admin_reply,
         }));
-        if (typeof window !== "undefined") {
-          localStorage.setItem("knitting_inquiries", JSON.stringify(inquiries.value));
-        }
+        safeSetItem("knitting_inquiries", inquiries.value);
       }
 
       // 7. 상점 및 카카오톡 설정 동기화
@@ -995,38 +1011,54 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           kakaoNotifyReview: sData.kakao_notify_review ?? true,
           kakaoNotifyInquiry: sData.kakao_notify_inquiry ?? true,
         };
-        if (typeof window !== "undefined") {
-          localStorage.setItem("knitting_settings", JSON.stringify(settings.value));
-        }
+        safeSetItem("knitting_settings", settings.value);
       }
+
+      isSynced.value = true;
     } catch (err) {
       console.warn("[Supabase] Data sync notice:", err);
     }
   };
 
-  const saveToLocalStorage = () => {
+  // 🛡️ iOS Safari 5MB 한도 초과(QuotaExceededError) 방지용 독립 안전 저장 함수
+  const safeSetItem = (key: string, value: any) => {
     if (typeof window === "undefined") return;
     try {
-      localStorage.setItem("knitting_products", JSON.stringify(products.value));
-      localStorage.setItem("knitting_orders", JSON.stringify(orders.value));
-      localStorage.setItem("knitting_refunds", JSON.stringify(refunds.value));
-      localStorage.setItem("knitting_inquiries", JSON.stringify(inquiries.value));
-      localStorage.setItem("knitting_reviews", JSON.stringify(reviews.value));
-      localStorage.setItem("knitting_notifications", JSON.stringify(notifications.value));
-      localStorage.setItem("knitting_settings", JSON.stringify(settings.value));
-      localStorage.setItem("knitting_site_notices", JSON.stringify(siteNotices.value));
-      localStorage.setItem("knitting_popup_notice", JSON.stringify(popupNotice.value));
-    } catch (e: any) {
-      console.warn("LocalStorage save warning (recovering quota):", e);
-      // QuotaExceededError 발생 시 알림 기록 등 비필수 데이터 정리 후 핵심 데이터(상품, 주문) 재저장
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (err: any) {
+      console.warn(`[Storage] Quota warning for "${key}":`, err);
       try {
         localStorage.removeItem("knitting_notifications");
-        localStorage.setItem("knitting_products", JSON.stringify(products.value));
-        localStorage.setItem("knitting_orders", JSON.stringify(orders.value));
-      } catch (innerErr) {
-        console.error("Critical storage failure:", innerErr);
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (retryErr) {
+        // 만약 orders에 대용량 이미지가 있어 초과된 경우 이미지 데이터를 제외하고 주문 메타데이터 보존
+        if (key === "knitting_orders" && Array.isArray(value)) {
+          try {
+            const stripped = value.map((o: any) => ({
+              ...o,
+              customImage: o.customImage ? "(image_saved_in_cloud)" : null,
+            }));
+            localStorage.setItem(key, JSON.stringify(stripped));
+          } catch (stripErr) {
+            console.error(`[Storage] Critical quota error for "${key}":`, stripErr);
+          }
+        }
       }
     }
+  };
+
+  const saveToLocalStorage = () => {
+    if (typeof window === "undefined") return;
+    // 중요한 설정/공지/팝업부터 최우선 개별 안전 저장
+    safeSetItem("knitting_settings", settings.value);
+    safeSetItem("knitting_site_notices", siteNotices.value);
+    safeSetItem("knitting_popup_notice", popupNotice.value);
+    safeSetItem("knitting_products", products.value);
+    safeSetItem("knitting_orders", orders.value);
+    safeSetItem("knitting_refunds", refunds.value);
+    safeSetItem("knitting_inquiries", inquiries.value);
+    safeSetItem("knitting_reviews", reviews.value);
+    safeSetItem("knitting_notifications", notifications.value);
   };
 
   // 🔔 알림 모달 관리 메서드들
@@ -1727,17 +1759,40 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     return newReview;
   };
 
-  const toggleReviewVisibility = (reviewId: string) => {
+  const toggleReviewVisibility = async (reviewId: string) => {
     const rev = reviews.value.find((r) => r.id === reviewId);
     if (!rev) return;
     rev.isVisible = !rev.isVisible;
     saveToLocalStorage();
+
+    try {
+      const client = getSupabase();
+      if (client) {
+        await client.from("knitting_reviews").update({
+          is_visible: rev.isVisible,
+          updated_at: new Date().toISOString(),
+        }).eq("id", reviewId);
+      }
+    } catch (e) {
+      console.warn("[Supabase] Review visibility update error:", e);
+    }
+
     showToast(rev.isVisible ? "후기가 '공개(표시 중)'로 전환되었습니다." : "후기가 '비공개(숨김 상태)'로 전환되었습니다.");
   };
 
-  const deleteReview = (reviewId: string) => {
+  const deleteReview = async (reviewId: string) => {
     reviews.value = reviews.value.filter((r) => r.id !== reviewId);
     saveToLocalStorage();
+
+    try {
+      const client = getSupabase();
+      if (client) {
+        await client.from("knitting_reviews").delete().eq("id", reviewId);
+      }
+    } catch (e) {
+      console.warn("[Supabase] Review delete error:", e);
+    }
+
     showToast("리뷰가 삭제되었습니다.");
   };
 
@@ -1746,6 +1801,18 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     if (rev) {
       rev.likes += 1;
       saveToLocalStorage();
+
+      try {
+        const client = getSupabase();
+        if (client) {
+          client.from("knitting_reviews").update({
+            likes: rev.likes,
+            updated_at: new Date().toISOString(),
+          }).eq("id", reviewId).then();
+        }
+      } catch (e) {
+        console.warn("[Supabase] Review like error:", e);
+      }
     }
   };
 
@@ -1769,7 +1836,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     }
   };
 
-  const updateAdminSettings = (newSettings: Partial<AdminSettings>) => {
+  const updateAdminSettings = async (newSettings: Partial<AdminSettings>) => {
     settings.value = { ...settings.value, ...newSettings };
     saveToLocalStorage();
 
@@ -1777,7 +1844,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     try {
       const client = getSupabase();
       if (client) {
-        client.from("knitting_settings").upsert({
+        const { error } = await client.from("knitting_settings").upsert({
           id: "main_settings",
           admin_password: settings.value.adminPassword,
           sound_alert_enabled: settings.value.soundAlertEnabled,
@@ -1793,9 +1860,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           account_number: settings.value.accountNumber,
           account_holder: settings.value.accountHolder,
           updated_at: new Date().toISOString(),
-        }).then(({ error }: any) => {
-          if (error) console.warn("[Supabase] Settings update error:", error);
         });
+        if (error) console.warn("[Supabase] Settings update error:", error);
       }
     } catch (e) {
       console.warn("[Supabase] Settings sync error:", e);
@@ -1808,7 +1874,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     return pw === current;
   };
 
-  const changeAdminPassword = (newPw: string): boolean => {
+  const changeAdminPassword = async (newPw: string): Promise<boolean> => {
     if (!newPw || newPw.trim().length < 4) return false;
     settings.value.adminPassword = newPw.trim();
     saveToLocalStorage();
@@ -1817,15 +1883,18 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     try {
       const client = getSupabase();
       if (client) {
-        client.from("knitting_settings").update({
+        const { error } = await client.from("knitting_settings").update({
           admin_password: settings.value.adminPassword,
           updated_at: new Date().toISOString(),
-        }).eq("id", "main_settings").then(({ error }: any) => {
-          if (error) console.warn("[Supabase] Password update error:", error);
-        });
+        }).eq("id", "main_settings");
+        if (error) {
+          console.warn("[Supabase] Password update error:", error);
+          return false;
+        }
       }
     } catch (e) {
       console.warn("[Supabase] Password sync error:", e);
+      return false;
     }
 
     return true;
@@ -1871,7 +1940,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
   };
 
   // 🛍️ 관리자 전용: 주문서 상품(카탈로그) 추가 (최대 5장 사진 지원)
-  const addProduct = (productData: Omit<ProductItem, "id">) => {
+  const addProduct = async (productData: Omit<ProductItem, "id">) => {
     const id = `prod_${Date.now()}`;
     const rawImages = productData.images && productData.images.length > 0
       ? productData.images.slice(0, 5)
@@ -1891,7 +1960,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     try {
       const client = getSupabase();
       if (client) {
-        client.from("knitting_products").insert({
+        const { error } = await client.from("knitting_products").insert({
           id: newProduct.id,
           name: newProduct.name,
           price: newProduct.price,
@@ -1903,9 +1972,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           details: newProduct.details || "",
           is_popular: Boolean(newProduct.isPopular),
           order_num: 0,
-        }).then(({ error }: any) => {
-          if (error) console.error("Supabase addProduct sync error:", error);
         });
+        if (error) console.error("Supabase addProduct sync error:", error);
       }
     } catch (e) {
       console.warn("Supabase addProduct background sync failed", e);
@@ -1916,7 +1984,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
   };
 
   // 🛍️ 관리자 전용: 주문서 상품(사진 최대 5장, 이름, 가격, 태그 등) 수정
-  const updateProduct = (id: string, updatedData: Partial<ProductItem>) => {
+  const updateProduct = async (id: string, updatedData: Partial<ProductItem>) => {
     const index = products.value.findIndex((p) => p.id === id);
     if (index === -1) {
       showToast("수정할 상품을 찾을 수 없습니다.");
@@ -1947,7 +2015,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       const client = getSupabase();
       if (client) {
         const prod = products.value[index];
-        client.from("knitting_products").update({
+        const { error } = await client.from("knitting_products").update({
           name: prod.name,
           price: prod.price,
           image: prod.image,
@@ -1958,9 +2026,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           details: prod.details || "",
           is_popular: Boolean(prod.isPopular),
           updated_at: new Date().toISOString(),
-        }).eq("id", id).then(({ error }: any) => {
-          if (error) console.error("Supabase updateProduct sync error:", error);
-        });
+        }).eq("id", id);
+        if (error) console.error("Supabase updateProduct sync error:", error);
       }
     } catch (e) {
       console.warn("Supabase updateProduct background sync failed", e);
@@ -1971,7 +2038,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
   };
 
   // 🛍️ 관리자 전용: 주문서 상품 삭제
-  const deleteProduct = (id: string) => {
+  const deleteProduct = async (id: string) => {
     if (products.value.length <= 1) {
       showAlert("최소 1개 이상의 주문서 상품이 유지되어야 합니다.", {
         type: "warning",
@@ -1988,9 +2055,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     try {
       const client = getSupabase();
       if (client) {
-        client.from("knitting_products").delete().eq("id", id).then(({ error }: any) => {
-          if (error) console.error("Supabase deleteProduct sync error:", error);
-        });
+        const { error } = await client.from("knitting_products").delete().eq("id", id);
+        if (error) console.error("Supabase deleteProduct sync error:", error);
       }
     } catch (e) {
       console.warn("Supabase deleteProduct background sync failed", e);
@@ -2008,7 +2074,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
   };
 
   // 📢 관리자 전용: 공지사항, 배송안내, 세탁주의, 공방소개/인스타 등 수정 (2~5번 이미지)
-  const updateSiteNotices = (payload: Partial<SiteNotices>) => {
+  const updateSiteNotices = async (payload: Partial<SiteNotices>) => {
     siteNotices.value = {
       ...siteNotices.value,
       ...payload,
@@ -2019,7 +2085,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     try {
       const client = getSupabase();
       if (client) {
-        client.from("knitting_site_notices").upsert({
+        const { error } = await client.from("knitting_site_notices").upsert({
           id: "main_notices",
           notice_content: siteNotices.value.noticeContent,
           shipping_content: siteNotices.value.shippingContent,
@@ -2030,9 +2096,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           making_period: siteNotices.value.makingPeriod,
           courier_info: siteNotices.value.courierInfo,
           updated_at: new Date().toISOString(),
-        }).then(({ error }: any) => {
-          if (error) console.error("Supabase updateSiteNotices sync error:", error);
         });
+        if (error) console.error("Supabase updateSiteNotices sync error:", error);
       }
     } catch (e) {
       console.warn("Supabase updateSiteNotices background sync failed", e);
@@ -2050,7 +2115,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
   };
 
   // 🌟 관리자 전용: 사용자 팝업 안내 & 새 상품 안내 설정 저장
-  const updatePopupNotice = (payload: Partial<PopupNotice>) => {
+  const updatePopupNotice = async (payload: Partial<PopupNotice>) => {
     const cleanPayload = { ...payload };
     const stripLeadingEmoji = (str?: string) =>
       str ? str.replace(/^[\s\p{Extended_Pictographic}\u200d\ufe0f🍎🧶📢🌟🛒🛍️👉✨]+/u, "").trim() : str;
@@ -2070,7 +2135,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     try {
       const client = getSupabase();
       if (client) {
-        client.from("knitting_popup_notice").upsert({
+        const { error } = await client.from("knitting_popup_notice").upsert({
           id: "main_popup",
           is_active: popupNotice.value.isActive,
           type: popupNotice.value.type,
@@ -2085,9 +2150,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           action_button_text: popupNotice.value.actionButtonText,
           show_action_button: popupNotice.value.showActionButton,
           updated_at: new Date().toISOString(),
-        }).then(({ error }: any) => {
-          if (error) console.error("Supabase updatePopupNotice sync error:", error);
         });
+        if (error) console.error("Supabase updatePopupNotice sync error:", error);
       }
     } catch (e) {
       console.warn("Supabase updatePopupNotice background sync failed", e);
@@ -2143,7 +2207,10 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     completedCount,
     unreadInquiriesCount,
     pendingRefundsCount,
+    isSynced,
+    safeSetItem,
     loadFromLocalStorage,
+    syncFromSupabase,
     saveToLocalStorage,
     checkAndCancelExpiredOrders,
     playChimeSound,

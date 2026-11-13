@@ -70,12 +70,40 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
+/* 🍎 iOS Safari (WebKit) 전역 UX/UI 최적화 */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   margin: 0;
   padding: 0;
   background-color: #faf7f2;
   color: #2b1f1d;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+}
+
+/* 📱 iOS Safari에서 인풋 터치 시 16px 미만 폰트로 인한 강제 화면 확대(줌인 및 화면 좌우 깨짐) 완전 방지 */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* iOS 기본 버튼 및 인풋 둥근 그림자 방지 */
+input[type="text"],
+input[type="tel"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+textarea {
+  -webkit-appearance: none;
 }
 
 /* 숫자 폰트 고정 */

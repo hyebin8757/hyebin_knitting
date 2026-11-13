@@ -1579,7 +1579,7 @@ const resetForNewOrder = () => {
 .confirm-modal-sheet {
   width: 100%;
   max-width: 520px;
-  max-height: 90vh;
+  max-height: 90dvh;
   background: #ffffff;
   border-top-left-radius: 28px;
   border-top-right-radius: 28px;
@@ -1675,6 +1675,7 @@ const resetForNewOrder = () => {
 .confirm-body {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 16px 20px;
   background: #fdfbf9;
   display: flex;
