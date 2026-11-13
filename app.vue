@@ -84,16 +84,6 @@ body {
   color: #2b1f1d;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior-y: none;
-}
-
-/* 📱 iOS Safari에서 인풋 터치 시 16px 미만 폰트로 인한 강제 화면 확대(줌인 및 화면 좌우 깨짐) 완전 방지 */
-@media screen and (max-width: 768px) {
-  input,
-  textarea,
-  select {
-    font-size: 16px !important;
-  }
 }
 
 /* iOS 기본 버튼 및 인풋 둥근 그림자 방지 */

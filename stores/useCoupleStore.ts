@@ -9,8 +9,8 @@ const getEnvValue = (key: string): string => {
   return "";
 };
 
-const supabaseUrl = getEnvValue("SUPABASE_URL") || "https://jhxsmhbykctjqmgonjym.supabase.co";
-const supabaseKey = getEnvValue("SUPABASE_KEY") || "sb_publishable_jdE2Pnj22VaOdB7vTIYSjw_T9jzjJRp";
+const supabaseUrl = getEnvValue("SUPABASE_URL") || "https://taxlvyiijpanfzwrmuih.supabase.co";
+const supabaseKey = getEnvValue("SUPABASE_KEY") || "sb_publishable_Xyp-Y9U-x152t2e6C1cItw_futrI8_G";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Data interfaces
