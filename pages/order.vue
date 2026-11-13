@@ -21,6 +21,13 @@ const form = ref({
 // 선택된 상품들 (productId -> 수량)
 const selectedQuantities = ref<Record<string, number>>({});
 
+// 개별 상품 상세 설명 접기/펼치기 상태 (미선택 상품도 미리보기 지원)
+const expandedDetails = ref<Record<string, boolean>>({});
+
+const toggleDetails = (id: string) => {
+  expandedDetails.value[id] = !expandedDetails.value[id];
+};
+
 // 주문 완료 상태
 const submittedOrder = ref<OrderItem | null>(null);
 const isSubmitting = ref(false);
@@ -74,6 +81,13 @@ const selectedItemList = computed(() => {
     }
   }
   return list;
+});
+
+// 상세 설명(제작/핏 안내)이 있는 선택된 상품 목록 (요청사항 상단 요약용)
+const selectedProductsWithDetails = computed(() => {
+  return selectedItemList.value
+    .map((item) => item.product)
+    .filter((p) => p.details && p.details.trim().length > 0);
 });
 
 // 총 상품 금액
@@ -478,6 +492,41 @@ const resetForNewOrder = () => {
               <div v-else class="qty-placeholder" @click="toggleProduct(product.id)">
                 <span>+ 상품 담기</span>
               </div>
+
+              <!-- 📝 상품 상세 설명 (제작 안내, 핏 설명) -->
+              <div v-if="product.details" class="prod-details-container">
+                <!-- 선택되었을 때 기본 펼침 / 미선택 시 토글 버튼 또는 항시 컴팩트 안내 -->
+                <div
+                  v-if="getQuantity(product.id) > 0 || expandedDetails[product.id]"
+                  class="prod-details-card"
+                  :class="{ 'is-selected': getQuantity(product.id) > 0 }"
+                  @click.stop
+                >
+                  <div class="prod-details-header">
+                    <span class="prod-details-badge">💡 제작·핏 안내</span>
+                    <button
+                      v-if="getQuantity(product.id) === 0"
+                      type="button"
+                      class="btn-close-mini-details"
+                      @click.stop="toggleDetails(product.id)"
+                      title="접기"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p class="prod-details-text">{{ product.details }}</p>
+                </div>
+                <button
+                  v-else
+                  type="button"
+                  class="btn-toggle-details"
+                  @click.stop="toggleDetails(product.id)"
+                  title="제작 및 핏 안내 보기"
+                >
+                  <i class="material-icons details-icon-mini">help_outline</i>
+                  <span>제작/핏 안내</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -507,6 +556,30 @@ const resetForNewOrder = () => {
                 <span class="ship-desc">{{ shipping.desc }}</span>
               </div>
             </label>
+          </div>
+        </div>
+
+        <!-- 💡 선택하신 상품의 맞춤제작 & 핏 참고사항 요약 안내 -->
+        <div v-if="selectedProductsWithDetails.length > 0" class="form-section-card selected-details-notice-card">
+          <div class="selected-details-head">
+            <span class="details-notice-icon">🧶</span>
+            <div class="details-notice-title-box">
+              <h4 class="details-notice-title">선택하신 상품의 맞춤제작·핏 안내</h4>
+              <p class="details-notice-sub">특별한 옵션(귀뚫린 버전 등) 요청 시 아래 [배송 시 요청사항]란에 적어주세요!</p>
+            </div>
+          </div>
+          <div class="selected-details-list">
+            <div
+              v-for="p in selectedProductsWithDetails"
+              :key="p.id"
+              class="selected-detail-row"
+            >
+              <div class="selected-detail-prod-head">
+                <span class="detail-prod-badge">{{ p.name }}</span>
+                <span class="detail-prod-qty">{{ getQuantity(p.id) }}개</span>
+              </div>
+              <p class="selected-detail-desc">{{ p.details }}</p>
+            </div>
           </div>
         </div>
 
@@ -639,6 +712,7 @@ const resetForNewOrder = () => {
                     <div class="c-item-details">
                       <span class="c-item-name">{{ item.product.name }}</span>
                       <span class="c-item-qty font-mono">{{ item.product.price.toLocaleString() }}원 × {{ item.quantity }}개</span>
+                      <span v-if="item.product.details" class="c-item-details-note font-mono">💡 {{ item.product.details }}</span>
                     </div>
                     <span class="c-item-price font-mono font-bold">{{ (item.product.price * item.quantity).toLocaleString() }}원</span>
                   </div>
@@ -1031,6 +1105,191 @@ const resetForNewOrder = () => {
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 8px;
+}
+
+/* 📝 개별 상품 카드 내 상세 설명 (제작·핏 안내) */
+.prod-details-container {
+  margin-top: 4px;
+}
+
+.prod-details-card {
+  background: #fff8f9;
+  border: 1px solid #ffd8df;
+  border-radius: 10px;
+  padding: 8px 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(255, 77, 109, 0.06);
+}
+
+.prod-details-card.is-selected {
+  background: #fff0f3;
+  border-color: #ffb3c1;
+  box-shadow: 0 2px 6px rgba(255, 77, 109, 0.12);
+}
+
+.prod-details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.prod-details-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #ff4d6d;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.btn-close-mini-details {
+  border: none;
+  background: transparent;
+  color: #a08c87;
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.prod-details-text {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #5c4a45;
+  white-space: pre-line;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  margin: 0;
+}
+
+.btn-toggle-details {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: #fdf8f4;
+  border: 1px dashed #e8d8cc;
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8c7873;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-toggle-details:hover {
+  background: #fff0f3;
+  border-color: #ffb3c1;
+  color: #ff4d6d;
+}
+
+.details-icon-mini {
+  font-size: 13px;
+}
+
+/* 🧶 선택한 상품들의 맞춤제작·핏 안내 요약 카드 (요청사항 바로 위) */
+.selected-details-notice-card {
+  background: linear-gradient(135deg, #fff7f8 0%, #fffbf8 100%);
+  border: 1.5px solid #ffccd5;
+  border-radius: 18px;
+  box-shadow: 0 4px 14px rgba(255, 77, 109, 0.08);
+  padding: 16px;
+}
+
+.selected-details-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.details-notice-icon {
+  font-size: 1.5rem;
+  background: #fff0f3;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(255, 77, 109, 0.15);
+}
+
+.details-notice-title-box {
+  flex: 1;
+}
+
+.details-notice-title {
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: #2b1f1d;
+  margin: 0 0 2px;
+}
+
+.details-notice-sub {
+  font-size: 0.76rem;
+  color: #ff4d6d;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.selected-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selected-detail-row {
+  background: #ffffff;
+  border: 1px solid #ffe3e8;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.selected-detail-prod-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.detail-prod-badge {
+  background: #ff4d6d;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.detail-prod-qty {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #8c7e7b;
+}
+
+.selected-detail-desc {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #4a3b37;
+  white-space: pre-line;
+  word-break: keep-all;
+  margin: 0;
+}
+
+/* 주문 확인 모달 내 상세 안내 문구 */
+.c-item-details-note {
+  display: block;
+  font-size: 0.72rem;
+  color: #ff4d6d;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-top: 3px;
+  white-space: pre-line;
 }
 
 /* 배송 방식 선택 */
@@ -1529,6 +1788,25 @@ const resetForNewOrder = () => {
   }
   .form-prod-name {
     font-size: 0.78rem;
+  }
+  .prod-details-card {
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+  .prod-details-badge {
+    font-size: 0.68rem;
+  }
+  .prod-details-text {
+    font-size: 0.7rem;
+    line-height: 1.4;
+  }
+  .btn-toggle-details {
+    padding: 3px 5px;
+    font-size: 0.68rem;
+  }
+  .selected-details-notice-card {
+    padding: 14px 12px;
+    border-radius: 14px;
   }
   .qty-controller .btn-qty {
     width: 32px;
