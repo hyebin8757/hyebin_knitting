@@ -608,33 +608,38 @@ const resetForNewOrder = () => {
                     :class="{ 'is-checked': getOptionQuantity(product.id, opt) > 0 }"
                     @click="toggleOption(product.id, opt)"
                   >
-                    <!-- 체크박스 -->
-                    <div class="option-check-box" :class="{ checked: getOptionQuantity(product.id, opt) > 0 }">
-                      <i v-if="getOptionQuantity(product.id, opt) > 0" class="material-icons opt-check-icon">check</i>
+                    <div class="option-row-main">
+                      <!-- 체크박스 -->
+                      <div class="option-check-box" :class="{ checked: getOptionQuantity(product.id, opt) > 0 }">
+                        <i v-if="getOptionQuantity(product.id, opt) > 0" class="material-icons opt-check-icon">check</i>
+                      </div>
+
+                      <!-- 종류명 (줄바꿈 깨짐 방지) -->
+                      <span class="option-row-name">{{ opt }}</span>
                     </div>
 
-                    <!-- 종류명 -->
-                    <span class="option-row-name">{{ opt }}</span>
-
-                    <!-- 수량 컨트롤러 (체크 시 노출) -->
+                    <!-- 수량 컨트롤러 (체크 시 하단 여유 줄에 노출) -->
                     <div
                       v-if="getOptionQuantity(product.id, opt) > 0"
-                      class="option-row-qty"
+                      class="option-row-qty-bar"
                       @click.stop
                     >
-                      <button
-                        type="button"
-                        class="btn-opt-ctrl"
-                        @click.stop="decreaseOptionQuantity(product.id, opt)"
-                        title="수량 감소"
-                      >-</button>
-                      <span class="opt-qty-num font-mono">{{ getOptionQuantity(product.id, opt) }}</span>
-                      <button
-                        type="button"
-                        class="btn-opt-ctrl"
-                        @click.stop="increaseOptionQuantity(product.id, opt)"
-                        title="수량 증가"
-                      >+</button>
+                      <span class="option-qty-label">수량</span>
+                      <div class="option-row-qty">
+                        <button
+                          type="button"
+                          class="btn-opt-ctrl"
+                          @click.stop="decreaseOptionQuantity(product.id, opt)"
+                          title="수량 감소"
+                        >-</button>
+                        <span class="opt-qty-num font-mono">{{ getOptionQuantity(product.id, opt) }}</span>
+                        <button
+                          type="button"
+                          class="btn-opt-ctrl"
+                          @click.stop="increaseOptionQuantity(product.id, opt)"
+                          title="수량 증가"
+                        >+</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1312,12 +1317,11 @@ const resetForNewOrder = () => {
 
 .option-row-item {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+  flex-direction: column;
+  padding: 8px 9px;
   background: #ffffff;
-  border: 1px solid #ebdcd0;
-  border-radius: 8px;
+  border: 1.5px solid #ebdcd0;
+  border-radius: 9px;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -1329,12 +1333,20 @@ const resetForNewOrder = () => {
 
 .option-row-item.is-checked {
   border-color: #ff4d6d;
-  background: #fff0f3;
+  background: #fff5f7;
+  box-shadow: 0 1px 4px rgba(255, 77, 109, 0.12);
+}
+
+.option-row-main {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
 }
 
 .option-check-box {
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   border-radius: 5px;
   border: 1.5px solid #c9b8ab;
   display: flex;
@@ -1358,30 +1370,53 @@ const resetForNewOrder = () => {
 
 .option-row-name {
   flex: 1;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: #2b1f1d;
-  line-height: 1.25;
+  line-height: 1.35;
+  word-break: keep-all; /* 단어가 낱글자로 쪼개지지 않고 깔끔하게 유지 */
+}
+
+.option-row-item.is-checked .option-row-name {
+  color: #d90429;
+  font-weight: 800;
+}
+
+/* 수량 컨트롤러 바 (체크되었을 때 하단에 넓고 여유있게 배치) */
+.option-row-qty-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed #ffd8df;
+  width: 100%;
+}
+
+.option-qty-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8c7873;
 }
 
 .option-row-qty {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   background: #ffffff;
   border: 1px solid #ff758f;
   border-radius: 6px;
-  padding: 1px 2px;
+  padding: 1px 3px;
 }
 
 .btn-opt-ctrl {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border: none;
   background: #fff0f3;
   color: #ff4d6d;
   font-weight: 800;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
@@ -1396,10 +1431,10 @@ const resetForNewOrder = () => {
 }
 
 .opt-qty-num {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 800;
   color: #ff4d6d;
-  min-width: 14px;
+  min-width: 18px;
   text-align: center;
 }
 
