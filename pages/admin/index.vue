@@ -114,8 +114,8 @@ const saveSiteNotices = async () => {
 };
 
 // 기본 공지 문구 복원
-const handleResetNotices = () => {
-  store.resetSiteNoticesToDefault();
+const handleResetNotices = async () => {
+  await store.resetSiteNoticesToDefault();
   syncNoticesForm();
 };
 
@@ -193,8 +193,8 @@ const savePopupNoticeSettings = async () => {
 };
 
 // 팝업 기본 설정 복원
-const handleResetPopupNotice = () => {
-  store.resetPopupNoticeToDefault();
+const handleResetPopupNotice = async () => {
+  await store.resetPopupNoticeToDefault();
   syncPopupForm();
 };
 

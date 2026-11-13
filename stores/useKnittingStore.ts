@@ -2108,9 +2108,28 @@ export const useKnittingStore = defineStore("knittingStore", () => {
   };
 
   // 📢 관리자 전용: 기본 공지 및 주문 안내 문구로 초기화
-  const resetSiteNoticesToDefault = () => {
+  const resetSiteNoticesToDefault = async () => {
     siteNotices.value = { ...DEFAULT_SITE_NOTICES };
     saveToLocalStorage();
+    try {
+      const client = getSupabase();
+      if (client) {
+        await client.from("knitting_site_notices").upsert({
+          id: "main_notices",
+          notice_content: siteNotices.value.noticeContent,
+          shipping_content: siteNotices.value.shippingContent,
+          caution_content: siteNotices.value.cautionContent,
+          washing_content: siteNotices.value.washingContent,
+          shop_intro: siteNotices.value.shopIntro,
+          instagram_id: siteNotices.value.instagramId,
+          making_period: siteNotices.value.makingPeriod,
+          courier_info: siteNotices.value.courierInfo,
+          updated_at: new Date().toISOString(),
+        });
+      }
+    } catch (e) {
+      console.warn("Supabase resetSiteNoticesToDefault sync failed", e);
+    }
     showToast("초기 기본 공지 및 주문 안내 문구로 복원되었습니다.");
   };
 
@@ -2162,9 +2181,32 @@ export const useKnittingStore = defineStore("knittingStore", () => {
   };
 
   // 🌟 관리자 전용: 기본 팝업 설정으로 복원
-  const resetPopupNoticeToDefault = () => {
+  const resetPopupNoticeToDefault = async () => {
     popupNotice.value = { ...DEFAULT_POPUP_NOTICE };
     saveToLocalStorage();
+    try {
+      const client = getSupabase();
+      if (client) {
+        await client.from("knitting_popup_notice").upsert({
+          id: "main_popup",
+          is_active: popupNotice.value.isActive,
+          type: popupNotice.value.type,
+          target_product_id: popupNotice.value.targetProductId,
+          badge_text: popupNotice.value.badgeText,
+          title: popupNotice.value.title,
+          content: popupNotice.value.content,
+          image_url: popupNotice.value.imageUrl,
+          is_always: popupNotice.value.isAlways,
+          start_date: popupNotice.value.startDate,
+          end_date: popupNotice.value.endDate,
+          action_button_text: popupNotice.value.actionButtonText,
+          show_action_button: popupNotice.value.showActionButton,
+          updated_at: new Date().toISOString(),
+        });
+      }
+    } catch (e) {
+      console.warn("Supabase resetPopupNoticeToDefault sync failed", e);
+    }
     showToast("기본 팝업 안내 설정으로 복원되었습니다.");
   };
 
