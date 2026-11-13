@@ -391,167 +391,10 @@ export const SHIPPING_OPTIONS = [
   },
 ];
 
-const INITIAL_REVIEWS: ReviewItem[] = [
-  {
-    id: "rev-1",
-    author: "모찌맘 (@mochi_nui)",
-    rating: 5,
-    productName: "사과 & 딸기",
-    content: "실물이 오조오억배는 더 귀여워요ㅠㅠ 실밥 하나 없이 꼼꼼하게 뜨개질되어있고 인형에 씌우니까 볼살 뽈록 튀어나오는게 심장 아픕니다.. 다른 과일도 꼭 재구매할게요!",
-    image: "/images/products/apple.jpg",
-    createdAt: "2026-11-05 14:20",
-    likes: 18,
-    isVerified: true,
-    isVisible: true,
-  },
-  {
-    id: "rev-2",
-    author: "먼작귀덕후 (@chiikawa_love)",
-    rating: 5,
-    productName: "도토리 모자 세트",
-    content: "도토리 모자 꼭지가 쫑긋 살아있어서 너무 귀엽고 같이 주신 미니 도토리 가방 매달아주니까 가을 소풍 나온 다람쥐 같아요 🍂 포장도 너무 정성스러웠어요 감사해요!",
-    image: "/images/products/acorn.jpg",
-    createdAt: "2026-11-06 18:32",
-    likes: 12,
-    isVerified: true,
-    isVisible: true,
-  },
-  {
-    id: "rev-3",
-    author: "솜뭉치키우기 (@som_daily)",
-    rating: 5,
-    productName: "복숭아 세라 ver.",
-    content: "세라복 카라 디테일 대박이에요! 파랑으로 주문했는데 색감도 쨍하고 핏이 딱 맞아서 벗겨지지도 않네요. 손세탁 설명서도 동봉해주셔서 안심하고 관리할 수 있겠어요.",
-    image: "/images/products/peach_sailor.jpg",
-    createdAt: "2026-11-07 11:15",
-    likes: 9,
-    isVerified: true,
-    isVisible: true,
-  },
-];
-
-const INITIAL_ORDERS: OrderItem[] = [
-  {
-    id: "ORD-20261108-8120",
-    createdAt: "2026-11-08 14:30",
-    createdAtTimestamp: Date.now() - 3600000 * 4,
-    instagramId: "cotton_candy_nui",
-    buyerName: "김민서",
-    phone: "010-8924-1102",
-    address: "서울시 마포구 독막로 12길 15 301호",
-    shippingId: "normal",
-    shippingType: "일반 택배 (CJ대한통운/한진)",
-    shippingCost: 4000,
-    items: [
-      { productId: "apple", productName: "사과", price: 14000, quantity: 1, image: "/images/products/apple.jpg" },
-      { productId: "peach", productName: "복숭아", price: 14000, quantity: 1, image: "/images/products/peach.jpg" },
-    ],
-    totalProductAmount: 28000,
-    totalAmount: 32000,
-    depositorName: "김민서",
-    memo: "문 앞에 놓아주세요. 꼭지 예쁘게 부탁드려요!",
-    status: "paid",
-    trackingNumber: "",
-    statusHistory: [
-      { status: "pending", timestamp: "2026-11-08 14:30", note: "주문서 접수 완료" },
-      { status: "paid", timestamp: "2026-11-08 14:45", note: "입금 확인 완료" },
-    ],
-  },
-  {
-    id: "ORD-20261108-9531",
-    createdAt: "2026-11-08 16:10",
-    createdAtTimestamp: Date.now() - 3600000 * 2,
-    instagramId: "bear_lover",
-    buyerName: "이지은",
-    phone: "010-3451-9082",
-    address: "GS25 마포중앙점 (편의점 수령)",
-    shippingId: "half",
-    shippingType: "GS반택 / CU알뜰택배",
-    shippingCost: 2000,
-    items: [
-      { productId: "strawberry", productName: "딸기", price: 14000, quantity: 2, image: "/images/products/strawberry.jpg" },
-    ],
-    totalProductAmount: 28000,
-    totalAmount: 30000,
-    depositorName: "이지은",
-    memo: "친구랑 트윈으로 맞추는 거라 딸기 크기 비슷하게 부탁드립니다 :)",
-    status: "pending",
-    trackingNumber: "",
-    statusHistory: [
-      { status: "pending", timestamp: "2026-11-08 16:10", note: "주문서 접수 완료 (입금 대기 중)" },
-    ],
-  },
-];
-
-const INITIAL_INQUIRIES: InquiryItem[] = [
-  {
-    id: "inq-1",
-    type: "커스텀제작",
-    name: "박하늘",
-    contact: "@haneul_sky",
-    content: "혹시 10cm 인형 말고 15cm 인형 사이즈로도 제작이 가능한지 궁금합니다! 사과 모자 넘 맘에 들어요.",
-    createdAt: "2026-11-07 16:45",
-    status: "answered",
-    adminReply: "안녕하세요! 네, 머리둘레를 남겨주시면 15cm 인형 맞춤 커스텀 제작 가능합니다. 인스타 DM으로 사이즈 상담 도와드릴게요!",
-  },
-  {
-    id: "inq-2",
-    type: "배송문의",
-    name: "정수아",
-    contact: "010-9988-1234",
-    content: "이번 주 금요일까지 받아야 하는데 오늘 주문하면 목요일까지 출고가 가능할까요?",
-    createdAt: "2026-11-08 13:10",
-    status: "unread",
-  },
-];
-
-export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: "notif-1",
-    type: "order",
-    title: "🛍️ 신규 주문 접수",
-    message: "김민주님께서 [사과, 복숭아 세라 ver.] 총 31,000원을 주문하셨습니다.",
-    createdAt: "방금 전 (16:10)",
-    timestamp: Date.now() - 1000 * 60 * 18,
-    isRead: false,
-    link: "/admin",
-    metadata: {
-      orderId: "ORD-20261108-8421",
-      buyerName: "김민주",
-      amount: 31000,
-      phone: "010-1234-5678",
-    },
-  },
-  {
-    id: "notif-2",
-    type: "inquiry",
-    title: "💌 커스텀 제작 문의",
-    message: "박하늘님: '10cm 인형 말고 15cm 인형 사이즈로도 제작이 가능한지 궁금합니다!'",
-    createdAt: "어제 16:45",
-    timestamp: Date.now() - 1000 * 60 * 60 * 25,
-    isRead: false,
-    link: "/admin",
-    metadata: {
-      buyerName: "박하늘",
-      inquiryType: "커스텀제작",
-    },
-  },
-  {
-    id: "notif-3",
-    type: "review",
-    title: "⭐ 5성 포토 후기 도착",
-    message: "콩순이맘님: '누이한테 씌워줬는데 너무 찰떡이고 귀여워요ㅠㅠ 실물이 오조오억배 예쁩니다!'",
-    createdAt: "2일 전",
-    timestamp: Date.now() - 1000 * 60 * 60 * 50,
-    isRead: true,
-    link: "/reviews",
-    metadata: {
-      buyerName: "콩순이맘",
-      productName: "사과 (사과 모자)",
-      rating: 5,
-    },
-  },
-];
+const INITIAL_REVIEWS: ReviewItem[] = [];
+const INITIAL_ORDERS: OrderItem[] = [];
+const INITIAL_INQUIRIES: InquiryItem[] = [];
+export const INITIAL_NOTIFICATIONS: NotificationItem[] = [];
 
 export const useKnittingStore = defineStore("knittingStore", () => {
   // 상태
@@ -699,19 +542,77 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       }
 
       const storedOrders = localStorage.getItem("knitting_orders");
-      if (storedOrders) orders.value = JSON.parse(storedOrders);
+      if (storedOrders) {
+        try {
+          const parsed = JSON.parse(storedOrders);
+          orders.value = Array.isArray(parsed)
+            ? parsed.filter((o: any) => !String(o.id || "").startsWith("ORD-20261108"))
+            : [];
+        } catch {
+          orders.value = [];
+        }
+      } else {
+        orders.value = [];
+      }
 
       const storedRefunds = localStorage.getItem("knitting_refunds");
-      if (storedRefunds) refunds.value = JSON.parse(storedRefunds);
+      if (storedRefunds) {
+        try {
+          refunds.value = JSON.parse(storedRefunds) || [];
+        } catch {
+          refunds.value = [];
+        }
+      } else {
+        refunds.value = [];
+      }
 
       const storedInquiries = localStorage.getItem("knitting_inquiries");
-      if (storedInquiries) inquiries.value = JSON.parse(storedInquiries);
+      if (storedInquiries) {
+        try {
+          const parsed = JSON.parse(storedInquiries);
+          inquiries.value = Array.isArray(parsed)
+            ? parsed.filter((i: any) => !["inq-1", "inq-2"].includes(i.id))
+            : [];
+        } catch {
+          inquiries.value = [];
+        }
+      } else {
+        inquiries.value = [];
+      }
 
       const storedReviews = localStorage.getItem("knitting_reviews");
-      if (storedReviews) reviews.value = JSON.parse(storedReviews);
+      if (storedReviews) {
+        try {
+          const parsed = JSON.parse(storedReviews);
+          reviews.value = Array.isArray(parsed)
+            ? parsed.filter((r: any) => !["rev-1", "rev-2", "rev-3"].includes(r.id))
+            : [];
+        } catch {
+          reviews.value = [];
+        }
+      } else {
+        reviews.value = [];
+      }
 
       const storedNotifications = localStorage.getItem("knitting_notifications");
-      if (storedNotifications) notifications.value = JSON.parse(storedNotifications);
+      if (storedNotifications) {
+        try {
+          const parsed = JSON.parse(storedNotifications);
+          notifications.value = Array.isArray(parsed)
+            ? parsed.filter((n: any) => !["notif-1", "notif-2", "notif-3"].includes(n.id))
+            : [];
+        } catch {
+          notifications.value = [];
+        }
+      } else {
+        notifications.value = [];
+      }
+
+      safeSetItem("knitting_orders", orders.value);
+      safeSetItem("knitting_refunds", refunds.value);
+      safeSetItem("knitting_inquiries", inquiries.value);
+      safeSetItem("knitting_reviews", reviews.value);
+      safeSetItem("knitting_notifications", notifications.value);
 
       const storedSettings = localStorage.getItem("knitting_settings");
       if (storedSettings) {
@@ -900,7 +801,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         .from("knitting_reviews")
         .select("*")
         .order("created_at", { ascending: false });
-      if (rData && rData.length > 0) {
+      if (rData) {
         reviews.value = rData.map((row: any) => ({
           id: row.id,
           author: row.author,
@@ -921,7 +822,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         .from("knitting_orders")
         .select("*")
         .order("created_at", { ascending: false });
-      if (oData && oData.length > 0) {
+      if (oData) {
         orders.value = oData.map((row: any) => ({
           id: row.id,
           createdAt: formatSafeLocaleDate(row.created_at),
@@ -952,7 +853,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         .from("knitting_refunds")
         .select("*")
         .order("created_at", { ascending: false });
-      if (refData && refData.length > 0) {
+      if (refData) {
         refunds.value = refData.map((row: any) => ({
           id: row.id,
           createdAt: formatSafeLocaleDate(row.created_at),
@@ -974,7 +875,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         .from("knitting_inquiries")
         .select("*")
         .order("created_at", { ascending: false });
-      if (inqData && inqData.length > 0) {
+      if (inqData) {
         inquiries.value = inqData.map((row: any) => ({
           id: row.id,
           createdAt: formatSafeLocaleDate(row.created_at),
