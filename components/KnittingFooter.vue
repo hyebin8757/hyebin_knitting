@@ -16,7 +16,7 @@ const copyAccount = () => {
     <div class="footer-inner">
       <div class="footer-brand">
         <div class="brand-line">
-          <span class="yarn-badge">🧶 앉은누이 뜨개옷장</span>
+          <span class="yarn-badge">🧶 먼작콩 뜨개상점</span>
           <span class="hand-craft-badge">100% 핸드메이드</span>
         </div>
         <p class="brand-desc">
@@ -43,7 +43,7 @@ const copyAccount = () => {
       </div>
 
       <div class="footer-bottom">
-        <p class="copy-text">© 2026 앉은누이 뜨개옷장 (혜빈이와 먼작콩). All rights reserved.</p>
+        <p class="copy-text">© 2026 먼작콩 뜨개상점. All rights reserved.</p>
         <div class="footer-links">
           <button class="text-link" @click="store.isFeedbackModalOpen = true">의견/건의 보내기</button>
           <span class="sep">|</span>

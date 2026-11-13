@@ -45,7 +45,7 @@ const onLogoClick = (e: MouseEvent) => {
       <nuxt-link to="/" class="brand-logo" @click="onLogoClick">
         <span class="logo-emoji">🧶</span>
         <div class="logo-text-group">
-          <span class="logo-title">앉은누이 뜨개옷장</span>
+          <span class="logo-title">먼작콩 뜨개상점</span>
         </div>
       </nuxt-link>
 

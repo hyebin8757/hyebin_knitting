@@ -39,9 +39,6 @@ const handleQuickLookup = () => {
           <span class="hero-main-title">🧶 먼작콩 뜨개상점</span>
           <span class="hero-sub-title highlight-text">치이카와 앉은누이 전용 뜨개옷</span>
         </h1>
-        <p class="hero-desc">
-          한 땀 한 땀 정성을 담아 사랑스럽게 맞춤 제작해 드립니다 ✨
-        </p>
 
         <div class="hero-actions">
           <nuxt-link to="/order" class="btn-hero-primary">
@@ -250,7 +247,7 @@ const handleQuickLookup = () => {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  margin: 0 0 14px;
+  margin: 0 0 22px;
   text-align: center;
 }
 
