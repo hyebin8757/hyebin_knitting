@@ -424,19 +424,27 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     adminScrollTrigger.value++;
   };
 
-  // 전역 인앱 알림 모달 상태 (브라우저 기본 alert 완전 대체)
+  // 전역 인앱 알림/확인 모달 상태 (브라우저 기본 alert 및 confirm 완전 대체)
   const alertModal = ref<{
     isOpen: boolean;
     title: string;
     message: string;
     type: "info" | "success" | "warning" | "error";
     confirmText: string;
+    cancelText?: string;
+    showCancel?: boolean;
+    onConfirm?: () => void;
+    onCancel?: () => void;
   }>({
     isOpen: false,
     title: "알림",
     message: "",
     type: "info",
     confirmText: "확인",
+    cancelText: "취소",
+    showCancel: false,
+    onConfirm: undefined,
+    onCancel: undefined,
   });
 
   const showAlert = (
@@ -453,6 +461,34 @@ export const useKnittingStore = defineStore("knittingStore", () => {
       message,
       type: options?.type || "info",
       confirmText: options?.confirmText || "확인",
+      cancelText: "취소",
+      showCancel: false,
+      onConfirm: undefined,
+      onCancel: undefined,
+    };
+  };
+
+  const showConfirm = (
+    message: string,
+    options?: {
+      title?: string;
+      type?: "info" | "success" | "warning" | "error";
+      confirmText?: string;
+      cancelText?: string;
+      onConfirm?: () => void;
+      onCancel?: () => void;
+    }
+  ) => {
+    alertModal.value = {
+      isOpen: true,
+      title: options?.title || "확인",
+      message,
+      type: options?.type || "warning",
+      confirmText: options?.confirmText || "확인",
+      cancelText: options?.cancelText || "취소",
+      showCancel: true,
+      onConfirm: options?.onConfirm,
+      onCancel: options?.onCancel,
     };
   };
 
@@ -1374,6 +1410,30 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     return true;
   };
 
+  // 📦 관리자 전용: 주문서 영구 삭제
+  const deleteOrder = async (orderId: string) => {
+    const target = orders.value.find((o) => o.id === orderId);
+    const targetName = target ? target.buyerName : "주문서";
+
+    orders.value = orders.value.filter((o) => o.id !== orderId);
+    refunds.value = refunds.value.filter((r) => r.orderId !== orderId);
+    saveToLocalStorage();
+
+    // 🌐 Supabase 비동기 동기화 (외래키 ON DELETE CASCADE 제약조건에 의해 연관 refund도 자동 삭제)
+    try {
+      const client = getSupabase();
+      if (client) {
+        const { error } = await client.from("knitting_orders").delete().eq("id", orderId);
+        if (error) console.error("Supabase deleteOrder sync error:", error);
+      }
+    } catch (e) {
+      console.warn("Supabase deleteOrder background sync failed", e);
+    }
+
+    showToast(`주문서 [${orderId}] (${targetName}님)가 완전히 삭제되었습니다.`);
+    return true;
+  };
+
   // 환불 요청 등록 및 카카오톡 알림
   const requestRefund = (orderId: string, refundData: {
     buyerName: string;
@@ -2130,6 +2190,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     switchAdminTab,
     alertModal,
     showAlert,
+    showConfirm,
     closeAlert,
     toast,
     showToast,
@@ -2166,6 +2227,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     createOrder,
     updateOrderStatus,
     updateOrderDetails,
+    deleteOrder,
     addProduct,
     updateProduct,
     deleteProduct,

@@ -10,21 +10,45 @@ const getIcon = (type: string) => {
     case "warning":
       return "⚠️";
     case "error":
-      return "❌";
+      return "🗑️";
     default:
       return "🔔";
+  }
+};
+
+const handleConfirm = () => {
+  const cb = store.alertModal.onConfirm;
+  store.closeAlert();
+  if (cb) {
+    try {
+      cb();
+    } catch (e) {
+      console.error("Alert onConfirm callback error:", e);
+    }
+  }
+};
+
+const handleCancel = () => {
+  const cb = store.alertModal.onCancel;
+  store.closeAlert();
+  if (cb) {
+    try {
+      cb();
+    } catch (e) {
+      console.error("Alert onCancel callback error:", e);
+    }
   }
 };
 </script>
 
 <template>
   <div>
-    <!-- 1. 커스텀 인앱 알림 모달 (브라우저 기본 alert 완전 대체) -->
+    <!-- 1. 커스텀 인앱 알림/확인 모달 (브라우저 기본 alert / confirm 완전 대체) -->
     <transition name="alert-fade">
       <div
         v-if="store.alertModal.isOpen"
         class="custom-alert-backdrop"
-        @click.self="store.closeAlert"
+        @click.self="handleCancel"
       >
         <div class="custom-alert-card" role="dialog" aria-modal="true">
           <div class="alert-icon-wrap" :class="store.alertModal.type">
@@ -34,11 +58,20 @@ const getIcon = (type: string) => {
           <h3 class="alert-title">{{ store.alertModal.title }}</h3>
           <p class="alert-message">{{ store.alertModal.message }}</p>
 
-          <div class="alert-btn-box">
+          <div class="alert-btn-box" :class="{ 'has-cancel': store.alertModal.showCancel }">
+            <button
+              v-if="store.alertModal.showCancel"
+              type="button"
+              class="btn-alert-cancel"
+              @click="handleCancel"
+            >
+              {{ store.alertModal.cancelText || "취소" }}
+            </button>
             <button
               type="button"
               class="btn-alert-confirm"
-              @click="store.closeAlert"
+              :class="[store.alertModal.type, { 'is-confirm': store.alertModal.showCancel }]"
+              @click="handleConfirm"
               autofocus
             >
               {{ store.alertModal.confirmText || "확인" }}
@@ -143,6 +176,31 @@ const getIcon = (type: string) => {
 
 .alert-btn-box {
   width: 100%;
+  display: flex;
+  gap: 10px;
+}
+
+.alert-btn-box.has-cancel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.btn-alert-cancel {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e8dfd8;
+  border-radius: 14px;
+  background: #f7f3ef;
+  color: #6d5b56;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-alert-cancel:active {
+  background: #ede3dc;
+  transform: scale(0.97);
 }
 
 .btn-alert-confirm {
@@ -157,6 +215,11 @@ const getIcon = (type: string) => {
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(255, 77, 109, 0.35);
   transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-alert-confirm.error {
+  background: linear-gradient(135deg, #ff4d6d 0%, #d90429 100%);
+  box-shadow: 0 4px 14px rgba(217, 4, 41, 0.35);
 }
 
 .btn-alert-confirm:active {

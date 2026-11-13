@@ -18,6 +18,22 @@ const openOrderEditModal = (order: OrderItem) => {
   isOrderEditModalOpen.value = true;
 };
 
+// 🗑️ 주문서 삭제 처리
+const handleDeleteOrder = (order: OrderItem) => {
+  store.showConfirm(
+    `주문서 [${order.id}] (${order.buyerName}님)를 정말 삭제하시겠습니까?\n삭제된 주문서는 영구적으로 제거되며 복구할 수 없습니다.`,
+    {
+      title: "주문서 영구 삭제",
+      type: "error",
+      confirmText: "삭제하기",
+      cancelText: "취소",
+      onConfirm: async () => {
+        await store.deleteOrder(order.id);
+      },
+    }
+  );
+};
+
 // 🛍️ 주문서 상품(카탈로그) 등록 & 수정 모달 상태
 const isProductModalOpen = ref(false);
 const selectedProductToEdit = ref<ProductItem | null>(null);
@@ -887,6 +903,15 @@ const handleLogout = () => {
                   <i class="material-icons">edit</i>
                   <span>주문서/사진 수정</span>
                 </button>
+                <button
+                  type="button"
+                  class="btn-order-del-top"
+                  @click="handleDeleteOrder(order)"
+                  title="주문서 영구 삭제"
+                >
+                  <i class="material-icons">delete_outline</i>
+                  <span>삭제</span>
+                </button>
               </div>
             </div>
 
@@ -1045,6 +1070,14 @@ const handleLogout = () => {
                   title="주문서 상세 정보 및 맞춤 사진 수정"
                 >
                   ✏️ 주문서/사진 수정
+                </button>
+                <button
+                  type="button"
+                  class="btn-status bg-red-light btn-order-del"
+                  @click="handleDeleteOrder(order)"
+                  title="주문서 영구 삭제"
+                >
+                  🗑️ 주문서 삭제
                 </button>
               </div>
             </div>
@@ -2694,6 +2727,44 @@ const handleLogout = () => {
 
 .btn-order-edit-top:hover {
   background: #ff4d6d;
+  color: #ffffff;
+}
+
+.btn-status.bg-red-light {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1.5px solid #fecaca;
+}
+.btn-status.bg-red-light:hover {
+  background: #fee2e2;
+}
+
+.btn-order-del {
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15);
+}
+
+.btn-order-del-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #ef4444;
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-order-del-top i {
+  font-size: 0.95rem;
+}
+
+.btn-order-del-top:hover {
+  background: #ef4444;
   color: #ffffff;
 }
 
@@ -4571,16 +4642,19 @@ input:checked + .slider:before {
     overflow-wrap: break-word;
   }
 
-  /* ✏️ 주문서 수정 버튼 & 사진 배너 모바일 최적화 */
-  .btn-order-edit-top span {
+  /* ✏️ 주문서 수정 & 🗑️ 삭제 버튼 & 사진 배너 모바일 최적화 */
+  .btn-order-edit-top span,
+  .btn-order-del-top span {
     display: none;
   }
 
-  .btn-order-edit-top {
+  .btn-order-edit-top,
+  .btn-order-del-top {
     padding: 4px 6px;
   }
 
-  .btn-order-edit {
+  .btn-order-edit,
+  .btn-order-del {
     width: 100%;
     height: 38px;
     display: flex;

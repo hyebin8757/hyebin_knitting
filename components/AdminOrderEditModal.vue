@@ -11,6 +11,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
   (e: "saved", orderId: string): void;
+  (e: "deleted", orderId: string): void;
 }>();
 
 const store = useKnittingStore();
@@ -158,6 +159,27 @@ const removeCustomImage = () => {
 // 모달 닫기
 const closeModal = () => {
   emit("update:modelValue", false);
+};
+
+// 🗑️ 현재 주문서 영구 삭제
+const handleDeleteCurrentOrder = () => {
+  if (!props.order) return;
+  const orderId = props.order.id;
+  const buyerName = props.order.buyerName;
+  store.showConfirm(
+    `주문서 [${orderId}] (${buyerName}님)를 정말 삭제하시겠습니까?\n삭제된 주문서는 영구적으로 제거되며 복구할 수 없습니다.`,
+    {
+      title: "주문서 영구 삭제",
+      type: "error",
+      confirmText: "삭제하기",
+      cancelText: "취소",
+      onConfirm: async () => {
+        closeModal();
+        await store.deleteOrder(orderId);
+        emit("deleted", orderId);
+      },
+    }
+  );
 };
 
 // 저장 처리
@@ -486,13 +508,25 @@ const handleSave = () => {
 
         <!-- 모달 푸터 버튼 -->
         <div class="modal-footer">
-          <button type="button" class="btn-modal-cancel" @click="closeModal">
-            취소
+          <button
+            type="button"
+            class="btn-modal-delete-order"
+            @click="handleDeleteCurrentOrder"
+            title="현재 주문서 영구 삭제"
+          >
+            <i class="material-icons">delete_forever</i>
+            <span>주문서 삭제</span>
           </button>
-          <button type="button" class="btn-modal-save" @click="handleSave">
-            <i class="material-icons">save</i>
-            <span>수정사항 저장하기</span>
-          </button>
+
+          <div class="modal-footer-right">
+            <button type="button" class="btn-modal-cancel" @click="closeModal">
+              취소
+            </button>
+            <button type="button" class="btn-modal-save" @click="handleSave">
+              <i class="material-icons">save</i>
+              <span>수정사항 저장하기</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1059,9 +1093,40 @@ const handleSave = () => {
   padding: 16px 20px;
   border-top: 1px solid #f0e6dd;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 10px;
   background: #faf7f5;
+}
+
+.btn-modal-delete-order {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #ef4444;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-modal-delete-order i {
+  font-size: 1.15rem;
+}
+
+.btn-modal-delete-order:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.modal-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .btn-modal-cancel {
@@ -1155,16 +1220,37 @@ const handleSave = () => {
 
   .modal-footer {
     padding: 12px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .btn-modal-delete-order {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    order: 2;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-footer-right {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    order: 1;
   }
 
   .btn-modal-cancel {
     padding: 10px 14px;
     font-size: 0.84rem;
+    flex: 1;
   }
 
   .btn-modal-save {
     padding: 10px 18px;
     font-size: 0.86rem;
+    flex: 2;
+    justify-content: center;
   }
 }
 
