@@ -78,6 +78,7 @@ export interface ProductItem {
   badgeColor?: string;
   description: string;
   details?: string;
+  options?: string[]; // 🏷️ 세부 종류 (체크박스 옵션 목록: 예: ['치이카와 (기본)', '우사기 (귀뚫림)'])
   isPopular?: boolean;
 }
 
@@ -87,6 +88,7 @@ export interface OrderItemEntry {
   price: number;
   quantity: number;
   image: string;
+  selectedOption?: string; // 🏷️ 고객이 선택한 세부 종류 옵션명
 }
 
 export interface OrderItem {
@@ -271,7 +273,8 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     tag: "BEST",
     badgeColor: "#ff4d6d",
     description: "새빨간 사과에 앙증맞은 꼭지와 초록 잎사귀가 포인트인 시그니처 뜨개 모자",
-    details: "부드러운 면혼방사로 제작되어 인형 털 손상 없이 쏙 씌워집니다.",
+    details: "우사기, 하치, 카니는 귀뚫린 버전으로 제작 가능합니다.\n해당 캐릭터 버전을 원하시면 아래 체크박스로 종류를 선택해 주세요.",
+    options: ["치이카와 (기본)", "우사기 (귀뚫림)", "하치와레", "모몽가 / 카니"],
     isPopular: true,
   },
   {
@@ -284,6 +287,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     badgeColor: "#c9184a",
     description: "장난꾸러기 악마 뿔과 디테일 날개가 돋보이는 사과 데빌 에디션",
     details: "사과 모자에 깜찍한 뿔이 달려있어 할로윈이나 포인트 연출에 최고예요.",
+    options: ["치이카와 (기본)", "우사기 (귀뚫림)", "하치와레"],
     isPopular: true,
   },
   {
@@ -306,8 +310,9 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     images: ["/images/products/peach_sailor.jpg", "/images/products/peach.jpg"],
     tag: "추천",
     badgeColor: "#59a5d8",
-    description: "복숭아 모자에 청량한 세라복 카라가 함께 구성된 투피스 느낌의 세라 세트",
-    details: "파랑 세라 / 분홍 세라 2가지 옵션으로 친구 인형과 트윈룩으로 입히기 좋아요.",
+    description: "마린룩 감성의 세라복 스타일과 복숭아 열매 브로치 조합",
+    details: "파랑과 분홍 2가지 색상 중 원하시는 컬러를 체크해 주세요.",
+    options: ["파랑 세라", "분홍 세라"],
     isPopular: true,
   },
   {
@@ -572,6 +577,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
               images: (p.images && Array.isArray(p.images) && p.images.length > 0)
                 ? p.images
                 : (p.image ? [p.image] : []),
+              options: (p.options && Array.isArray(p.options)) ? p.options : [],
             }));
           }
         } catch (e) {
@@ -785,6 +791,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           badgeColor: row.badge_color || "#ff4d6d",
           description: row.description || "",
           details: row.details || "",
+          options: (row.options && Array.isArray(row.options)) ? row.options : [],
           isPopular: row.is_popular ?? false,
         }));
         safeSetItem("knitting_products", products.value);
@@ -1933,6 +1940,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           badge_color: newProduct.badgeColor || "#ff4d6d",
           description: newProduct.description || "",
           details: newProduct.details || "",
+          options: newProduct.options || [],
           is_popular: Boolean(newProduct.isPopular),
           order_num: 0,
         });
@@ -1987,6 +1995,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           badge_color: prod.badgeColor || "#ff4d6d",
           description: prod.description || "",
           details: prod.details || "",
+          options: prod.options || [],
           is_popular: Boolean(prod.isPopular),
           updated_at: new Date().toISOString(),
         }).eq("id", id);

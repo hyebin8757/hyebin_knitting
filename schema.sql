@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.knitting_products (
     badge_color VARCHAR(50) DEFAULT '#ff4d6d',
     description TEXT,
     details TEXT,
+    options JSONB DEFAULT '[]'::jsonb,
     is_popular BOOLEAN DEFAULT false,
     order_num INT DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -145,6 +146,7 @@ CREATE TABLE IF NOT EXISTS public.knitting_popup_notice (
 -- ==============================================================================
 -- 🔒 RLS (Row Level Security) 설정 및 공개 권한 부여 정책
 -- ==============================================================================
+ALTER TABLE public.knitting_products ADD COLUMN IF NOT EXISTS options JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE public.knitting_products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.knitting_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.knitting_refunds ENABLE ROW LEVEL SECURITY;
@@ -215,7 +217,7 @@ END $$;
 -- ==============================================================================
 
 -- 1. 9종 기본 뜨개옷 상품 등록
-INSERT INTO public.knitting_products (id, name, price, image, images, tag, badge_color, description, details, is_popular, order_num)
+INSERT INTO public.knitting_products (id, name, price, image, images, tag, badge_color, description, details, options, is_popular, order_num)
 VALUES
 (
     'apple',
@@ -226,7 +228,8 @@ VALUES
     'BEST',
     '#ff4d6d',
     '새빨간 사과에 앙증맞은 꼭지와 초록 잎사귀가 포인트인 시그니처 뜨개 모자',
-    '부드러운 면혼방사로 제작되어 인형 털 손상 없이 쏙 씌워집니다.',
+    '우사기, 하치, 카니는 귀뚫린 버전으로 제작 가능합니다. 해당 캐릭터 버전을 원하시면 아래 체크박스로 종류를 선택해 주세요.',
+    '["치이카와 (기본)", "우사기 (귀뚫림)", "하치와레", "모몽가 / 카니"]'::jsonb,
     true,
     1
 ),
@@ -240,6 +243,7 @@ VALUES
     '#c9184a',
     '장난꾸러기 악마 뿔과 디테일 날개가 돋보이는 사과 데빌 에디션',
     '사과 모자에 깜찍한 뿔이 달려있어 할로윈이나 포인트 연출에 최고예요.',
+    '["치이카와 (기본)", "우사기 (귀뚫림)", "하치와레"]'::jsonb,
     true,
     2
 ),
@@ -253,6 +257,7 @@ VALUES
     '#ff758f',
     '은은한 베이비 핑크빛 복숭아 모양 보닛과 앙증맞은 잎사귀 장식',
     '동글동글한 복숭아 라인이 얼굴을 더욱 사랑스럽고 화사하게 만들어줍니다.',
+    '[]'::jsonb,
     true,
     3
 ),
@@ -266,6 +271,7 @@ VALUES
     '#59a5d8',
     '복숭아 모자에 청량한 세라복 카라가 함께 구성된 투피스 느낌의 세라 세트',
     '파랑 세라 / 분홍 세라 2가지 옵션으로 친구 인형과 트윈룩으로 입히기 좋아요.',
+    '["파랑 세라", "분홍 세라"]'::jsonb,
     true,
     4
 ),
@@ -279,6 +285,7 @@ VALUES
     '#ffb703',
     '보기만 해도 상큼해지는 레몬 옐로우 컬러와 싱그러운 나뭇잎 포인트',
     '화사하고 쨍한 색감이라 야외 출사 사진 찍을 때 특히 예쁘게 나옵니다.',
+    '[]'::jsonb,
     false,
     5
 ),
@@ -292,6 +299,7 @@ VALUES
     '#e63946',
     '달콤한 생크림 보닛 위에 콕 얹어진 탐스러운 빨간 딸기 모자',
     '새하얀 베이스와 선명한 딸기 오브제가 어우러져 어디서나 시선 집중!',
+    '[]'::jsonb,
     true,
     6
 ),
@@ -305,6 +313,7 @@ VALUES
     '#a4161a',
     '고급스러운 딥와인 레드 컬러에 하얀 퐁퐁 방울이 달린 장미 산타 에디션',
     '겨울 시즌 감성을 가득 담아 연말 선물용으로 가장 사랑받는 디자인입니다.',
+    '[]'::jsonb,
     false,
     7
 ),
@@ -318,6 +327,7 @@ VALUES
     '#9d0208',
     '물결치는 프릴 디테일이 인형 얼굴을 폭 감싸주는 우아한 장미 보닛',
     '목 부분 리본을 살짝 묶어 사랑스럽게 착용하는 고풍스러운 보닛 스타일입니다.',
+    '[]'::jsonb,
     false,
     8
 ),
@@ -331,6 +341,7 @@ VALUES
     '#8b5a2b',
     '올망졸망 도토리 꼭지 베레모와 미니 도토리 크로스백 소품 세트',
     '모자뿐만 아니라 작은 손가방까지 한 세트로 제공되어 완성도 높은 코디 가능!',
+    '[]'::jsonb,
     true,
     9
 )
@@ -343,6 +354,7 @@ ON CONFLICT (id) DO UPDATE SET
     badge_color = EXCLUDED.badge_color,
     description = EXCLUDED.description,
     details = EXCLUDED.details,
+    options = EXCLUDED.options,
     is_popular = EXCLUDED.is_popular,
     order_num = EXCLUDED.order_num;
 

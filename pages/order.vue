@@ -18,8 +18,11 @@ const form = ref({
   memo: "",
 });
 
-// 선택된 상품들 (productId -> 수량)
+// 선택된 상품들 (productId -> 수량) - 옵션이 없는 일반 상품용
 const selectedQuantities = ref<Record<string, number>>({});
+
+// 선택된 세부 옵션/종류 (productId -> optionName -> 수량) - 옵션이 있는 대 상품용
+const selectedOptionQuantities = ref<Record<string, Record<string, number>>>({});
 
 // 개별 상품 상세 설명 접기/펼치기 상태 (미선택 상품도 미리보기 지원)
 const expandedDetails = ref<Record<string, boolean>>({});
@@ -35,19 +38,94 @@ const isSubmitting = ref(false);
 onMounted(() => {
   // URL 쿼리에 select가 있으면 해당 상품 1개 자동 선택
   const querySelect = route.query.select as string;
-  if (querySelect && store.products.some((p) => p.id === querySelect)) {
-    selectedQuantities.value[querySelect] = 1;
+  if (querySelect) {
+    const p = store.products.find((prod) => prod.id === querySelect);
+    if (p) {
+      if (p.options && p.options.length > 0) {
+        if (!selectedOptionQuantities.value[querySelect]) {
+          selectedOptionQuantities.value[querySelect] = {};
+        }
+        selectedOptionQuantities.value[querySelect][p.options[0]] = 1;
+      } else {
+        selectedQuantities.value[querySelect] = 1;
+      }
+    }
   }
 });
 
-// 선택된 상품 수량 제어
-const getQuantity = (id: string) => selectedQuantities.value[id] || 0;
+// 대 상품의 총 선택 수량 계산 (옵션이 있으면 옵션 수량 합산)
+const getQuantity = (id: string) => {
+  const p = store.products.find((prod) => prod.id === id);
+  if (p && p.options && p.options.length > 0) {
+    const opts = selectedOptionQuantities.value[id] || {};
+    return Object.values(opts).reduce((sum, q) => sum + (q || 0), 0);
+  }
+  return selectedQuantities.value[id] || 0;
+};
 
-const toggleProduct = (id: string) => {
-  if (selectedQuantities.value[id] && selectedQuantities.value[id] > 0) {
-    delete selectedQuantities.value[id];
+// 특정 세부 종류(옵션)의 선택 수량
+const getOptionQuantity = (productId: string, optionName: string) => {
+  return selectedOptionQuantities.value[productId]?.[optionName] || 0;
+};
+
+// 특정 세부 종류(옵션) 체크박스 토글
+const toggleOption = (productId: string, optionName: string) => {
+  if (!selectedOptionQuantities.value[productId]) {
+    selectedOptionQuantities.value[productId] = {};
+  }
+  const current = selectedOptionQuantities.value[productId][optionName] || 0;
+  if (current > 0) {
+    selectedOptionQuantities.value[productId][optionName] = 0;
   } else {
-    selectedQuantities.value[id] = 1;
+    selectedOptionQuantities.value[productId][optionName] = 1;
+  }
+};
+
+// 특정 세부 종류(옵션) 수량 증가
+const increaseOptionQuantity = (productId: string, optionName: string) => {
+  if (!selectedOptionQuantities.value[productId]) {
+    selectedOptionQuantities.value[productId] = {};
+  }
+  const current = selectedOptionQuantities.value[productId][optionName] || 0;
+  selectedOptionQuantities.value[productId][optionName] = current + 1;
+};
+
+// 특정 세부 종류(옵션) 수량 감소
+const decreaseOptionQuantity = (productId: string, optionName: string) => {
+  if (!selectedOptionQuantities.value[productId]) return;
+  const current = selectedOptionQuantities.value[productId][optionName] || 0;
+  if (current <= 1) {
+    selectedOptionQuantities.value[productId][optionName] = 0;
+  } else {
+    selectedOptionQuantities.value[productId][optionName] = current - 1;
+  }
+};
+
+// 대 상품 헤더 체크박스 클릭 시 전체 토글
+const toggleProduct = (id: string) => {
+  const p = store.products.find((prod) => prod.id === id);
+  if (p && p.options && p.options.length > 0) {
+    const totalQty = getQuantity(id);
+    if (totalQty > 0) {
+      // 이미 1개 이상 선택되어 있다면 전체 해제
+      selectedOptionQuantities.value[id] = {};
+    } else {
+      // 아무것도 선택되어 있지 않다면 첫 번째 기본 옵션 1개 체크
+      if (!selectedOptionQuantities.value[id]) {
+        selectedOptionQuantities.value[id] = {};
+      }
+      const firstOpt = p.options[0];
+      if (firstOpt) {
+        selectedOptionQuantities.value[id][firstOpt] = 1;
+      }
+    }
+  } else {
+    // 옵션 없는 일반 상품
+    if (selectedQuantities.value[id] && selectedQuantities.value[id] > 0) {
+      delete selectedQuantities.value[id];
+    } else {
+      selectedQuantities.value[id] = 1;
+    }
   }
 };
 
@@ -65,21 +143,43 @@ const decreaseQuantity = (id: string) => {
   }
 };
 
-// 선택된 아이템 목록
+// 선택된 아이템 목록 (옵션 상품은 각 종류별로 개별 목록화)
 const selectedItemList = computed(() => {
-  const list: { product: (typeof store.products)[0]; quantity: number; subtotal: number }[] = [];
-  for (const [id, qty] of Object.entries(selectedQuantities.value)) {
-    if (qty > 0) {
-      const p = store.products.find((prod) => prod.id === id);
-      if (p) {
+  const list: {
+    product: (typeof store.products)[0];
+    productName: string;
+    selectedOption?: string;
+    quantity: number;
+    subtotal: number;
+  }[] = [];
+
+  for (const product of store.products) {
+    if (product.options && product.options.length > 0) {
+      const opts = selectedOptionQuantities.value[product.id] || {};
+      for (const [optName, optQty] of Object.entries(opts)) {
+        if (optQty > 0) {
+          list.push({
+            product,
+            productName: `${product.name} (${optName})`,
+            selectedOption: optName,
+            quantity: optQty,
+            subtotal: product.price * optQty,
+          });
+        }
+      }
+    } else {
+      const qty = selectedQuantities.value[product.id] || 0;
+      if (qty > 0) {
         list.push({
-          product: p,
+          product,
+          productName: product.name,
           quantity: qty,
-          subtotal: p.price * qty,
+          subtotal: product.price * qty,
         });
       }
     }
   }
+
   return list;
 });
 
@@ -149,7 +249,8 @@ const confirmAndSubmitOrder = async () => {
   try {
     const items = selectedItemList.value.map((item) => ({
       productId: item.product.id,
-      productName: item.product.name,
+      productName: item.productName || item.product.name,
+      selectedOption: item.selectedOption,
       price: item.product.price,
       quantity: item.quantity,
       image: item.product.image,
@@ -469,6 +570,9 @@ const resetForNewOrder = () => {
                   <i v-if="getQuantity(product.id) > 0" class="material-icons check-icon">check</i>
                 </div>
                 <span class="form-prod-name">{{ product.name }}</span>
+                <span v-if="product.options && product.options.length > 0" class="opt-count-tag">
+                  {{ product.options.length }}종류
+                </span>
               </div>
 
               <!-- 상품 사진 스와이프 (최대 5장 지원) -->
@@ -483,15 +587,70 @@ const resetForNewOrder = () => {
                 <span class="form-prod-price-badge">{{ product.price.toLocaleString() }}원</span>
               </div>
 
-              <!-- 수량 컨트롤러 -->
-              <div class="qty-controller" v-if="getQuantity(product.id) > 0">
-                <button type="button" class="btn-qty" @click.stop="decreaseQuantity(product.id)">-</button>
-                <span class="qty-val font-mono">{{ getQuantity(product.id) }}</span>
-                <button type="button" class="btn-qty" @click.stop="increaseQuantity(product.id)">+</button>
+              <!-- 🏷️ 세부 종류(옵션) 선택 체크박스 리스트 (옵션 등록된 상품) -->
+              <div
+                v-if="product.options && product.options.length > 0"
+                class="prod-options-checklist-wrap"
+                @click.stop
+              >
+                <div class="options-checklist-header">
+                  <span class="options-title-badge">종류 선택 (체크)</span>
+                  <span v-if="getQuantity(product.id) > 0" class="options-selected-sum font-mono">
+                    총 {{ getQuantity(product.id) }}개 선택됨
+                  </span>
+                </div>
+
+                <div class="options-list-grid">
+                  <div
+                    v-for="opt in product.options"
+                    :key="opt"
+                    class="option-row-item"
+                    :class="{ 'is-checked': getOptionQuantity(product.id, opt) > 0 }"
+                    @click="toggleOption(product.id, opt)"
+                  >
+                    <!-- 체크박스 -->
+                    <div class="option-check-box" :class="{ checked: getOptionQuantity(product.id, opt) > 0 }">
+                      <i v-if="getOptionQuantity(product.id, opt) > 0" class="material-icons opt-check-icon">check</i>
+                    </div>
+
+                    <!-- 종류명 -->
+                    <span class="option-row-name">{{ opt }}</span>
+
+                    <!-- 수량 컨트롤러 (체크 시 노출) -->
+                    <div
+                      v-if="getOptionQuantity(product.id, opt) > 0"
+                      class="option-row-qty"
+                      @click.stop
+                    >
+                      <button
+                        type="button"
+                        class="btn-opt-ctrl"
+                        @click.stop="decreaseOptionQuantity(product.id, opt)"
+                        title="수량 감소"
+                      >-</button>
+                      <span class="opt-qty-num font-mono">{{ getOptionQuantity(product.id, opt) }}</span>
+                      <button
+                        type="button"
+                        class="btn-opt-ctrl"
+                        @click.stop="increaseOptionQuantity(product.id, opt)"
+                        title="수량 증가"
+                      >+</button>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div v-else class="qty-placeholder" @click="toggleProduct(product.id)">
-                <span>+ 상품 담기</span>
-              </div>
+
+              <!-- 일반 단일 상품용 수량 컨트롤러 -->
+              <template v-else>
+                <div class="qty-controller" v-if="getQuantity(product.id) > 0">
+                  <button type="button" class="btn-qty" @click.stop="decreaseQuantity(product.id)">-</button>
+                  <span class="qty-val font-mono">{{ getQuantity(product.id) }}</span>
+                  <button type="button" class="btn-qty" @click.stop="increaseQuantity(product.id)">+</button>
+                </div>
+                <div v-else class="qty-placeholder" @click="toggleProduct(product.id)">
+                  <span>+ 상품 담기</span>
+                </div>
+              </template>
 
               <!-- 📝 상품 상세 설명 (제작 안내, 핏 설명) -->
               <div v-if="product.details" class="prod-details-container">
@@ -1105,6 +1264,143 @@ const resetForNewOrder = () => {
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 8px;
+}
+
+.opt-count-tag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #ff758f;
+  background: #fff0f3;
+  padding: 1px 5px;
+  border-radius: 6px;
+}
+
+/* 🏷️ 세부 종류(옵션) 체크박스 리스트 */
+.prod-options-checklist-wrap {
+  background: #fdfaf7;
+  border: 1.5px solid #f0e2d8;
+  border-radius: 12px;
+  padding: 8px 10px;
+  margin-top: 2px;
+  transition: all 0.2s;
+}
+
+.options-checklist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.options-title-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #6b5c58;
+}
+
+.options-selected-sum {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #ff4d6d;
+}
+
+.options-list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.option-row-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: #ffffff;
+  border: 1px solid #ebdcd0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.option-row-item:hover {
+  border-color: #ffb3c1;
+  background: #fffafa;
+}
+
+.option-row-item.is-checked {
+  border-color: #ff4d6d;
+  background: #fff0f3;
+}
+
+.option-check-box {
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  border: 1.5px solid #c9b8ab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #ffffff;
+  transition: all 0.15s;
+}
+
+.option-check-box.checked {
+  background: #ff4d6d;
+  border-color: #ff4d6d;
+}
+
+.opt-check-icon {
+  font-size: 13px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.option-row-name {
+  flex: 1;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #2b1f1d;
+  line-height: 1.25;
+}
+
+.option-row-qty {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: #ffffff;
+  border: 1px solid #ff758f;
+  border-radius: 6px;
+  padding: 1px 2px;
+}
+
+.btn-opt-ctrl {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: #fff0f3;
+  color: #ff4d6d;
+  font-weight: 800;
+  font-size: 0.82rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.btn-opt-ctrl:hover {
+  background: #ff4d6d;
+  color: #ffffff;
+}
+
+.opt-qty-num {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #ff4d6d;
+  min-width: 14px;
+  text-align: center;
 }
 
 /* 📝 개별 상품 카드 내 상세 설명 (제작·핏 안내) */

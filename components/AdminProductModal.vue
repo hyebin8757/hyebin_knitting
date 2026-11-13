@@ -31,8 +31,35 @@ const form = ref({
   badgeColor: "#ff4d6d",
   description: "",
   details: "",
+  options: [] as string[],
   isPopular: true,
 });
+
+// 새 옵션(종류) 입력 상태 및 프리셋
+const newOptionInput = ref("");
+const presetOptions = [
+  "치이카와 (기본)",
+  "우사기 (귀뚫림)",
+  "하치와레",
+  "모몽가 / 카니",
+  "파랑",
+  "분홍",
+];
+
+const addOption = (optName?: string) => {
+  const target = (optName || newOptionInput.value).trim();
+  if (!target) return;
+  if (!form.value.options.includes(target)) {
+    form.value.options.push(target);
+  }
+  if (!optName) {
+    newOptionInput.value = "";
+  }
+};
+
+const removeOption = (index: number) => {
+  form.value.options.splice(index, 1);
+};
 
 // 기본 추천 이미지 목록 (9종)
 const defaultSampleImages = [
@@ -77,6 +104,7 @@ watch(
         badgeColor: newVal.badgeColor || "#ff4d6d",
         description: newVal.description || "",
         details: newVal.details || "",
+        options: newVal.options ? [...newVal.options] : [],
         isPopular: newVal.isPopular ?? true,
       };
     } else {
@@ -89,6 +117,7 @@ watch(
         badgeColor: "#ff4d6d",
         description: "",
         details: "100% 핸드메이드 맞춤 뜨개옷으로 인형에 딱 맞게 제작됩니다.",
+        options: ["치이카와 (기본)", "우사기 (귀뚫림)", "하치와레"],
         isPopular: true,
       };
     }
@@ -247,6 +276,7 @@ const handleSave = async () => {
       badgeColor: form.value.badgeColor,
       description: form.value.description.trim(),
       details: form.value.details.trim(),
+      options: form.value.options.map((o) => o.trim()).filter(Boolean),
       isPopular: form.value.isPopular,
     });
     emit("saved", props.product.id);
@@ -260,6 +290,7 @@ const handleSave = async () => {
       badgeColor: form.value.badgeColor,
       description: form.value.description.trim() || "정성껏 한 땀 한 땀 제작하는 핸드메이드 맞춤 뜨개옷",
       details: form.value.details.trim(),
+      options: form.value.options.map((o) => o.trim()).filter(Boolean),
       isPopular: form.value.isPopular,
     });
     emit("saved", created ? created.id : "");
@@ -519,6 +550,72 @@ const handleSave = async () => {
                 class="form-textarea"
                 placeholder="인형 착용감, 색상 구성, 세탁 시 주의사항 등 고객에게 보여줄 상세 정보"
               ></textarea>
+            </div>
+
+            <!-- 5. 🏷️ 상품 종류 (세부 옵션 체크박스 관리) -->
+            <div class="form-group options-config-group">
+              <div class="options-header-row">
+                <label class="input-label">
+                  🏷️ 상품 종류 (체크박스 옵션 관리)
+                  <span class="sub-label">고객이 하나의 대 상품 안에서 체크하여 고를 수 있는 세부 종류</span>
+                </label>
+              </div>
+
+              <!-- 등록된 옵션 칩 목록 -->
+              <div class="options-chips-wrap">
+                <div
+                  v-for="(opt, idx) in form.options"
+                  :key="idx"
+                  class="option-tag-chip"
+                >
+                  <span class="chip-name">{{ opt }}</span>
+                  <button
+                    type="button"
+                    class="btn-chip-remove"
+                    @click="removeOption(idx)"
+                    title="종류 삭제"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <span v-if="form.options.length === 0" class="no-options-tip">
+                  등록된 세부 종류가 없습니다. (단일 상품으로 노출)
+                </span>
+              </div>
+
+              <!-- 새 옵션 직접 추가 입력창 -->
+              <div class="add-option-input-bar">
+                <input
+                  v-model="newOptionInput"
+                  type="text"
+                  class="form-input option-add-input"
+                  placeholder="추가할 종류 입력 (예: 우사기 귀뚫림, 하치와레)"
+                  @keyup.enter.prevent="addOption()"
+                />
+                <button
+                  type="button"
+                  class="btn-add-opt"
+                  @click="addOption()"
+                >
+                  + 종류 추가
+                </button>
+              </div>
+
+              <!-- 빠른 추천 옵션 태그 버튼들 -->
+              <div class="preset-options-row">
+                <span class="preset-label">빠른 추천:</span>
+                <div class="preset-btns">
+                  <button
+                    v-for="preset in presetOptions"
+                    :key="preset"
+                    type="button"
+                    class="btn-preset-opt"
+                    @click="addOption(preset)"
+                  >
+                    + {{ preset }}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- 인기 추천 상품 등록 여부 토글 -->
@@ -1187,6 +1284,130 @@ const handleSave = async () => {
 .btn-save:hover {
   background: #e63956;
   transform: translateY(-1px);
+}
+
+/* 🏷️ 세부 종류 (옵션) 관리 스타일 */
+.options-config-group {
+  background: #fdfbf9;
+  border: 1.5px dashed #ffd8df;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.options-header-row .sub-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #8c7873;
+  margin-top: 2px;
+}
+
+.options-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 32px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.option-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff0f3;
+  border: 1px solid #ffb3c1;
+  color: #ff4d6d;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.btn-chip-remove {
+  border: none;
+  background: transparent;
+  color: #ff4d6d;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.btn-chip-remove:hover {
+  color: #d90429;
+}
+
+.no-options-tip {
+  font-size: 0.74rem;
+  color: #a08c87;
+  font-style: italic;
+}
+
+.add-option-input-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.option-add-input {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+}
+
+.btn-add-opt {
+  background: #ff758f;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.btn-add-opt:hover {
+  background: #ff4d6d;
+}
+
+.preset-options-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preset-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #8c7873;
+}
+
+.preset-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.btn-preset-opt {
+  background: #ffffff;
+  border: 1px solid #ebdcd0;
+  color: #6b5c58;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-preset-opt:hover {
+  background: #fff0f3;
+  border-color: #ffb3c1;
+  color: #ff4d6d;
 }
 
 @media (max-width: 480px) {
