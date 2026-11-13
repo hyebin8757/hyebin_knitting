@@ -247,7 +247,7 @@ export interface PopupNotice {
 }
 
 export const DEFAULT_POPUP_NOTICE: PopupNotice = {
-  isActive: true,
+  isActive: false,
   type: "product",
   targetProductId: "apple",
   badgeText: "NEW 신상품 출시 안내",
@@ -421,7 +421,18 @@ export const useKnittingStore = defineStore("knittingStore", () => {
   const siteNotices = ref<SiteNotices>({ ...DEFAULT_SITE_NOTICES });
 
   // 🌟 사용자 팝업 안내 및 신상품 안내 설정
-  const popupNotice = ref<PopupNotice>({ ...DEFAULT_POPUP_NOTICE });
+  const getInitialPopupNotice = (): PopupNotice => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("knitting_popup_notice");
+        if (stored) {
+          return { ...DEFAULT_POPUP_NOTICE, ...JSON.parse(stored) };
+        }
+      } catch {}
+    }
+    return { ...DEFAULT_POPUP_NOTICE };
+  };
+  const popupNotice = ref<PopupNotice>(getInitialPopupNotice());
   const isUserNoticeModalOpen = ref<boolean>(false);
 
   const switchAdminTab = (tab: "orders" | "products" | "notices" | "popups" | "refunds" | "inquiries" | "reviews" | "settings") => {

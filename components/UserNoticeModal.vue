@@ -63,16 +63,19 @@ const isWithinPeriod = () => {
 const checkAndOpenPopup = () => {
   // 관리자 및 관리자 관련 라우트에서는 절대 노출하지 않음
   if (route.path.startsWith("/admin") || route.path.startsWith("/manage") || route.path.startsWith("/owner")) {
+    isOpen.value = false;
     return;
   }
 
-  // 관리자 설정에서 비활성화된 경우
+  // 관리자 설정에서 비활성화된 경우 즉시 차단
   if (!store.popupNotice.isActive) {
+    isOpen.value = false;
     return;
   }
 
   // 기간 설정 체크
   if (!isWithinPeriod()) {
+    isOpen.value = false;
     return;
   }
 
@@ -80,15 +83,46 @@ const checkAndOpenPopup = () => {
   if (typeof window !== "undefined") {
     const hideUntil = localStorage.getItem("knitting_hide_popup_until");
     if (hideUntil && Date.now() < Number(hideUntil)) {
+      isOpen.value = false;
       return;
     }
   }
 
-  // 약간의 딜레이 후 부드럽게 팝업 오픈
+  // 약간의 딜레이 후 부드럽게 팝업 오픈 (실행 직전 모든 조건 재확인)
   setTimeout(() => {
+    if (route.path.startsWith("/admin") || route.path.startsWith("/manage") || route.path.startsWith("/owner")) {
+      isOpen.value = false;
+      return;
+    }
+    if (!store.popupNotice.isActive) {
+      isOpen.value = false;
+      return;
+    }
+    if (!isWithinPeriod()) {
+      isOpen.value = false;
+      return;
+    }
+    if (typeof window !== "undefined") {
+      const hideUntil = localStorage.getItem("knitting_hide_popup_until");
+      if (hideUntil && Date.now() < Number(hideUntil)) {
+        isOpen.value = false;
+        return;
+      }
+    }
     isOpen.value = true;
   }, 350);
 };
+
+// ⭐️ store.popupNotice.isActive 상태를 적극 감시하여 false로 바뀌는 순간 즉시 닫기
+watch(
+  () => store.popupNotice.isActive,
+  (active) => {
+    if (!active) {
+      isOpen.value = false;
+    }
+  },
+  { immediate: true }
+);
 
 // 관리자 미리보기 또는 수동 트리거 감지
 watch(

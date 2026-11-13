@@ -182,6 +182,24 @@ const handlePopupProductSelect = () => {
   }
 };
 
+// 팝업 노출 상태 즉시 토글 저장 (스위치 클릭 시 즉각 반영)
+const handleTogglePopupActive = async () => {
+  const newActive = Boolean(popupForm.value.isActive);
+  store.popupNotice.isActive = newActive;
+  store.safeSetItem("knitting_popup_notice", store.popupNotice);
+
+  await store.updatePopupNotice({
+    ...popupForm.value,
+    isActive: newActive,
+  });
+
+  if (!newActive) {
+    store.showToast("🚫 팝업이 숨김(OFF) 처리되었습니다. 고객 화면에 노출되지 않습니다.");
+  } else {
+    store.showToast("🟢 팝업이 활성화(ON)되었습니다. 고객 방문 시 팝업이 노출됩니다.");
+  }
+};
+
 // 팝업 설정 저장
 const savePopupNoticeSettings = async () => {
   const sanitizeLeadingEmoji = (str: string) =>
@@ -1415,15 +1433,23 @@ const handleLogout = () => {
               <div class="popup-config-grid">
                 <!-- 활성화 토글 -->
                 <div class="form-group">
-                  <label class="input-label">팝업 모달 노출 상태</label>
+                  <label class="input-label">팝업 모달 노출 상태 (클릭 즉시 자동 저장)</label>
                   <div class="toggle-card-row">
                     <label class="switch">
-                      <input type="checkbox" v-model="popupForm.isActive" />
+                      <input type="checkbox" v-model="popupForm.isActive" @change="handleTogglePopupActive" />
                       <span class="slider"></span>
                     </label>
                     <span class="toggle-status-txt" :class="{ 'text-pink font-bold': popupForm.isActive }">
                       {{ popupForm.isActive ? '🟢 사용자에게 팝업 노출 중 (ON)' : '⚪ 팝업 숨김 (OFF)' }}
                     </span>
+                    <button
+                      type="button"
+                      class="btn-quick-toggle-action"
+                      :class="popupForm.isActive ? 'btn-turn-off' : 'btn-turn-on'"
+                      @click="popupForm.isActive = !popupForm.isActive; handleTogglePopupActive();"
+                    >
+                      {{ popupForm.isActive ? '🔒 팝업 즉시 숨기기 (OFF)' : '📢 팝업 즉시 켜기 (ON)' }}
+                    </button>
                   </div>
                 </div>
 
@@ -3108,6 +3134,37 @@ const handleLogout = () => {
 .toggle-status-txt {
   font-size: 0.86rem;
   color: #635350;
+}
+
+.btn-quick-toggle-action {
+  margin-left: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1.5px solid transparent;
+}
+
+.btn-turn-off {
+  background: #fff0f3;
+  color: #d90429;
+  border-color: #ffd8df;
+}
+
+.btn-turn-off:hover {
+  background: #ffccd5;
+}
+
+.btn-turn-on {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-color: #c8e6c9;
+}
+
+.btn-turn-on:hover {
+  background: #c8e6c9;
 }
 
 .popup-type-selector {
