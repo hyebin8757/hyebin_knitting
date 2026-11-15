@@ -75,6 +75,13 @@ const noticesForm = ref({
   courierInfo: "",
 });
 
+// 🚚 주문서 배송 방식 목록 관리 상태
+const shippingList = ref<ShippingOptionItem[]>([]);
+
+const syncShippingList = () => {
+  shippingList.value = JSON.parse(JSON.stringify(store.shippingOptions));
+};
+
 const syncNoticesForm = () => {
   noticesForm.value = {
     noticeContent: store.siteNotices.noticeContent,
@@ -86,6 +93,7 @@ const syncNoticesForm = () => {
     makingPeriod: store.siteNotices.makingPeriod,
     courierInfo: store.siteNotices.courierInfo,
   };
+  syncShippingList();
 };
 
 watch(
@@ -96,7 +104,45 @@ watch(
   { deep: true }
 );
 
-// 공지 & 주문안내 저장 핸들러
+watch(
+  () => store.shippingOptions,
+  () => {
+    syncShippingList();
+  },
+  { deep: true, immediate: true }
+);
+
+// 새 배송 방식 추가
+const addShippingOptionItem = () => {
+  shippingList.value.push({
+    id: `ship_${Date.now()}`,
+    name: "새 배송방식",
+    cost: 3000,
+    desc: "배송 방식 상세 설명",
+  });
+  store.showToast("새 배송 방식 슬롯이 추가되었습니다. 내용을 입력 후 저장해주세요! 🚚");
+};
+
+// 배송 방식 항목 삭제
+const removeShippingOptionItem = (idx: number) => {
+  if (shippingList.value.length <= 1) {
+    store.showAlert("주문서에는 최소 1개 이상의 배송 방식이 필요합니다.", {
+      type: "warning",
+      title: "삭제 불가",
+    });
+    return;
+  }
+  const removed = shippingList.value.splice(idx, 1);
+  store.showToast(`'${removed[0]?.name || "배송방식"}' 항목이 삭제되었습니다.`);
+};
+
+// 기본 배송 방식 복원
+const handleResetShipping = async () => {
+  await store.resetShippingOptionsToDefault();
+  syncShippingList();
+};
+
+// 공지 & 주문안내 및 배송 방식 저장 핸들러
 const saveSiteNotices = async () => {
   await store.updateSiteNotices({
     noticeContent: noticesForm.value.noticeContent.trim(),
@@ -109,8 +155,12 @@ const saveSiteNotices = async () => {
     courierInfo: noticesForm.value.courierInfo.trim(),
   });
 
-  store.showAlert("📢 공지사항 및 주문 안내 문구가 안전하게 저장되었습니다!\n클라우드 데이터베이스 및 모든 페이지에 즉시 실시간 반영되었습니다. ✨", {
-    title: "공지 & 주문안내 저장 완료",
+  if (shippingList.value.length > 0) {
+    await store.updateShippingOptions(shippingList.value);
+  }
+
+  store.showAlert("📢 공지사항 및 주문 배송 방식 설정이 안전하게 저장되었습니다!\n클라우드 데이터베이스 및 주문서 페이지에 즉시 실시간 반영되었습니다. ✨", {
+    title: "공지 & 배송방식 저장 완료",
     type: "success",
   });
 };
@@ -1202,6 +1252,92 @@ const handleLogout = () => {
                     class="notice-input"
                     placeholder="CJ대한통운 / 우체국 / GS25·CU 편의점 택배"
                   />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. 🚚 주문서 배송 방식 및 배송비 설정 (실시간 추가·수정·삭제) -->
+          <div class="notice-editor-card card-notice-shipping">
+            <div class="editor-card-header">
+              <span class="editor-badge bg-badge-teal">배송설정</span>
+              <div class="editor-header-meta">
+                <h4 class="editor-title">🚚 주문서 배송 방식 및 배송비 설정</h4>
+                <span class="editor-hint">고객 주문서의 '배송 방식' 선택지에 실시간 반영됩니다 (금액 자동 계산)</span>
+              </div>
+              <div class="shipping-ctrl-actions">
+                <button
+                  type="button"
+                  class="btn-shipping-add"
+                  @click="addShippingOptionItem"
+                >
+                  <i class="material-icons">add</i>
+                  <span>새 배송방식 추가</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-shipping-reset"
+                  @click="handleResetShipping"
+                  title="기본 배송 방식으로 복원"
+                >
+                  <i class="material-icons">restart_alt</i>
+                  <span>기본값 복원</span>
+                </button>
+              </div>
+            </div>
+            <div class="editor-body">
+              <div class="shipping-list-editor">
+                <div
+                  v-for="(shipItem, sIdx) in shippingList"
+                  :key="shipItem.id"
+                  class="shipping-item-card"
+                >
+                  <div class="ship-item-top">
+                    <span class="ship-item-num font-mono">배송 옵션 #{{ sIdx + 1 }}</span>
+                    <button
+                      type="button"
+                      class="btn-ship-del"
+                      title="해당 배송 방식 삭제"
+                      @click="removeShippingOptionItem(sIdx)"
+                    >
+                      <i class="material-icons">delete_outline</i>
+                      <span>삭제</span>
+                    </button>
+                  </div>
+                  <div class="ship-inputs-grid">
+                    <div class="form-group">
+                      <label class="input-label">배송 방식 명칭 <span class="req">*</span></label>
+                      <input
+                        v-model="shipItem.name"
+                        type="text"
+                        class="notice-input"
+                        placeholder="예: 일반택배, GS반값택배, 방문수령 등"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label class="input-label">배송비 (원) <span class="req">*</span></label>
+                      <div class="price-input-wrap">
+                        <input
+                          v-model.number="shipItem.cost"
+                          type="number"
+                          step="100"
+                          min="0"
+                          class="notice-input font-mono"
+                          placeholder="4000"
+                        />
+                        <span class="price-won-tag">원</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group mt-2">
+                    <label class="input-label">배송 안내 및 설명</label>
+                    <input
+                      v-model="shipItem.desc"
+                      type="text"
+                      class="notice-input"
+                      placeholder="예: 편의점 수령 (주소란에 편의점 점포명과 주소를 반드시 기재)"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -4192,6 +4328,127 @@ input:checked + .slider:before {
   .btn-save-notices-bottom {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* 🚚 배송 설정 에디터 스타일 */
+.card-notice-shipping {
+  border-left: 4px solid #0d9488;
+}
+
+.bg-badge-teal {
+  background: #0d9488;
+  color: #ffffff;
+}
+
+.shipping-ctrl-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.btn-shipping-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #0d9488;
+  color: #ffffff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-shipping-add:hover {
+  background: #0f766e;
+}
+
+.btn-shipping-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  color: #0f766e;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-shipping-reset:hover {
+  background: #ccfbf1;
+}
+
+.shipping-list-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shipping-item-card {
+  background: #ffffff;
+  border: 1px solid #e6f4f2;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.04);
+}
+
+.ship-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed #d1fae5;
+}
+
+.ship-item-num {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #0d9488;
+}
+
+.btn-ship-del {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: transparent;
+  border: 1px solid #fecdd3;
+  color: #e11d48;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-ship-del:hover {
+  background: #ffe4e6;
+}
+
+.btn-ship-del .material-icons {
+  font-size: 14px;
+}
+
+.ship-inputs-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .ship-inputs-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 }
 

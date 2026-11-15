@@ -76,7 +76,7 @@ const calculatedTotalAmount = computed(() => {
 // 배송 방식 변경 처리
 const handleShippingChange = (e: Event) => {
   const target = e.target as HTMLSelectElement;
-  const opt = SHIPPING_OPTIONS.find((s) => s.id === target.value);
+  const opt = store.shippingOptions.find((s) => s.id === target.value);
   if (opt) {
     form.value.shippingId = opt.id;
     form.value.shippingType = opt.name;
@@ -375,7 +375,7 @@ const handleSave = () => {
               <div class="form-group">
                 <label class="input-label">배송 방식</label>
                 <select :value="form.shippingId" class="form-select" @change="handleShippingChange">
-                  <option v-for="s in SHIPPING_OPTIONS" :key="s.id" :value="s.id">
+                  <option v-for="s in store.shippingOptions" :key="s.id" :value="s.id">
                     {{ s.name }} (+{{ s.cost.toLocaleString() }}원)
                   </option>
                 </select>

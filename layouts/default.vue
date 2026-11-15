@@ -22,6 +22,19 @@ const isAdminRoute = computed(() => {
   );
 });
 
+// 🔒 전역 모달 오픈 시 뒷배경 스크롤 방지
+const isGlobalModalOpen = computed(() => {
+  return Boolean(
+    store.isOrderLookupModalOpen ||
+    store.isFeedbackModalOpen ||
+    store.isReviewWriteModalOpen ||
+    store.isNotificationModalOpen ||
+    store.alertModal.isOpen
+  );
+});
+
+useBodyScrollLock(isGlobalModalOpen);
+
 onMounted(() => {
   store.loadFromLocalStorage();
 });

@@ -2,13 +2,6 @@
 import { useKnittingStore } from "~/stores/useKnittingStore";
 
 const store = useKnittingStore();
-
-const copyAccount = () => {
-  if (typeof navigator !== "undefined" && navigator.clipboard) {
-    navigator.clipboard.writeText(`${store.settings.bankName} ${store.settings.accountNumber}`);
-    store.showToast(`계좌번호가 복사되었습니다! (${store.settings.bankName} ${store.settings.accountNumber}) ✨`);
-  }
-};
 </script>
 
 <template>
@@ -25,15 +18,6 @@ const copyAccount = () => {
       </div>
 
       <div class="footer-info-grid">
-        <div class="info-block">
-          <h4 class="block-title">💳 공식 입금 계좌</h4>
-          <div class="account-card">
-            <span class="acc-text">{{ store.settings.bankName }} {{ store.settings.accountNumber }}</span>
-            <span class="acc-holder">예금주: {{ store.settings.accountHolder }}</span>
-            <button class="btn-copy" @click="copyAccount">계좌 복사</button>
-          </div>
-        </div>
-
         <div class="info-block">
           <h4 class="block-title">📬 제작 및 상담 안내</h4>
           <p class="info-line">Instagram: <b>{{ store.siteNotices.instagramId }}</b> (DM 문의 환영)</p>
@@ -134,44 +118,6 @@ const copyAccount = () => {
   font-weight: 700;
   color: #3f2f2c;
   margin: 0;
-}
-
-.account-card {
-  background: #ffffff;
-  border: 1px solid #ebdcd0;
-  border-radius: 12px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.acc-text {
-  font-weight: 800;
-  color: #2b1f1d;
-  font-size: 0.95rem;
-}
-
-.acc-holder {
-  font-size: 0.8rem;
-  color: #8c7e7b;
-}
-
-.btn-copy {
-  align-self: flex-start;
-  margin-top: 6px;
-  background: #f7f3ee;
-  border: 1px solid #e0d4c8;
-  color: #5c4e4b;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.btn-copy:hover {
-  background: #ece3d8;
 }
 
 .info-line {

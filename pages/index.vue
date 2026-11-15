@@ -2,12 +2,34 @@
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useKnittingStore } from "~/stores/useKnittingStore";
+import ImageZoomModal from "~/components/ImageZoomModal.vue";
 
 const route = useRoute();
 const router = useRouter();
 const store = useKnittingStore();
 
 const searchPhone = ref("");
+
+// 🔍 사진 확대보기 모달 상태
+const zoomModal = ref({
+  isOpen: false,
+  images: [] as string[],
+  initialIndex: 0,
+  title: "",
+});
+
+const openImageZoom = (product: any, initialIndex = 0) => {
+  const imgs = product.images && Array.isArray(product.images) && product.images.length > 0
+    ? product.images
+    : (product.image ? [product.image] : ["/images/products/apple.jpg"]);
+
+  zoomModal.value = {
+    isOpen: true,
+    images: imgs,
+    initialIndex,
+    title: product.name,
+  };
+};
 
 // 비밀 관리자 쿼리 파라미터 감지 (예: /?manage 또는 /?admin 접속 시 관리자 페이지로 자동 이동)
 onMounted(() => {
@@ -124,6 +146,7 @@ const handleQuickLookup = () => {
                 :badge-text="product.tag"
                 :badge-color="product.badgeColor || '#ff758f'"
                 @click="goToOrderWithProduct(product.id)"
+                @zoom="openImageZoom(product, $event.index)"
               />
             </div>
 
@@ -196,6 +219,14 @@ const handleQuickLookup = () => {
         </div>
       </div>
     </section>
+
+    <!-- 🔍 상품 사진 원본 확대보기 라이트박스 모달 -->
+    <ImageZoomModal
+      v-model="zoomModal.isOpen"
+      :images="zoomModal.images"
+      :initial-index="zoomModal.initialIndex"
+      :title="zoomModal.title"
+    />
   </div>
 </template>
 

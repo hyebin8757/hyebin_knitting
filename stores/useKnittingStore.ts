@@ -230,7 +230,7 @@ export const DEFAULT_SITE_NOTICES: SiteNotices = {
   courierInfo: `롯데택배 / 우체국 / CU 편의점택배`,
 };
 
-// 9가지 앉은누이 뜨개옷 상품 정밀 데이터 (최대 5장 다중 사진 지원)
+// 7가지 앉은누이 뜨개옷 상품 정밀 데이터 (최대 5장 다중 사진 지원)
 export const INITIAL_PRODUCTS: ProductItem[] = [
   {
     id: "apple",
@@ -246,19 +246,6 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     isPopular: true,
   },
   {
-    id: "apple_devil",
-    name: "사과 데빌 ver.",
-    price: 14000,
-    image: "/images/products/apple_devil.jpg",
-    images: ["/images/products/apple_devil.jpg", "/images/products/apple.jpg"],
-    tag: "HOT",
-    badgeColor: "#c9184a",
-    description: "장난꾸러기 악마 뿔과 디테일 날개가 돋보이는 사과 데빌 에디션",
-    details: "사과 모자에 깜찍한 뿔이 달려있어 할로윈이나 포인트 연출에 최고예요.",
-    options: ["치이카와 (기본)", "우사기 (귀뚫림)", "하치와레"],
-    isPopular: true,
-  },
-  {
     id: "peach",
     name: "복숭아",
     price: 14000,
@@ -267,20 +254,8 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     tag: "인기",
     badgeColor: "#ff758f",
     description: "은은한 베이비 핑크빛 복숭아 모양 보닛과 앙증맞은 잎사귀 장식",
-    details: "동글동글한 복숭아 라인이 얼굴을 더욱 사랑스럽고 화사하게 만들어줍니다.",
-    isPopular: true,
-  },
-  {
-    id: "peach_sailor",
-    name: "복숭아 세라(파랑, 분홍) ver.",
-    price: 15000,
-    image: "/images/products/peach_sailor.jpg",
-    images: ["/images/products/peach_sailor.jpg", "/images/products/peach.jpg"],
-    tag: "추천",
-    badgeColor: "#59a5d8",
-    description: "마린룩 감성의 세라복 스타일과 복숭아 열매 브로치 조합",
-    details: "파랑과 분홍 2가지 색상 중 원하시는 컬러를 체크해 주세요.",
-    options: ["파랑 세라", "분홍 세라"],
+    details: "동글동글한 복숭아 라인이 얼굴을 더욱 사랑스럽고 화사하게 만들어줍니다.\n세라복 스타일이나 파랑/분홍 컬러 선택이 가능합니다.",
+    options: ["기본 복숭아", "파랑 세라", "분홍 세라"],
     isPopular: true,
   },
   {
@@ -345,7 +320,14 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
   },
 ];
 
-export const SHIPPING_OPTIONS = [
+export interface ShippingOptionItem {
+  id: string;
+  name: string;
+  cost: number;
+  desc: string;
+}
+
+export const DEFAULT_SHIPPING_OPTIONS: ShippingOptionItem[] = [
   {
     id: "normal",
     name: "일반택배",
@@ -366,6 +348,9 @@ export const SHIPPING_OPTIONS = [
   },
 ];
 
+// 이전 버전 호환성용 상수
+export const SHIPPING_OPTIONS = DEFAULT_SHIPPING_OPTIONS;
+
 const INITIAL_REVIEWS: ReviewItem[] = [];
 const INITIAL_ORDERS: OrderItem[] = [];
 const INITIAL_INQUIRIES: InquiryItem[] = [];
@@ -374,11 +359,16 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [];
 export const useKnittingStore = defineStore("knittingStore", () => {
   // 상태
   const products = ref<ProductItem[]>([...INITIAL_PRODUCTS]);
+  // 🗑️ 관리자가 명시적으로 삭제한 상품 ID 영구 블랙리스트 (재실행 시 Supabase 등에서 강제 부활 차단)
+  const deletedProductIds = ref<string[]>(["apple_devil", "peach_sailor"]);
   const orders = ref<OrderItem[]>([...INITIAL_ORDERS]);
   const refunds = ref<RefundItem[]>([]);
   const inquiries = ref<InquiryItem[]>([...INITIAL_INQUIRIES]);
   const reviews = ref<ReviewItem[]>([...INITIAL_REVIEWS]);
   const notifications = ref<NotificationItem[]>([...INITIAL_NOTIFICATIONS]);
+
+  // 🚚 배송 방식 목록 상태 (관리자가 직접 추가·수정·삭제 가능)
+  const shippingOptions = ref<ShippingOptionItem[]>([...DEFAULT_SHIPPING_OPTIONS]);
 
   // 관리자 인증 & 설정
   const isAdminLoggedIn = ref<boolean>(false);
@@ -531,12 +521,27 @@ export const useKnittingStore = defineStore("knittingStore", () => {
   const loadFromLocalStorage = () => {
     if (typeof window === "undefined") return;
     try {
+      // 🗑️ 삭제된 상품 블랙리스트 우선 로드
+      const storedDeleted = localStorage.getItem("knitting_deleted_product_ids");
+      if (storedDeleted) {
+        try {
+          const parsed = JSON.parse(storedDeleted);
+          if (Array.isArray(parsed)) {
+            deletedProductIds.value = Array.from(new Set([...deletedProductIds.value, ...parsed]));
+          }
+        } catch (e) {
+          console.error("Failed to parse deleted product ids:", e);
+        }
+      }
+
       const storedProducts = localStorage.getItem("knitting_products");
       if (storedProducts) {
         try {
           const parsed = JSON.parse(storedProducts);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            products.value = parsed.map((p) => {
+            products.value = parsed
+              .filter((p: any) => !deletedProductIds.value.includes(p.id))
+              .map((p) => {
               const defaultProd = INITIAL_PRODUCTS.find((ip) => ip.id === p.id);
               const hasOptions = Array.isArray(p.options) && p.options.length > 0;
               return {
@@ -554,6 +559,9 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         } catch (e) {
           console.error("Failed to parse stored products:", e);
         }
+      } else {
+        // 로컬스토리지에 상품이 없더라도 삭제된 상품은 초기값에서 제외
+        products.value = INITIAL_PRODUCTS.filter((p) => !deletedProductIds.value.includes(p.id));
       }
 
       const storedOrders = localStorage.getItem("knitting_orders");
@@ -641,6 +649,19 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           siteNotices.value = { ...DEFAULT_SITE_NOTICES, ...JSON.parse(storedNotices) };
         } catch (e) {
           console.error("Failed to parse site notices:", e);
+        }
+      }
+
+      // 🚚 배송 방식 목록 불러오기
+      const storedShipping = localStorage.getItem("knitting_shipping_options");
+      if (storedShipping) {
+        try {
+          const parsed = JSON.parse(storedShipping);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            shippingOptions.value = parsed;
+          }
+        } catch (e) {
+          console.error("Failed to parse shipping options:", e);
         }
       }
 
@@ -737,7 +758,9 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         .select("*")
         .order("order_num", { ascending: true });
       if (pData && pData.length > 0) {
-        products.value = pData.map((row: any) => {
+        // 🗑️ 관리자가 삭제한 상품은 Supabase DB에 남아있더라도 복원 차단
+        const activeRows = pData.filter((row: any) => !deletedProductIds.value.includes(row.id));
+        products.value = activeRows.map((row: any) => {
           const defaultProd = INITIAL_PRODUCTS.find((p) => p.id === row.id);
           const hasDbOptions = Array.isArray(row.options) && row.options.length > 0;
           const options = hasDbOptions
@@ -1066,6 +1089,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     // 중요한 설정/공지/팝업부터 최우선 개별 안전 저장
     safeSetItem("knitting_settings", settings.value);
     safeSetItem("knitting_site_notices", siteNotices.value);
+    safeSetItem("knitting_shipping_options", shippingOptions.value);
     safeSetItem("knitting_products", products.value);
     safeSetItem("knitting_orders", orders.value);
     safeSetItem("knitting_refunds", refunds.value);
@@ -1261,7 +1285,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     depositorName?: string;
     memo?: string;
   }) => {
-    const selectedShipping = SHIPPING_OPTIONS.find((s) => s.id === orderInput.shippingId) || SHIPPING_OPTIONS[0];
+    const selectedShipping = shippingOptions.value.find((s) => s.id === orderInput.shippingId) || shippingOptions.value[0];
     const totalProductAmount = orderInput.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const totalAmount = totalProductAmount + selectedShipping.cost;
 
@@ -1975,6 +1999,23 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     return true;
   };
 
+  // 🚚 배송 방식 설정 관리 (추가, 수정, 삭제, 기본 복원)
+  const updateShippingOptions = async (newOptions: ShippingOptionItem[]) => {
+    if (!newOptions || newOptions.length === 0) {
+      showAlert("최소 1개 이상의 배송 방식이 필요합니다.", { type: "warning", title: "배송 방식 확인" });
+      return;
+    }
+    shippingOptions.value = JSON.parse(JSON.stringify(newOptions));
+    saveToLocalStorage();
+    showToast("배송 방식 설정이 성공적으로 저장되었습니다! 🚚");
+  };
+
+  const resetShippingOptionsToDefault = async () => {
+    shippingOptions.value = JSON.parse(JSON.stringify(DEFAULT_SHIPPING_OPTIONS));
+    saveToLocalStorage();
+    showToast("배송 방식이 기본 설정으로 복원되었습니다.");
+  };
+
   // 상태 라벨 헬퍼
   const getStatusLabel = (status: OrderItem["status"]): string => {
     switch (status) {
@@ -2126,6 +2167,12 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     const target = products.value.find((p) => p.id === id);
     const targetName = target ? target.name : "상품";
     products.value = products.value.filter((p) => p.id !== id);
+
+    // 🗑️ 블랙리스트에 추가하여 재실행 시 Supabase 등에서 강제 부활 완벽 차단
+    if (!deletedProductIds.value.includes(id)) {
+      deletedProductIds.value.push(id);
+      safeSetItem("knitting_deleted_product_ids", deletedProductIds.value);
+    }
     saveToLocalStorage();
 
     // 🌐 Supabase 비동기 동기화
@@ -2143,11 +2190,13 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     return true;
   };
 
-  // 🛍️ 관리자 전용: 기본 9개 상품으로 복구
+  // 🛍️ 관리자 전용: 기본 상품으로 복구
   const resetProductsToDefault = () => {
+    deletedProductIds.value = [];
+    safeSetItem("knitting_deleted_product_ids", []);
     products.value = JSON.parse(JSON.stringify(INITIAL_PRODUCTS));
     saveToLocalStorage();
-    showToast("초기 기본 9개 상품 목록으로 복원되었습니다.");
+    showToast("초기 기본 상품 목록으로 복원되었습니다.");
   };
 
   // 📢 관리자 전용: 공지사항, 배송안내, 세탁주의, 공방소개/인스타 등 수정 (2~5번 이미지)
@@ -2212,6 +2261,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
 
   return {
     products,
+    deletedProductIds,
     orders,
     refunds,
     inquiries,
@@ -2219,6 +2269,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     notifications,
     settings,
     siteNotices,
+    shippingOptions,
     isAdminLoggedIn,
     adminActiveTab,
     adminScrollTrigger,
@@ -2284,6 +2335,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     updateAdminSettings,
     verifyAdminPassword,
     changeAdminPassword,
+    updateShippingOptions,
+    resetShippingOptionsToDefault,
     getStatusLabel,
     getStatusColor,
   };

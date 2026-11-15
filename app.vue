@@ -65,6 +65,27 @@ onMounted(() => {
 </template>
 
 <style>
+/* 🔒 모달 오픈 시 배경 화면 스크롤 방지 */
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  height: 100% !important;
+}
+
+/* 단, 모달 내부 자체는 자유롭게 스크롤 가능하도록 overscroll 설정 */
+.modal-backdrop,
+.modal-overlay,
+.confirm-modal-backdrop,
+.admin-modal-backdrop,
+.modal-wrapper,
+.modal-container,
+.modal-card,
+.modal-sheet,
+.modal-body {
+  overscroll-behavior: contain;
+}
+
 /* 전역 스크롤바 및 기본 스타일 */
 * {
   box-sizing: border-box;

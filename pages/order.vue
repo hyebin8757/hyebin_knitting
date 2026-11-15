@@ -2,10 +2,32 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useKnittingStore, SHIPPING_OPTIONS, type OrderItem } from "~/stores/useKnittingStore";
+import ImageZoomModal from "~/components/ImageZoomModal.vue";
 
 const route = useRoute();
 const router = useRouter();
 const store = useKnittingStore();
+
+// 🔍 상품 사진 확대보기 모달 상태
+const zoomModal = ref({
+  isOpen: false,
+  images: [] as string[],
+  initialIndex: 0,
+  title: "",
+});
+
+const openImageZoom = (product: any, initialIndex = 0) => {
+  const imgs = product.images && Array.isArray(product.images) && product.images.length > 0
+    ? product.images
+    : (product.image ? [product.image] : ["/images/products/apple.jpg"]);
+
+  zoomModal.value = {
+    isOpen: true,
+    images: imgs,
+    initialIndex,
+    title: product.name,
+  };
+};
 
 // 주문 폼 상태
 const form = ref({
@@ -197,7 +219,7 @@ const totalProductPrice = computed(() => {
 
 // 배송비
 const currentShipping = computed(() => {
-  return SHIPPING_OPTIONS.find((s) => s.id === form.value.shippingId) || SHIPPING_OPTIONS[0];
+  return store.shippingOptions.find((s) => s.id === form.value.shippingId) || store.shippingOptions[0] || SHIPPING_OPTIONS[0];
 });
 
 // 최종 결제 금액
@@ -216,6 +238,7 @@ const copyAccount = () => {
 
 // 주문 확인 모달 상태
 const isConfirmModalOpen = ref(false);
+useBodyScrollLock(isConfirmModalOpen);
 
 // 1차: 유효성 검사 후 최종 확인 모달 띄우기 ("정말로 주문할 건지")
 const handleOpenConfirmModal = () => {
@@ -575,14 +598,15 @@ const resetForNewOrder = () => {
                 </span>
               </div>
 
-              <!-- 상품 사진 스와이프 (최대 5장 지원) -->
+              <!-- 상품 사진 스와이프 (최대 5장 지원 & 클릭 시 확대보기 모달) -->
               <div class="form-prod-img-box">
                 <ProductImageSwipe
                   :images="product.images || [product.image]"
                   :fallback-image="product.image"
                   :alt="product.name"
                   aspect-ratio="1/1"
-                  @click="toggleProduct(product.id)"
+                  @click="openImageZoom(product)"
+                  @zoom="openImageZoom(product, $event.index)"
                 />
                 <span class="form-prod-price-badge">{{ product.price.toLocaleString() }}원</span>
               </div>
@@ -700,7 +724,7 @@ const resetForNewOrder = () => {
           <label class="field-label">배송 방식 <span class="req">*</span></label>
           <div class="shipping-options-list">
             <label
-              v-for="shipping in SHIPPING_OPTIONS"
+              v-for="shipping in store.shippingOptions"
               :key="shipping.id"
               class="shipping-radio-label"
               :class="{ active: form.shippingId === shipping.id }"
@@ -917,6 +941,14 @@ const resetForNewOrder = () => {
           </div>
         </div>
       </transition>
+
+      <!-- 🔍 상품 사진 원본 확대보기 라이트박스 모달 -->
+      <ImageZoomModal
+        v-model="zoomModal.isOpen"
+        :images="zoomModal.images"
+        :initial-index="zoomModal.initialIndex"
+        :title="zoomModal.title"
+      />
     </div>
   </div>
 </template>

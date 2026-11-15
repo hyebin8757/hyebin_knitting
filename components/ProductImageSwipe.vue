@@ -12,6 +12,7 @@ const props = withDefaults(
     showArrows?: boolean;
     showDots?: boolean;
     showCounter?: boolean;
+    showZoomButton?: boolean;
   }>(),
   {
     images: () => [],
@@ -23,12 +24,14 @@ const props = withDefaults(
     showArrows: true,
     showDots: true,
     showCounter: true,
+    showZoomButton: true,
   }
 );
 
 const emit = defineEmits<{
   (e: "click", event: MouseEvent | TouchEvent): void;
   (e: "change", index: number): void;
+  (e: "zoom", data: { index: number; images: string[] }): void;
 }>();
 
 // 표시할 실제 이미지 목록 (최소 1개)
@@ -98,6 +101,15 @@ const onTouchEnd = (e: TouchEvent) => {
   }
 };
 
+// 🔍 사진 확대보기 트리거
+const triggerZoom = (e: Event) => {
+  e.stopPropagation();
+  emit("zoom", {
+    index: currentIndex.value,
+    images: displayImages.value,
+  });
+};
+
 // 탭/클릭 핸들러: 드래그/스와이프가 아니었을 때만 상위 클릭 이벤트 전파
 const handleClick = (e: MouseEvent) => {
   if (isSwiping) {
@@ -143,26 +155,46 @@ const handleClick = (e: MouseEvent) => {
       class="swipe-badge"
       :style="{ backgroundColor: badgeColor }"
       @click.stop
+      @touchstart.stop
+      @touchend.stop
     >
       {{ badgeText }}
     </span>
 
-    <!-- 다중 사진 카운터 뱃지 (예: 1 / 3) -->
-    <span
-      v-if="hasMultiple && showCounter"
-      class="swipe-counter font-mono"
-      @click.stop
-    >
-      {{ currentIndex + 1 }} / {{ displayImages.length }}
-    </span>
+    <!-- 우측 상단 컨트롤 바 (카운터 뱃지 + 🔍 확대보기 버튼) -->
+    <div class="swipe-top-controls" @click.stop @touchstart.stop @touchend.stop>
+      <!-- 다중 사진 카운터 뱃지 (예: 1 / 3) -->
+      <span
+        v-if="hasMultiple && showCounter"
+        class="swipe-counter font-mono"
+      >
+        {{ currentIndex + 1 }} / {{ displayImages.length }}
+      </span>
 
-    <!-- 좌우 이동 화살표 (2장 이상일 때 노출) -->
+      <!-- 🔍 확대보기 버튼 -->
+      <button
+        v-if="showZoomButton"
+        type="button"
+        class="swipe-btn-zoom"
+        aria-label="사진 확대보기"
+        title="사진 크게보기"
+        @click.stop.prevent="triggerZoom"
+        @touchstart.stop
+        @touchend.stop
+      >
+        <i class="material-icons">zoom_in</i>
+      </button>
+    </div>
+
+    <!-- 좌우 이동 화살표 (크기 확대 및 상위 클릭 전파 차단) -->
     <template v-if="hasMultiple && showArrows">
       <button
         type="button"
         class="swipe-nav btn-prev"
         aria-label="이전 사진"
-        @click.stop="prev"
+        @click.stop.prevent="prev"
+        @touchstart.stop
+        @touchend.stop
       >
         ‹
       </button>
@@ -170,7 +202,9 @@ const handleClick = (e: MouseEvent) => {
         type="button"
         class="swipe-nav btn-next"
         aria-label="다음 사진"
-        @click.stop="next"
+        @click.stop.prevent="next"
+        @touchstart.stop
+        @touchend.stop
       >
         ›
       </button>
@@ -181,6 +215,8 @@ const handleClick = (e: MouseEvent) => {
       v-if="hasMultiple && showDots"
       class="swipe-dots"
       @click.stop
+      @touchstart.stop
+      @touchend.stop
     >
       <button
         v-for="(_, dotIdx) in displayImages"
@@ -189,7 +225,9 @@ const handleClick = (e: MouseEvent) => {
         class="swipe-dot"
         :class="{ active: currentIndex === dotIdx }"
         :aria-label="`${dotIdx + 1}번 사진으로 이동`"
-        @click="goTo(dotIdx)"
+        @click.stop.prevent="goTo(dotIdx)"
+        @touchstart.stop
+        @touchend.stop
       ></button>
     </div>
   </div>
@@ -245,12 +283,20 @@ const handleClick = (e: MouseEvent) => {
   pointer-events: none;
 }
 
-/* 카운터 뱃지 (1 / 3) */
-.swipe-counter {
+/* 상단 컨트롤 바 (카운터 뱃지 + 돋보기 버튼) */
+.swipe-top-controls {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(43, 31, 29, 0.65);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 3;
+}
+
+/* 카운터 뱃지 (1 / 3) */
+.swipe-counter {
+  background: rgba(43, 31, 29, 0.7);
   color: #ffffff;
   font-size: 0.64rem;
   font-weight: 700;
@@ -258,41 +304,86 @@ const handleClick = (e: MouseEvent) => {
   border-radius: 10px;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 2;
   pointer-events: none;
 }
 
-/* 화살표 네비게이션 */
+/* 🔍 확대보기 버튼 */
+.swipe-btn-zoom {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(235, 220, 208, 0.8);
+  color: #4a3431;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(43, 31, 29, 0.2);
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.swipe-btn-zoom .material-icons {
+  font-size: 17px;
+  color: #2b1f1d;
+}
+
+.swipe-btn-zoom:hover {
+  background: #ff4d6d;
+  border-color: #ff4d6d;
+}
+
+.swipe-btn-zoom:hover .material-icons {
+  color: #ffffff;
+}
+
+/* 화살표 네비게이션 (크기 확대 및 손쉬운 터치) */
 .swipe-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  border: 1px solid rgba(235, 220, 208, 0.7);
-  color: #4a3431;
-  font-size: 1.15rem;
-  font-weight: 700;
+  border: 1.5px solid rgba(235, 220, 208, 0.9);
+  color: #3f2f2c;
+  font-size: 1.35rem;
+  font-weight: 800;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 3;
-  box-shadow: 0 2px 6px rgba(43, 31, 29, 0.15);
+  z-index: 4;
+  box-shadow: 0 3px 8px rgba(43, 31, 29, 0.25);
   transition: all 0.15s;
   padding: 0;
-  opacity: 0.85;
+  opacity: 0.95;
+  touch-action: manipulation;
+}
+
+/* 터치 히트박스 확장 (주변 8px 영역까지 터치 감지) */
+.swipe-nav::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  left: -8px;
+  right: -8px;
 }
 
 .swipe-nav:hover {
   background: #ffffff;
+  color: #ff4d6d;
   opacity: 1;
-  transform: translateY(-50%) scale(1.08);
+  transform: translateY(-50%) scale(1.12);
+  box-shadow: 0 4px 12px rgba(255, 77, 109, 0.3);
 }
 
 .btn-prev {
@@ -340,9 +431,16 @@ const handleClick = (e: MouseEvent) => {
 
 @media (max-width: 480px) {
   .swipe-nav {
-    width: 22px;
-    height: 22px;
-    font-size: 1rem;
+    width: 30px;
+    height: 30px;
+    font-size: 1.25rem;
+  }
+  .swipe-btn-zoom {
+    width: 25px;
+    height: 25px;
+  }
+  .swipe-btn-zoom .material-icons {
+    font-size: 16px;
   }
 }
 </style>
