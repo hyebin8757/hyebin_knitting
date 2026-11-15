@@ -125,24 +125,6 @@ CREATE TABLE IF NOT EXISTS public.knitting_site_notices (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 8. 사용자 팝업 모달 안내 설정 테이블 (knitting_popup_notice)
-CREATE TABLE IF NOT EXISTS public.knitting_popup_notice (
-    id VARCHAR(50) PRIMARY KEY DEFAULT 'main_popup',
-    is_active BOOLEAN DEFAULT TRUE,
-    type VARCHAR(50) DEFAULT 'product',
-    target_product_id VARCHAR(100) DEFAULT 'apple',
-    badge_text VARCHAR(100) DEFAULT 'NEW 신상품 출시 안내',
-    title VARCHAR(200) DEFAULT '2026 앉은누이 귀여운 신상 컬렉션 오픈!',
-    content TEXT,
-    image_url TEXT DEFAULT '/images/products/apple.jpg',
-    is_always BOOLEAN DEFAULT TRUE,
-    start_date VARCHAR(50) DEFAULT '2026-11-01T00:00',
-    end_date VARCHAR(50) DEFAULT '2026-12-31T23:59',
-    action_button_text VARCHAR(100) DEFAULT '신상품 바로 보러가기',
-    show_action_button BOOLEAN DEFAULT TRUE,
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- ==============================================================================
 -- 🔒 RLS (Row Level Security) 설정 및 공개 권한 부여 정책
 -- ==============================================================================
@@ -154,7 +136,6 @@ ALTER TABLE public.knitting_inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.knitting_reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.knitting_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.knitting_site_notices ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.knitting_popup_notice ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
@@ -178,9 +159,6 @@ BEGIN
 
     DROP POLICY IF EXISTS "Public full access knitting_site_notices" ON public.knitting_site_notices;
     CREATE POLICY "Public full access knitting_site_notices" ON public.knitting_site_notices FOR ALL TO public USING (true) WITH CHECK (true);
-
-    DROP POLICY IF EXISTS "Public full access knitting_popup_notice" ON public.knitting_popup_notice;
-    CREATE POLICY "Public full access knitting_popup_notice" ON public.knitting_popup_notice FOR ALL TO public USING (true) WITH CHECK (true);
 END $$;
 
 -- ==============================================================================
@@ -397,22 +375,7 @@ INSERT INTO public.knitting_site_notices (
     '롯데택배 / 우체국 / CU 편의점택배'
 ) ON CONFLICT (id) DO NOTHING;
 
--- 4. 사용자 팝업 안내 초기 설정
-INSERT INTO public.knitting_popup_notice (
-    id, is_active, type, target_product_id, badge_text, title, content,
-    image_url, is_always, start_date, end_date, action_button_text, show_action_button
-) VALUES (
-    'main_popup',
-    true,
-    'product',
-    'apple',
-    'NEW 신상품 출시 안내',
-    '2026 앉은누이 귀여운 신상 컬렉션 오픈!',
-    E'동글동글 귀여운 인형 친구들을 위한 맞춤 사과 뜨개옷이 새롭게 출시되었습니다!\n100% 핸드메이드 정성으로 한 땀 한 땀 제작되는 맞춤 뜨개옷을 지금 바로 주문서에서 만나보세요 ✨',
-    '/images/products/apple.jpg',
-    true,
-    '2026-11-01T00:00',
-    '2026-12-31T23:59',
-    '신상품 바로 보러가기',
-    true
-) ON CONFLICT (id) DO NOTHING;
+-- ==============================================================================
+-- 🗑️ 팝업 관련 테이블 제거 (사용 안 함)
+-- ==============================================================================
+DROP TABLE IF EXISTS public.knitting_popup_notice CASCADE;

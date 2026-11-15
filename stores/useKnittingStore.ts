@@ -230,38 +230,6 @@ export const DEFAULT_SITE_NOTICES: SiteNotices = {
   courierInfo: `롯데택배 / 우체국 / CU 편의점택배`,
 };
 
-// 🌟 사용자 대상 팝업 모달 안내 설정 (공지 및 새 상품 안내)
-export interface PopupNotice {
-  isActive: boolean; // 팝업 노출 활성화 여부
-  type: "product" | "notice"; // 새 상품 안내 vs 일반 공지
-  targetProductId: string; // 새 상품일 경우 이동할 대상 상품 ID
-  badgeText: string; // 모달 상단 뱃지
-  title: string; // 팝업 제목
-  content: string; // 팝업 상세 내용
-  imageUrl: string; // 팝업 사진 URL
-  isAlways: boolean; // 기간 무제한(상시 노출) 여부
-  startDate: string; // 노출 시작 일시 (YYYY-MM-DDTHH:mm)
-  endDate: string; // 노출 종료 일시 (YYYY-MM-DDTHH:mm)
-  actionButtonText: string; // 바로가기 버튼 문구
-  showActionButton: boolean; // 바로가기 버튼 표시 여부
-}
-
-export const DEFAULT_POPUP_NOTICE: PopupNotice = {
-  isActive: false,
-  type: "product",
-  targetProductId: "apple",
-  badgeText: "NEW 신상품 출시 안내",
-  title: "2026 앉은누이 귀여운 신상 컬렉션 오픈!",
-  content: `동글동글 귀여운 인형 친구들을 위한 맞춤 사과 뜨개옷이 새롭게 출시되었습니다!
-100% 핸드메이드 정성으로 한 땀 한 땀 제작되는 맞춤 뜨개옷을 지금 바로 주문서에서 만나보세요 ✨`,
-  imageUrl: "/images/products/apple.jpg",
-  isAlways: true,
-  startDate: "2026-11-01T00:00",
-  endDate: "2026-12-31T23:59",
-  actionButtonText: "신상품 바로 보러가기",
-  showActionButton: true,
-};
-
 // 9가지 앉은누이 뜨개옷 상품 정밀 데이터 (최대 5장 다중 사진 지원)
 export const INITIAL_PRODUCTS: ProductItem[] = [
   {
@@ -414,28 +382,13 @@ export const useKnittingStore = defineStore("knittingStore", () => {
 
   // 관리자 인증 & 설정
   const isAdminLoggedIn = ref<boolean>(false);
-  const adminActiveTab = ref<"orders" | "products" | "notices" | "popups" | "refunds" | "inquiries" | "reviews" | "settings">("orders");
+  const adminActiveTab = ref<"orders" | "products" | "notices" | "refunds" | "inquiries" | "reviews" | "settings">("orders");
   const adminScrollTrigger = ref<number>(0);
 
   // 📢 사용자 페이지 공지 및 주문 안내 문구 상태 (2~5번 이미지)
   const siteNotices = ref<SiteNotices>({ ...DEFAULT_SITE_NOTICES });
 
-  // 🌟 사용자 팝업 안내 및 신상품 안내 설정
-  const getInitialPopupNotice = (): PopupNotice => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("knitting_popup_notice");
-        if (stored) {
-          return { ...DEFAULT_POPUP_NOTICE, ...JSON.parse(stored) };
-        }
-      } catch {}
-    }
-    return { ...DEFAULT_POPUP_NOTICE };
-  };
-  const popupNotice = ref<PopupNotice>(getInitialPopupNotice());
-  const isUserNoticeModalOpen = ref<boolean>(false);
-
-  const switchAdminTab = (tab: "orders" | "products" | "notices" | "popups" | "refunds" | "inquiries" | "reviews" | "settings") => {
+  const switchAdminTab = (tab: "orders" | "products" | "notices" | "refunds" | "inquiries" | "reviews" | "settings") => {
     adminActiveTab.value = tab;
     adminScrollTrigger.value++;
   };
@@ -691,24 +644,9 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         }
       }
 
-      // 🌟 사용자 팝업 안내 및 신상품 안내 설정 불러오기
-      const storedPopup = localStorage.getItem("knitting_popup_notice");
-      if (storedPopup) {
-        try {
-          const parsed = JSON.parse(storedPopup);
-          popupNotice.value = { ...DEFAULT_POPUP_NOTICE, ...parsed };
-          const stripLeadingEmoji = (str?: string) =>
-            str ? str.replace(/^[\s\p{Extended_Pictographic}\u200d\ufe0f🍎🧶📢🌟🛒🛍️👉✨]+/u, "").trim() : "";
-          if (popupNotice.value.actionButtonText) {
-            popupNotice.value.actionButtonText = stripLeadingEmoji(popupNotice.value.actionButtonText);
-          }
-          if (popupNotice.value.badgeText) {
-            popupNotice.value.badgeText = stripLeadingEmoji(popupNotice.value.badgeText);
-          }
-        } catch (e) {
-          console.error("Failed to parse popup notice:", e);
-        }
-      }
+      // 팝업 관련 로컬 스토리지 정리
+      localStorage.removeItem("knitting_popup_notice");
+      localStorage.removeItem("knitting_hide_popup_until");
 
       const adminSession = sessionStorage.getItem("knitting_admin_auth");
       if (adminSession === "true") {
@@ -845,31 +783,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         safeSetItem("knitting_site_notices", siteNotices.value);
       }
 
-      // 3. 팝업 안내 설정 동기화
-      const { data: popData } = await client
-        .from("knitting_popup_notice")
-        .select("*")
-        .eq("id", "main_popup")
-        .maybeSingle();
-      if (popData) {
-        popupNotice.value = {
-          isActive: popData.is_active ?? popupNotice.value.isActive,
-          type: popData.type || popupNotice.value.type,
-          targetProductId: popData.target_product_id || popupNotice.value.targetProductId,
-          badgeText: popData.badge_text || popupNotice.value.badgeText,
-          title: popData.title || popupNotice.value.title,
-          content: popData.content || popupNotice.value.content,
-          imageUrl: popData.image_url || popupNotice.value.imageUrl,
-          isAlways: popData.is_always ?? popupNotice.value.isAlways,
-          startDate: popData.start_date || popupNotice.value.startDate,
-          endDate: popData.end_date || popupNotice.value.endDate,
-          actionButtonText: popData.action_button_text || popupNotice.value.actionButtonText,
-          showActionButton: popData.show_action_button ?? popupNotice.value.showActionButton,
-        };
-        safeSetItem("knitting_popup_notice", popupNotice.value);
-      }
-
-      // 4. 구매자 리뷰 동기화
+      // 3. 구매자 리뷰 동기화
       const { data: rData } = await client
         .from("knitting_reviews")
         .select("*")
@@ -1026,7 +940,6 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     // 중요한 설정/공지/팝업부터 최우선 개별 안전 저장
     safeSetItem("knitting_settings", settings.value);
     safeSetItem("knitting_site_notices", siteNotices.value);
-    safeSetItem("knitting_popup_notice", popupNotice.value);
     safeSetItem("knitting_products", products.value);
     safeSetItem("knitting_orders", orders.value);
     safeSetItem("knitting_refunds", refunds.value);
@@ -2133,83 +2046,6 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     showToast("초기 기본 공지 및 주문 안내 문구로 복원되었습니다.");
   };
 
-  // 🌟 관리자 전용: 사용자 팝업 안내 & 새 상품 안내 설정 저장
-  const updatePopupNotice = async (payload: Partial<PopupNotice>) => {
-    const cleanPayload = { ...payload };
-    const stripLeadingEmoji = (str?: string) =>
-      str ? str.replace(/^[\s\p{Extended_Pictographic}\u200d\ufe0f🍎🧶📢🌟🛒🛍️👉✨]+/u, "").trim() : str;
-    if (cleanPayload.actionButtonText) {
-      cleanPayload.actionButtonText = stripLeadingEmoji(cleanPayload.actionButtonText);
-    }
-    if (cleanPayload.badgeText) {
-      cleanPayload.badgeText = stripLeadingEmoji(cleanPayload.badgeText);
-    }
-    popupNotice.value = {
-      ...popupNotice.value,
-      ...cleanPayload,
-    };
-    saveToLocalStorage();
-
-    // 🌐 Supabase 비동기 동기화
-    try {
-      const client = getSupabase();
-      if (client) {
-        const { error } = await client.from("knitting_popup_notice").upsert({
-          id: "main_popup",
-          is_active: popupNotice.value.isActive,
-          type: popupNotice.value.type,
-          target_product_id: popupNotice.value.targetProductId,
-          badge_text: popupNotice.value.badgeText,
-          title: popupNotice.value.title,
-          content: popupNotice.value.content,
-          image_url: popupNotice.value.imageUrl,
-          is_always: popupNotice.value.isAlways,
-          start_date: popupNotice.value.startDate,
-          end_date: popupNotice.value.endDate,
-          action_button_text: popupNotice.value.actionButtonText,
-          show_action_button: popupNotice.value.showActionButton,
-          updated_at: new Date().toISOString(),
-        });
-        if (error) console.error("Supabase updatePopupNotice sync error:", error);
-      }
-    } catch (e) {
-      console.warn("Supabase updatePopupNotice background sync failed", e);
-    }
-
-    showToast("사용자 팝업 안내 설정이 저장되었습니다! ✨");
-    return true;
-  };
-
-  // 🌟 관리자 전용: 기본 팝업 설정으로 복원
-  const resetPopupNoticeToDefault = async () => {
-    popupNotice.value = { ...DEFAULT_POPUP_NOTICE };
-    saveToLocalStorage();
-    try {
-      const client = getSupabase();
-      if (client) {
-        await client.from("knitting_popup_notice").upsert({
-          id: "main_popup",
-          is_active: popupNotice.value.isActive,
-          type: popupNotice.value.type,
-          target_product_id: popupNotice.value.targetProductId,
-          badge_text: popupNotice.value.badgeText,
-          title: popupNotice.value.title,
-          content: popupNotice.value.content,
-          image_url: popupNotice.value.imageUrl,
-          is_always: popupNotice.value.isAlways,
-          start_date: popupNotice.value.startDate,
-          end_date: popupNotice.value.endDate,
-          action_button_text: popupNotice.value.actionButtonText,
-          show_action_button: popupNotice.value.showActionButton,
-          updated_at: new Date().toISOString(),
-        });
-      }
-    } catch (e) {
-      console.warn("Supabase resetPopupNoticeToDefault sync failed", e);
-    }
-    showToast("기본 팝업 안내 설정으로 복원되었습니다.");
-  };
-
   return {
     products,
     orders,
@@ -2219,8 +2055,6 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     notifications,
     settings,
     siteNotices,
-    popupNotice,
-    isUserNoticeModalOpen,
     isAdminLoggedIn,
     adminActiveTab,
     adminScrollTrigger,
@@ -2271,8 +2105,6 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     resetProductsToDefault,
     updateSiteNotices,
     resetSiteNoticesToDefault,
-    updatePopupNotice,
-    resetPopupNoticeToDefault,
     requestRefund,
     updateRefundStatus,
     createInquiry,
