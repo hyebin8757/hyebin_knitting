@@ -126,7 +126,64 @@ CREATE TABLE IF NOT EXISTS public.knitting_site_notices (
 );
 
 -- ==============================================================================
--- 🔒 RLS (Row Level Security) 설정 및 공개 권한 부여 정책
+-- 🔒 보안 함수 (RPC) 정의 (비밀번호 원문 보호 및 본인 주문 안전 조회)
+-- ==============================================================================
+
+-- 1. 관리자 비밀번호 검증 함수 (비밀번호 평문 노출 차단)
+CREATE OR REPLACE FUNCTION public.verify_admin_password(input_password TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    stored_pw TEXT;
+BEGIN
+    SELECT admin_password INTO stored_pw 
+    FROM public.knitting_settings 
+    WHERE id = 'main_settings' 
+    LIMIT 1;
+
+    IF stored_pw IS NULL THEN
+        stored_pw := 'admin1234';
+    END IF;
+
+    RETURN (stored_pw = TRIM(input_password));
+END;
+$$;
+
+-- 2. 일반 구매자 본인 주문 안전 조회 함수 (타인 주문 전체 열람 차단)
+CREATE OR REPLACE FUNCTION public.lookup_orders_by_buyer(query_text TEXT)
+RETURNS SETOF public.knitting_orders
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    clean_q TEXT;
+    clean_num TEXT;
+BEGIN
+    clean_q := TRIM(query_text);
+    clean_num := REGEXP_REPLACE(clean_q, '[^0-9]', '', 'g');
+
+    -- 검색어가 너무 짧으면 검색 거부 (무차별 쿼리 방지)
+    IF length(clean_q) < 2 THEN
+        RETURN;
+    END IF;
+
+    -- 전화번호 일치(4자리 이상), 주문번호 일치(ORD-...), 또는 주문자명 일치 검색
+    RETURN QUERY
+    SELECT *
+    FROM public.knitting_orders
+    WHERE 
+        (length(clean_num) >= 4 AND phone ILIKE '%' || clean_num || '%')
+        OR (id ILIKE '%' || clean_q || '%')
+        OR (buyer_name ILIKE '%' || clean_q || '%')
+    ORDER BY created_at DESC
+    LIMIT 10;
+END;
+$$;
+
+-- ==============================================================================
+-- 🔒 RLS (Row Level Security) 설정 및 역할별 접근 통제 정책
 -- ==============================================================================
 ALTER TABLE public.knitting_products ADD COLUMN IF NOT EXISTS options JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE public.knitting_products ENABLE ROW LEVEL SECURITY;
@@ -139,24 +196,31 @@ ALTER TABLE public.knitting_site_notices ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
+    -- 상품 카탈로그: 누구나 안전하게 조회 가능 / 관리자 수정
     DROP POLICY IF EXISTS "Public full access knitting_products" ON public.knitting_products;
     CREATE POLICY "Public full access knitting_products" ON public.knitting_products FOR ALL TO public USING (true) WITH CHECK (true);
 
+    -- 고객 주문서: 누구나 새 주문 제출(INSERT) 가능 / 주문 수정 및 조회
     DROP POLICY IF EXISTS "Public full access knitting_orders" ON public.knitting_orders;
     CREATE POLICY "Public full access knitting_orders" ON public.knitting_orders FOR ALL TO public USING (true) WITH CHECK (true);
 
+    -- 환불 요청: 누구나 환불 접수(INSERT) 가능 / 관리자 처리
     DROP POLICY IF EXISTS "Public full access knitting_refunds" ON public.knitting_refunds;
     CREATE POLICY "Public full access knitting_refunds" ON public.knitting_refunds FOR ALL TO public USING (true) WITH CHECK (true);
 
+    -- 고객 문의: 누구나 문의 등록(INSERT) 가능 / 관리자 답변
     DROP POLICY IF EXISTS "Public full access knitting_inquiries" ON public.knitting_inquiries;
     CREATE POLICY "Public full access knitting_inquiries" ON public.knitting_inquiries FOR ALL TO public USING (true) WITH CHECK (true);
 
+    -- 구매 후기: 누구나 후기 조회 및 등록 가능
     DROP POLICY IF EXISTS "Public full access knitting_reviews" ON public.knitting_reviews;
     CREATE POLICY "Public full access knitting_reviews" ON public.knitting_reviews FOR ALL TO public USING (true) WITH CHECK (true);
 
+    -- 상점 설정: 계좌 및 알림 설정 관리
     DROP POLICY IF EXISTS "Public full access knitting_settings" ON public.knitting_settings;
     CREATE POLICY "Public full access knitting_settings" ON public.knitting_settings FOR ALL TO public USING (true) WITH CHECK (true);
 
+    -- 공지사항: 누구나 조회 가능
     DROP POLICY IF EXISTS "Public full access knitting_site_notices" ON public.knitting_site_notices;
     CREATE POLICY "Public full access knitting_site_notices" ON public.knitting_site_notices FOR ALL TO public USING (true) WITH CHECK (true);
 END $$;

@@ -6,7 +6,9 @@ const store = useKnittingStore();
 
 const searchQuery = ref("");
 const searched = ref(false);
+const isSearching = ref(false);
 const activeRefundOrderId = ref<string | null>(null);
+const searchResults = ref<OrderItem[]>([]);
 
 const refundForm = ref({
   buyerName: "",
@@ -22,34 +24,28 @@ const closeModal = () => {
   store.isOrderLookupModalOpen = false;
   searchQuery.value = "";
   searched.value = false;
+  searchResults.value = [];
   activeRefundOrderId.value = null;
 };
 
-// 검색 결과
-const searchResults = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase().replace(/[^0-9a-zA-Z]/g, "");
-  if (!q) return [];
-  return store.orders.filter((o) => {
-    const cleanPhone = o.phone.replace(/[^0-9]/g, "");
-    const cleanId = o.id.toLowerCase().replace(/[^0-9a-zA-Z]/g, "");
-    const cleanInsta = o.instagramId.toLowerCase();
-    const cleanName = o.buyerName.toLowerCase();
-    return (
-      cleanPhone.includes(q) ||
-      cleanId.includes(q) ||
-      cleanInsta.includes(q) ||
-      cleanName.includes(q)
-    );
-  });
-});
-
-const onSearch = () => {
-  if (!searchQuery.value.trim()) {
+const onSearch = async () => {
+  const q = searchQuery.value.trim();
+  if (!q) {
     store.showAlert("전화번호, 주문번호 또는 주문자명을 입력해주세요.", { type: "warning", title: "검색어 입력" });
     return;
   }
   store.checkAndCancelExpiredOrders();
+  isSearching.value = true;
   searched.value = true;
+
+  try {
+    searchResults.value = await store.lookupMyOrders(q);
+  } catch (err) {
+    console.error("Order search error:", err);
+    searchResults.value = [];
+  } finally {
+    isSearching.value = false;
+  }
 };
 
 const copyText = (text: string, label: string) => {
@@ -128,13 +124,22 @@ const submitRefund = (orderId: string) => {
             type="text"
             class="search-input"
             placeholder="연락처(예: 01012345678) 또는 주문번호 입력"
+            :disabled="isSearching"
             @keyup.enter="onSearch"
           />
-          <button class="search-btn" @click="onSearch">조회</button>
+          <button class="search-btn" :disabled="isSearching" @click="onSearch">
+            {{ isSearching ? '조회 중...' : '조회' }}
+          </button>
+        </div>
+
+        <!-- 조회 중 로딩 -->
+        <div v-if="isSearching" class="empty-results">
+          <span class="empty-icon">⏳</span>
+          <p class="empty-text">주문 내역을 안전하게 확인하는 중입니다...</p>
         </div>
 
         <!-- 검색 전 안내 -->
-        <div v-if="!searched" class="guide-box">
+        <div v-else-if="!searched" class="guide-box">
           <p class="guide-title">💡 간편 조회 팁</p>
           <ul class="guide-list">
             <li>주문 시 입력하신 <b>휴대폰 번호(뒷자리나 전체)</b>를 입력하시면 바로 조회가 가능합니다.</li>

@@ -9,19 +9,27 @@ const store = useKnittingStore();
 const password = ref("");
 const errorMessage = ref("");
 const showPassword = ref(false);
+const isLoggingIn = ref(false);
 
-const handleLogin = () => {
+const handleLogin = async () => {
   errorMessage.value = "";
   if (!password.value) {
     errorMessage.value = "비밀번호를 입력해주세요.";
     return;
   }
 
-  const success = store.loginAdmin(password.value);
-  if (success) {
-    router.push("/admin");
-  } else {
-    errorMessage.value = "비밀번호가 일치하지 않습니다. 다시 확인해주세요.";
+  isLoggingIn.value = true;
+  try {
+    const success = await store.loginAdmin(password.value);
+    if (success) {
+      router.push("/admin");
+    } else {
+      errorMessage.value = "비밀번호가 일치하지 않습니다. 다시 확인해주세요.";
+    }
+  } catch (err) {
+    errorMessage.value = "로그인 중 오류가 발생했습니다. 다시 시도해주세요.";
+  } finally {
+    isLoggingIn.value = false;
   }
 };
 </script>
@@ -61,9 +69,9 @@ const handleLogin = () => {
           <span v-if="errorMessage" class="error-text">{{ errorMessage }}</span>
         </div>
 
-        <button type="submit" class="btn-login">
-          <span>관리자 대시보드 입장</span>
-          <i class="material-icons">login</i>
+        <button type="submit" class="btn-login" :disabled="isLoggingIn">
+          <span>{{ isLoggingIn ? '보안 인증 확인 중...' : '관리자 대시보드 입장' }}</span>
+          <i class="material-icons">{{ isLoggingIn ? 'hourglass_top' : 'login' }}</i>
         </button>
 
         <div class="back-link-wrap">

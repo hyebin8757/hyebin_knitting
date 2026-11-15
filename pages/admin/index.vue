@@ -201,12 +201,15 @@ const pwForm = ref({
   showPassword: false,
 });
 
-onMounted(() => {
+onMounted(async () => {
   store.loadFromLocalStorage();
   if (!store.isAdminLoggedIn) {
     router.push("/admin/login");
     return;
   }
+
+  // 관리자 전용 최신 데이터(주문서, 환불, 문의 등) 동기화
+  await store.fetchAdminDataFromSupabase();
 
   // 기존 설정값 폼에 주입
   settingsForm.value = {

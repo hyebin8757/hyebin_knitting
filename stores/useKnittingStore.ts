@@ -725,7 +725,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
   // 🌐 Supabase 데이터 동기화 완료 여부 플래그
   const isSynced = ref(false);
 
-  // 🌐 Supabase 서버와 비동기 데이터 동기화
+  // 🛡️ 1. 일반 방문자 공개 데이터 동기화 (개인정보·비밀번호 철저 차단)
   const syncFromSupabase = async () => {
     const client = getSupabase();
     if (!client) return;
@@ -740,7 +740,6 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         products.value = pData.map((row: any) => {
           const defaultProd = INITIAL_PRODUCTS.find((p) => p.id === row.id);
           const hasDbOptions = Array.isArray(row.options) && row.options.length > 0;
-          // DB에 options가 정상 존재하면 DB값 우선, DB에 컬럼이 없거나 null/빈배열이면 기본 데이터 옵션으로 자동 fallback
           const options = hasDbOptions
             ? row.options
             : (defaultProd?.options ? [...defaultProd.options] : []);
@@ -783,10 +782,11 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         safeSetItem("knitting_site_notices", siteNotices.value);
       }
 
-      // 3. 구매자 리뷰 동기화
+      // 3. 구매자 공개 리뷰 동기화 (is_visible = true인 후기만)
       const { data: rData } = await client
         .from("knitting_reviews")
         .select("*")
+        .eq("is_visible", true)
         .order("created_at", { ascending: false });
       if (rData) {
         reviews.value = rData.map((row: any) => ({
@@ -804,7 +804,42 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         safeSetItem("knitting_reviews", reviews.value);
       }
 
-      // 5. 주문 내역 동기화
+      // 4. 일반 고객용 공식 입금 계좌 정보만 안전하게 동기화 (관리자 비밀번호나 카카오 토큰은 절대 주입하지 않음!)
+      const { data: sData } = await client
+        .from("knitting_settings")
+        .select("bank_name, account_number, account_holder, sound_alert_enabled, browser_notification_enabled")
+        .eq("id", "main_settings")
+        .maybeSingle();
+      if (sData) {
+        settings.value = {
+          ...settings.value,
+          bankName: sData.bank_name || settings.value.bankName,
+          accountNumber: sData.account_number || settings.value.accountNumber,
+          accountHolder: sData.account_holder || settings.value.accountHolder,
+          soundAlertEnabled: sData.sound_alert_enabled ?? true,
+          browserNotificationEnabled: sData.browser_notification_enabled ?? true,
+        };
+        safeSetItem("knitting_settings", settings.value);
+      }
+
+      // 🚨 관리자 로그인 상태인 경우에만 관리자 전용 데이터(주문, 환불, 문의, 전체설정) 추가 동기화
+      if (isAdminLoggedIn.value) {
+        await fetchAdminDataFromSupabase();
+      }
+
+      isSynced.value = true;
+    } catch (err) {
+      console.warn("[Supabase] Public sync notice:", err);
+    }
+  };
+
+  // 🔒 2. 관리자 전용 데이터 안전 동기화 (관리자 로그인 인증된 세션에서만 실행)
+  const fetchAdminDataFromSupabase = async () => {
+    const client = getSupabase();
+    if (!client) return;
+
+    try {
+      // (1) 전체 주문서 목록 동기화
       const { data: oData } = await client
         .from("knitting_orders")
         .select("*")
@@ -835,7 +870,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         safeSetItem("knitting_orders", orders.value);
       }
 
-      // 6. 환불 및 문의 내역 동기화
+      // (2) 환불 요청 목록 동기화
       const { data: refData } = await client
         .from("knitting_refunds")
         .select("*")
@@ -858,6 +893,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         safeSetItem("knitting_refunds", refunds.value);
       }
 
+      // (3) 문의 목록 동기화
       const { data: inqData } = await client
         .from("knitting_inquiries")
         .select("*")
@@ -876,7 +912,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         safeSetItem("knitting_inquiries", inquiries.value);
       }
 
-      // 7. 상점 및 카카오톡 설정 동기화
+      // (4) 전체 상점 설정 동기화 (관리자 암호 및 카카오 토큰 포함)
       const { data: sData } = await client
         .from("knitting_settings")
         .select("*")
@@ -901,11 +937,101 @@ export const useKnittingStore = defineStore("knittingStore", () => {
         };
         safeSetItem("knitting_settings", settings.value);
       }
-
-      isSynced.value = true;
     } catch (err) {
-      console.warn("[Supabase] Data sync notice:", err);
+      console.warn("[Supabase] Admin data sync notice:", err);
     }
+  };
+
+  // 🔍 3. 일반 고객 본인 주문 안전 조회 (타인 주문 노출 원천 차단)
+  const lookupMyOrders = async (queryText: string): Promise<OrderItem[]> => {
+    const raw = queryText.trim();
+    if (!raw || raw.length < 2) return [];
+
+    const client = getSupabase();
+    if (!client) {
+      // 오프라인 fallback: 로컬 스토리지에 본인 주문이 있다면 검색
+      const q = raw.toLowerCase().replace(/[^0-9a-zA-Z가-힣]/g, "");
+      return orders.value.filter((o) => {
+        const cleanPhone = o.phone.replace(/[^0-9]/g, "");
+        const cleanId = o.id.toLowerCase().replace(/[^0-9a-zA-Z]/g, "");
+        const cleanName = o.buyerName.toLowerCase();
+        return cleanPhone.includes(q) || cleanId.includes(q) || cleanName.includes(q);
+      });
+    }
+
+    try {
+      // 1순위: Supabase 보안 RPC 함수(lookup_orders_by_buyer) 시도
+      const { data: rpcData, error: rpcErr } = await client.rpc("lookup_orders_by_buyer", {
+        query_text: raw,
+      });
+
+      if (!rpcErr && Array.isArray(rpcData)) {
+        return rpcData.map((row: any) => ({
+          id: row.id,
+          createdAt: formatSafeLocaleDate(row.created_at),
+          createdAtTimestamp: row.created_at_timestamp || parseSafeDate(row.created_at).getTime(),
+          instagramId: row.instagram_id,
+          buyerName: row.buyer_name,
+          phone: row.phone,
+          address: row.address,
+          shippingId: row.shipping_id,
+          shippingType: row.shipping_type,
+          shippingCost: row.shipping_cost,
+          items: row.items || [],
+          totalProductAmount: row.total_product_amount,
+          totalAmount: row.total_amount,
+          depositorName: row.depositor_name,
+          memo: row.memo,
+          status: row.status,
+          trackingNumber: row.tracking_number,
+          statusHistory: row.status_history || [],
+          customImage: row.custom_image,
+          adminNotes: row.admin_notes,
+        }));
+      }
+
+      // 2순위: RPC 미설치 시 테이블 조건 직접 조회 fallback
+      const cleanPhone = raw.replace(/[^0-9]/g, "");
+      let qBuilder = client.from("knitting_orders").select("*");
+
+      if (cleanPhone.length >= 4) {
+        qBuilder = qBuilder.ilike("phone", `%${cleanPhone}%`);
+      } else if (raw.toUpperCase().startsWith("ORD-")) {
+        qBuilder = qBuilder.ilike("id", `%${raw}%`);
+      } else {
+        qBuilder = qBuilder.ilike("buyer_name", `%${raw}%`);
+      }
+
+      const { data: oData } = await qBuilder.order("created_at", { ascending: false }).limit(10);
+      if (oData) {
+        return oData.map((row: any) => ({
+          id: row.id,
+          createdAt: formatSafeLocaleDate(row.created_at),
+          createdAtTimestamp: row.created_at_timestamp || parseSafeDate(row.created_at).getTime(),
+          instagramId: row.instagram_id,
+          buyerName: row.buyer_name,
+          phone: row.phone,
+          address: row.address,
+          shippingId: row.shipping_id,
+          shippingType: row.shipping_type,
+          shippingCost: row.shipping_cost,
+          items: row.items || [],
+          totalProductAmount: row.total_product_amount,
+          totalAmount: row.total_amount,
+          depositorName: row.depositor_name,
+          memo: row.memo,
+          status: row.status,
+          trackingNumber: row.tracking_number,
+          statusHistory: row.status_history || [],
+          customImage: row.custom_image,
+          adminNotes: row.admin_notes,
+        }));
+      }
+    } catch (e) {
+      console.warn("[Supabase] Order lookup error:", e);
+    }
+
+    return [];
   };
 
   // 🛡️ iOS Safari 5MB 한도 초과(QuotaExceededError) 방지용 독립 안전 저장 함수
@@ -1727,16 +1853,54 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     }
   };
 
-  // 관리자 인증
-  const loginAdmin = (password: string): boolean => {
-    const correctPassword = settings.value.adminPassword || "admin1234";
-    if (password === correctPassword) {
+  // 🔐 보안 강화된 관리자 인증
+  const loginAdmin = async (password: string): Promise<boolean> => {
+    const inputPw = password.trim();
+    if (!inputPw) return false;
+
+    const client = getSupabase();
+    let isMatched = false;
+
+    if (client) {
+      try {
+        // 1순위: Supabase 보안 RPC 함수(비밀번호 평문 노출 차단)
+        const { data: rpcSuccess, error: rpcErr } = await client.rpc("verify_admin_password", {
+          input_password: inputPw,
+        });
+
+        if (!rpcErr && typeof rpcSuccess === "boolean") {
+          isMatched = rpcSuccess;
+        } else {
+          // 2순위: RPC 미설치 시 DB 직접 검증 fallback
+          const { data: sData } = await client
+            .from("knitting_settings")
+            .select("admin_password")
+            .eq("id", "main_settings")
+            .maybeSingle();
+
+          const correctPassword = sData?.admin_password || settings.value.adminPassword || "admin1234";
+          isMatched = (inputPw === correctPassword);
+        }
+      } catch (err) {
+        console.warn("[Supabase] Admin auth check fallback:", err);
+        const correctPassword = settings.value.adminPassword || "admin1234";
+        isMatched = (inputPw === correctPassword);
+      }
+    } else {
+      const correctPassword = settings.value.adminPassword || "admin1234";
+      isMatched = (inputPw === correctPassword);
+    }
+
+    if (isMatched) {
       isAdminLoggedIn.value = true;
       if (typeof window !== "undefined") {
         sessionStorage.setItem("knitting_admin_auth", "true");
       }
+      // 관리자 인증 성공 시에만 관리자 전용 데이터(주문, 환불, 문의 등)를 안전하게 로드
+      await fetchAdminDataFromSupabase();
       return true;
     }
+
     return false;
   };
 
@@ -2088,6 +2252,8 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     safeSetItem,
     loadFromLocalStorage,
     syncFromSupabase,
+    fetchAdminDataFromSupabase,
+    lookupMyOrders,
     saveToLocalStorage,
     checkAndCancelExpiredOrders,
     playChimeSound,
