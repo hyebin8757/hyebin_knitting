@@ -73,9 +73,6 @@ const noticesForm = ref({
   instagramId: "",
   makingPeriod: "",
   courierInfo: "",
-  bankName: "카카오뱅크",
-  accountNumber: "3333-12-8924018",
-  accountHolder: "전혜빈",
 });
 
 const syncNoticesForm = () => {
@@ -88,9 +85,6 @@ const syncNoticesForm = () => {
     instagramId: store.siteNotices.instagramId,
     makingPeriod: store.siteNotices.makingPeriod,
     courierInfo: store.siteNotices.courierInfo,
-    bankName: store.settings.bankName || "카카오뱅크",
-    accountNumber: store.settings.accountNumber || "3333-12-8924018",
-    accountHolder: store.settings.accountHolder || "전혜빈",
   };
 };
 
@@ -113,13 +107,6 @@ const saveSiteNotices = async () => {
     instagramId: noticesForm.value.instagramId.trim(),
     makingPeriod: noticesForm.value.makingPeriod.trim(),
     courierInfo: noticesForm.value.courierInfo.trim(),
-  });
-
-  // 공식 계좌 정보도 함께 동기화
-  await store.updateAdminSettings({
-    bankName: noticesForm.value.bankName.trim(),
-    accountNumber: noticesForm.value.accountNumber.trim(),
-    accountHolder: noticesForm.value.accountHolder.trim(),
   });
 
   store.showAlert("📢 공지사항 및 주문 안내 문구가 안전하게 저장되었습니다!\n클라우드 데이터베이스 및 모든 페이지에 즉시 실시간 반영되었습니다. ✨", {
@@ -1214,48 +1201,6 @@ const handleLogout = () => {
                     type="text"
                     class="notice-input"
                     placeholder="CJ대한통운 / 우체국 / GS25·CU 편의점 택배"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 6. 💳 공식 입금 계좌 정보 (3번 & 4번 이미지) -->
-          <div class="notice-editor-card card-notice-bank">
-            <div class="editor-card-header">
-              <span class="editor-badge bg-badge-bank">입금계좌</span>
-              <div class="editor-header-meta">
-                <h4 class="editor-title">💳 공식 입금 계좌 관리</h4>
-                <span class="editor-hint">주문서 계좌 확인 박스, 푸터 및 주문 조회 시 고객에게 표시되는 계좌 정보</span>
-              </div>
-            </div>
-            <div class="editor-body">
-              <div class="editor-grid-3">
-                <div class="form-group">
-                  <label class="input-label">은행명</label>
-                  <input
-                    v-model="noticesForm.bankName"
-                    type="text"
-                    class="notice-input font-bold"
-                    placeholder="카카오뱅크"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="input-label">계좌번호 (하이픈 포함)</label>
-                  <input
-                    v-model="noticesForm.accountNumber"
-                    type="text"
-                    class="notice-input font-mono font-bold"
-                    placeholder="3333-12-8924018"
-                  />
-                </div>
-                <div class="form-group">
-                  <label class="input-label">예금주</label>
-                  <input
-                    v-model="noticesForm.accountHolder"
-                    type="text"
-                    class="notice-input font-bold"
-                    placeholder="전혜빈"
                   />
                 </div>
               </div>
