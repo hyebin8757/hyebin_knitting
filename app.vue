@@ -65,12 +65,9 @@ onMounted(() => {
 </template>
 
 <style>
-/* 🔒 모달 오픈 시 배경 화면 스크롤 방지 */
-html.modal-open,
+/* 🔒 모달 오픈 시 배경 화면 스크롤 방지 & 위치 보존 */
 body.modal-open {
-  overflow: hidden !important;
   overscroll-behavior: none !important;
-  height: 100% !important;
 }
 
 /* 단, 모달 내부 자체는 자유롭게 스크롤 가능하도록 overscroll 설정 */

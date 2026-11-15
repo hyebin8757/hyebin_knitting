@@ -103,6 +103,7 @@ const onTouchEnd = (e: TouchEvent) => {
 
 // 🔍 사진 확대보기 트리거
 const triggerZoom = (e: Event) => {
+  e.preventDefault();
   e.stopPropagation();
   emit("zoom", {
     index: currentIndex.value,
