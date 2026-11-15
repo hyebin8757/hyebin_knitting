@@ -35,9 +35,13 @@ const form = ref({
   isPopular: true,
 });
 
-// 새 옵션(종류) 입력 상태 및 프리셋
+// ==========================================
+// 🏷️ 세부 옵션(종류) 및 빠른 추천 관리
+// ==========================================
 const newOptionInput = ref("");
-const presetOptions = [
+
+// 빠른 추천 기본 프리셋
+const DEFAULT_PRESET_OPTIONS = [
   "치이카와 (기본)",
   "우사기 (귀뚫림)",
   "하치와레",
@@ -45,6 +49,57 @@ const presetOptions = [
   "파랑",
   "분홍",
 ];
+
+const PRESET_STORAGE_KEY = "knitting_custom_preset_options";
+
+const getInitialPresetOptions = (): string[] => {
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem(PRESET_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error("Failed to load preset options from localStorage", e);
+    }
+  }
+  return [...DEFAULT_PRESET_OPTIONS];
+};
+
+const presetOptions = ref<string[]>(getInitialPresetOptions());
+const newPresetInput = ref("");
+const isAddingPreset = ref(false);
+
+const savePresetOptions = () => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presetOptions.value));
+  }
+};
+
+const addPresetOption = () => {
+  const target = newPresetInput.value.trim();
+  if (!target) return;
+  if (!presetOptions.value.includes(target)) {
+    presetOptions.value.push(target);
+    savePresetOptions();
+    store.showToast(`'${target}' 추천이 추가되었습니다! ✨`);
+  }
+  newPresetInput.value = "";
+  isAddingPreset.value = false;
+};
+
+const deletePresetOption = (index: number) => {
+  const removed = presetOptions.value.splice(index, 1);
+  savePresetOptions();
+  store.showToast(`'${removed[0]}' 추천이 삭제되었습니다.`);
+};
+
+const resetPresetOptions = () => {
+  presetOptions.value = [...DEFAULT_PRESET_OPTIONS];
+  savePresetOptions();
+  store.showToast("빠른 추천 목록이 기본값으로 초기화되었습니다.");
+};
 
 const addOption = (optName?: string) => {
   const target = (optName || newOptionInput.value).trim();
@@ -61,18 +116,108 @@ const removeOption = (index: number) => {
   form.value.options.splice(index, 1);
 };
 
-// 기본 추천 이미지 목록 (9종)
-const defaultSampleImages = [
+// ==========================================
+// 💡 공방 샘플 사진 빠른 선택 관리
+// ==========================================
+interface SampleImageItem {
+  name: string;
+  url: string;
+}
+
+const DEFAULT_SAMPLE_IMAGES: SampleImageItem[] = [
   { name: "사과", url: "/images/products/apple.jpg" },
-  { name: "사과 데빌", url: "/images/products/apple_devil.jpg" },
   { name: "복숭아", url: "/images/products/peach.jpg" },
-  { name: "세라복", url: "/images/products/peach_sailor.jpg" },
   { name: "레몬", url: "/images/products/lemon.jpg" },
   { name: "딸기", url: "/images/products/strawberry.jpg" },
   { name: "장미 산타", url: "/images/products/rose_santa.jpg" },
   { name: "장미 보닛", url: "/images/products/rose_bonnet.jpg" },
   { name: "도토리", url: "/images/products/acorn.jpg" },
 ];
+
+const SAMPLE_STORAGE_KEY = "knitting_custom_sample_images";
+
+const getInitialSampleImages = (): SampleImageItem[] => {
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem(SAMPLE_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error("Failed to load sample images from localStorage", e);
+    }
+  }
+  return [...DEFAULT_SAMPLE_IMAGES];
+};
+
+const sampleImages = ref<SampleImageItem[]>(getInitialSampleImages());
+const isAddingSample = ref(false);
+const newSampleName = ref("");
+const newSampleUrl = ref("");
+const sampleFileInputRef = ref<HTMLInputElement | null>(null);
+
+const saveSampleImages = () => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(SAMPLE_STORAGE_KEY, JSON.stringify(sampleImages.value));
+  }
+};
+
+const triggerSampleFileInput = () => {
+  if (sampleFileInputRef.value) {
+    sampleFileInputRef.value.click();
+  }
+};
+
+const handleSampleFileUpload = async (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const files = target.files;
+  if (!files || files.length === 0) return;
+
+  try {
+    store.showToast("샘플 사진을 최적화 압축 중... 📸");
+    const compressedBase64 = await compressImageFile(files[0], 600, 600, 0.75);
+    newSampleUrl.value = compressedBase64;
+    store.showToast("사진이 준비되었습니다. 이름을 입력 후 등록해주세요.");
+  } catch (err) {
+    console.error("Sample image compression error:", err);
+    store.showAlert("사진 변환 중 오류가 발생했습니다.", { type: "error" });
+  } finally {
+    target.value = "";
+  }
+};
+
+const addSampleImage = () => {
+  const name = newSampleName.value.trim();
+  const url = newSampleUrl.value.trim();
+  if (!name) {
+    store.showAlert("샘플 사진 이름을 입력해주세요. (예: 산타 모자)", { type: "warning" });
+    return;
+  }
+  if (!url) {
+    store.showAlert("사진 파일 또는 이미지 URL을 등록해주세요.", { type: "warning" });
+    return;
+  }
+
+  sampleImages.value.push({ name, url });
+  saveSampleImages();
+  store.showToast(`'${name}' 샘플 사진이 추가되었습니다! 📸`);
+  newSampleName.value = "";
+  newSampleUrl.value = "";
+  isAddingSample.value = false;
+};
+
+const deleteSampleImage = (index: number) => {
+  const removed = sampleImages.value.splice(index, 1);
+  saveSampleImages();
+  store.showToast(`'${removed[0]?.name || "샘플"}' 사진이 목록에서 삭제되었습니다.`);
+};
+
+const resetSampleImages = () => {
+  sampleImages.value = [...DEFAULT_SAMPLE_IMAGES];
+  saveSampleImages();
+  store.showToast("샘플 사진 목록이 기본값으로 초기화되었습니다.");
+};
 
 // 추천 뱃지 색상 팔레트
 const colorPalette = [
@@ -455,19 +600,93 @@ const handleSave = async () => {
 
             <!-- 공방 기본 샘플 이미지 빠른 선택 칩 -->
             <div class="samples-group">
-              <span class="samples-lbl">💡 기본 공방 샘플 사진 빠른 선택:</span>
+              <div class="samples-header-bar">
+                <span class="samples-lbl">💡 기본 공방 샘플 사진 빠른 선택:</span>
+                <div class="samples-ctrl-btns">
+                  <button
+                    type="button"
+                    class="btn-sample-toggle"
+                    :class="{ active: isAddingSample }"
+                    @click="isAddingSample = !isAddingSample"
+                  >
+                    {{ isAddingSample ? '닫기' : '+ 새 샘플 추가' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-sample-reset"
+                    title="기본 샘플 사진으로 초기화"
+                    @click="resetSampleImages"
+                  >
+                    초기화
+                  </button>
+                </div>
+              </div>
+
+              <!-- 새 샘플 사진 등록 인라인 폼 (열림 상태) -->
+              <div v-if="isAddingSample" class="sample-add-card">
+                <div class="sample-add-title">📷 새 샘플 사진 등록</div>
+                <div class="sample-add-inputs">
+                  <input
+                    v-model="newSampleName"
+                    type="text"
+                    class="form-input sample-name-inp"
+                    placeholder="샘플 이름 (예: 산타 모자)"
+                  />
+                  <div class="sample-url-row">
+                    <input
+                      v-model="newSampleUrl"
+                      type="text"
+                      class="form-input font-mono sample-url-inp"
+                      placeholder="이미지 URL 또는 사진 파일 선택"
+                    />
+                    <input
+                      ref="sampleFileInputRef"
+                      type="file"
+                      accept="image/*"
+                      class="hidden-file-input"
+                      @change="handleSampleFileUpload"
+                    />
+                    <button
+                      type="button"
+                      class="btn-sample-upload"
+                      @click="triggerSampleFileInput"
+                    >
+                      <i class="material-icons">photo_camera</i> 파일
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn-sample-submit"
+                    @click="addSampleImage"
+                  >
+                    + 샘플 목록에 등록
+                  </button>
+                </div>
+              </div>
+
+              <!-- 샘플 사진 칩 목록 (삭제 x 버튼 포함) -->
               <div class="samples-chips">
-                <button
-                  v-for="sample in defaultSampleImages"
-                  :key="sample.name"
-                  type="button"
+                <div
+                  v-for="(sample, sIdx) in sampleImages"
+                  :key="sample.name + '_' + sIdx"
                   class="btn-sample-chip"
                   :class="{ active: imageList.includes(sample.url) }"
                   @click="selectSampleImage(sample.url)"
                 >
                   <img :src="sample.url" :alt="sample.name" class="chip-mini-thumb" />
-                  <span>{{ sample.name }}</span>
-                </button>
+                  <span class="sample-chip-text">{{ sample.name }}</span>
+                  <button
+                    type="button"
+                    class="btn-sample-chip-del"
+                    title="샘플 사진 삭제"
+                    @click.stop="deleteSampleImage(sIdx)"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <span v-if="sampleImages.length === 0" class="no-samples-tip">
+                  등록된 샘플 사진이 없습니다. '+ 새 샘플 추가'를 눌러 등록해보세요!
+                </span>
               </div>
             </div>
           </div>
@@ -606,19 +825,70 @@ const handleSave = async () => {
                 </button>
               </div>
 
-              <!-- 빠른 추천 옵션 태그 버튼들 -->
+              <!-- 빠른 추천 옵션 태그 버튼들 (편집/삭제 및 새 추천 추가 가능) -->
               <div class="preset-options-row">
-                <span class="preset-label">빠른 추천:</span>
-                <div class="preset-btns">
+                <div class="preset-header-bar">
+                  <span class="preset-label">빠른 추천:</span>
+                  <div class="preset-ctrl-btns">
+                    <button
+                      type="button"
+                      class="btn-preset-toggle"
+                      :class="{ active: isAddingPreset }"
+                      @click="isAddingPreset = !isAddingPreset"
+                    >
+                      {{ isAddingPreset ? '닫기' : '+ 추천 추가' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-preset-reset"
+                      title="기본 추천 목록으로 초기화"
+                      @click="resetPresetOptions"
+                    >
+                      초기화
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 새 추천 단어 추가 인라인 바 -->
+                <div v-if="isAddingPreset" class="preset-add-bar">
+                  <input
+                    v-model="newPresetInput"
+                    type="text"
+                    class="form-input preset-add-input"
+                    placeholder="새 추천 옵션명 (예: 루돌프 뿔)"
+                    @keyup.enter.prevent="addPresetOption"
+                  />
                   <button
-                    v-for="preset in presetOptions"
-                    :key="preset"
                     type="button"
+                    class="btn-preset-submit"
+                    @click="addPresetOption"
+                  >
+                    + 등록
+                  </button>
+                </div>
+
+                <!-- 추천 칩 목록 -->
+                <div class="preset-btns">
+                  <div
+                    v-for="(preset, pIdx) in presetOptions"
+                    :key="preset + '_' + pIdx"
                     class="btn-preset-opt"
                     @click="addOption(preset)"
+                    title="클릭하여 옵션으로 추가"
                   >
-                    + {{ preset }}
-                  </button>
+                    <span class="preset-text">+ {{ preset }}</span>
+                    <button
+                      type="button"
+                      class="btn-preset-del"
+                      title="추천 목록에서 삭제"
+                      @click.stop="deletePresetOption(pIdx)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <span v-if="presetOptions.length === 0" class="no-presets-tip">
+                    등록된 추천 항목이 없습니다.
+                  </span>
                 </div>
               </div>
             </div>
@@ -1091,13 +1361,134 @@ const handleSave = async () => {
 .samples-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+}
+
+.samples-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .samples-lbl {
   font-size: 0.74rem;
   font-weight: 700;
   color: #8c7875;
+}
+
+.samples-ctrl-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-sample-toggle {
+  background: #fff0f3;
+  border: 1px solid #ffccd5;
+  color: #ff4d6d;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-sample-toggle:hover,
+.btn-sample-toggle.active {
+  background: #ff4d6d;
+  color: #ffffff;
+  border-color: #ff4d6d;
+}
+
+.btn-sample-reset {
+  background: #f5ede6;
+  border: 1px solid #ebdcd0;
+  color: #8c7875;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-sample-reset:hover {
+  background: #ebdcd0;
+  color: #5c4e4b;
+}
+
+/* 새 샘플 등록 카드 */
+.sample-add-card {
+  background: #fff8f9;
+  border: 1px solid #ffccd5;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sample-add-title {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #c9184a;
+}
+
+.sample-add-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sample-name-inp {
+  font-size: 0.78rem;
+  padding: 6px 10px;
+}
+
+.sample-url-row {
+  display: flex;
+  gap: 6px;
+}
+
+.sample-url-inp {
+  flex: 1;
+  font-size: 0.74rem;
+  padding: 6px 8px;
+}
+
+.btn-sample-upload {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #fdfbf7;
+  border: 1px solid #ebdcd0;
+  color: #5c4e4b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-sample-upload .material-icons {
+  font-size: 16px;
+  color: #ff4d6d;
+}
+
+.btn-sample-submit {
+  background: #ff4d6d;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-sample-submit:hover {
+  background: #e63956;
 }
 
 .samples-chips {
@@ -1107,7 +1498,7 @@ const handleSave = async () => {
 }
 
 .btn-sample-chip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
   background: #ffffff;
@@ -1130,6 +1521,40 @@ const handleSave = async () => {
   background: #ff4d6d;
   color: #ffffff;
   border-color: #ff4d6d;
+}
+
+.sample-chip-text {
+  user-select: none;
+}
+
+.btn-sample-chip-del {
+  border: none;
+  background: transparent;
+  color: #b09e99;
+  font-size: 0.68rem;
+  font-weight: 900;
+  cursor: pointer;
+  padding: 0 2px;
+  margin-left: 2px;
+  line-height: 1;
+}
+
+.btn-sample-chip-del:hover {
+  color: #d90429;
+}
+
+.btn-sample-chip.active .btn-sample-chip-del {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-sample-chip.active .btn-sample-chip-del:hover {
+  color: #ffffff;
+}
+
+.no-samples-tip {
+  font-size: 0.72rem;
+  color: #a08c87;
+  font-style: italic;
 }
 
 .chip-mini-thumb {
@@ -1382,28 +1807,108 @@ const handleSave = async () => {
 .preset-options-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+}
+
+.preset-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .preset-label {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: #8c7873;
+}
+
+.preset-ctrl-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-preset-toggle {
+  background: #fff0f3;
+  border: 1px solid #ffccd5;
+  color: #ff4d6d;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-preset-toggle:hover,
+.btn-preset-toggle.active {
+  background: #ff4d6d;
+  color: #ffffff;
+  border-color: #ff4d6d;
+}
+
+.btn-preset-reset {
+  background: #f5ede6;
+  border: 1px solid #ebdcd0;
+  color: #8c7875;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-preset-reset:hover {
+  background: #ebdcd0;
+  color: #5c4e4b;
+}
+
+/* 새 추천 추가 인라인 바 */
+.preset-add-bar {
+  display: flex;
+  gap: 6px;
+  background: #fff8f9;
+  border: 1px solid #ffccd5;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.preset-add-input {
+  flex: 1;
+  padding: 5px 8px;
+  font-size: 0.76rem;
+}
+
+.btn-preset-submit {
+  background: #ff4d6d;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-preset-submit:hover {
+  background: #e63956;
 }
 
 .preset-btns {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 5px;
 }
 
 .btn-preset-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: #ffffff;
   border: 1px solid #ebdcd0;
   color: #6b5c58;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 3px 7px;
+  padding: 3px 8px;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s;
@@ -1413,6 +1918,27 @@ const handleSave = async () => {
   background: #fff0f3;
   border-color: #ffb3c1;
   color: #ff4d6d;
+}
+
+.btn-preset-del {
+  border: none;
+  background: transparent;
+  color: #b09e99;
+  font-size: 0.64rem;
+  font-weight: 900;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.btn-preset-del:hover {
+  color: #d90429;
+}
+
+.no-presets-tip {
+  font-size: 0.72rem;
+  color: #a08c87;
+  font-style: italic;
 }
 
 @media (max-width: 480px) {

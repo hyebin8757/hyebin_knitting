@@ -191,152 +191,16 @@ EXCEPTION
 END $$;
 
 -- ==============================================================================
--- 🌱 초기 기본 데이터 시드 (Initial Seed Data)
+-- 🗑️ 팝업 관련 테이블 영구 삭제 & 불필요한 상품 정리
 -- ==============================================================================
+DROP TABLE IF EXISTS public.knitting_popup_notice CASCADE;
 
--- 1. 9종 기본 뜨개옷 상품 등록
-INSERT INTO public.knitting_products (id, name, price, image, images, tag, badge_color, description, details, options, is_popular, order_num)
-VALUES
-(
-    'apple',
-    '사과',
-    14000,
-    '/images/products/apple.jpg',
-    '["/images/products/apple.jpg", "/images/products/apple_devil.jpg"]'::jsonb,
-    'BEST',
-    '#ff4d6d',
-    '새빨간 사과에 앙증맞은 꼭지와 초록 잎사귀가 포인트인 시그니처 뜨개 모자',
-    '우사기, 하치, 카니는 귀뚫린 버전으로 제작 가능합니다. 해당 캐릭터 버전을 원하시면 아래 체크박스로 종류를 선택해 주세요.',
-    '["치이카와 (기본)", "우사기 (귀뚫림)", "하치와레", "모몽가 / 카니"]'::jsonb,
-    true,
-    1
-),
-(
-    'apple_devil',
-    '사과 데빌 ver.',
-    14000,
-    '/images/products/apple_devil.jpg',
-    '["/images/products/apple_devil.jpg", "/images/products/apple.jpg"]'::jsonb,
-    'HOT',
-    '#c9184a',
-    '장난꾸러기 악마 뿔과 디테일 날개가 돋보이는 사과 데빌 에디션',
-    '사과 모자에 깜찍한 뿔이 달려있어 할로윈이나 포인트 연출에 최고예요.',
-    '["치이카와 (기본)", "우사기 (귀뚫림)", "하치와레"]'::jsonb,
-    true,
-    2
-),
-(
-    'peach',
-    '복숭아',
-    14000,
-    '/images/products/peach.jpg',
-    '["/images/products/peach.jpg", "/images/products/peach_sailor.jpg"]'::jsonb,
-    '인기',
-    '#ff758f',
-    '은은한 베이비 핑크빛 복숭아 모양 보닛과 앙증맞은 잎사귀 장식',
-    '동글동글한 복숭아 라인이 얼굴을 더욱 사랑스럽고 화사하게 만들어줍니다.',
-    '[]'::jsonb,
-    true,
-    3
-),
-(
-    'peach_sailor',
-    '복숭아 세라(파랑, 분홍) ver.',
-    15000,
-    '/images/products/peach_sailor.jpg',
-    '["/images/products/peach_sailor.jpg", "/images/products/peach.jpg"]'::jsonb,
-    '추천',
-    '#59a5d8',
-    '복숭아 모자에 청량한 세라복 카라가 함께 구성된 투피스 느낌의 세라 세트',
-    '파랑 세라 / 분홍 세라 2가지 옵션으로 친구 인형과 트윈룩으로 입히기 좋아요.',
-    '["파랑 세라", "분홍 세라"]'::jsonb,
-    true,
-    4
-),
-(
-    'lemon',
-    '레몬',
-    14000,
-    '/images/products/lemon.jpg',
-    '["/images/products/lemon.jpg"]'::jsonb,
-    '상큼',
-    '#ffb703',
-    '보기만 해도 상큼해지는 레몬 옐로우 컬러와 싱그러운 나뭇잎 포인트',
-    '화사하고 쨍한 색감이라 야외 출사 사진 찍을 때 특히 예쁘게 나옵니다.',
-    '[]'::jsonb,
-    false,
-    5
-),
-(
-    'strawberry',
-    '딸기',
-    14000,
-    '/images/products/strawberry.jpg',
-    '["/images/products/strawberry.jpg"]'::jsonb,
-    'BEST',
-    '#e63946',
-    '달콤한 생크림 보닛 위에 콕 얹어진 탐스러운 빨간 딸기 모자',
-    '새하얀 베이스와 선명한 딸기 오브제가 어우러져 어디서나 시선 집중!',
-    '[]'::jsonb,
-    true,
-    6
-),
-(
-    'rose_santa',
-    '장미 산타 ver.',
-    15000,
-    '/images/products/rose_santa.jpg',
-    '["/images/products/rose_santa.jpg", "/images/products/rose_bonnet.jpg"]'::jsonb,
-    '시즌한정',
-    '#a4161a',
-    '고급스러운 딥와인 레드 컬러에 하얀 퐁퐁 방울이 달린 장미 산타 에디션',
-    '겨울 시즌 감성을 가득 담아 연말 선물용으로 가장 사랑받는 디자인입니다.',
-    '[]'::jsonb,
-    false,
-    7
-),
-(
-    'rose_bonnet',
-    '장미 기본/보닛 ver.',
-    15000,
-    '/images/products/rose_bonnet.jpg',
-    '["/images/products/rose_bonnet.jpg", "/images/products/rose_santa.jpg"]'::jsonb,
-    '우아',
-    '#9d0208',
-    '물결치는 프릴 디테일이 인형 얼굴을 폭 감싸주는 우아한 장미 보닛',
-    '목 부분 리본을 살짝 묶어 사랑스럽게 착용하는 고풍스러운 보닛 스타일입니다.',
-    '[]'::jsonb,
-    false,
-    8
-),
-(
-    'acorn',
-    '도토리 모자 세트',
-    15000,
-    '/images/products/acorn.jpg',
-    '["/images/products/acorn.jpg"]'::jsonb,
-    '세트할인',
-    '#8b5a2b',
-    '올망졸망 도토리 꼭지 베레모와 미니 도토리 크로스백 소품 세트',
-    '모자뿐만 아니라 작은 손가방까지 한 세트로 제공되어 완성도 높은 코디 가능!',
-    '[]'::jsonb,
-    true,
-    9
-)
-ON CONFLICT (id) DO UPDATE SET
-    name = EXCLUDED.name,
-    price = EXCLUDED.price,
-    image = EXCLUDED.image,
-    images = EXCLUDED.images,
-    tag = EXCLUDED.tag,
-    badge_color = EXCLUDED.badge_color,
-    description = EXCLUDED.description,
-    details = EXCLUDED.details,
-    options = EXCLUDED.options,
-    is_popular = EXCLUDED.is_popular,
-    order_num = EXCLUDED.order_num;
+-- 사용자가 관리자에서 삭제했던 상품이 재등록되지 않도록 명시적 정리
+DELETE FROM public.knitting_products WHERE id IN ('apple_devil', 'peach_sailor');
 
--- 2. 상점 및 카카오톡 알림 초기 설정
+-- ==============================================================================
+-- ⚙️ 상점 및 카카오톡 알림 초기 설정 (이미 존재하는 경우 덮어쓰지 않음)
+-- ==============================================================================
 INSERT INTO public.knitting_settings (
     id, admin_password, sound_alert_enabled, browser_notification_enabled,
     kakao_alert_enabled, kakao_access_token, kakao_js_key,
@@ -359,7 +223,9 @@ INSERT INTO public.knitting_settings (
     '노혜빈'
 ) ON CONFLICT (id) DO NOTHING;
 
--- 3. 홈페이지 공지 & 주문안내 초기 문구
+-- ==============================================================================
+-- 📢 홈페이지 공지 & 주문안내 초기 문구 (이미 존재하는 경우 덮어쓰지 않음)
+-- ==============================================================================
 INSERT INTO public.knitting_site_notices (
     id, notice_content, shipping_content, caution_content, washing_content,
     shop_intro, instagram_id, making_period, courier_info
@@ -374,8 +240,3 @@ INSERT INTO public.knitting_site_notices (
     '입금 확인 후 약 2~3 영업일 소요(주문량 많을 시 시간소요 개별안내)',
     '롯데택배 / 우체국 / CU 편의점택배'
 ) ON CONFLICT (id) DO NOTHING;
-
--- ==============================================================================
--- 🗑️ 팝업 관련 테이블 제거 (사용 안 함)
--- ==============================================================================
-DROP TABLE IF EXISTS public.knitting_popup_notice CASCADE;
