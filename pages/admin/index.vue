@@ -77,6 +77,7 @@ const noticesForm = ref({
 
 // 🚚 주문서 배송 방식 목록 관리 상태
 const shippingList = ref<ShippingOptionItem[]>([]);
+const isSavingShipping = ref(false);
 
 const syncShippingList = () => {
   shippingList.value = JSON.parse(JSON.stringify(store.shippingOptions));
@@ -93,7 +94,6 @@ const syncNoticesForm = () => {
     makingPeriod: store.siteNotices.makingPeriod,
     courierInfo: store.siteNotices.courierInfo,
   };
-  syncShippingList();
 };
 
 watch(
@@ -104,13 +104,10 @@ watch(
   { deep: true }
 );
 
-watch(
-  () => store.shippingOptions,
-  () => {
-    syncShippingList();
-  },
-  { deep: true, immediate: true }
-);
+// 마운트 시 최초 배송 목록 동기화
+onMounted(() => {
+  syncShippingList();
+});
 
 // 새 배송 방식 추가
 const addShippingOptionItem = () => {
@@ -140,6 +137,21 @@ const removeShippingOptionItem = (idx: number) => {
 const handleResetShipping = async () => {
   await store.resetShippingOptionsToDefault();
   syncShippingList();
+};
+
+// 🚚 배송 방식 단독 즉시 저장
+const handleSaveShipping = async () => {
+  if (shippingList.value.length === 0) {
+    store.showAlert("최소 1개 이상의 배송 방식이 필요합니다.", { type: "warning" });
+    return;
+  }
+  isSavingShipping.value = true;
+  await store.updateShippingOptions(shippingList.value);
+  isSavingShipping.value = false;
+  store.showAlert("🚚 배송 방식 및 배송비 설정이 성공적으로 저장되었습니다!\n모든 방문자의 주문서에 실시간 반영됩니다.", {
+    title: "배송 설정 저장 완료",
+    type: "success",
+  });
 };
 
 // 공지 & 주문안내 및 배송 방식 저장 핸들러
@@ -1266,6 +1278,15 @@ const handleLogout = () => {
                 <span class="editor-hint">고객 주문서의 '배송 방식' 선택지에 실시간 반영됩니다 (금액 자동 계산)</span>
               </div>
               <div class="shipping-ctrl-actions">
+                <button
+                  type="button"
+                  class="btn-shipping-save"
+                  :disabled="isSavingShipping"
+                  @click="handleSaveShipping"
+                >
+                  <i class="material-icons">save</i>
+                  <span>{{ isSavingShipping ? '저장 중...' : '배송 방식 즉시 저장' }}</span>
+                </button>
                 <button
                   type="button"
                   class="btn-shipping-add"
@@ -4347,6 +4368,32 @@ input:checked + .slider:before {
   gap: 8px;
   margin-left: auto;
   flex-wrap: wrap;
+}
+
+.btn-shipping-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ff4d6d;
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 77, 109, 0.25);
+  transition: all 0.2s;
+}
+
+.btn-shipping-save:hover:not(:disabled) {
+  background: #e03254;
+  transform: translateY(-1px);
+}
+
+.btn-shipping-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-shipping-add {

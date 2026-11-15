@@ -201,6 +201,7 @@ export interface SiteNotices {
   instagramId: string;       // 6. 인스타그램 계정 ID
   makingPeriod: string;      // 7. 제작 소요 기간 안내 문구
   courierInfo: string;       // 8. 배송사 안내 문구
+  shippingOptions?: ShippingOptionItem[]; // 🚚 9. 주문서 배송 방식 목록
 }
 
 // 공방 기본 공지 및 주문안내 정밀 텍스트 (이미지 2~5번 100% 반영)
@@ -802,6 +803,13 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           makingPeriod: nData.making_period || siteNotices.value.makingPeriod,
           courierInfo: nData.courier_info || siteNotices.value.courierInfo,
         };
+
+        // 🚚 Supabase 클라우드에 저장된 배송 방식 목록이 있으면 주문서에 즉시 동기화
+        if (nData.shipping_options && Array.isArray(nData.shipping_options) && nData.shipping_options.length > 0) {
+          shippingOptions.value = nData.shipping_options;
+          safeSetItem("knitting_shipping_options", shippingOptions.value);
+        }
+
         safeSetItem("knitting_site_notices", siteNotices.value);
       }
 
@@ -1999,7 +2007,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     return true;
   };
 
-  // 🚚 배송 방식 설정 관리 (추가, 수정, 삭제, 기본 복원)
+  // 🚚 배송 방식 설정 관리 (추가, 수정, 삭제, 기본 복원 및 Supabase 클라우드 동기화)
   const updateShippingOptions = async (newOptions: ShippingOptionItem[]) => {
     if (!newOptions || newOptions.length === 0) {
       showAlert("최소 1개 이상의 배송 방식이 필요합니다.", { type: "warning", title: "배송 방식 확인" });
@@ -2007,12 +2015,52 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     }
     shippingOptions.value = JSON.parse(JSON.stringify(newOptions));
     saveToLocalStorage();
+
+    // 🌐 Supabase 비동기 클라우드 동기화 (모든 고객 기기에 즉시 실시간 배송비 반영)
+    try {
+      const client = getSupabase();
+      if (client) {
+        const { error } = await client.from("knitting_site_notices").upsert({
+          id: "main_notices",
+          notice_content: siteNotices.value.noticeContent,
+          shipping_content: siteNotices.value.shippingContent,
+          caution_content: siteNotices.value.cautionContent,
+          washing_content: siteNotices.value.washingContent,
+          shop_intro: siteNotices.value.shopIntro,
+          instagram_id: siteNotices.value.instagramId,
+          making_period: siteNotices.value.makingPeriod,
+          courier_info: siteNotices.value.courierInfo,
+          shipping_options: shippingOptions.value,
+          updated_at: new Date().toISOString(),
+        });
+        if (error) {
+          console.warn("[Supabase] updateShippingOptions notice (SQL column setup needed):", error);
+        }
+      }
+    } catch (e) {
+      console.warn("Supabase updateShippingOptions sync failed", e);
+    }
+
     showToast("배송 방식 설정이 성공적으로 저장되었습니다! 🚚");
   };
 
   const resetShippingOptionsToDefault = async () => {
     shippingOptions.value = JSON.parse(JSON.stringify(DEFAULT_SHIPPING_OPTIONS));
     saveToLocalStorage();
+
+    try {
+      const client = getSupabase();
+      if (client) {
+        await client.from("knitting_site_notices").upsert({
+          id: "main_notices",
+          shipping_options: DEFAULT_SHIPPING_OPTIONS,
+          updated_at: new Date().toISOString(),
+        });
+      }
+    } catch (e) {
+      console.warn("Supabase resetShippingOptions sync failed", e);
+    }
+
     showToast("배송 방식이 기본 설정으로 복원되었습니다.");
   };
 
@@ -2211,7 +2259,7 @@ export const useKnittingStore = defineStore("knittingStore", () => {
     try {
       const client = getSupabase();
       if (client) {
-        const { error } = await client.from("knitting_site_notices").upsert({
+        const upsertPayload: any = {
           id: "main_notices",
           notice_content: siteNotices.value.noticeContent,
           shipping_content: siteNotices.value.shippingContent,
@@ -2221,9 +2269,17 @@ export const useKnittingStore = defineStore("knittingStore", () => {
           instagram_id: siteNotices.value.instagramId,
           making_period: siteNotices.value.makingPeriod,
           courier_info: siteNotices.value.courierInfo,
+          shipping_options: shippingOptions.value,
           updated_at: new Date().toISOString(),
-        });
-        if (error) console.error("Supabase updateSiteNotices sync error:", error);
+        };
+
+        const { error } = await client.from("knitting_site_notices").upsert(upsertPayload);
+        if (error) {
+          // 컬럼이 아직 DB에 없을 경우의 fallback
+          delete upsertPayload.shipping_options;
+          await client.from("knitting_site_notices").upsert(upsertPayload);
+          console.warn("[Supabase] Notice upsert with shipping_options notice:", error);
+        }
       }
     } catch (e) {
       console.warn("Supabase updateSiteNotices background sync failed", e);
